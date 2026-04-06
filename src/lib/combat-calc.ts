@@ -13,16 +13,19 @@ export function calcEffectiveWeapon(
   activeBuffIds: string[]
 ): EffectiveWeaponStats {
   const activeBuffs = buffs.filter((b) => activeBuffIds.includes(b.id))
+  const applicableBuffs = weapon.type === 'ranged'
+    ? activeBuffs.filter((b) => !b.meleeOnly)
+    : activeBuffs
 
-  const totalAttackMod = activeBuffs.reduce((sum, b) => sum + b.attackMod, 0)
-  const totalDamageMod = activeBuffs.reduce((sum, b) => sum + b.damageMod, 0)
+  const totalAttackMod = applicableBuffs.reduce((sum, b) => sum + b.attackMod, 0)
+  const totalDamageMod = applicableBuffs.reduce((sum, b) => sum + b.damageMod, 0)
   const totalAcMod = activeBuffs.reduce((sum, b) => sum + b.acMod, 0)
 
   return {
     attackBonus: weapon.attackBonus.map((a) => a + totalAttackMod),
     damageBonus: weapon.damageBonus + totalDamageMod,
     acMod: totalAcMod,
-    activeBuffNames: activeBuffs.map((b) => b.name),
+    activeBuffNames: applicableBuffs.map((b) => b.name),
   }
 }
 

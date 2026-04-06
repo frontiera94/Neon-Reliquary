@@ -14,7 +14,7 @@ export function TopBar() {
   const conditions = session?.conditions ?? []
 
   return (
-    <header className="bg-surface flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50">
+    <header className="bg-surface/90 backdrop-blur-sm border-b border-outline-variant/20 flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50">
       <div className="flex items-center gap-4">
         <span
           className="text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer"

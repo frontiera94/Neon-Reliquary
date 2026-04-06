@@ -19,19 +19,21 @@
   },
   "savingThrows": { "fort": 5, "ref": 10, "will": 5, "fortBase": 1, "refBase": 4, "willBase": 1 },
   "skills": [
-    { "id": "acrobatics", "name": "Acrobatics", "ability": "dex", "ranks": 4, "classSkill": true, "miscBonus": 2, "trained": true, "armorCheckPenalty": false },
-    { "id": "bluff", "name": "Bluff", "ability": "cha", "ranks": 4, "classSkill": true, "miscBonus": 1, "trained": true, "armorCheckPenalty": false },
-    { "id": "disable-device", "name": "Disable Device", "ability": "dex", "ranks": 4, "classSkill": true, "miscBonus": 2, "trained": true, "armorCheckPenalty": false },
-    { "id": "escape-artist", "name": "Escape Artist", "ability": "dex", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "intimidate", "name": "Intimidate", "ability": "cha", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "knowledge-dungeoneering", "name": "Knowledge (Dungeoneering)", "ability": "int", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "knowledge-local", "name": "Knowledge (Local)", "ability": "int", "ranks": 4, "classSkill": true, "miscBonus": 3, "trained": true, "armorCheckPenalty": false },
-    { "id": "perception", "name": "Perception", "ability": "wis", "ranks": 4, "classSkill": true, "miscBonus": 2, "trained": true, "armorCheckPenalty": false },
-    { "id": "sense-motive", "name": "Sense Motive", "ability": "wis", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "sleight-of-hand", "name": "Sleight of Hand", "ability": "dex", "ranks": 4, "classSkill": true, "miscBonus": 3, "trained": true, "armorCheckPenalty": false },
-    { "id": "stealth", "name": "Stealth", "ability": "dex", "ranks": 4, "classSkill": true, "miscBonus": 7, "trained": true, "armorCheckPenalty": false },
-    { "id": "survival", "name": "Survival", "ability": "wis", "ranks": 1, "classSkill": false, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "use-magic-device", "name": "Use Magic Device", "ability": "cha", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false }
+    { "id": "acrobatics",              "name": "Acrobatics",               "ability": "dex", "ranks": 4, "classSkill": true,  "miscBonus": 2,  "trained": true,  "armorCheckPenalty": false },
+    { "id": "bluff",                   "name": "Bluff",                    "ability": "cha", "ranks": 4, "classSkill": true,  "miscBonus": 1,  "trained": true,  "armorCheckPenalty": false },
+    { "id": "climb",                   "name": "Climb",                    "ability": "str", "ranks": 2, "classSkill": false, "miscBonus": 0,  "trained": false, "armorCheckPenalty": true  },
+    { "id": "disable-device",          "name": "Disable Device",           "ability": "dex", "ranks": 4, "classSkill": true,  "miscBonus": 2,  "trained": true,  "armorCheckPenalty": false },
+    { "id": "escape-artist",           "name": "Escape Artist",            "ability": "dex", "ranks": 4, "classSkill": true,  "miscBonus": 0,  "trained": true,  "armorCheckPenalty": false },
+    { "id": "intimidate",              "name": "Intimidate",               "ability": "cha", "ranks": 4, "classSkill": true,  "miscBonus": 0,  "trained": true,  "armorCheckPenalty": false },
+    { "id": "knowledge-dungeoneering", "name": "Knowledge (Dungeoneering)","ability": "int", "ranks": 4, "classSkill": true,  "miscBonus": 0,  "trained": true,  "armorCheckPenalty": false },
+    { "id": "knowledge-local",         "name": "Knowledge (Local)",        "ability": "int", "ranks": 4, "classSkill": true,  "miscBonus": 3,  "trained": true,  "armorCheckPenalty": false },
+    { "id": "perception",              "name": "Perception",               "ability": "wis", "ranks": 4, "classSkill": true,  "miscBonus": 2,  "trained": true,  "armorCheckPenalty": false },
+    { "id": "sense-motive",            "name": "Sense Motive",             "ability": "wis", "ranks": 4, "classSkill": true,  "miscBonus": 0,  "trained": true,  "armorCheckPenalty": false },
+    { "id": "sleight-of-hand",         "name": "Sleight of Hand",          "ability": "dex", "ranks": 4, "classSkill": true,  "miscBonus": 3,  "trained": true,  "armorCheckPenalty": false },
+    { "id": "stealth",                 "name": "Stealth",                  "ability": "dex", "ranks": 4, "classSkill": true,  "miscBonus": 7,  "trained": true,  "armorCheckPenalty": false },
+    { "id": "survival",               "name": "Survival",                  "ability": "wis", "ranks": 1, "classSkill": false, "miscBonus": 0,  "trained": false, "armorCheckPenalty": false },
+    { "id": "swim",                    "name": "Swim",                     "ability": "str", "ranks": 0, "classSkill": false, "miscBonus": 0,  "trained": false, "armorCheckPenalty": true  },
+    { "id": "use-magic-device",        "name": "Use Magic Device",         "ability": "cha", "ranks": 4, "classSkill": true,  "miscBonus": 0,  "trained": true,  "armorCheckPenalty": false }
   ],
   "weapons": [
     {
@@ -43,7 +45,7 @@
       "damageBonus": 5,
       "critRange": 19,
       "critMultiplier": 2,
-      "tags": ["+1 Magic", "Finesse", "DEX to damage"]
+      "tags": ["Finesse", "DEX to damage", "Weapon Focus"]
     },
     {
       "id": "light-crossbow-small",
@@ -54,7 +56,7 @@
       "damageBonus": 0,
       "critRange": 19,
       "critMultiplier": 2,
-      "tags": ["Small"],
+      "tags": ["Small", "Range 30 ft."],
       "maxAmmo": 20,
       "currentAmmo": 20
     },
@@ -71,56 +73,182 @@
     }
   ],
   "buffs": [
-    { "id": "sneak-attack", "name": "Sneak Attack +2d6", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "color": "error" },
-    { "id": "deadly-aim", "name": "Deadly Aim (−1 atk / +2 dmg ranged)", "active": false, "attackMod": -1, "damageMod": 2, "acMod": 0, "color": "primary" },
-    { "id": "flanking", "name": "Flanking (+2 attack)", "active": false, "attackMod": 2, "damageMod": 0, "acMod": 0, "color": "secondary" }
+    {
+      "id": "sneak-attack",
+      "name": "Sneak Attack +2d6",
+      "active": false,
+      "attackMod": 0, "damageMod": 0, "acMod": 0,
+      "color": "error"
+    },
+    {
+      "id": "two-weapon-fighting",
+      "name": "Two-Weapon Fighting (−2 primary / −2 off-hand)",
+      "active": false,
+      "attackMod": -2, "damageMod": 0, "acMod": 0,
+      "color": "secondary"
+    },
+    {
+      "id": "flanking",
+      "name": "Flanking (+2 attack)",
+      "active": false,
+      "attackMod": 2, "damageMod": 0, "acMod": 0,
+      "color": "secondary"
+    },
+    {
+      "id": "deadly-aim",
+      "name": "Deadly Aim (−1 atk / +2 dmg ranged)",
+      "active": false,
+      "attackMod": -1, "damageMod": 2, "acMod": 0,
+      "color": "primary"
+    },
+    {
+      "id": "debilitating-injury",
+      "name": "Debilitating Injury: Bewildered (−2 AC on target)",
+      "active": false,
+      "attackMod": 0, "damageMod": 0, "acMod": 0,
+      "color": "error"
+    }
   ],
-  "dailyResources": [],
+  "dailyResources": [
+    { "id": "underhanded", "name": "Underhanded (max sneak dmg surprise)", "total": 3, "label": "Uses" },
+    { "id": "cure-light-wounds", "name": "Potion of Cure Light Wounds (1d8+1)", "total": 1, "label": "Potions" }
+  ],
   "feats": [
     {
-      "id": "sneak-attack", "index": 1, "name": "Sneak Attack +2d6",
-      "shortDesc": "Deal +2d6 damage when target is denied DEX bonus to AC or when flanking.",
-      "fullDesc": "If Mariano can catch an opponent when he is unable to defend himself effectively, he can strike vital spots for extra damage. Any time the target is denied a Dexterity bonus to AC (whether or not he actually has a Dex bonus), or when Mariano flanks the target, the attack deals +2d6 extra damage. Ranged sneak attacks require being within 30 feet."
+      "id": "sneak-attack", "index": 1,
+      "name": "Sneak Attack +2d6",
+      "shortDesc": "+2d6 damage when target is denied DEX to AC or when flanking. Ranged only within 30 ft.",
+      "fullDesc": "If Mariano can catch an opponent when he is unable to defend himself effectively, he can strike vital spots for extra damage. Any time the target is denied a Dexterity bonus to AC, or when Mariano flanks the target, the attack deals +2d6 extra damage. This extra damage is not multiplied on a critical hit. Ranged sneak attacks only count if the target is within 30 feet."
     },
     {
-      "id": "trapfinding", "index": 2, "name": "Trapfinding",
-      "shortDesc": "+2 on Perception checks to find traps and on Disable Device. Can disarm magic traps.",
-      "fullDesc": "Mariano adds +2 on Perception checks to locate traps and on Disable Device checks. He can use Disable Device to disarm magic traps. Without this ability, most magic traps cannot be disarmed. This bonus is already included in his skill totals.",
-      "bonusValue": 2, "bonusMax": 4, "bonusLabel": "Trap Bonus"
+      "id": "finesse-training", "index": 2,
+      "name": "Finesse Training (Dagger)",
+      "shortDesc": "Free Weapon Finesse. Add DEX modifier instead of STR to damage rolls with daggers.",
+      "fullDesc": "Mariano uses DEX (+5) instead of STR (−2) for attack rolls with light weapons (Weapon Finesse). At 3rd level, he selected the dagger: he now also adds DEX (+5) to damage rolls instead of STR (−2) with daggers. This is why the Gold Plated Dagger deals 1d3+5 damage and hits at +10 (BAB 3 + DEX 5 + size 1 + Weapon Focus 1)."
     },
     {
-      "id": "evasion", "index": 3, "name": "Evasion",
+      "id": "uncanny-dodge", "index": 3,
+      "name": "Uncanny Dodge",
+      "shortDesc": "Cannot be caught flat-footed; retains DEX bonus to AC even when flat-footed or against invisible attackers.",
+      "fullDesc": "Mariano can react to danger before his senses would normally allow him to do so. He cannot be caught flat-footed, nor does he lose his Dexterity bonus to AC if the attacker is invisible. This is why his flat-footed AC equals his full AC (20). He still loses DEX if immobilized or if feinted against."
+    },
+    {
+      "id": "evasion", "index": 4,
+      "name": "Evasion",
       "shortDesc": "On a successful Reflex save against a half-damage effect, take no damage instead.",
-      "fullDesc": "If Mariano makes a successful Reflex saving throw against an attack that normally deals half damage on a successful save, he instead takes no damage. Evasion can only be used if wearing light armor or no armor. A helpless rogue does not gain this benefit."
+      "fullDesc": "If Mariano makes a successful Reflex saving throw against an attack that normally deals half damage on a successful save, he instead takes no damage. Evasion can only be used if wearing light armor or no armor."
     },
     {
-      "id": "trap-sense", "index": 4, "name": "Trap Sense +1",
-      "shortDesc": "+1 bonus on Reflex saves against traps and +1 dodge bonus to AC against attacks made by traps.",
-      "fullDesc": "Mariano gains an intuitive sense that alerts him to danger from traps. He gains a +1 bonus on Reflex saves made to avoid traps and a +1 dodge bonus to AC against attacks made by traps. This bonus is already included in his conditional save modifiers.",
-      "bonusValue": 1, "bonusMax": 1, "bonusLabel": "Trap Sense"
+      "id": "danger-sense", "index": 5,
+      "name": "Danger Sense +1",
+      "shortDesc": "+1 Reflex saves vs traps, +1 dodge AC vs trap attacks, +1 Perception vs surprise.",
+      "fullDesc": "Mariano gains a +1 bonus on Reflex saves to avoid traps and a +1 dodge bonus to AC against attacks by traps. In addition, he gains a +1 bonus on Perception checks to avoid being surprised by a foe. These bonuses are already reflected in his stat block conditionals.",
+      "bonusValue": 1, "bonusMax": 6, "bonusLabel": "Danger Sense"
     },
     {
-      "id": "uncanny-dodge", "index": 5, "name": "Uncanny Dodge",
-      "shortDesc": "Cannot be caught flat-footed. Retains DEX bonus to AC even when flat-footed.",
-      "fullDesc": "Mariano can react to danger before his senses would normally allow him to do so. He cannot be caught flat-footed, nor does he lose his Dexterity bonus to AC if the attacker is invisible. This is why his flat-footed AC equals his full AC (20). He still loses DEX if immobilized."
+      "id": "debilitating-injury", "index": 6,
+      "name": "Debilitating Injury",
+      "shortDesc": "After dealing sneak attack damage, impose one of: −2 AC (Bewildered), −2 attack (Disoriented), or half speed (Hampered) for 1 round.",
+      "fullDesc": "At 4th level, whenever Mariano deals sneak attack damage, he can also debilitate the target for 1 round. Choose one: Bewildered (−2 AC, −2 additional AC vs Mariano's attacks), Disoriented (−2 on attack rolls, −2 additional on attacks vs Mariano), or Hampered (all speeds halved, can't take a 5-foot step). Penalties don't stack with themselves; each new sneak attack can extend the duration."
     },
     {
-      "id": "finesse-training", "index": 6, "name": "Finesse Training (Dagger)",
-      "shortDesc": "Free Weapon Finesse. At level 3: add DEX modifier to damage with daggers instead of STR.",
-      "fullDesc": "Mariano uses DEX (+5) instead of STR for attack rolls with daggers, gaining his full DEX to-hit. At 3rd level, he selected the dagger for Finesse Training: he now adds DEX (+5) to damage rolls instead of STR (−2) with daggers. This is why the Gold Plated Dagger deals 1d3+5 damage and hits at +10 (BAB 3 + DEX 5 + magic +1 + size +1)."
+      "id": "trapfinding", "index": 7,
+      "name": "Trapfinding",
+      "shortDesc": "+2 Perception to find traps, +2 Disable Device. Can disarm magical traps.",
+      "fullDesc": "Mariano adds +2 on Perception checks made to locate traps and to Disable Device checks. He can use the Disable Device skill to disarm magic traps. This bonus is already included in his skill totals (Disable Device 14, Perception 11).",
+      "bonusValue": 2, "bonusMax": 2, "bonusLabel": "Trap Bonus"
+    },
+    {
+      "id": "minor-magic", "index": 8,
+      "name": "Minor Magic: Acid Splash",
+      "shortDesc": "Cast Acid Splash at will as a spell-like ability (CL 4, DC 14).",
+      "fullDesc": "Rogue talent. Mariano can cast Acid Splash at will as a spell-like ability. Caster level 4, save DC 14 (INT-based). Acid Splash: ranged touch attack, deals 1d3 acid damage. Bookish Rogue feat allows him to swap this spell by studying a spellbook for 10 minutes."
+    },
+    {
+      "id": "underhanded", "index": 9,
+      "name": "Underhanded",
+      "shortDesc": "+4 Sleight of Hand to conceal weapons. During surprise round with concealed weapon: sneak attack deals maximum damage automatically.",
+      "fullDesc": "Rogue talent. Mariano gains +4 circumstance bonus on all Sleight of Hand checks made to conceal a weapon. If he makes a sneak attack during the surprise round using a concealed weapon the opponent did not know about, he does not need to roll sneak attack damage — it deals maximum damage automatically. Usable CHA modifier times per day (3/day).",
+      "bonusValue": 3, "bonusMax": 3, "bonusLabel": "Uses/day"
+    },
+    {
+      "id": "weapon-finesse", "index": 10,
+      "name": "Weapon Finesse",
+      "shortDesc": "Use DEX instead of STR for attack rolls with light weapons, rapiers, and whips.",
+      "fullDesc": "With a light weapon, rapier, whip, or spiked chain made for his size, Mariano may use his Dexterity modifier (+5) instead of his Strength modifier (−2) on attack rolls. Gained as a bonus feat at 1st level via Finesse Training."
+    },
+    {
+      "id": "weapon-focus-dagger", "index": 11,
+      "name": "Weapon Focus (Dagger)",
+      "shortDesc": "+1 bonus on all attack rolls made with daggers.",
+      "fullDesc": "Mariano is especially skilled with daggers. He gains a +1 bonus on all attack rolls made using the dagger. This +1 is included in the Gold Plated Dagger's attack bonus (+10 = BAB 3 + DEX 5 + size 1 + WF 1)."
+    },
+    {
+      "id": "two-weapon-fighting", "index": 12,
+      "name": "Two-Weapon Fighting",
+      "shortDesc": "Fight with a weapon in each hand. Primary hand penalty −2, off-hand penalty −2 (with light off-hand weapon).",
+      "fullDesc": "Mariano can fight with a weapon in each of his hands (two Gold Plated Daggers), making one extra attack each round with the secondary weapon. The standard penalty is reduced: primary hand −2 (normally −4), off-hand −2 (normally −8 with a light off-hand weapon). Both daggers use DEX for attack via Weapon Finesse."
+    },
+    {
+      "id": "skill-focus-stealth", "index": 13,
+      "name": "Skill Focus (Stealth)",
+      "shortDesc": "+3 bonus on Stealth checks. Increases to +6 with 10+ ranks.",
+      "fullDesc": "Mariano is particularly adept at Stealth. He gets a +3 bonus on all Stealth checks. This +3 is included in his Stealth total (19 = DEX 5 + ranks 4 + class skill 3 + size 4 + Skill Focus 3). This bonus increases to +6 at 10+ ranks."
+    },
+    {
+      "id": "extra-rogue-talent", "index": 14,
+      "name": "Extra Unchained Rogue Talent",
+      "shortDesc": "Gain one additional unchained rogue talent.",
+      "fullDesc": "Through constant practice, Mariano has learned an additional special trick. He gained the Underhanded rogue talent through this feat. Can be taken multiple times, each time granting one additional rogue talent."
+    },
+    {
+      "id": "bookish-rogue", "index": 15,
+      "name": "Bookish Rogue",
+      "shortDesc": "Spend 10 minutes with a spellbook to permanently swap Minor Magic spell to any same-level sorcerer/wizard spell in it.",
+      "fullDesc": "By studying a spellbook for 10 minutes, Mariano can change the spell he is able to cast using his Minor Magic talent to any sorcerer/wizard spell of the same level contained in the spellbook. This change is permanent until he takes the time to change it again."
+    },
+    {
+      "id": "halfling-racial", "index": 16,
+      "name": "Halfling Racial Traits",
+      "shortDesc": "Fearless (+2 vs fear), Halfling Luck (+1 all saves), Keen Senses (+2 Perception), Sure-Footed (+2 Acrobatics/Climb), size bonus (+1 AC/attack), speed 20 ft.",
+      "fullDesc": "Mariano benefits from several halfling racial traits: Fearless (+2 racial bonus on saves vs. fear, stacks with Halfling Luck); Halfling Luck (+1 racial bonus on all saving throws, included in saves); Keen Senses (+2 bonus on Perception, included); Sure-Footed (+2 racial bonus on Acrobatics and Climb, included); Small size (+1 size bonus to AC and attack rolls, included); base speed 20 ft."
     }
   ],
   "classAbilities": [
     {
       "id": "uncanny-dodge-ca",
       "name": "Uncanny Dodge",
-      "description": "Retains DEX bonus to AC when flat-footed (flat-footed AC = full AC of 20). Also keeps DEX bonus against invisible attackers.",
+      "description": "Cannot be caught flat-footed. Retains DEX bonus to AC when flat-footed or attacked by invisible opponents. Flat-footed AC = full AC (20).",
       "isSignature": true
     },
     {
-      "id": "halfling-traits",
+      "id": "debilitating-injury-ca",
+      "name": "Debilitating Injury",
+      "description": "After dealing sneak attack damage, choose one penalty on the target for 1 round: Bewildered (−2 AC, stacks to −4 vs Mariano), Disoriented (−2 attack, stacks to −4 vs Mariano), or Hampered (half speed, no 5-foot step). Extra sneak attacks extend duration.",
+      "isSignature": true
+    },
+    {
+      "id": "minor-magic-ca",
+      "name": "Minor Magic: Acid Splash",
+      "description": "Rogue talent — cast Acid Splash at will as a spell-like ability. CL 4, DC 14 (INT-based). Ranged touch attack dealing 1d3 acid damage. Can swap spell via Bookish Rogue feat (10 min with a spellbook).",
+      "isSignature": false
+    },
+    {
+      "id": "underhanded-ca",
+      "name": "Underhanded (3/day)",
+      "description": "Rogue talent — +4 circumstance bonus on Sleight of Hand to conceal a weapon. During the surprise round with a concealed weapon the opponent didn't know about: sneak attack automatically deals maximum damage (no roll needed). Usable CHA mod times per day (3/day).",
+      "isSignature": false
+    },
+    {
+      "id": "finesse-training-ca",
+      "name": "Finesse Training (Dagger)",
+      "description": "Uses DEX (+5) instead of STR (−2) for attack rolls with all light weapons (Weapon Finesse). Also uses DEX (+5) instead of STR (−2) for damage rolls specifically with daggers. Explains Gold Plated Dagger: +10 to hit (BAB 3 + DEX 5 + size 1 + Weapon Focus 1), 1d3+5 damage.",
+      "isSignature": false
+    },
+    {
+      "id": "halfling-racial-ca",
       "name": "Halfling Racial Traits",
-      "description": "+2 Acrobatics, +2 Perception, +4 Stealth (size), +1 size bonus to AC and attack rolls. +1 to all saving throws (+2 vs. fear). Speed 20 ft.",
+      "description": "Languages: Common, Dwarven, Elven, Gnome, Goblin, Halfling. +1 size bonus to AC and attack rolls. +1 to all saving throws (Halfling Luck). +2 racial bonus on saves vs. fear (Fearless). +2 Perception (Keen Senses). +2 Acrobatics and Climb (Sure-Footed). +4 size bonus to Stealth. Speed 20 ft.",
       "isSignature": false
     }
   ],

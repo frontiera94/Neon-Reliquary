@@ -20,6 +20,12 @@ export interface BuffToggle {
   damageMod: number
   acMod: number
   color?: 'primary' | 'secondary' | 'error'
+  /** When true, attackMod/damageMod are not applied to ranged weapons */
+  meleeOnly?: boolean
+  /** When true, the combat UI shows an off-hand attack button at attackBonus - 4 */
+  isTwf?: boolean
+  /** Extra damage dice rolled separately when this buff is active (e.g. "2d6") */
+  extraDamageDice?: string
 }
 
 export type ConditionType =

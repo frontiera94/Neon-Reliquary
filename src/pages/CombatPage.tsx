@@ -19,6 +19,8 @@ export function CombatPage() {
   if (!session) { initSession(char.id, char.maxHp); return null }
 
   const activeBuffIds = session.activeBuffIds
+  const twfActive = char.buffs.some((b) => b.isTwf && activeBuffIds.includes(b.id))
+  const sneakAttackDice = char.buffs.find((b) => b.extraDamageDice && activeBuffIds.includes(b.id))?.extraDamageDice
 
   return (
     <div className="p-4 md:p-8 space-y-6">
@@ -105,11 +107,20 @@ export function CombatPage() {
               effective={effective}
               ammo={ammo}
               maxAmmo={weapon.maxAmmo}
+              twfActive={twfActive}
+              sneakAttackDice={sneakAttackDice}
               onAttackRoll={() => openRoll({
                 diceType: 20,
                 count: 1,
                 modifier: effective.attackBonus[0],
                 label: `${weapon.name} Attack`,
+                critRange: weapon.critRange,
+              })}
+              onOffhandRoll={() => openRoll({
+                diceType: 20,
+                count: 1,
+                modifier: effective.attackBonus[0] - 4,
+                label: `${weapon.name} Off-hand`,
                 critRange: weapon.critRange,
               })}
               onDamageRoll={() => {
@@ -121,6 +132,10 @@ export function CombatPage() {
                   label: `${weapon.name} Damage`,
                 })
               }}
+              onSneakAttackRoll={sneakAttackDice ? () => {
+                const { count, sides } = parseDiceFormula(sneakAttackDice)
+                openRoll({ diceType: sides, count, modifier: 0, label: 'Sneak Attack' })
+              } : undefined}
               onAmmoChange={weapon.type === 'ranged' ? (v) => setAmmo(char.id, weapon.id, v) : undefined}
             />
           )
@@ -188,19 +203,30 @@ function WeaponCard({
   effective,
   ammo,
   maxAmmo,
+  twfActive,
+  sneakAttackDice,
   onAttackRoll,
+  onOffhandRoll,
   onDamageRoll,
+  onSneakAttackRoll,
   onAmmoChange,
 }: {
   weapon: Weapon
   effective: ReturnType<typeof calcEffectiveWeapon>
   ammo?: number
   maxAmmo?: number
+  twfActive: boolean
+  sneakAttackDice?: string
   onAttackRoll: () => void
+  onOffhandRoll: () => void
   onDamageRoll: () => void
+  onSneakAttackRoll?: () => void
   onAmmoChange?: (v: number) => void
 }) {
   const borderColor = weapon.type === 'melee' ? 'border-primary' : 'border-secondary'
+  const showOffhand = twfActive && weapon.type === 'melee'
+  const offhandBonus = effective.attackBonus[0] - 4
+
   return (
     <div className={`bg-surface-container p-6 relative group transition-all hover:bg-surface-container-high border-l-4 ${borderColor}`}>
       {/* Header */}
@@ -226,15 +252,35 @@ function WeaponCard({
         </div>
       </div>
 
-      {/* Buttons */}
-      <div className={`grid gap-4 ${weapon.type === 'ranged' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+      {/* Attack row */}
+      <div className={`grid gap-4 mb-4 ${showOffhand ? 'grid-cols-2' : 'grid-cols-1'}`}>
         <button
           onClick={onAttackRoll}
           className="flex flex-col items-center justify-center py-6 bg-gradient-to-br from-primary to-primary-container text-on-primary hover:shadow-[0_0_30px_rgba(0,218,243,0.2)] transition-all active:scale-95"
         >
-          <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-80">Attack</span>
+          <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-80">
+            {showOffhand ? 'Primary' : 'Attack'}
+          </span>
           <span className="text-3xl font-black font-label">{formatAttackBonus(effective.attackBonus)}</span>
         </button>
+
+        {showOffhand && (
+          <button
+            onClick={onOffhandRoll}
+            className="flex flex-col items-center justify-center py-6 bg-gradient-to-br from-primary/60 to-primary-container/60 text-on-primary hover:shadow-[0_0_30px_rgba(0,218,243,0.15)] transition-all active:scale-95 border border-primary/30"
+          >
+            <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-80">Off-hand</span>
+            <span className="text-3xl font-black font-label">{formatAttackBonus([offhandBonus])}</span>
+          </button>
+        )}
+      </div>
+
+      {/* Damage row */}
+      <div className={`grid gap-4 ${
+        weapon.type === 'ranged' && maxAmmo !== undefined && onAmmoChange
+          ? sneakAttackDice ? 'grid-cols-3' : 'grid-cols-2'
+          : sneakAttackDice ? 'grid-cols-2' : 'grid-cols-1'
+      }`}>
         <button
           onClick={onDamageRoll}
           className="flex flex-col items-center justify-center py-6 bg-surface-container-lowest border border-outline-variant/30 text-secondary hover:bg-surface-container-highest transition-all"
@@ -244,6 +290,16 @@ function WeaponCard({
             {formatDamage(weapon.damageDice, effective.damageBonus)}
           </span>
         </button>
+
+        {sneakAttackDice && onSneakAttackRoll && (
+          <button
+            onClick={onSneakAttackRoll}
+            className="flex flex-col items-center justify-center py-6 bg-error-container/20 border border-error/30 text-error hover:bg-error-container/40 transition-all active:scale-95"
+          >
+            <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-80">Sneak Atk</span>
+            <span className="text-2xl font-bold font-label">{sneakAttackDice}</span>
+          </button>
+        )}
 
         {/* Ammo tracker */}
         {weapon.type === 'ranged' && maxAmmo !== undefined && ammo !== undefined && onAmmoChange && (
