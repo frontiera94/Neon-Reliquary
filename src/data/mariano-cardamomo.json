@@ -1,0 +1,129 @@
+{
+  "id": "mariano-cardamomo",
+  "name": "Mariano Cardamomo",
+  "class": "Rogue",
+  "level": 4,
+  "race": "Halfling",
+  "alignment": "Chaotic Evil",
+  "portrait": "https://placehold.co/400x600/1f1f25/e9c349?text=Mariano",
+  "abilities": { "str": 6, "dex": 20, "con": 16, "int": 18, "wis": 14, "cha": 17 },
+  "maxHp": 39,
+  "baseAttackBonus": [3],
+  "initiativeBonus": 7,
+  "speed": 20,
+  "armorClass": {
+    "total": 20, "touch": 16, "flatFooted": 20,
+    "armorBonus": 4, "shieldBonus": 0, "dexBonus": 5,
+    "naturalArmor": 0, "deflection": 0, "misc": 1,
+    "spellFailureChance": 15
+  },
+  "savingThrows": { "fort": 5, "ref": 10, "will": 5, "fortBase": 1, "refBase": 4, "willBase": 1 },
+  "skills": [
+    { "id": "acrobatics", "name": "Acrobatics", "ability": "dex", "ranks": 4, "classSkill": true, "miscBonus": 2, "trained": true, "armorCheckPenalty": false },
+    { "id": "bluff", "name": "Bluff", "ability": "cha", "ranks": 4, "classSkill": true, "miscBonus": 1, "trained": true, "armorCheckPenalty": false },
+    { "id": "disable-device", "name": "Disable Device", "ability": "dex", "ranks": 4, "classSkill": true, "miscBonus": 2, "trained": true, "armorCheckPenalty": false },
+    { "id": "escape-artist", "name": "Escape Artist", "ability": "dex", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
+    { "id": "intimidate", "name": "Intimidate", "ability": "cha", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
+    { "id": "knowledge-dungeoneering", "name": "Knowledge (Dungeoneering)", "ability": "int", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
+    { "id": "knowledge-local", "name": "Knowledge (Local)", "ability": "int", "ranks": 4, "classSkill": true, "miscBonus": 3, "trained": true, "armorCheckPenalty": false },
+    { "id": "perception", "name": "Perception", "ability": "wis", "ranks": 4, "classSkill": true, "miscBonus": 2, "trained": true, "armorCheckPenalty": false },
+    { "id": "sense-motive", "name": "Sense Motive", "ability": "wis", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
+    { "id": "sleight-of-hand", "name": "Sleight of Hand", "ability": "dex", "ranks": 4, "classSkill": true, "miscBonus": 3, "trained": true, "armorCheckPenalty": false },
+    { "id": "stealth", "name": "Stealth", "ability": "dex", "ranks": 4, "classSkill": true, "miscBonus": 7, "trained": true, "armorCheckPenalty": false },
+    { "id": "survival", "name": "Survival", "ability": "wis", "ranks": 1, "classSkill": false, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
+    { "id": "use-magic-device", "name": "Use Magic Device", "ability": "cha", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false }
+  ],
+  "weapons": [
+    {
+      "id": "gold-plated-dagger",
+      "name": "Gold Plated Dagger (Small)",
+      "type": "melee",
+      "attackBonus": [10],
+      "damageDice": "1d3",
+      "damageBonus": 5,
+      "critRange": 19,
+      "critMultiplier": 2,
+      "tags": ["+1 Magic", "Finesse", "DEX to damage"]
+    },
+    {
+      "id": "light-crossbow-small",
+      "name": "Light Crossbow (Small)",
+      "type": "ranged",
+      "attackBonus": [9],
+      "damageDice": "1d6",
+      "damageBonus": 0,
+      "critRange": 19,
+      "critMultiplier": 2,
+      "tags": ["Small"],
+      "maxAmmo": 20,
+      "currentAmmo": 20
+    },
+    {
+      "id": "sap",
+      "name": "Sap (Small)",
+      "type": "melee",
+      "attackBonus": [9],
+      "damageDice": "1d4",
+      "damageBonus": -2,
+      "critRange": 20,
+      "critMultiplier": 2,
+      "tags": ["Nonlethal", "Finesse"]
+    }
+  ],
+  "buffs": [
+    { "id": "sneak-attack", "name": "Sneak Attack +2d6", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "color": "error" },
+    { "id": "deadly-aim", "name": "Deadly Aim (−1 atk / +2 dmg ranged)", "active": false, "attackMod": -1, "damageMod": 2, "acMod": 0, "color": "primary" },
+    { "id": "flanking", "name": "Flanking (+2 attack)", "active": false, "attackMod": 2, "damageMod": 0, "acMod": 0, "color": "secondary" }
+  ],
+  "dailyResources": [],
+  "feats": [
+    {
+      "id": "sneak-attack", "index": 1, "name": "Sneak Attack +2d6",
+      "shortDesc": "Deal +2d6 damage when target is denied DEX bonus to AC or when flanking.",
+      "fullDesc": "If Mariano can catch an opponent when he is unable to defend himself effectively, he can strike vital spots for extra damage. Any time the target is denied a Dexterity bonus to AC (whether or not he actually has a Dex bonus), or when Mariano flanks the target, the attack deals +2d6 extra damage. Ranged sneak attacks require being within 30 feet."
+    },
+    {
+      "id": "trapfinding", "index": 2, "name": "Trapfinding",
+      "shortDesc": "+2 on Perception checks to find traps and on Disable Device. Can disarm magic traps.",
+      "fullDesc": "Mariano adds +2 on Perception checks to locate traps and on Disable Device checks. He can use Disable Device to disarm magic traps. Without this ability, most magic traps cannot be disarmed. This bonus is already included in his skill totals.",
+      "bonusValue": 2, "bonusMax": 4, "bonusLabel": "Trap Bonus"
+    },
+    {
+      "id": "evasion", "index": 3, "name": "Evasion",
+      "shortDesc": "On a successful Reflex save against a half-damage effect, take no damage instead.",
+      "fullDesc": "If Mariano makes a successful Reflex saving throw against an attack that normally deals half damage on a successful save, he instead takes no damage. Evasion can only be used if wearing light armor or no armor. A helpless rogue does not gain this benefit."
+    },
+    {
+      "id": "trap-sense", "index": 4, "name": "Trap Sense +1",
+      "shortDesc": "+1 bonus on Reflex saves against traps and +1 dodge bonus to AC against attacks made by traps.",
+      "fullDesc": "Mariano gains an intuitive sense that alerts him to danger from traps. He gains a +1 bonus on Reflex saves made to avoid traps and a +1 dodge bonus to AC against attacks made by traps. This bonus is already included in his conditional save modifiers.",
+      "bonusValue": 1, "bonusMax": 1, "bonusLabel": "Trap Sense"
+    },
+    {
+      "id": "uncanny-dodge", "index": 5, "name": "Uncanny Dodge",
+      "shortDesc": "Cannot be caught flat-footed. Retains DEX bonus to AC even when flat-footed.",
+      "fullDesc": "Mariano can react to danger before his senses would normally allow him to do so. He cannot be caught flat-footed, nor does he lose his Dexterity bonus to AC if the attacker is invisible. This is why his flat-footed AC equals his full AC (20). He still loses DEX if immobilized."
+    },
+    {
+      "id": "finesse-training", "index": 6, "name": "Finesse Training (Dagger)",
+      "shortDesc": "Free Weapon Finesse. At level 3: add DEX modifier to damage with daggers instead of STR.",
+      "fullDesc": "Mariano uses DEX (+5) instead of STR for attack rolls with daggers, gaining his full DEX to-hit. At 3rd level, he selected the dagger for Finesse Training: he now adds DEX (+5) to damage rolls instead of STR (−2) with daggers. This is why the Gold Plated Dagger deals 1d3+5 damage and hits at +10 (BAB 3 + DEX 5 + magic +1 + size +1)."
+    }
+  ],
+  "classAbilities": [
+    {
+      "id": "uncanny-dodge-ca",
+      "name": "Uncanny Dodge",
+      "description": "Retains DEX bonus to AC when flat-footed (flat-footed AC = full AC of 20). Also keeps DEX bonus against invisible attackers.",
+      "isSignature": true
+    },
+    {
+      "id": "halfling-traits",
+      "name": "Halfling Racial Traits",
+      "description": "+2 Acrobatics, +2 Perception, +4 Stealth (size), +1 size bonus to AC and attack rolls. +1 to all saving throws (+2 vs. fear). Speed 20 ft.",
+      "isSignature": false
+    }
+  ],
+  "spellSlots": [],
+  "spells": []
+}

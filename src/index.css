@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+
+@import "tailwindcss";
+
+body {
+  background-color: #131318;
+  font-family: 'Manrope', sans-serif;
+  color: #e4e1e9;
+  margin: 0;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #131318; }
+::-webkit-scrollbar-thumb { background: #00daf344; }
+
+.glow-pulse {
+  animation: glowPulse 2s ease-in-out infinite alternate;
+}
+@keyframes glowPulse {
+  from { box-shadow: 0 0 10px rgba(0,218,243,0.2); }
+  to   { box-shadow: 0 0 25px rgba(0,218,243,0.5); }
+}
+
+.neon-glow {
+  text-shadow: 0 0 10px rgba(0,218,243,0.5), 0 0 20px rgba(0,218,243,0.3);
+}
+
+#root {
+  width: 100%;
+  min-height: 100svh;
+}
