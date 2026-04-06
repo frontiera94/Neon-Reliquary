@@ -1,0 +1,167 @@
+{
+  "id": "noorie",
+  "name": "Noorie",
+  "class": "Druid",
+  "level": 4,
+  "race": "Human",
+  "alignment": "Neutral Evil",
+  "portrait": "https://placehold.co/400x600/1f1f25/00daf3?text=Noorie",
+  "abilities": { "str": 12, "dex": 16, "con": 13, "int": 12, "wis": 20, "cha": 11 },
+  "maxHp": 36,
+  "baseAttackBonus": [3],
+  "initiativeBonus": 7,
+  "speed": 30,
+  "armorClass": {
+    "total": 15, "touch": 13, "flatFooted": 12,
+    "armorBonus": 2, "shieldBonus": 0, "dexBonus": 3,
+    "naturalArmor": 0, "deflection": 0, "misc": 0,
+    "spellFailureChance": 10
+  },
+  "savingThrows": { "fort": 5, "ref": 5, "will": 9, "fortBase": 4, "refBase": 1, "willBase": 4 },
+  "skills": [
+    { "id": "acrobatics", "name": "Acrobatics", "ability": "dex", "ranks": 4, "classSkill": false, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
+    { "id": "diplomacy", "name": "Diplomacy", "ability": "cha", "ranks": 0, "classSkill": false, "miscBonus": 1, "trained": false, "armorCheckPenalty": false },
+    { "id": "disguise", "name": "Disguise", "ability": "cha", "ranks": 0, "classSkill": false, "miscBonus": 1, "trained": false, "armorCheckPenalty": false },
+    { "id": "handle-animal", "name": "Handle Animal", "ability": "cha", "ranks": 3, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
+    { "id": "heal", "name": "Heal", "ability": "wis", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
+    { "id": "knowledge-nature", "name": "Knowledge (Nature)", "ability": "int", "ranks": 3, "classSkill": true, "miscBonus": 4, "trained": true, "armorCheckPenalty": false },
+    { "id": "perception", "name": "Perception", "ability": "wis", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
+    { "id": "sense-motive", "name": "Sense Motive", "ability": "wis", "ranks": 0, "classSkill": false, "miscBonus": 0, "trained": false, "armorCheckPenalty": false },
+    { "id": "spellcraft", "name": "Spellcraft", "ability": "int", "ranks": 2, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
+    { "id": "stealth", "name": "Stealth", "ability": "wis", "ranks": 2, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
+    { "id": "survival", "name": "Survival", "ability": "wis", "ranks": 2, "classSkill": true, "miscBonus": 3, "trained": true, "armorCheckPenalty": false }
+  ],
+  "weapons": [
+    {
+      "id": "scythe-memento",
+      "name": "Scythe (Memento)",
+      "type": "melee",
+      "attackBonus": [4],
+      "damageDice": "2d4",
+      "damageBonus": 1,
+      "critRange": 20,
+      "critMultiplier": 4,
+      "tags": ["Trip", "2-Handed", "Memento"]
+    },
+    {
+      "id": "sling",
+      "name": "Sling",
+      "type": "ranged",
+      "attackBonus": [6],
+      "damageDice": "1d4",
+      "damageBonus": 1,
+      "critRange": 20,
+      "critMultiplier": 2,
+      "tags": [],
+      "maxAmmo": 10,
+      "currentAmmo": 10
+    }
+  ],
+  "buffs": [
+    { "id": "wild-shape", "name": "Wild Shape (active)", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "color": "primary" },
+    { "id": "barkskin", "name": "Barkskin (+2 Natural Armor)", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 2, "color": "secondary" },
+    { "id": "fire-resistance", "name": "Fire Resistance 5 (Ash subdomain, passive)", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "color": "error" }
+  ],
+  "dailyResources": [
+    { "id": "fire-bolt", "name": "Fire Bolt (ranged touch 1d6+2)", "total": 8 },
+    { "id": "wild-shape", "name": "Wild Shape (4 hrs)", "total": 1 },
+    { "id": "spells-1", "name": "Lvl 1 Spells (+1 domain)", "total": 6 },
+    { "id": "spells-2", "name": "Lvl 2 Spells (+1 domain)", "total": 4 }
+  ],
+  "feats": [
+    {
+      "id": "fire-bolt", "index": 1, "name": "Fire Bolt (Sp) — 8/day",
+      "shortDesc": "Standard action: ranged touch attack within 30 ft. that deals 1d6+2 fire damage.",
+      "fullDesc": "As a standard action, Noorie unleashes a scorching bolt of divine fire. She can target any single foe within 30 feet as a ranged touch attack with this bolt of fire. If it hits, the fire bolt deals 1d6+2 points of fire damage. She can use this ability 8 times per day. This is a domain power from the Ash Subdomain.",
+      "bonusValue": 8, "bonusMax": 8, "bonusLabel": "Uses Remaining"
+    },
+    {
+      "id": "wild-shape", "index": 2, "name": "Wild Shape (1/day, 4 hours)",
+      "shortDesc": "Transform into a Small or Medium animal once per day for up to 4 hours.",
+      "fullDesc": "Noorie can change shape once per day for up to 4 hours, assuming the form of a Small or Medium animal (as per beast shape I). She gains the animal's natural attacks, movement types, and extraordinary abilities while in that form. Equipment melds into the form unless it is magical jewelry, which resizes.",
+      "bonusValue": 1, "bonusMax": 1, "bonusLabel": "Uses Remaining"
+    },
+    {
+      "id": "combat-casting", "index": 3, "name": "Combat Casting",
+      "shortDesc": "+4 on concentration checks when casting defensively or while grappled.",
+      "fullDesc": "You get a +4 bonus on concentration checks made to cast a spell or use a spell-like ability when casting on the defensive or while grappled. Noorie's concentration total is +9 (WIS +5 + level 4), making defensive casting very reliable."
+    },
+    {
+      "id": "improved-initiative", "index": 4, "name": "Improved Initiative",
+      "shortDesc": "+4 bonus on initiative checks (already included in initiative +7).",
+      "fullDesc": "Your quick reflexes allow you to react quickly to danger. You get a +4 bonus on initiative checks. Combined with Noorie's DEX +3, her initiative is +7, meaning she very often acts first in combat."
+    },
+    {
+      "id": "resist-natures-lure", "index": 5, "name": "Resist Nature's Lure",
+      "shortDesc": "+4 bonus on saves vs. fey spell-like/supernatural abilities, and vs. spells targeting plants.",
+      "fullDesc": "Noorie gains a +4 bonus on saving throws against the spell-like and supernatural abilities of fey. This bonus also applies to spells and effects that utilize and target plants, such as Blight, Entangle, Spike Growth, and Warp Wood."
+    },
+    {
+      "id": "nature-magic", "index": 6, "name": "Nature Magic",
+      "shortDesc": "Know Direction as a constant at-will SLA. May choose one additional druid orison usable 1/day as SLA.",
+      "fullDesc": "You gain Know Direction as a constant spell-like ability (always know which way is north). You can choose another druid orison to cast as a spell-like ability once per day. Your caster level for both of these spell-like abilities equals your character level."
+    },
+    {
+      "id": "ash-subdomain", "index": 7, "name": "Ash Subdomain (Fire Domain)",
+      "shortDesc": "Fire Resistance 5 (passive). Domain spell: Burning Hands (level 1), Produce Flame (level 2).",
+      "fullDesc": "Noorie worships Asmodeus and her Nature Bond is to the Fire domain (Ash subdomain). She gains Fire Resistance 5 permanently. Her domain spells are automatically added to her prepared list each level: Burning Hands (1st), Produce Flame (2nd). The Fire Bolt ability is her domain power."
+    }
+  ],
+  "classAbilities": [
+    {
+      "id": "spontaneous-casting",
+      "name": "Spontaneous Casting (Summon Nature's Ally)",
+      "description": "Noorie can sacrifice any prepared spell to spontaneously cast a Summon Nature's Ally spell of equal or lower level — no preparation needed. As NE, she applies the Fiendish template to all summoned creatures (DR 2/magic, resist 5 cold/fire/elec., Smite Good 1/day, Darkvision 60 ft.). She cannot summon Celestial-template creatures. See SNA I/II spells for full creature lists.",
+      "isSignature": true
+    },
+    {
+      "id": "nature-sense",
+      "name": "Nature Sense",
+      "description": "+2 bonus on Knowledge (Nature) and Survival skill checks. Already included in skill totals.",
+      "isSignature": false
+    },
+    {
+      "id": "trackless-step",
+      "name": "Trackless Step / Woodland Stride",
+      "description": "Noorie leaves no trail in natural surroundings (cannot be tracked) and can move through natural undergrowth at full speed without damage or impairment.",
+      "isSignature": false
+    },
+    {
+      "id": "wisdom-in-flesh",
+      "name": "Wisdom in the Flesh (Stealth)",
+      "description": "Noorie makes Stealth checks using her Wisdom modifier (+5) instead of Dexterity (+3). Stealth is treated as a class skill for her. This is why her Stealth total is 10 (WIS 5 + ranks 2 + class skill 3).",
+      "isSignature": false
+    }
+  ],
+  "spellSlots": [
+    { "level": 1, "total": 6 },
+    { "level": 2, "total": 4 }
+  ],
+  "spells": [
+    { "id": "detect-magic-n", "name": "Detect Magic", "level": 0, "school": "Divination", "castingTime": "1 standard action", "range": "60 ft. cone", "duration": "Concentration, up to 4 min.", "savingThrow": "None", "spellResistance": false, "components": "V, S", "description": "You detect magical auras within a 60-foot cone." },
+    { "id": "guidance-n", "name": "Guidance", "level": 0, "school": "Divination", "castingTime": "1 standard action", "range": "Touch", "duration": "1 min or until discharged", "savingThrow": "Will negates (harmless)", "spellResistance": true, "components": "V, S", "description": "Imbues the subject with a +1 competence bonus on one attack roll, saving throw, or skill check of their choice." },
+    { "id": "stabilize-n", "name": "Stabilize", "level": 0, "school": "Conjuration", "subschool": "Healing", "castingTime": "1 standard action", "range": "Close (35 ft.)", "duration": "Instantaneous", "savingThrow": "Will negates (harmless)", "spellResistance": true, "components": "V, S", "description": "Stabilizes a living creature at negative HP so it stops dying." },
+    { "id": "virtue-n", "name": "Virtue", "level": 0, "school": "Transmutation", "castingTime": "1 standard action", "range": "Touch", "duration": "1 minute", "savingThrow": "None", "spellResistance": true, "components": "V, S, DF", "description": "Grants the subject 1 temporary hit point for 1 minute." },
+    { "id": "cure-light-wounds-n", "name": "Cure Light Wounds", "level": 1, "school": "Conjuration", "subschool": "Healing", "castingTime": "1 standard action", "range": "Touch", "duration": "Instantaneous", "savingThrow": "Will half (harmless)", "spellResistance": true, "components": "V, S", "description": "Channel positive energy to cure 1d8+4 hit points of damage on a living creature." },
+    { "id": "burning-hands-n", "name": "Burning Hands (Domain)", "level": 1, "school": "Evocation", "castingTime": "1 standard action", "range": "15 ft. cone", "duration": "Instantaneous", "savingThrow": "Reflex half (DC 16)", "spellResistance": true, "components": "V, S", "description": "A cone of searing flame deals 4d4 fire damage to all creatures in the area. Domain spell — always prepared in the bonus domain slot.", "isAttackSpell": true },
+    { "id": "entangle", "name": "Entangle", "level": 1, "school": "Transmutation", "castingTime": "1 standard action", "range": "Long (560 ft.)", "duration": "4 minutes", "savingThrow": "Reflex partial (DC 16)", "spellResistance": false, "components": "V, S, DF", "description": "Plants in a 40-ft.-radius spread wrap around foes. Creatures that fail their Reflex save are entangled (−2 attack, −4 DEX) and must make a Strength/Escape Artist check to move. On success, speed is halved.", "isAttackSpell": true },
+    { "id": "produce-flame", "name": "Produce Flame", "level": 1, "school": "Evocation", "castingTime": "1 standard action", "range": "0 ft.", "duration": "4 minutes", "savingThrow": "None", "spellResistance": true, "components": "V, S", "description": "Flames appear in your open hand. As a melee touch attack, deal 1d6+4 fire damage. As a ranged touch attack (thrown, 30 ft. range increment), deal 1d6+4 fire. You can make one attack per round." },
+    { "id": "summon-natures-ally-1", "name": "Summon Nature's Ally I", "summonOptions": [
+        { "id": "fiendish-riding-dog", "name": "Fiendish Riding Dog", "size": "Medium", "ac": 13, "hp": 13, "template": "Fiendish", "attacks": [{ "name": "Bite", "bonus": 3, "damageDice": "1d6", "damageBonus": 3, "notes": "Trip on hit (free CMB check)" }], "specialAbilities": "Trip (free on bite), DR 2/magic, Resist 5 cold/fire/elec., Smite Good 1/day (+4 dmg)" },
+        { "id": "fiendish-viper", "name": "Fiendish Viper (Small)", "size": "Small", "ac": 16, "hp": 4, "template": "Fiendish", "attacks": [{ "name": "Bite", "bonus": 4, "damageDice": "1d2", "damageBonus": -2, "notes": "Poison: 1d2 Con/round × 6 rounds (Fort DC 11)" }], "specialAbilities": "Poison (Fort DC 11, 1d2 Con/rd × 6 rd), DR 2/magic, Resist 5 cold/fire/elec." },
+        { "id": "fiendish-eagle", "name": "Fiendish Eagle", "size": "Small", "ac": 14, "hp": 6, "template": "Fiendish", "attacks": [{ "name": "Talons", "bonus": 3, "damageDice": "1d4", "damageBonus": 1, "notes": "Fly 80 ft. (average)" }], "specialAbilities": "Fly 80 ft., Low-light vision, DR 2/magic, Resist 5 cold/fire/elec., Smite Good 1/day" }
+      ], "level": 1, "school": "Conjuration", "subschool": "Summoning", "castingTime": "1 round", "range": "Close (35 ft.)", "duration": "4 rounds", "savingThrow": "None", "spellResistance": false, "components": "V, S, DF", "description": "Summons one creature for 4 rounds (CL 4). Noorie is NE — she can apply the Fiendish template to any creature (DR 2/magic, resist 5 cold/fire/electricity, Smite Good 1/day, Darkvision 60 ft.). Can also be cast spontaneously by sacrificing any prepared level-1 spell.\n\nCREATURE OPTIONS:\n• Fiendish Riding Dog (Medium) — AC 13, HP 13, Bite +3 (1d6+3, trip free). Best all-rounder: trip + flanking body.\n• Fiendish Viper, Small (Small) — AC 16, HP 4, Bite +4 (1d2−2 + poison: 1d2 Con/rd × 6, Fort DC 11). Fragile but poisons reliably.\n• Fiendish Eagle (Small) — AC 14, HP 6, Talons +3 (1d4+1), Fly 80 ft. Aerial flanker, low-light vision.\n• Fiendish Dire Rat (Small) — AC 13, HP 5, Bite +1 (1d4 + filth fever disease Fort DC 11).\n• Fiendish Pony (Medium) — AC 13, HP 13, 2 Hooves +2 (1d3+1). Cheap flanking body." },
+    { "id": "speak-animals", "name": "Speak with Animals", "level": 1, "school": "Divination", "castingTime": "1 standard action", "range": "Personal", "duration": "4 minutes", "savingThrow": "None", "spellResistance": false, "components": "V, S", "description": "You can ask questions of and receive answers from animals. The spell doesn't make them more friendly. Unusual or fantastical concepts are beyond their grasp." },
+    { "id": "barkskin", "name": "Barkskin", "level": 2, "school": "Transmutation", "castingTime": "1 standard action", "range": "Touch", "duration": "40 minutes", "savingThrow": "None", "spellResistance": true, "components": "V, S, DF", "description": "Toughens a creature's skin, granting a +2 enhancement bonus to the creature's existing natural armor bonus. Toggle the 'Barkskin' buff above to track the AC change." },
+    { "id": "produce-flame-2", "name": "Produce Flame (Domain Lvl 2)", "level": 2, "school": "Evocation", "castingTime": "1 standard action", "range": "0 ft.", "duration": "4 minutes", "savingThrow": "None", "spellResistance": true, "components": "V, S", "description": "Domain slot version of Produce Flame — always prepared in the Ash Subdomain bonus level-2 slot. Deals 1d6+4 fire damage as melee or ranged touch attack." },
+    { "id": "flaming-sphere-n", "name": "Flaming Sphere", "level": 2, "school": "Evocation", "castingTime": "1 standard action", "range": "Medium (140 ft.)", "duration": "4 rounds", "savingThrow": "Reflex negates (DC 17)", "spellResistance": true, "components": "V, S, M/DF", "description": "A 5-ft.-diameter burning globe rolls in the direction you point and burns those it strikes for 2d6 fire damage (Reflex DC 17 negates). Move it 30 ft. per round as a move action.", "isAttackSpell": true },
+    { "id": "summon-natures-ally-2", "name": "Summon Nature's Ally II", "summonOptions": [
+        { "id": "fiendish-crocodile", "name": "Fiendish Crocodile", "size": "Medium", "ac": 14, "hp": 22, "template": "Fiendish", "attacks": [{ "name": "Bite", "bonus": 6, "damageDice": "1d8", "damageBonus": 4, "notes": "Grab on hit → free grapple (Death Roll: 1d8+6 + 1d4+4)" }], "specialAbilities": "Grab (free grapple on bite), Death Roll while grappling, DR 2/magic, Resist 5 cold/fire/elec." },
+        { "id": "fiendish-wolf", "name": "Fiendish Wolf", "size": "Medium", "ac": 14, "hp": 13, "template": "Fiendish", "attacks": [{ "name": "Bite", "bonus": 3, "damageDice": "1d6", "damageBonus": 2, "notes": "Trip on hit (free CMB check)" }], "specialAbilities": "Trip (free on bite), DR 2/magic, Resist 5 cold/fire/elec., Smite Good 1/day" },
+        { "id": "fiendish-hyena", "name": "Fiendish Hyena", "size": "Medium", "ac": 14, "hp": 13, "template": "Fiendish", "attacks": [{ "name": "Bite", "bonus": 3, "damageDice": "1d6", "damageBonus": 3, "notes": "Trip on hit (free CMB check)" }], "specialAbilities": "Trip (free on bite), DR 2/magic, Resist 5 cold/fire/elec., Smite Good 1/day" },
+        { "id": "fiendish-giant-eagle", "name": "Fiendish Giant Eagle", "size": "Large", "ac": 15, "hp": 26, "template": "Fiendish", "attacks": [{ "name": "Talons ×2", "bonus": 5, "damageDice": "1d6", "damageBonus": 3, "notes": "Two talon attacks" }, { "name": "Bite", "bonus": 0, "damageDice": "1d6", "damageBonus": 1, "notes": "Secondary attack" }], "specialAbilities": "Fly 80 ft., Evasion, DR 2/magic, Resist 5 cold/fire/elec., Smite Good 1/day" },
+        { "id": "fiendish-giant-ant", "name": "Fiendish Giant Ant (Worker)", "size": "Medium", "ac": 17, "hp": 13, "template": "Fiendish", "attacks": [{ "name": "Bite", "bonus": 3, "damageDice": "1d6", "damageBonus": 3, "notes": "Poison: 1d2 Str (Fort DC 14)" }], "specialAbilities": "Poison (Fort DC 14, 1d2 Str), Acid resist 10, Scent, DR 2/magic, Resist 5 cold/fire/elec." }
+      ], "level": 2, "school": "Conjuration", "subschool": "Summoning", "castingTime": "1 round", "range": "Close (35 ft.)", "duration": "4 rounds", "savingThrow": "None", "spellResistance": false, "components": "V, S, DF", "description": "Summons one SNA II creature OR 1d3 SNA I creatures of the same kind for 4 rounds (CL 4). Fiendish template applies to all (DR 2/magic, resist 5 cold/fire/electricity, Smite Good 1/day). Can also be cast spontaneously by sacrificing any prepared level-2 spell.\n\nSNA II CREATURE OPTIONS (one creature):\n• Fiendish Crocodile (Medium) — AC 14, HP 22, Bite +6 (1d8+4, grab → death roll 1d8+6). BEST PICK: devastating grappler.\n• Fiendish Wolf (Medium) — AC 14, HP 13, Bite +3 (1d6+2, trip). Flanking + trip.\n• Fiendish Hyena (Medium) — AC 14, HP 13, Bite +3 (1d6+3, trip). Slightly stronger bite than wolf.\n• Fiendish Giant Eagle (Large) — AC 15, HP 26, 2 Talons +5 (1d6+3) + Bite, Fly 80 ft. Aerial powerhouse.\n• Fiendish Giant Ant, Worker (Medium) — AC 17, HP 13, Bite +3 (1d6+3 + poison: 1d2 Str Fort DC 14). High AC option.\n• Fiendish Octopus (Small) — AC 16, HP 8, Arms +5 (1d4+1, grab + constrict) + ink cloud. Aquatic only.\n\nSNA I HORDE OPTION (1d3 of the same SNA I creature):\n• 1d3 Fiendish Riding Dogs — best horde pick: trip + action pressure.\n• 1d3 Fiendish Vipers — poison stacking if multiple targets available." },
+    { "id": "resist-energy", "name": "Resist Energy", "level": 2, "school": "Abjuration", "castingTime": "1 standard action", "range": "Touch", "duration": "40 minutes", "savingThrow": "Fortitude negates (harmless)", "spellResistance": true, "components": "V, S, DF", "description": "Grants a creature limited protection from damage of one chosen energy type (acid, cold, electricity, fire, sonic). Protects against 10 points of that damage per attack." }
+  ]
+}
