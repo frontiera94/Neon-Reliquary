@@ -1,74 +1,70 @@
-# React + TypeScript + Vite
+# Neon Reliquary
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A high-performance digital companion for **Pathfinder 1st Edition** with a Neon Noir dark fantasy aesthetic. Built for both desktop and mobile, it automates combat mechanics, tracks resources, and provides a tactile 2D dice system.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Character management** — load characters from JSON, switch instantly between them
+- **Status tab** — HP tracking, ability scores, AC, saves, and daily resource squares (Ki, Rage, Arcane Pool, etc.)
+- **Combat tab** — weapon cards with automated attack/damage calculation, buff toggles (Power Attack, Deadly Aim, Rage), and prepared combat spells
+- **Spells tab** — full spell library grouped by level with preparation tracking and arcane failure display
+- **Features tab** — feats, class features, and special abilities
+- **Dice system** — cryptographically random dice rolls with animated 2D overlay, crit detection, and a persistent roll log
+- **Session persistence** — HP, spent resources, active buffs, conditions, and spell slots survive page reloads via localStorage
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Layer | Library |
+|---|---|
+| Framework | React 19 + Vite |
+| Language | TypeScript (strict mode) |
+| State | Zustand |
+| Styling | Tailwind CSS v4 |
+| Animations | Framer Motion |
+| Persistence | localStorage (Zustand persist) + Dexie (IndexedDB) |
+| Routing | React Router v7 |
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev       # Start dev server with HMR at http://localhost:5173
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Commands
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev       # Start dev server
+npm run build     # Type-check + production build
+npm run lint      # ESLint across all .ts/.tsx files
+npm run preview   # Serve the dist/ build locally
+npx tsc --noEmit  # Type-check without building
 ```
-# Neon-Reliquary
+
+## Adding a Character
+
+1. Create a JSON file in `src/data/` matching the `FullCharacter` shape (see `src/store/useCharacterStore.ts`)
+2. Import it in `CharacterSelectionPage.tsx`
+3. Call `loadCharacter(data as unknown as FullCharacter)` in the seeding `useEffect`
+
+Character JSON can be generated from a PCGen PDF export using the extraction pipeline in `pdf_characters/`.
+
+## Project Structure
+
+```
+src/
+├── components/     # Shared UI components (dice overlay, modals, etc.)
+├── data/           # Character JSON files
+├── lib/            # Pure logic: dice engine, combat calculations
+├── pages/          # Route-level page components
+└── store/          # Zustand stores (character, session, dice)
+```
+
+## Design Tokens
+
+- **Primary** `#00daf3` — cyan, used for interactive/active states
+- **Secondary** `#e9c349` — gold, used for headers and labels
+- **Error** `#ffb4ab` — danger/nonlethal damage
+- **Tertiary** `#c6c6c6` — muted/supporting text
+- **Background** `#0a0a0f` — deep onyx
+- **0px border-radius** everywhere by design — sharp corners only
