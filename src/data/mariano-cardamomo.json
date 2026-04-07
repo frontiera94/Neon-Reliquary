@@ -78,14 +78,17 @@
       "name": "Sneak Attack +2d6",
       "active": false,
       "attackMod": 0, "damageMod": 0, "acMod": 0,
-      "color": "error"
+      "color": "error",
+      "extraDamageDice": "2d6"
     },
     {
       "id": "two-weapon-fighting",
       "name": "Two-Weapon Fighting (−2 primary / −2 off-hand)",
       "active": false,
       "attackMod": -2, "damageMod": 0, "acMod": 0,
-      "color": "secondary"
+      "color": "secondary",
+      "meleeOnly": true,
+      "isTwf": true
     },
     {
       "id": "flanking",
@@ -253,5 +256,7 @@
     }
   ],
   "spellSlots": [],
-  "spells": []
+  "spells": [
+    { "id": "acid-splash", "name": "Acid Splash", "level": 0, "school": "Conjuration", "subschool": "Creation", "castingTime": "1 standard action", "range": "Close (25 ft.)", "duration": "Instantaneous", "savingThrow": "None", "spellResistance": false, "components": "V, S", "description": "You fire a small orb of acid as a ranged touch attack. The orb deals 1d3 acid damage on a hit. As a cantrip it can be cast unlimited times per day.", "isAttackSpell": true }
+  ]
 }

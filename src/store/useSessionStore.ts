@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { SessionState } from '../types/session'
+import type { SessionState, ActiveSummon } from '../types/session'
 import type { ConditionType } from '../types/combat'
 
 interface SessionStore {
@@ -19,6 +19,9 @@ interface SessionStore {
   spendSpellSlot: (characterId: string, level: number, max: number) => void
   recoverSpellSlot: (characterId: string, level: number) => void
   setAmmo: (characterId: string, weaponId: string, amount: number) => void
+  setSummon: (characterId: string, summon: ActiveSummon) => void
+  adjustSummonHp: (characterId: string, delta: number) => void
+  clearSummon: (characterId: string) => void
   initSession: (characterId: string, maxHp: number) => void
 }
 
@@ -33,6 +36,7 @@ const defaultSession = (characterId: string, maxHp = 0): SessionState => ({
   preparedSpellIds: [],
   spentSpellSlots: {},
   ammo: {},
+  activeSummon: null,
 })
 
 export const useSessionStore = create<SessionStore>()(
@@ -247,13 +251,44 @@ export const useSessionStore = create<SessionStore>()(
           return {
             sessions: {
               ...s.sessions,
+              [id]: { ...sess, ammo: { ...sess.ammo, [weaponId]: amount } },
+            },
+          }
+        }),
+
+      setSummon: (id, summon) =>
+        set((s) => ({
+          sessions: {
+            ...s.sessions,
+            [id]: { ...(s.sessions[id] ?? defaultSession(id)), activeSummon: summon },
+          },
+        })),
+
+      adjustSummonHp: (id, delta) =>
+        set((s) => {
+          const sess = s.sessions[id] ?? defaultSession(id)
+          if (!sess.activeSummon) return s
+          return {
+            sessions: {
+              ...s.sessions,
               [id]: {
                 ...sess,
-                ammo: { ...sess.ammo, [weaponId]: amount },
+                activeSummon: {
+                  ...sess.activeSummon,
+                  currentHp: Math.max(0, sess.activeSummon.currentHp + delta),
+                },
               },
             },
           }
         }),
+
+      clearSummon: (id) =>
+        set((s) => ({
+          sessions: {
+            ...s.sessions,
+            [id]: { ...(s.sessions[id] ?? defaultSession(id)), activeSummon: null },
+          },
+        })),
     }),
     { name: 'neon-sessions' }
   )

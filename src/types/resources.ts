@@ -10,6 +10,25 @@ export interface SpellSlot {
   total: number
 }
 
+export interface SummonAttack {
+  name: string
+  bonus: number
+  damageDice: string
+  damageBonus: number
+  notes?: string
+}
+
+export interface SummonOption {
+  id: string
+  name: string
+  size: string
+  ac: number
+  hp: number
+  attacks: SummonAttack[]
+  specialAbilities?: string
+  template?: string
+}
+
 export interface Spell {
   id: string
   name: string
@@ -24,4 +43,5 @@ export interface Spell {
   components: string
   description: string
   isAttackSpell?: boolean
+  summonOptions?: SummonOption[]
 }

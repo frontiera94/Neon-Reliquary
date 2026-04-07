@@ -1,5 +1,11 @@
 import type { ConditionType } from './combat'
 
+export interface ActiveSummon {
+  spellId: string
+  optionId: string
+  currentHp: number
+}
+
 export interface SessionState {
   characterId: string
   currentHp: number
@@ -11,4 +17,5 @@ export interface SessionState {
   preparedSpellIds: string[]
   spentSpellSlots: Record<number, number>
   ammo: Record<string, number>
+  activeSummon: ActiveSummon | null
 }
