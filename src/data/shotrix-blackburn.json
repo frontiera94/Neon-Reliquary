@@ -62,7 +62,8 @@
   "buffs": [
     { "id": "arcane-pool-weapon", "name": "Arcane Pool (+1 weapon)", "active": false, "attackMod": 1, "damageMod": 1, "acMod": 0, "color": "primary" },
     { "id": "shield-spell", "name": "Shield (cast)", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 4, "color": "secondary" },
-    { "id": "spell-combat", "name": "Spell Combat (−2 attacks)", "active": false, "attackMod": -2, "damageMod": 0, "acMod": 0, "color": "error" }
+    { "id": "spell-combat", "name": "Spell Combat (−2 attacks)", "active": false, "attackMod": -2, "damageMod": 0, "acMod": 0, "color": "error" },
+    { "id": "true-strike", "name": "True Strike", "active": false, "attackMod": 20, "damageMod": 0, "acMod": 0, "color": "primary" }
   ],
   "dailyResources": [
     { "id": "arcane-pool", "name": "Arcane Pool", "total": 6 },

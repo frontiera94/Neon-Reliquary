@@ -66,7 +66,7 @@
     }
   ],
   "buffs": [
-    { "id": "jabbing-style", "name": "Jabbing Style (+1d6 on 2nd hit)", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "color": "primary" },
+    { "id": "jabbing-style", "name": "Jabbing Style", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "extraDamageDice": "1d6", "meleeOnly": true, "color": "primary" },
     { "id": "ki-extra-attack", "name": "Ki: Extra Flurry Attack (1 pt)", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "color": "secondary" },
     { "id": "stunning-fist-active", "name": "Stunning Fist (DC 14 Fort or stunned)", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "color": "error" }
   ],

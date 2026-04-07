@@ -68,7 +68,8 @@
   "buffs": [
     { "id": "power-attack", "name": "Power Attack", "active": true, "attackMod": -4, "damageMod": 12, "acMod": 0, "color": "primary" },
     { "id": "deadly-aim", "name": "Deadly Aim", "active": false, "attackMod": -3, "damageMod": 6, "acMod": 0, "color": "secondary" },
-    { "id": "rage", "name": "Rage", "active": false, "attackMod": 2, "damageMod": 3, "acMod": -2, "color": "error" }
+    { "id": "judgment-destruction", "name": "Judgment: Destruction", "active": false, "attackMod": 0, "damageMod": 3, "acMod": 0, "color": "error" },
+    { "id": "bane-weapon", "name": "Bane (active)", "active": false, "attackMod": 2, "damageMod": 0, "acMod": 0, "extraDamageDice": "4d6", "color": "secondary" }
   ],
   "dailyResources": [
     { "id": "judgement", "name": "Judgment", "total": 5 },

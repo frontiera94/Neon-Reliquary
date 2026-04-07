@@ -58,7 +58,8 @@
   "buffs": [
     { "id": "power-attack", "name": "Power Attack", "active": false, "attackMod": -2, "damageMod": 4, "acMod": 0, "color": "primary" },
     { "id": "deadly-aim", "name": "Deadly Aim", "active": false, "attackMod": -2, "damageMod": 4, "acMod": 0, "color": "secondary" },
-    { "id": "sneak-attack", "name": "Sneak Attack", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "color": "error" }
+    { "id": "sneak-attack", "name": "Sneak Attack", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "extraDamageDice": "4d6", "color": "error" },
+    { "id": "flanking", "name": "Flanking", "active": false, "attackMod": 2, "damageMod": 0, "acMod": 0, "meleeOnly": true, "color": "primary" }
   ],
   "dailyResources": [
     { "id": "rogue-talent", "name": "Minor Magic", "total": 3 },

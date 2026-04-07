@@ -66,6 +66,7 @@
   "buffs": [
     { "id": "mage-armor", "name": "Mage Armor", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 3, "color": "primary" },
     { "id": "evil-eye-active", "name": "Evil Eye (on enemy)", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "color": "secondary" },
+    { "id": "misfortune-active", "name": "Misfortune (on target)", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "color": "primary" },
     { "id": "fortune-active", "name": "Fortune (reroll ready)", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "color": "error" }
   ],
   "dailyResources": [

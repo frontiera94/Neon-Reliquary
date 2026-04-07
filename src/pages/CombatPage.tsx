@@ -23,7 +23,14 @@ export function CombatPage() {
 
   const activeBuffIds = session.activeBuffIds
   const twfActive = char.buffs.some((b) => b.isTwf && activeBuffIds.includes(b.id))
-  const sneakAttackDice = char.buffs.find((b) => b.extraDamageDice && activeBuffIds.includes(b.id))?.extraDamageDice
+  const extraDiceBuff = char.buffs.find((b) => b.extraDamageDice && activeBuffIds.includes(b.id))
+  const sneakAttackDice = extraDiceBuff?.extraDamageDice
+  const extraDiceLabel = extraDiceBuff
+    ? extraDiceBuff.name.split(' ').slice(0, 2).join(' ')
+    : 'Extra Dmg'
+  const totalAcMod = char.buffs
+    .filter((b) => activeBuffIds.includes(b.id))
+    .reduce((sum, b) => sum + b.acMod, 0)
 
   const summonableSpells = char.spells.filter((s) => s.summonOptions && s.summonOptions.length > 0)
   const activeSummon = session.activeSummon
@@ -98,7 +105,7 @@ export function CombatPage() {
       <CombatHPWidget
         hp={session.currentHp}
         maxHp={char.maxHp}
-        ac={char.armorClass.total}
+        ac={char.armorClass.total + totalAcMod}
         onAdjust={(d) => adjustHp(char.id, d, char.maxHp)}
       />
 
@@ -133,6 +140,7 @@ export function CombatPage() {
               maxAmmo={weapon.maxAmmo}
               twfActive={twfActive}
               sneakAttackDice={sneakAttackDice}
+              extraDiceLabel={extraDiceLabel}
               onAttackRoll={() => openRoll({
                 diceType: 20,
                 count: 1,
@@ -432,6 +440,7 @@ function WeaponCard({
   maxAmmo,
   twfActive,
   sneakAttackDice,
+  extraDiceLabel,
   onAttackRoll,
   onOffhandRoll,
   onDamageRoll,
@@ -444,6 +453,7 @@ function WeaponCard({
   maxAmmo?: number
   twfActive: boolean
   sneakAttackDice?: string
+  extraDiceLabel?: string
   onAttackRoll: () => void
   onOffhandRoll: () => void
   onDamageRoll: () => void
@@ -523,7 +533,7 @@ function WeaponCard({
             onClick={onSneakAttackRoll}
             className="flex flex-col items-center justify-center py-6 bg-error-container/20 border border-error/30 text-error hover:bg-error-container/40 transition-all active:scale-95"
           >
-            <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-80">Sneak Atk</span>
+            <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-80">{extraDiceLabel ?? 'Extra Dmg'}</span>
             <span className="text-2xl font-bold font-label">{sneakAttackDice}</span>
           </button>
         )}

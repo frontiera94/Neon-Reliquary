@@ -33,6 +33,19 @@
   ],
   "weapons": [
     {
+      "id": "fire-bolt",
+      "name": "Fire Bolt",
+      "type": "ranged",
+      "attackBonus": [6],
+      "damageDice": "1d6",
+      "damageBonus": 2,
+      "critRange": 20,
+      "critMultiplier": 2,
+      "tags": ["Fire", "Touch Attack", "Domain Power"],
+      "maxAmmo": 8,
+      "currentAmmo": 8
+    },
+    {
       "id": "scythe-memento",
       "name": "Scythe (Memento)",
       "type": "melee",
