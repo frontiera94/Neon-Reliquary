@@ -6,7 +6,7 @@ import { calcEffectiveWeapon, formatAttackBonus, formatDamage } from '../lib/com
 import { parseDiceFormula } from '../lib/dice-engine'
 import type { Weapon } from '../types/combat'
 import type { SummonOption } from '../types/resources'
-import type { DiceRoll } from '../lib/dice-engine'
+import type { DiceRoll } from '../types/dice'
 
 export function CombatPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
