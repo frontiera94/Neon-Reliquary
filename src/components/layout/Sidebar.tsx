@@ -13,7 +13,7 @@ export function Sidebar() {
   const char = useCharacterStore((s) => s.activeCharacter())
 
   return (
-    <aside className="hidden md:flex flex-col h-screen w-64 bg-surface-container fixed left-0 top-0 pt-20 pb-8 z-40">
+    <aside className="hidden md:flex flex-col h-screen w-64 bg-surface-container fixed left-0 top-0 pt-20 pb-8 z-40" style={{ boxShadow: 'inset -1px 0 0 rgba(0,218,243,0.12), 4px 0 24px -8px rgba(0,218,243,0.08)' }}>
       {char && (
         <div className="px-6 mb-8">
           <div className="flex items-center gap-3">

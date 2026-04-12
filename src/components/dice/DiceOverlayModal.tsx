@@ -58,7 +58,7 @@ export function DiceOverlayModal() {
 
             {/* Header */}
             <div className="p-8 pb-0 text-center">
-              <h2 className="font-headline text-xs uppercase tracking-[0.3em] text-secondary mb-2">
+              <h2 className="font-headline text-xs uppercase tracking-[0.3em] text-secondary mb-2 neon-glow-gold">
                 {pendingRoll?.label ?? lastResult?.label}
               </h2>
               <div className="h-px w-16 bg-secondary/30 mx-auto" />

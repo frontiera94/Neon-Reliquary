@@ -12,7 +12,7 @@ export function BottomNav() {
   return (
     <nav
       className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex"
-      style={{ backdropFilter: 'blur(12px)', background: 'rgba(19,19,24,0.9)' }}
+      style={{ backdropFilter: 'blur(12px)', background: 'rgba(19,19,24,0.9)', boxShadow: 'inset 0 1px 0 rgba(0,218,243,0.15), 0 -4px 20px -8px rgba(0,218,243,0.1)' }}
     >
       {navItems.map(({ to, icon, label }) => (
         <NavLink

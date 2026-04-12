@@ -109,7 +109,11 @@ function SkillRow({
   onRoll: () => void
 }) {
   return (
-    <div className="bg-surface-container flex items-center justify-between p-4 gap-4 border border-primary shadow-[0_0_15px_rgba(0,218,243,0.1)] hover:bg-surface-container-high hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all group">
+    <button
+      onClick={onRoll}
+      aria-label={`Roll ${skill.name}`}
+      className="w-full bg-surface-container flex items-center justify-between p-4 gap-4 border border-white/50 shadow-[0_0_18px_rgba(0,218,243,0.2)] hover:shadow-[0_0_35px_rgba(0,218,243,0.45)] hover:bg-surface-container-high transition-all active:scale-[0.99] text-left"
+    >
       {/* Left: name + meta */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <div
@@ -135,17 +139,12 @@ function SkillRow({
         </div>
       </div>
 
-      {/* Roll button */}
-      <button
-        onClick={onRoll}
-        className="w-20 h-20 flex-shrink-0 flex flex-col items-center justify-center bg-gradient-to-br from-primary to-primary-container text-on-primary hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all active:scale-95"
-        aria-label={`Roll ${skill.name}`}
-      >
+      {/* Bonus */}
+      <div className="w-20 h-20 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-primary to-primary-container text-on-primary">
         <span className="font-label text-2xl font-black">
           {total >= 0 ? `+${total}` : total}
         </span>
-        <span className="font-label text-[9px] uppercase tracking-widest opacity-70 mt-0.5">Roll</span>
-      </button>
-    </div>
+      </div>
+    </button>
   )
 }

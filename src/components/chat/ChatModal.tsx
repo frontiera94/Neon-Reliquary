@@ -113,13 +113,13 @@ export function ChatModal() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 24, stiffness: 280 }}
-            className="w-full h-full md:max-w-2xl md:h-[85vh] bg-surface-container flex flex-col shadow-[0_0_60px_rgba(0,0,0,0.9)]"
+            className="w-full h-full md:max-w-2xl md:h-[85vh] bg-surface-container flex flex-col border border-primary/20 shadow-[0_0_40px_rgba(0,218,243,0.1),0_0_80px_rgba(0,0,0,0.9)]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/20 flex-shrink-0">
               <div>
-                <h2 className="font-headline text-secondary text-sm uppercase tracking-widest">
+                <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-gold">
                   Oracolo
                 </h2>
                 {character && (

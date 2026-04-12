@@ -213,7 +213,7 @@ function CombatHPWidget({
 }) {
   const percent = Math.max(0, Math.min(100, (hp / maxHp) * 100))
   return (
-    <section className="bg-surface-container p-6 flex flex-col md:flex-row items-center gap-6">
+    <section className="bg-surface-container p-6 flex flex-col md:flex-row items-center gap-6 border border-primary/30 shadow-[0_0_15px_rgba(0,218,243,0.08)]">
       <div className="flex items-center gap-4">
         <button
           onClick={() => onAdjust(-1)}
@@ -502,7 +502,7 @@ function WeaponCard({
       <div className={`grid gap-4 mb-4 ${showOffhand ? 'grid-cols-2' : 'grid-cols-1'}`}>
         <button
           onClick={onAttackRoll}
-          className="flex flex-col items-center justify-center py-6 bg-gradient-to-br from-primary to-primary-container text-on-primary hover:shadow-[0_0_30px_rgba(0,218,243,0.2)] transition-all active:scale-95"
+          className="flex flex-col items-center justify-center py-6 bg-gradient-to-br from-primary to-primary-container text-on-primary border border-white/70 shadow-[0_0_18px_rgba(0,218,243,0.25)] hover:shadow-[0_0_35px_rgba(0,218,243,0.5)] transition-all active:scale-95"
         >
           <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-80">
             {showOffhand ? 'Primary' : 'Attack'}
@@ -513,7 +513,7 @@ function WeaponCard({
         {showOffhand && (
           <button
             onClick={onOffhandRoll}
-            className="flex flex-col items-center justify-center py-6 bg-gradient-to-br from-primary/60 to-primary-container/60 text-on-primary hover:shadow-[0_0_30px_rgba(0,218,243,0.15)] transition-all active:scale-95 border border-primary/30"
+            className="flex flex-col items-center justify-center py-6 bg-gradient-to-br from-primary/60 to-primary-container/60 text-on-primary border border-white/50 shadow-[0_0_12px_rgba(0,218,243,0.18)] hover:shadow-[0_0_28px_rgba(0,218,243,0.4)] transition-all active:scale-95"
           >
             <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-80">Off-hand</span>
             <span className="text-3xl font-black font-label">{formatAttackBonus([offhandBonus])}</span>
@@ -529,7 +529,7 @@ function WeaponCard({
       }`}>
         <button
           onClick={onDamageRoll}
-          className="flex flex-col items-center justify-center py-6 bg-surface-container-lowest border border-outline-variant/30 text-secondary hover:bg-surface-container-highest transition-all"
+          className="flex flex-col items-center justify-center py-6 bg-surface-container-lowest border border-white/40 text-secondary shadow-[0_0_12px_rgba(233,195,73,0.15)] hover:shadow-[0_0_25px_rgba(233,195,73,0.35)] hover:bg-surface-container-highest transition-all"
         >
           <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-60">Damage</span>
           <span className="text-2xl font-bold font-label">
@@ -540,7 +540,7 @@ function WeaponCard({
         {sneakAttackDice && onSneakAttackRoll && (
           <button
             onClick={onSneakAttackRoll}
-            className="flex flex-col items-center justify-center py-6 bg-error-container/20 border border-error/30 text-error hover:bg-error-container/40 transition-all active:scale-95"
+            className="flex flex-col items-center justify-center py-6 bg-error-container/20 border border-white/40 text-error shadow-[0_0_12px_rgba(255,180,171,0.15)] hover:shadow-[0_0_25px_rgba(255,180,171,0.35)] hover:bg-error-container/40 transition-all active:scale-95"
           >
             <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-80">{extraDiceLabel ?? 'Extra Dmg'}</span>
             <span className="text-2xl font-bold font-label">{sneakAttackDice}</span>

@@ -29,10 +29,10 @@ export function TopBar() {
 
   return (
     <>
-    <header className="bg-surface/90 backdrop-blur-sm border-b border-outline-variant/20 flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50">
+    <header className="bg-surface/90 backdrop-blur-sm flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50" style={{ boxShadow: 'inset 0 -1px 0 rgba(0,218,243,0.15), 0 4px 20px -8px rgba(0,218,243,0.12)' }}>
       <div className="flex items-center gap-4">
         <span
-          className="text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer"
+          className="text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft"
           onClick={() => navigate('/characters')}
         >
           NEON RELIQUARY

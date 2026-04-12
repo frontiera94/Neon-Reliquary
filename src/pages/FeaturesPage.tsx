@@ -17,7 +17,7 @@ export function FeaturesPage() {
       {/* Header */}
       <div className="max-w-4xl mx-auto mb-12">
         <h1 className="font-headline text-5xl md:text-7xl font-bold text-on-surface mb-4 tracking-tighter uppercase">
-          Features & <span className="text-secondary">Abilities</span>
+          Features & <span className="text-secondary neon-glow-gold">Abilities</span>
         </h1>
         <div className="h-1 w-24 bg-primary mb-8" />
         <p className="font-body text-tertiary text-lg max-w-2xl leading-relaxed">
@@ -75,7 +75,7 @@ export function FeaturesPage() {
 
 function FeatAccordionItem({ feat }: { feat: Feat }) {
   return (
-    <div className="group border-b border-outline-variant/10">
+    <div className="group border-b border-outline-variant/10 border-l-2 border-l-primary/20 hover:border-l-primary/50 transition-colors">
       <details className="w-full bg-surface-container-low">
         <summary className="flex items-center justify-between p-6 cursor-pointer hover:bg-surface-container transition-colors list-none">
           <div className="flex items-center gap-6">

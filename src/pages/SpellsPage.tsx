@@ -60,8 +60,8 @@ export function SpellsPage() {
 
       {/* Spell slot tracker */}
       {char.spellSlots.length > 0 && (
-        <section className="mb-8 bg-surface-container p-6">
-          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4">
+        <section className="mb-8 bg-surface-container p-6 border border-primary/30 shadow-[0_0_15px_rgba(0,218,243,0.08)]">
+          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-gold">
             Spell Slots
           </h2>
           <div className="flex flex-wrap gap-6">

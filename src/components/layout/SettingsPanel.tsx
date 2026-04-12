@@ -26,15 +26,18 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
       {/* Slide-in panel — z-[45] so the sticky TopBar always renders on top */}
       <div
-        className="fixed top-0 right-0 bottom-0 z-[45] w-full max-w-sm bg-surface-container border-l border-outline-variant/20 shadow-[-10px_0_40px_rgba(0,0,0,0.6)] flex flex-col transition-transform duration-300"
-        style={{ transform: isOpen ? 'translateX(0)' : 'translateX(100%)' }}
+        className="fixed top-0 right-0 bottom-0 z-[45] w-full max-w-sm bg-surface-container flex flex-col transition-transform duration-300"
+        style={{
+          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
+          boxShadow: 'inset 1px 0 0 rgba(0,218,243,0.18), -10px 0 40px rgba(0,0,0,0.6), -4px 0 30px -10px rgba(0,218,243,0.12)',
+        }}
       >
         {/* Spacer to clear the sticky TopBar */}
         <div className="h-[73px] flex-shrink-0" />
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant/20 flex-shrink-0">
-          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest">Settings</h2>
+          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-gold">Settings</h2>
           <button
             onClick={onClose}
             className="text-tertiary hover:text-primary transition-colors"

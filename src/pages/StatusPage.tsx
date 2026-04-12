@@ -63,7 +63,7 @@ export function StatusPage() {
         {/* Vitality Core */}
         <section className="lg:col-span-12 flex flex-col items-center justify-center bg-surface-container p-8 relative overflow-hidden group border border-primary shadow-[0_0_15px_rgba(0,218,243,0.1)] hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all">
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent pointer-events-none" />
-          <h2 className="font-headline text-secondary text-lg mb-8 uppercase tracking-widest">Vitality Core</h2>
+          <h2 className="font-headline text-secondary text-lg mb-8 uppercase tracking-widest neon-glow-gold">Vitality Core</h2>
           <div className="text-center">
             <div
               className="font-label font-black text-primary"
@@ -212,7 +212,7 @@ export function StatusPage() {
         {/* Daily Resources */}
         {char.dailyResources.length > 0 && (
           <section className="lg:col-span-12 bg-surface-container p-6 border border-primary shadow-[0_0_15px_rgba(0,218,243,0.1)] hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all">
-            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-6">
+            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-6 neon-glow-gold">
               Daily Resources
             </h2>
             <div className="flex flex-wrap gap-8">
@@ -259,7 +259,7 @@ export function StatusPage() {
 
         {/* Conditions */}
         <section className="lg:col-span-12 bg-surface-container p-6 border border-primary shadow-[0_0_15px_rgba(0,218,243,0.1)] hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all">
-          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-6">
+          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-6 neon-glow-gold">
             Conditions
           </h2>
           <div className="flex flex-wrap gap-2">
