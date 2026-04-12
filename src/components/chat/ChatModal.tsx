@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Markdown from 'react-markdown'
 import { useChatStore } from '../../store/useChatStore'
 import { useCharacterStore } from '../../store/useCharacterStore'
 import { useSessionStore } from '../../store/useSessionStore'
@@ -19,13 +20,13 @@ export function ChatModal() {
   const closeChat = useChatStore((s) => s.closeChat)
   const appendMessage = useChatStore((s) => s.appendMessage)
   const setLoading = useChatStore((s) => s.setLoading)
-  const getMessages = useChatStore((s) => s.getMessages)
+  const chats = useChatStore((s) => s.chats)
 
   const character = useCharacterStore((s) => s.activeCharacter())
   const getSession = useSessionStore((s) => s.getSession)
 
   const characterId = character?.id ?? ''
-  const messages = getMessages(characterId)
+  const messages = chats[characterId] ?? []
 
   const [text, setText] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -171,32 +172,48 @@ export function ChatModal() {
                       className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[85%] px-4 py-3 font-body text-sm leading-relaxed whitespace-pre-wrap ${
+                        className={`max-w-[85%] px-4 py-3 font-body text-sm leading-relaxed ${
                           msg.role === 'user'
-                            ? 'bg-primary/10 text-on-surface border border-primary/20'
-                            : 'bg-surface-container-highest text-on-surface'
+                            ? 'bg-primary/10 text-on-surface border border-primary/20 whitespace-pre-wrap'
+                            : 'bg-surface-container-highest text-on-surface prose-chat'
                         }`}
                       >
-                        {msg.content}
+                        {msg.role === 'user' ? msg.content : (
+                          <Markdown
+                            components={{
+                              h1: ({ children }) => <p style={{ color: '#e9c349', fontFamily: 'Noto Serif, serif', fontSize: '0.95rem', marginBottom: '0.25rem' }}>{children}</p>,
+                              h2: ({ children }) => <p style={{ color: '#e9c349', fontFamily: 'Noto Serif, serif', fontSize: '0.85rem', marginBottom: '0.25rem' }}>{children}</p>,
+                              h3: ({ children }) => <p style={{ color: '#e9c349', fontFamily: 'Space Grotesk, monospace', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem' }}>{children}</p>,
+                              strong: ({ children }) => <strong style={{ color: '#00daf3', fontWeight: 600 }}>{children}</strong>,
+                              em: ({ children }) => <em style={{ color: '#c6c6c6' }}>{children}</em>,
+                              ul: ({ children }) => <ul style={{ listStyleType: 'disc', paddingLeft: '1.25rem', margin: '0.25rem 0' }}>{children}</ul>,
+                              ol: ({ children }) => <ol style={{ listStyleType: 'decimal', paddingLeft: '1.25rem', margin: '0.25rem 0' }}>{children}</ol>,
+                              li: ({ children }) => <li style={{ marginBottom: '0.125rem' }}>{children}</li>,
+                              code: ({ children }) => <code style={{ background: '#1f1f25', padding: '0.1rem 0.3rem', fontFamily: 'Space Grotesk, monospace', fontSize: '0.75rem', color: '#00daf3' }}>{children}</code>,
+                              p: ({ children }) => <p style={{ marginBottom: '0.35rem' }}>{children}</p>,
+                              hr: () => <div style={{ margin: '0.5rem 0', height: '1px', background: 'rgba(63,71,83,0.3)' }} />,
+                            }}
+                          >
+                            {msg.content}
+                          </Markdown>
+                        )}
                       </div>
                     </div>
                   ))}
 
                   {isLoading && (
                     <div className="flex justify-start">
-                      <div className="px-4 py-3 bg-surface-container-highest flex items-center gap-1">
-                        {[0, 1, 2].map((i) => (
-                          <motion.div
-                            key={i}
-                            className="w-1.5 h-1.5 bg-tertiary rounded-full"
-                            animate={{ y: [0, -4, 0] }}
-                            transition={{
-                              duration: 0.6,
-                              repeat: Infinity,
-                              delay: i * 0.15,
-                            }}
-                          />
-                        ))}
+                      <div className="px-4 py-3 bg-surface-container-highest flex items-center gap-2">
+                        <div style={{
+                          width: 16, height: 16, borderRadius: '50%',
+                          border: '2px solid rgba(198,198,198,0.25)',
+                          borderTopColor: '#c6c6c6',
+                          animation: 'chat-spin 0.8s linear infinite',
+                          flexShrink: 0,
+                        }} />
+                        <span className="font-label text-[10px] text-tertiary uppercase tracking-widest">
+                          In elaborazione…
+                        </span>
                       </div>
                     </div>
                   )}
@@ -223,7 +240,16 @@ export function ChatModal() {
                 aria-label="Invia"
                 className="flex-shrink-0 w-12 h-12 bg-primary text-on-primary flex items-center justify-center hover:shadow-[0_0_20px_rgba(0,218,243,0.4)] transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
               >
-                <span className="material-symbols-outlined text-xl">send</span>
+                {isLoading ? (
+                  <div style={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    border: '2px solid rgba(0,54,61,0.4)',
+                    borderTopColor: '#00363d',
+                    animation: 'chat-spin 0.8s linear infinite',
+                  }} />
+                ) : (
+                  <span className="material-symbols-outlined text-xl">send</span>
+                )}
               </button>
             </div>
           </motion.div>

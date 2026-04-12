@@ -9,7 +9,8 @@ export async function callChatApi(
 ): Promise<string> {
   const apiMessages = messages.map((m) => ({ role: m.role, content: m.content }))
 
-  const res = await fetch('/api/chat', {
+  const endpoint = import.meta.env.VITE_CHAT_ENDPOINT ?? '/api/chat'
+  const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages: apiMessages, character, session }),

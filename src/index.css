@@ -27,6 +27,10 @@ body {
 ::-webkit-scrollbar-track { background: #131318; }
 ::-webkit-scrollbar-thumb { background: #00daf344; }
 
+@keyframes chat-spin {
+  to { transform: rotate(360deg); }
+}
+
 .glow-pulse {
   animation: glowPulse 2s ease-in-out infinite alternate;
 }

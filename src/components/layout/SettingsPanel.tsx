@@ -10,9 +10,9 @@ interface SettingsPanelProps {
 export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { history, clearHistory } = useDiceStore()
   const clearChat = useChatStore((s) => s.clearChat)
-  const getMessages = useChatStore((s) => s.getMessages)
+  const chats = useChatStore((s) => s.chats)
   const activeCharacterId = useCharacterStore((s) => s.activeCharacterId)
-  const chatCount = activeCharacterId ? getMessages(activeCharacterId).length : 0
+  const chatCount = activeCharacterId ? (chats[activeCharacterId]?.length ?? 0) : 0
 
   return (
     <>
