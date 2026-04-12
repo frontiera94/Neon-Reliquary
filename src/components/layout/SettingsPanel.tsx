@@ -1,4 +1,6 @@
 import { useDiceStore } from '../../store/useDiceStore'
+import { useChatStore } from '../../store/useChatStore'
+import { useCharacterStore } from '../../store/useCharacterStore'
 
 interface SettingsPanelProps {
   isOpen: boolean
@@ -7,6 +9,10 @@ interface SettingsPanelProps {
 
 export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { history, clearHistory } = useDiceStore()
+  const clearChat = useChatStore((s) => s.clearChat)
+  const getMessages = useChatStore((s) => s.getMessages)
+  const activeCharacterId = useCharacterStore((s) => s.activeCharacterId)
+  const chatCount = activeCharacterId ? getMessages(activeCharacterId).length : 0
 
   return (
     <>
@@ -35,6 +41,21 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           >
             <span className="material-symbols-outlined">close</span>
           </button>
+        </div>
+
+        {/* Chat AI */}
+        <div className="px-6 py-4 flex items-center justify-between border-b border-outline-variant/10">
+          <span className="font-label text-xs text-tertiary uppercase tracking-widest">
+            Chat AI ({chatCount})
+          </span>
+          {chatCount > 0 && activeCharacterId && (
+            <button
+              onClick={() => clearChat(activeCharacterId)}
+              className="font-label text-[10px] uppercase tracking-widest text-tertiary hover:text-error transition-colors"
+            >
+              Cancella
+            </button>
+          )}
         </div>
 
         {/* Roll History */}

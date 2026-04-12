@@ -7,8 +7,19 @@ import { SettingsPanel } from './SettingsPanel'
 export function TopBar() {
   const navigate = useNavigate()
   const char = useCharacterStore((s) => s.activeCharacter())
+  const characters = useCharacterStore((s) => s.characters)
+  const setActiveCharacter = useCharacterStore((s) => s.setActiveCharacter)
   const session = useSessionStore((s) => char ? s.getSession(char.id) : null)
+  const initSession = useSessionStore((s) => s.initSession)
   const [settingsOpen, setSettingsOpen] = useState(false)
+
+  const idx = char ? characters.findIndex((c) => c.id === char.id) : -1
+  const cycleTo = (offset: number) => {
+    if (idx < 0 || characters.length < 2) return
+    const next = characters[(idx + offset + characters.length) % characters.length]
+    setActiveCharacter(next.id)
+    initSession(next.id, next.maxHp)
+  }
 
   const hp = session?.currentHp ?? 0
   const maxHp = char?.maxHp ?? 1
@@ -66,6 +77,24 @@ export function TopBar() {
       )}
 
       <div className="flex items-center gap-4">
+        {characters.length >= 2 && (
+          <>
+            <button
+              onClick={() => cycleTo(-1)}
+              aria-label="Previous character"
+              className="p-2 text-tertiary hover:text-primary transition-all duration-300"
+            >
+              <span className="material-symbols-outlined">chevron_left</span>
+            </button>
+            <button
+              onClick={() => cycleTo(1)}
+              aria-label="Next character"
+              className="p-2 text-tertiary hover:text-primary transition-all duration-300"
+            >
+              <span className="material-symbols-outlined">chevron_right</span>
+            </button>
+          </>
+        )}
         <button
           onClick={() => navigate('/characters')}
           className="flex items-center gap-2 px-4 py-2 bg-surface-container text-secondary font-label text-sm hover:bg-primary/10 hover:shadow-[0_0_15px_#00daf366] transition-all duration-300"

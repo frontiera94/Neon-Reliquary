@@ -3,6 +3,8 @@ import { TopBar } from './TopBar'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { DiceOverlayModal } from '../dice/DiceOverlayModal'
+import { ChatFab } from '../chat/ChatFab'
+import { ChatModal } from '../chat/ChatModal'
 
 export function MainLayout() {
   return (
@@ -16,6 +18,8 @@ export function MainLayout() {
       </div>
       <BottomNav />
       <DiceOverlayModal />
+      <ChatFab />
+      <ChatModal />
     </div>
   )
 }
