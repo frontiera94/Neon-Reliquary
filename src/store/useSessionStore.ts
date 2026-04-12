@@ -23,6 +23,7 @@ interface SessionStore {
   adjustSummonHp: (characterId: string, delta: number) => void
   clearSummon: (characterId: string) => void
   initSession: (characterId: string, maxHp: number) => void
+  longRest: (characterId: string, maxHp: number) => void
 }
 
 const defaultSession = (characterId: string, maxHp = 0): SessionState => ({
@@ -287,6 +288,25 @@ export const useSessionStore = create<SessionStore>()(
           sessions: {
             ...s.sessions,
             [id]: { ...(s.sessions[id] ?? defaultSession(id)), activeSummon: null },
+          },
+        })),
+
+      longRest: (id, maxHp) =>
+        set((s) => ({
+          sessions: {
+            ...s.sessions,
+            [id]: {
+              ...(s.sessions[id] ?? defaultSession(id, maxHp)),
+              currentHp: maxHp,
+              tempHp: 0,
+              nonlethalDamage: 0,
+              spentResources: {},
+              spentSpellSlots: {},
+              preparedSpellIds: [],
+              activeBuffIds: [],
+              conditions: [],
+              activeSummon: null,
+            },
           },
         })),
     }),

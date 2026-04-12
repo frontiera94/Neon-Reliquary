@@ -1,11 +1,14 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCharacterStore } from '../../store/useCharacterStore'
 import { useSessionStore } from '../../store/useSessionStore'
+import { SettingsPanel } from './SettingsPanel'
 
 export function TopBar() {
   const navigate = useNavigate()
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => char ? s.getSession(char.id) : null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const hp = session?.currentHp ?? 0
   const maxHp = char?.maxHp ?? 1
@@ -14,6 +17,7 @@ export function TopBar() {
   const conditions = session?.conditions ?? []
 
   return (
+    <>
     <header className="bg-surface/90 backdrop-blur-sm border-b border-outline-variant/20 flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50">
       <div className="flex items-center gap-4">
         <span
@@ -69,10 +73,16 @@ export function TopBar() {
           <span className="material-symbols-outlined text-sm">account_circle</span>
           <span className="hidden lg:inline">Character Switcher</span>
         </button>
-        <button className="p-2 text-tertiary hover:text-primary transition-all duration-300">
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="p-2 text-tertiary hover:text-primary transition-all duration-300"
+        >
           <span className="material-symbols-outlined">settings</span>
         </button>
       </div>
+
     </header>
+    <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+    </>
   )
 }

@@ -3,18 +3,26 @@ import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { abilityMod } from '../lib/dice-engine'
+import type { ConditionType } from '../types/combat'
 
 const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const
 const ABILITY_NAMES = { str: 'Strength', dex: 'Dexterity', con: 'Constitution', int: 'Intelligence', wis: 'Wisdom', cha: 'Charisma' }
 
+const ALL_CONDITIONS: ConditionType[] = [
+  'shaken', 'sickened', 'fatigued', 'exhausted',
+  'blinded', 'confused', 'dazed', 'frightened',
+  'nauseated', 'paralyzed', 'prone', 'stunned',
+]
+
 export function StatusPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => char ? s.getSession(char.id) : null)
-  const { adjustHp, initSession, setNonlethal, setResourceSpent } = useSessionStore()
+  const { adjustHp, initSession, setNonlethal, setResourceSpent, setTempHp, toggleCondition, longRest } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
 
   const [hpDelta, setHpDelta] = useState(1)
   const [nlEdit, setNlEdit] = useState<string | null>(null)
+  const [tempEdit, setTempEdit] = useState<string | null>(null)
 
   if (!char) return <EmptyState />
 
@@ -39,6 +47,13 @@ export function StatusPage() {
     const val = parseInt(nlEdit)
     if (!isNaN(val) && val >= 0) setNonlethal(char!.id, val)
     setNlEdit(null)
+  }
+
+  function commitTemp() {
+    if (tempEdit === null) return
+    const val = parseInt(tempEdit)
+    if (!isNaN(val) && val >= 0) setTempHp(char!.id, val)
+    setTempEdit(null)
   }
 
   return (
@@ -85,9 +100,28 @@ export function StatusPage() {
             </button>
           </div>
           <div className="mt-8 flex gap-4">
-            <div className="px-4 py-2 bg-surface-container-lowest font-label text-xs text-on-surface-variant">
-              TEMP HP: {session.tempHp}
-            </div>
+            {tempEdit === null ? (
+              <button
+                onClick={() => setTempEdit(String(session.tempHp))}
+                className="px-4 py-2 bg-surface-container-lowest font-label text-xs text-primary hover:bg-surface-container-high transition-all"
+              >
+                TEMP HP: {session.tempHp}
+              </button>
+            ) : (
+              <div className="flex items-center gap-1 bg-surface-container-lowest px-2">
+                <span className="font-label text-xs text-primary">TEMP HP:</span>
+                <input
+                  autoFocus
+                  type="number"
+                  min={0}
+                  value={tempEdit}
+                  onChange={(e) => setTempEdit(e.target.value)}
+                  onBlur={commitTemp}
+                  onKeyDown={(e) => { if (e.key === 'Enter') commitTemp(); if (e.key === 'Escape') setTempEdit(null) }}
+                  className="w-14 bg-transparent text-primary font-label text-xs text-center focus:outline-none border-b border-primary"
+                />
+              </div>
+            )}
             {nlEdit === null ? (
               <button
                 onClick={() => setNlEdit(String(session.nonlethalDamage))}
@@ -110,6 +144,15 @@ export function StatusPage() {
                 />
               </div>
             )}
+          </div>
+          <div className="mt-4">
+            <button
+              onClick={() => longRest(char.id, maxHp)}
+              className="px-6 py-2 bg-surface-container-highest font-label text-xs text-secondary uppercase tracking-widest hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_15px_rgba(0,218,243,0.3)] transition-all"
+            >
+              <span className="material-symbols-outlined text-sm align-middle mr-1">bedtime</span>
+              Long Rest
+            </button>
           </div>
         </section>
 
@@ -154,7 +197,6 @@ export function StatusPage() {
                 onClick={() => openRoll({ diceType: 20, count: 1, modifier: mod, label: `${ABILITY_NAMES[key]} Check` })}
                 className="bg-surface-container hover:bg-surface-container-high hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] p-4 transition-all cursor-pointer group relative border-b-2 border-transparent hover:border-primary text-left"
               >
-                <span className="material-symbols-outlined absolute top-3 right-3 text-primary/20 group-hover:text-primary/80 transition-all text-base">casino</span>
                 <p className="font-label text-[10px] text-tertiary uppercase tracking-widest mb-1">
                   {key.toUpperCase()}
                 </p>
@@ -214,6 +256,34 @@ export function StatusPage() {
             </div>
           </section>
         )}
+
+        {/* Conditions */}
+        <section className="lg:col-span-12 bg-surface-container p-6 border border-primary shadow-[0_0_15px_rgba(0,218,243,0.1)] hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all">
+          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-6">
+            Conditions
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {ALL_CONDITIONS.map((condition) => {
+              const active = session.conditions.includes(condition)
+              return (
+                <button
+                  key={condition}
+                  onClick={() => toggleCondition(char.id, condition)}
+                  className={`px-4 py-2 font-label text-xs uppercase tracking-widest transition-all ${
+                    active
+                      ? 'bg-error text-on-error shadow-[0_0_10px_rgba(255,180,171,0.4)]'
+                      : 'bg-surface-container-high text-tertiary hover:text-error hover:bg-error-container'
+                  }`}
+                >
+                  {condition}
+                </button>
+              )
+            })}
+          </div>
+          {session.conditions.length === 0 && (
+            <p className="font-label text-xs text-tertiary/50 uppercase tracking-widest mt-2">No active conditions</p>
+          )}
+        </section>
       </div>
     </div>
   )
@@ -234,9 +304,6 @@ function DefenseCard({
         onClick={onRoll}
         className="bg-surface-container hover:bg-surface-container-high hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] p-6 transition-all cursor-pointer group relative w-full text-left"
       >
-        <span className="material-symbols-outlined absolute top-4 right-4 text-primary/20 group-hover:text-primary/80 transition-all">
-          casino
-        </span>
         <p className={`font-label text-[10px] uppercase tracking-widest text-${color}`}>{label}</p>
         <p className="font-label text-4xl font-bold text-on-surface">
           {value >= 0 ? `+${value}` : value}

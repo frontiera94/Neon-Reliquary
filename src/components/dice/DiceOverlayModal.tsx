@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDiceStore } from '../../store/useDiceStore'
 import { rollDice } from '../../lib/dice-engine'
@@ -6,11 +6,17 @@ import { DiceRollingAnimation } from './DiceRollingAnimation'
 
 export function DiceOverlayModal() {
   const { isOpen, isRolling, pendingRoll, lastResult, openRoll, setResult, close } = useDiceStore()
+  const isConfirmingRef = useRef(false)
+  const [critConfirmed, setCritConfirmed] = useState<boolean | null>(null)
 
   useEffect(() => {
     if (!isOpen || !pendingRoll) return
     const timer = setTimeout(() => {
       const result = rollDice(pendingRoll)
+      if (isConfirmingRef.current) {
+        setCritConfirmed(result.naturalRolls[0] !== 1)
+        isConfirmingRef.current = false
+      }
       setResult(result)
     }, 1200)
     return () => clearTimeout(timer)
@@ -18,7 +24,7 @@ export function DiceOverlayModal() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close()
+      if (e.key === 'Escape') { close(); setCritConfirmed(null) }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -93,8 +99,26 @@ export function DiceOverlayModal() {
                     </span>
                   </div>
 
-                  {/* Critical badge */}
-                  {lastResult.isCriticalThreat && (
+                  {/* Crit result badge */}
+                  {critConfirmed === true && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="px-4 py-1 bg-secondary/20 border border-secondary font-label text-xs uppercase tracking-widest text-secondary mb-4"
+                    >
+                      Critical Hit Confirmed!
+                    </motion.div>
+                  )}
+                  {critConfirmed === false && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="px-4 py-1 bg-error/10 border border-error font-label text-xs uppercase tracking-widest text-error mb-4"
+                    >
+                      Critical Failed — Natural 1
+                    </motion.div>
+                  )}
+                  {critConfirmed === null && lastResult.isCriticalThreat && (
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
@@ -115,15 +139,28 @@ export function DiceOverlayModal() {
             {/* Actions */}
             {!isRolling && lastResult && (
               <div className="p-8 pt-0 flex gap-4">
-                <button
-                  className="flex-1 py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-label text-sm uppercase tracking-widest hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all active:scale-95"
-                  onClick={() => pendingRoll && openRoll(pendingRoll)}
-                >
-                  Roll Again
-                </button>
+                {critConfirmed === null && lastResult.isCriticalThreat ? (
+                  <button
+                    className="flex-1 py-4 bg-gradient-to-br from-secondary to-secondary/60 text-on-secondary font-label text-sm uppercase tracking-widest hover:shadow-[0_0_20px_rgba(233,195,73,0.3)] transition-all active:scale-95"
+                    onClick={() => {
+                      if (!pendingRoll) return
+                      isConfirmingRef.current = true
+                      openRoll({ ...pendingRoll, label: `Confirm: ${pendingRoll.label}` })
+                    }}
+                  >
+                    Confirm Critical
+                  </button>
+                ) : (
+                  <button
+                    className="flex-1 py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary font-label text-sm uppercase tracking-widest hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all active:scale-95"
+                    onClick={() => { setCritConfirmed(null); pendingRoll && openRoll({ ...pendingRoll }) }}
+                  >
+                    Roll Again
+                  </button>
+                )}
                 <button
                   className="flex-1 py-4 border border-outline-variant/30 text-tertiary font-label text-sm uppercase tracking-widest hover:bg-surface-container-high transition-all"
-                  onClick={close}
+                  onClick={() => { close(); setCritConfirmed(null) }}
                 >
                   Dismiss
                 </button>

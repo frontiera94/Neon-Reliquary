@@ -23,6 +23,8 @@ export function CombatPage() {
 
   const activeBuffIds = session.activeBuffIds
   const twfActive = char.buffs.some((b) => b.isTwf && activeBuffIds.includes(b.id))
+  const hasTwfFeat = char.feats.some((f) => /two.weapon fighting/i.test(f.name))
+  const offhandPenalty = hasTwfFeat ? 0 : -4
   const extraDiceBuff = char.buffs.find((b) => b.extraDamageDice && activeBuffIds.includes(b.id))
   const sneakAttackDice = extraDiceBuff?.extraDamageDice
   const extraDiceLabel = extraDiceBuff
@@ -139,6 +141,7 @@ export function CombatPage() {
               ammo={ammo}
               maxAmmo={weapon.maxAmmo}
               twfActive={twfActive}
+              offhandPenalty={offhandPenalty}
               sneakAttackDice={sneakAttackDice}
               extraDiceLabel={extraDiceLabel}
               onAttackRoll={() => openRoll({
@@ -151,7 +154,7 @@ export function CombatPage() {
               onOffhandRoll={() => openRoll({
                 diceType: 20,
                 count: 1,
-                modifier: effective.attackBonus[0] - 4,
+                modifier: effective.attackBonus[0] + offhandPenalty,
                 label: `${weapon.name} Off-hand`,
                 critRange: weapon.critRange,
               })}
@@ -218,9 +221,11 @@ function CombatHPWidget({
         >
           <span className="material-symbols-outlined">remove</span>
         </button>
-        <div className="text-center">
-          <span className="font-label text-4xl font-black text-primary">{hp}</span>
-          <span className="font-label text-tertiary text-lg"> / {maxHp}</span>
+        <div className="bg-surface-container-high px-6 py-4 text-center">
+          <p className="font-label text-[10px] text-tertiary uppercase tracking-widest">HP</p>
+          <p className="font-label text-3xl font-black text-primary">
+            {hp}<span className="text-tertiary text-lg font-normal"> / {maxHp}</span>
+          </p>
         </div>
         <button
           onClick={() => onAdjust(1)}
@@ -370,11 +375,13 @@ function SummonedCreaturePanel({
         >
           <span className="material-symbols-outlined text-lg">remove</span>
         </button>
+        <div className="bg-surface-container-high px-4 py-2 text-center flex-shrink-0">
+          <p className="font-label text-[10px] text-tertiary uppercase tracking-widest">HP</p>
+          <p className="font-label text-2xl font-bold text-primary">
+            {currentHp}<span className="text-tertiary text-sm font-normal"> / {option.hp}</span>
+          </p>
+        </div>
         <div className="flex-1 space-y-1">
-          <div className="flex justify-between font-label text-[10px] text-tertiary uppercase tracking-widest">
-            <span>HP</span>
-            <span>{currentHp} / {option.hp}</span>
-          </div>
           <div className="h-2 bg-surface-container-lowest overflow-hidden">
             <div
               className="h-full transition-all duration-300"
@@ -439,6 +446,7 @@ function WeaponCard({
   ammo,
   maxAmmo,
   twfActive,
+  offhandPenalty,
   sneakAttackDice,
   extraDiceLabel,
   onAttackRoll,
@@ -452,6 +460,7 @@ function WeaponCard({
   ammo?: number
   maxAmmo?: number
   twfActive: boolean
+  offhandPenalty: number
   sneakAttackDice?: string
   extraDiceLabel?: string
   onAttackRoll: () => void
@@ -462,7 +471,7 @@ function WeaponCard({
 }) {
   const borderColor = weapon.type === 'melee' ? 'border-primary' : 'border-secondary'
   const showOffhand = twfActive && weapon.type === 'melee'
-  const offhandBonus = effective.attackBonus[0]
+  const offhandBonus = effective.attackBonus[0] + offhandPenalty
 
   return (
     <div className={`bg-surface-container p-6 relative group transition-all hover:bg-surface-container-high border-l-4 ${borderColor}`}>
@@ -481,9 +490,9 @@ function WeaponCard({
             ))}
           </div>
         </div>
-        <div className="text-right flex-shrink-0">
-          <p className="text-[10px] font-label text-tertiary uppercase opacity-50 mb-1">Critical</p>
-          <p className="text-lg font-label text-secondary-fixed-dim font-bold">
+        <div className="bg-surface-container-high px-4 py-2 text-center flex-shrink-0">
+          <p className="font-label text-[10px] text-tertiary uppercase tracking-widest mb-1">Critical</p>
+          <p className="font-label text-lg font-bold text-secondary">
             {weapon.critRange < 20 ? `${weapon.critRange}-20` : '20'} / x{weapon.critMultiplier}
           </p>
         </div>
