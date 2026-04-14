@@ -1,6 +1,10 @@
+import { useState } from 'react'
 import { useDiceStore } from '../../store/useDiceStore'
 import { useChatStore } from '../../store/useChatStore'
 import { useCharacterStore } from '../../store/useCharacterStore'
+import type { DiceType } from '../../types/dice'
+
+const DICE_TYPES: DiceType[] = [4, 6, 8, 10, 12, 20, 100]
 
 interface SettingsPanelProps {
   isOpen: boolean
@@ -8,11 +12,16 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
-  const { history, clearHistory } = useDiceStore()
+  const { history, clearHistory, openRoll } = useDiceStore()
   const clearChat = useChatStore((s) => s.clearChat)
   const chats = useChatStore((s) => s.chats)
   const activeCharacterId = useCharacterStore((s) => s.activeCharacterId)
   const chatCount = activeCharacterId ? (chats[activeCharacterId]?.length ?? 0) : 0
+
+  const [diceType, setDiceType] = useState<DiceType>(20)
+  const [diceCount, setDiceCount] = useState(1)
+  const [modifier, setModifier] = useState(0)
+  const [rollLabel, setRollLabel] = useState('')
 
   return (
     <>
@@ -44,6 +53,73 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           >
             <span className="material-symbols-outlined">close</span>
           </button>
+        </div>
+
+        {/* Freeform Dice Roller */}
+        <div className="px-6 py-4 border-b border-outline-variant/10 space-y-3">
+          <span className="font-label text-xs text-tertiary uppercase tracking-widest">Custom Roll</span>
+          <div className="flex flex-wrap gap-1">
+            {DICE_TYPES.map((d) => (
+              <button
+                key={d}
+                onClick={() => setDiceType(d)}
+                className={`px-2 py-1 font-label text-[10px] uppercase tracking-widest transition-all ${
+                  diceType === d
+                    ? 'bg-primary text-on-primary shadow-[0_0_8px_rgba(0,218,243,0.4)]'
+                    : 'bg-surface-container-high text-tertiary hover:text-primary'
+                }`}
+              >
+                d{d}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setDiceCount((c) => Math.max(1, c - 1))}
+                className="w-7 h-7 bg-surface-container-high text-tertiary hover:text-primary font-label text-sm transition-all flex items-center justify-center"
+              >−</button>
+              <span className="font-label text-sm text-on-surface w-6 text-center">{diceCount}</span>
+              <button
+                onClick={() => setDiceCount((c) => Math.min(10, c + 1))}
+                className="w-7 h-7 bg-surface-container-high text-tertiary hover:text-primary font-label text-sm transition-all flex items-center justify-center"
+              >+</button>
+            </div>
+            <span className="font-label text-xs text-tertiary">d{diceType}</span>
+            <div className="flex items-center gap-1 ml-auto">
+              <button
+                onClick={() => setModifier((m) => m - 1)}
+                className="w-7 h-7 bg-surface-container-high text-tertiary hover:text-primary font-label text-sm transition-all flex items-center justify-center"
+              >−</button>
+              <span className="font-label text-sm text-on-surface w-10 text-center">
+                {modifier >= 0 ? `+${modifier}` : modifier}
+              </span>
+              <button
+                onClick={() => setModifier((m) => m + 1)}
+                className="w-7 h-7 bg-surface-container-high text-tertiary hover:text-primary font-label text-sm transition-all flex items-center justify-center"
+              >+</button>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={rollLabel}
+              onChange={(e) => setRollLabel(e.target.value)}
+              placeholder="Label (optional)"
+              className="flex-1 bg-surface-container-high px-3 py-2 font-label text-xs text-on-surface placeholder:text-tertiary/50 border-b border-transparent focus:border-primary focus:outline-none transition-colors"
+            />
+            <button
+              onClick={() => openRoll({
+                diceType,
+                count: diceCount,
+                modifier,
+                label: rollLabel.trim() || `${diceCount}d${diceType}${modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''}`,
+              })}
+              className="px-4 py-2 bg-primary text-on-primary font-label text-xs uppercase tracking-widest hover:shadow-[0_0_15px_rgba(0,218,243,0.4)] transition-all active:scale-95"
+            >
+              Roll
+            </button>
+          </div>
         </div>
 
         {/* Chat AI */}

@@ -6,46 +6,156 @@
   "race": "Human",
   "alignment": "Chaotic Evil",
   "portrait": "https://placehold.co/400x600/1f1f25/e9c349?text=Knam",
-  "abilities": { "str": 18, "dex": 14, "con": 16, "int": 11, "wis": 12, "cha": 15 },
+  "abilities": {
+    "str": 18,
+    "dex": 14,
+    "con": 16,
+    "int": 11,
+    "wis": 12,
+    "cha": 15
+  },
   "maxHp": 51,
-  "baseAttackBonus": [4],
+  "baseAttackBonus": [
+    4
+  ],
   "initiativeBonus": 2,
   "speed": 30,
   "armorClass": {
-    "total": 19, "touch": 12, "flatFooted": 19,
-    "armorBonus": 6, "shieldBonus": 0, "dexBonus": 2,
-    "naturalArmor": 1, "deflection": 0, "misc": 0,
+    "total": 19,
+    "touch": 12,
+    "flatFooted": 19,
+    "armorBonus": 6,
+    "shieldBonus": 0,
+    "dexBonus": 2,
+    "naturalArmor": 1,
+    "deflection": 0,
+    "misc": 0,
     "spellFailureChance": 25
   },
-  "savingThrows": { "fort": 7, "ref": 3, "will": 2, "fortBase": 4, "refBase": 1, "willBase": 1 },
+  "savingThrows": {
+    "fort": 7,
+    "ref": 3,
+    "will": 2,
+    "fortBase": 4,
+    "refBase": 1,
+    "willBase": 1
+  },
   "skills": [
-    { "id": "bluff", "name": "Bluff", "ability": "cha", "ranks": 2, "classSkill": false, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "diplomacy", "name": "Diplomacy", "ability": "cha", "ranks": 3, "classSkill": false, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "intimidate", "name": "Intimidate", "ability": "cha", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "knowledge-arcana", "name": "Knowledge (Arcana)", "ability": "int", "ranks": 1, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "perception", "name": "Perception", "ability": "wis", "ranks": 4, "classSkill": true, "miscBonus": 2, "trained": true, "armorCheckPenalty": false },
-    { "id": "sense-motive", "name": "Sense Motive", "ability": "wis", "ranks": 4, "classSkill": false, "miscBonus": 2, "trained": true, "armorCheckPenalty": false },
-    { "id": "spellcraft", "name": "Spellcraft", "ability": "int", "ranks": 2, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "stealth", "name": "Stealth", "ability": "dex", "ranks": 1, "classSkill": false, "miscBonus": -5, "trained": true, "armorCheckPenalty": true },
-    { "id": "survival", "name": "Survival", "ability": "wis", "ranks": 0, "classSkill": true, "miscBonus": 1, "trained": false, "armorCheckPenalty": false }
+    {
+      "id": "bluff",
+      "name": "Bluff",
+      "ability": "cha",
+      "ranks": 2,
+      "classSkill": false,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "diplomacy",
+      "name": "Diplomacy",
+      "ability": "cha",
+      "ranks": 3,
+      "classSkill": false,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "intimidate",
+      "name": "Intimidate",
+      "ability": "cha",
+      "ranks": 4,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "knowledge-arcana",
+      "name": "Knowledge (Arcana)",
+      "ability": "int",
+      "ranks": 1,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "perception",
+      "name": "Perception",
+      "ability": "wis",
+      "ranks": 4,
+      "classSkill": true,
+      "miscBonus": 2,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "sense-motive",
+      "name": "Sense Motive",
+      "ability": "wis",
+      "ranks": 4,
+      "classSkill": false,
+      "miscBonus": 2,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "spellcraft",
+      "name": "Spellcraft",
+      "ability": "int",
+      "ranks": 2,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "stealth",
+      "name": "Stealth",
+      "ability": "dex",
+      "ranks": 1,
+      "classSkill": false,
+      "miscBonus": -5,
+      "trained": true,
+      "armorCheckPenalty": true
+    },
+    {
+      "id": "survival",
+      "name": "Survival",
+      "ability": "wis",
+      "ranks": 0,
+      "classSkill": true,
+      "miscBonus": 1,
+      "trained": false,
+      "armorCheckPenalty": false
+    }
   ],
   "weapons": [
     {
       "id": "earth-breaker",
       "name": "Masterwork Earth Breaker",
       "type": "melee",
-      "attackBonus": [9],
+      "attackBonus": [
+        9
+      ],
       "damageDice": "2d6",
       "damageBonus": 6,
       "critRange": 20,
       "critMultiplier": 3,
-      "tags": ["Masterwork", "2-Handed"]
+      "tags": [
+        "Masterwork",
+        "2-Handed"
+      ]
     },
     {
       "id": "spiked-gauntlet",
       "name": "Spiked Gauntlet",
       "type": "melee",
-      "attackBonus": [8],
+      "attackBonus": [
+        8
+      ],
       "damageDice": "1d4",
       "damageBonus": 4,
       "critRange": 20,
@@ -56,59 +166,118 @@
       "id": "bite-attack",
       "name": "Bite (Ring of Rat Fangs)",
       "type": "melee",
-      "attackBonus": [8],
+      "attackBonus": [
+        8
+      ],
       "damageDice": "1d4",
       "damageBonus": 4,
       "critRange": 20,
       "critMultiplier": 2,
-      "tags": ["Natural Attack", "In Rage Only"]
+      "tags": [
+        "Natural Attack",
+        "In Rage Only"
+      ]
     }
   ],
   "buffs": [
-    { "id": "bloodrage", "name": "Bloodrage (+4 STR/CON, +2 Will, −2 AC)", "active": false, "attackMod": 2, "damageMod": 3, "acMod": -2, "color": "error" },
-    { "id": "power-attack", "name": "Power Attack (2H: −2 atk / +6 dmg)", "active": false, "attackMod": -2, "damageMod": 6, "acMod": 0, "color": "primary" },
-    { "id": "furious-focus", "name": "Furious Focus (first atk ignores PA penalty)", "active": false, "attackMod": 2, "damageMod": 0, "acMod": 0, "color": "secondary" }
+    {
+      "id": "bloodrage",
+      "name": "Bloodrage (+4 STR/CON, +2 Will, −2 AC)",
+      "active": false,
+      "attackMod": 2,
+      "damageMod": 3,
+      "acMod": -2,
+      "color": "error"
+    },
+    {
+      "id": "power-attack",
+      "name": "Power Attack (2H: −2 atk / +6 dmg)",
+      "active": false,
+      "attackMod": -2,
+      "damageMod": 6,
+      "acMod": 0,
+      "color": "primary"
+    },
+    {
+      "id": "furious-focus",
+      "name": "Furious Focus (first atk ignores PA penalty)",
+      "active": false,
+      "attackMod": 2,
+      "damageMod": 0,
+      "acMod": 0,
+      "color": "secondary"
+    }
   ],
   "dailyResources": [
-    { "id": "bloodrage-rounds", "name": "Bloodrage Rounds", "total": 14 },
-    { "id": "staggering-strike", "name": "Staggering Strike (on crit)", "total": 5 },
-    { "id": "spells-1", "name": "Lvl 1 Spells", "total": 2 }
+    {
+      "id": "bloodrage-rounds",
+      "name": "Bloodrage Rounds",
+      "total": 14
+    },
+    {
+      "id": "staggering-strike",
+      "name": "Staggering Strike (on crit)",
+      "total": 5
+    },
+    {
+      "id": "spells-1",
+      "name": "Lvl 1 Spells",
+      "total": 2
+    }
   ],
   "feats": [
     {
-      "id": "bloodrage", "index": 1, "name": "Bloodrage (14 rounds/day)",
+      "id": "bloodrage",
+      "index": 1,
+      "name": "Bloodrage (14 rounds/day)",
       "shortDesc": "+4 morale STR, +4 CON, +2 Will saves, −2 AC. Free action to enter/exit.",
       "fullDesc": "While bloodraging: STR becomes 22 (+6), CON becomes 20 (+5), Will saves +2. AC is reduced by 2. Cannot use CHA/DEX/INT-based skills (except Acrobatics, Fly, Intimidate, Ride). Earth Breaker in rage: attack +11, damage 2d6+9. On exit, fatigued for 2× rounds spent raging.",
-      "bonusValue": 14, "bonusMax": 14, "bonusLabel": "Rounds Remaining"
+      "bonusValue": 14,
+      "bonusMax": 14,
+      "bonusLabel": "Rounds Remaining"
     },
     {
-      "id": "staggering-strike", "index": 2, "name": "Staggering Strike (Su)",
+      "id": "staggering-strike",
+      "index": 2,
+      "name": "Staggering Strike (Su)",
       "shortDesc": "On a confirmed critical hit: Fort DC 15 or target is staggered for 1 round.",
       "fullDesc": "When you confirm a critical hit, the target must succeed a Fortitude saving throw (DC 15) or be staggered for 1 round. These effects stack with the Staggering Critical feat. The target must save against each effect individually.",
-      "bonusValue": 5, "bonusMax": 5, "bonusLabel": "Uses Remaining"
+      "bonusValue": 5,
+      "bonusMax": 5,
+      "bonusLabel": "Uses Remaining"
     },
     {
-      "id": "aberrant-bloodline", "index": 3, "name": "Aberrant Bloodline",
+      "id": "aberrant-bloodline",
+      "index": 3,
+      "name": "Aberrant Bloodline",
       "shortDesc": "Bloodline grants +5 ft. reach during bloodrage and strange physical alterations.",
       "fullDesc": "Knam's bloodline is alien and bizarre. When bloodraging, his reach increases by 5 feet (reach becomes 10 ft. with all weapons). At higher levels this bloodline grants further supernatural abilities including tentacle attacks and acid immunity."
     },
     {
-      "id": "power-attack", "index": 4, "name": "Power Attack",
+      "id": "power-attack",
+      "index": 4,
+      "name": "Power Attack",
       "shortDesc": "−2 attack / +4 damage (×1.5 for 2H = +6 damage with Earth Breaker).",
       "fullDesc": "Take a −2 penalty on all melee attack rolls to gain +4 bonus on all melee damage rolls (+6 with a two-handed weapon). The bonus to damage is halved for off-hand weapons. The penalty disappears for your first attack each turn when using Furious Focus."
     },
     {
-      "id": "furious-focus", "index": 5, "name": "Furious Focus",
+      "id": "furious-focus",
+      "index": 5,
+      "name": "Furious Focus",
       "shortDesc": "When using Power Attack with a 2H weapon, the first attack each turn does NOT suffer the −2 penalty.",
       "fullDesc": "When wielding a two-handed weapon or a one-handed weapon with two hands and using the Power Attack feat, you do not suffer Power Attack's penalty on melee attack rolls on the FIRST attack you make each turn. You still suffer the penalty on any additional attacks, including attacks of opportunity."
     },
     {
-      "id": "alertness", "index": 6, "name": "Alertness",
+      "id": "alertness",
+      "index": 6,
+      "name": "Alertness",
       "shortDesc": "+2 on Perception and Sense Motive checks.",
       "fullDesc": "You often notice things that others might miss. You get a +2 bonus on Perception and Sense Motive skill checks. If you have 10 or more ranks in one of these skills, the bonus increases to +4 for that skill."
     },
     {
-      "id": "toughness", "index": 7, "name": "Toughness",
+      "id": "toughness",
+      "index": 7,
+      "name": "Toughness",
       "shortDesc": "+4 hit points.",
       "fullDesc": "You have enhanced physical stamina, granting +4 hit points. These are already included in Knam's HP total of 51."
     }
@@ -134,10 +303,40 @@
     }
   ],
   "spellSlots": [
-    { "level": 1, "total": 2 }
+    {
+      "level": 1,
+      "total": 2
+    }
   ],
   "spells": [
-    { "id": "burning-hands-k", "name": "Burning Hands", "level": 1, "school": "Evocation", "castingTime": "1 standard action", "range": "15 ft. cone", "duration": "Instantaneous", "savingThrow": "Reflex half (DC 13)", "spellResistance": true, "components": "V, S", "description": "A cone of searing flame deals 4d4 fire damage to all creatures in the area. Reflex DC 13 halves.", "isAttackSpell": true },
-    { "id": "color-spray", "name": "Color Spray", "level": 1, "school": "Illusion", "castingTime": "1 standard action", "range": "15 ft. cone", "duration": "Instantaneous (see text)", "savingThrow": "Will negates (DC 13)", "spellResistance": true, "components": "V, S, M", "description": "A vivid cone of clashing colors springs from your hand. Creatures with 2 or fewer HD are knocked unconscious; 3-4 HD are blinded and stunned; 5+ HD are stunned for 1 round (all if they fail Will DC 13).", "isAttackSpell": true }
+    {
+      "id": "burning-hands-k",
+      "name": "Burning Hands",
+      "level": 1,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "15 ft. cone",
+      "duration": "Instantaneous",
+      "savingThrow": "Reflex half (DC 13)",
+      "spellResistance": true,
+      "components": "V, S",
+      "description": "A cone of searing flame deals 4d4 fire damage to all creatures in the area. Reflex DC 13 halves.",
+      "isAttackSpell": true,
+      "damageDice": "4d4"
+    },
+    {
+      "id": "color-spray",
+      "name": "Color Spray",
+      "level": 1,
+      "school": "Illusion",
+      "castingTime": "1 standard action",
+      "range": "15 ft. cone",
+      "duration": "Instantaneous (see text)",
+      "savingThrow": "Will negates (DC 13)",
+      "spellResistance": true,
+      "components": "V, S, M",
+      "description": "A vivid cone of clashing colors springs from your hand. Creatures with 2 or fewer HD are knocked unconscious; 3-4 HD are blinded and stunned; 5+ HD are stunned for 1 round (all if they fail Will DC 13).",
+      "isAttackSpell": true
+    }
   ]
 }

@@ -29,6 +29,8 @@ export interface SummonOption {
   template?: string
 }
 
+export type SpellAttackType = 'rangedTouch' | 'meleeTouch' | 'ray'
+
 export interface Spell {
   id: string
   name: string
@@ -42,6 +44,10 @@ export interface Spell {
   spellResistance: boolean
   components: string
   description: string
+  /** @deprecated use attackType instead */
   isAttackSpell?: boolean
+  attackType?: SpellAttackType
+  damageDice?: string
+  damageBonus?: number
   summonOptions?: SummonOption[]
 }

@@ -3,6 +3,7 @@ import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { abilityMod } from '../lib/dice-engine'
+import { CONDITION_INFO } from '../lib/conditions'
 import type { ConditionType } from '../types/combat'
 
 const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const
@@ -164,6 +165,13 @@ export function StatusPage() {
             sub={`TOUCH: ${char.armorClass.touch} | FLAT: ${char.armorClass.flatFooted}`}
           />
           <DefenseCard
+            label="Initiative"
+            value={char.initiativeBonus}
+            sub={`DEX: +${abilityMod(char.abilities.dex)} | MISC: +${char.initiativeBonus - abilityMod(char.abilities.dex)}`}
+            color="primary"
+            onRoll={() => openRoll({ diceType: 20, count: 1, modifier: char.initiativeBonus, label: 'Initiative' })}
+          />
+          <DefenseCard
             label="Fortitude"
             value={char.savingThrows.fort}
             sub={`BASE: +${char.savingThrows.fortBase} | CON: +${abilityMod(char.abilities.con)}`}
@@ -265,18 +273,35 @@ export function StatusPage() {
           <div className="flex flex-wrap gap-2">
             {ALL_CONDITIONS.map((condition) => {
               const active = session.conditions.includes(condition)
+              const info = CONDITION_INFO[condition]
               return (
-                <button
-                  key={condition}
-                  onClick={() => toggleCondition(char.id, condition)}
-                  className={`px-4 py-2 font-label text-xs uppercase tracking-widest transition-all ${
-                    active
-                      ? 'bg-error text-on-error shadow-[0_0_10px_rgba(255,180,171,0.4)]'
-                      : 'bg-surface-container-high text-tertiary hover:text-error hover:bg-error-container'
-                  }`}
-                >
-                  {condition}
-                </button>
+                <div key={condition} className="relative group">
+                  <button
+                    onClick={() => toggleCondition(char.id, condition)}
+                    className={`px-4 py-2 font-label text-xs uppercase tracking-widest transition-all ${
+                      active
+                        ? 'bg-error text-on-error shadow-[0_0_10px_rgba(255,180,171,0.4)]'
+                        : 'bg-surface-container-high text-tertiary hover:text-error hover:bg-error-container'
+                    }`}
+                  >
+                    {condition}
+                  </button>
+                  {/* Hover tooltip */}
+                  <div className="pointer-events-none absolute bottom-full left-0 mb-2 w-64 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                    <div className="bg-black border border-error/40 p-3 shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
+                      <p className="font-headline text-error text-xs uppercase tracking-widest mb-1">{info.name}</p>
+                      <p className="font-body text-tertiary text-[11px] mb-2 leading-snug">{info.summary}</p>
+                      <ul className="space-y-0.5">
+                        {info.penalties.map((p, i) => (
+                          <li key={i} className="flex items-start gap-1.5">
+                            <span className="text-error/50 font-label text-[10px] mt-px flex-shrink-0">▸</span>
+                            <span className="font-label text-[10px] text-on-surface-variant leading-snug">{p}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               )
             })}
           </div>

@@ -2,7 +2,22 @@ import { useState } from 'react'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
-import type { Spell } from '../types/resources'
+import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
+import type { Spell, SpellAttackType } from '../types/resources'
+import type { AbilityScore } from '../types/character'
+
+function concentrationMod(charClass: string, level: number, abilities: AbilityScore): number {
+  const cls = charClass.toLowerCase()
+  let abilMod: number
+  if (/wizard|magus|witch|alchemist|investigator|arcanist/.test(cls)) {
+    abilMod = abilityMod(abilities.int)
+  } else if (/sorcerer|bard|oracle|summoner|skald|bloodrager/.test(cls)) {
+    abilMod = abilityMod(abilities.cha)
+  } else {
+    abilMod = abilityMod(abilities.wis)
+  }
+  return level + abilMod
+}
 
 export function SpellsPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
@@ -36,6 +51,20 @@ export function SpellsPage() {
   const spentSlots = session?.spentSpellSlots ?? {}
 
   const arcaneFailure = char.armorClass.spellFailureChance ?? 0
+  const concMod = concentrationMod(char.class, char.level, char.abilities)
+  const hasCombatCasting = char.feats.some((f) => /combat casting/i.test(f.name))
+
+  const bab = char.baseAttackBonus[0] ?? 0
+  const dexMod = abilityMod(char.abilities.dex)
+  const strMod = abilityMod(char.abilities.str)
+  const attackBonusFor = (t: SpellAttackType): number =>
+    t === 'meleeTouch' ? bab + strMod : bab + dexMod
+
+  const attackLabel: Record<SpellAttackType, string> = {
+    rangedTouch: 'Cast (Ranged Touch)',
+    meleeTouch: 'Cast (Melee Touch)',
+    ray: 'Cast (Ray)',
+  }
 
   return (
     <div className="p-4 md:p-8 lg:p-12">
@@ -56,6 +85,26 @@ export function SpellsPage() {
             </span>
           </div>
         )}
+
+        {/* Global Concentration Check */}
+        <div className="mt-4 flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => openRoll({ diceType: 20, count: 1, modifier: concMod, label: 'Concentration' })}
+            className="px-4 py-2 bg-surface-container border border-outline-variant/30 text-tertiary font-label text-xs uppercase tracking-widest hover:text-primary hover:border-primary/50 hover:shadow-[0_0_12px_rgba(0,218,243,0.2)] transition-all active:scale-95 flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>electric_bolt</span>
+            Concentration ({concMod >= 0 ? `+${concMod}` : concMod})
+          </button>
+          {hasCombatCasting && (
+            <button
+              onClick={() => openRoll({ diceType: 20, count: 1, modifier: concMod + 4, label: 'Concentration (Defensive)' })}
+              className="px-4 py-2 bg-surface-container border border-outline-variant/30 text-tertiary font-label text-xs uppercase tracking-widest hover:text-secondary hover:border-secondary/50 hover:shadow-[0_0_12px_rgba(233,195,73,0.2)] transition-all active:scale-95 flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>electric_bolt</span>
+              Defensive ({concMod + 4 >= 0 ? `+${concMod + 4}` : concMod + 4})
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Spell slot tracker */}
@@ -152,18 +201,28 @@ export function SpellsPage() {
               <div className="space-y-px">
                 {levelSpells.map((spell) => {
                   const slotMax = char.spellSlots.find((sl) => sl.level === spell.level)?.total ?? 0
+                  const atkBonus = spell.attackType ? attackBonusFor(spell.attackType) : 0
                   return (
-                  <SpellRow
-                    key={spell.id}
-                    spell={spell}
-                    isPrepared={preparedIds.includes(spell.id)}
-                    onTogglePrepare={() => toggleSpellPrepared(char.id, spell.id, spell.level, slotMax)}
-                    onCast={
-                      spell.isAttackSpell
-                        ? () => openRoll({ diceType: 20, count: 1, modifier: char.savingThrows.will, label: `${spell.name} Attack` })
-                        : undefined
-                    }
-                  />
+                    <SpellRow
+                      key={spell.id}
+                      spell={spell}
+                      isPrepared={preparedIds.includes(spell.id)}
+                      attackLabel={spell.attackType ? `${attackLabel[spell.attackType]} (${atkBonus >= 0 ? `+${atkBonus}` : atkBonus})` : undefined}
+                      onTogglePrepare={() => toggleSpellPrepared(char.id, spell.id, spell.level, slotMax)}
+                      onAttack={
+                        spell.attackType
+                          ? () => openRoll({ diceType: 20, count: 1, modifier: atkBonus, label: `${spell.name} (Attack)` })
+                          : undefined
+                      }
+                      onDamage={
+                        spell.damageDice
+                          ? () => {
+                              const { count, sides, bonus } = parseDiceFormula(spell.damageDice!)
+                              openRoll({ diceType: sides, count, modifier: (spell.damageBonus ?? 0) + bonus, label: `${spell.name} (Damage)` })
+                            }
+                          : undefined
+                      }
+                    />
                   )
                 })}
               </div>
@@ -177,13 +236,17 @@ export function SpellsPage() {
 function SpellRow({
   spell,
   isPrepared,
+  attackLabel,
   onTogglePrepare,
-  onCast,
+  onAttack,
+  onDamage,
 }: {
   spell: Spell
   isPrepared: boolean
+  attackLabel?: string
   onTogglePrepare: () => void
-  onCast?: () => void
+  onAttack?: () => void
+  onDamage?: () => void
 }) {
   return (
     <details className={`w-full group border transition-all ${isPrepared ? 'border-primary/50 shadow-[0_0_8px_rgba(0,218,243,0.15)]' : 'border-outline-variant/20'}`}>
@@ -208,9 +271,9 @@ function SpellRow({
             <span className="font-label text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 uppercase">
               {spell.school}{spell.subschool ? ` (${spell.subschool})` : ''}
             </span>
-            {spell.isAttackSpell && (
+            {spell.attackType && (
               <span className="font-label text-[10px] text-error bg-error/10 px-1.5 py-0.5 uppercase">
-                Attack
+                {spell.attackType === 'meleeTouch' ? 'Melee Touch' : spell.attackType === 'ray' ? 'Ray' : 'Ranged Touch'}
               </span>
             )}
           </div>
@@ -240,15 +303,33 @@ function SpellRow({
             <p className="text-primary mb-1">Components</p>
             <p className="text-on-surface-variant">{spell.components}</p>
           </div>
+          {spell.damageDice && (
+            <div>
+              <p className="text-primary mb-1">Damage</p>
+              <p className="text-on-surface-variant">
+                {spell.damageDice}{spell.damageBonus ? `+${spell.damageBonus}` : ''}
+              </p>
+            </div>
+          )}
         </div>
-        {onCast && (
-          <button
-            onClick={onCast}
-            className="mt-4 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary font-label text-xs uppercase tracking-widest hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all active:scale-95"
-          >
-            Cast Spell
-          </button>
-        )}
+        <div className="mt-4 flex gap-2 flex-wrap">
+          {onAttack && attackLabel && (
+            <button
+              onClick={onAttack}
+              className="px-5 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary font-label text-xs uppercase tracking-widest border border-white hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all active:scale-95"
+            >
+              {attackLabel}
+            </button>
+          )}
+          {onDamage && (
+            <button
+              onClick={onDamage}
+              className="px-5 py-3 bg-surface-container-highest border border-error/40 text-error font-label text-xs uppercase tracking-widest hover:shadow-[0_0_15px_rgba(255,180,171,0.3)] hover:bg-error/10 transition-all active:scale-95"
+            >
+              Roll Damage ({spell.damageDice}{spell.damageBonus ? `+${spell.damageBonus}` : ''})
+            </button>
+          )}
+        </div>
       </div>
     </details>
   )

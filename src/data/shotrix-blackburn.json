@@ -6,93 +6,295 @@
   "race": "Human (Chelaxian)",
   "alignment": "Lawful Evil",
   "portrait": "https://placehold.co/400x600/1f1f25/00daf3?text=Shotrix",
-  "abilities": { "str": 10, "dex": 18, "con": 16, "int": 18, "wis": 13, "cha": 7 },
+  "abilities": {
+    "str": 10,
+    "dex": 18,
+    "con": 16,
+    "int": 18,
+    "wis": 13,
+    "cha": 7
+  },
   "maxHp": 43,
-  "baseAttackBonus": [3],
+  "baseAttackBonus": [
+    3
+  ],
   "initiativeBonus": 6,
   "speed": 30,
   "armorClass": {
-    "total": 17, "touch": 14, "flatFooted": 13,
-    "armorBonus": 3, "shieldBonus": 0, "dexBonus": 4,
-    "naturalArmor": 0, "deflection": 0, "misc": 0,
+    "total": 17,
+    "touch": 14,
+    "flatFooted": 13,
+    "armorBonus": 3,
+    "shieldBonus": 0,
+    "dexBonus": 4,
+    "naturalArmor": 0,
+    "deflection": 0,
+    "misc": 0,
     "spellFailureChance": 15
   },
-  "savingThrows": { "fort": 7, "ref": 5, "will": 5, "fortBase": 4, "refBase": 1, "willBase": 4 },
+  "savingThrows": {
+    "fort": 7,
+    "ref": 5,
+    "will": 5,
+    "fortBase": 4,
+    "refBase": 1,
+    "willBase": 4
+  },
   "skills": [
-    { "id": "acrobatics", "name": "Acrobatics", "ability": "dex", "ranks": 4, "classSkill": false, "miscBonus": -1, "trained": true, "armorCheckPenalty": true },
-    { "id": "appraise", "name": "Appraise", "ability": "int", "ranks": 0, "classSkill": false, "miscBonus": 2, "trained": false, "armorCheckPenalty": false },
-    { "id": "diplomacy", "name": "Diplomacy", "ability": "cha", "ranks": 3, "classSkill": true, "miscBonus": 1, "trained": true, "armorCheckPenalty": false },
-    { "id": "disguise", "name": "Disguise", "ability": "cha", "ranks": 0, "classSkill": false, "miscBonus": 1, "trained": false, "armorCheckPenalty": false },
-    { "id": "fly", "name": "Fly", "ability": "dex", "ranks": 0, "classSkill": true, "miscBonus": -1, "trained": false, "armorCheckPenalty": true },
-    { "id": "knowledge-arcana", "name": "Knowledge (Arcana)", "ability": "int", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "knowledge-planes", "name": "Knowledge (Planes)", "ability": "int", "ranks": 1, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "perception", "name": "Perception", "ability": "wis", "ranks": 4, "classSkill": false, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "sense-motive", "name": "Sense Motive", "ability": "wis", "ranks": 0, "classSkill": false, "miscBonus": 2, "trained": false, "armorCheckPenalty": false },
-    { "id": "spellcraft", "name": "Spellcraft", "ability": "int", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "stealth", "name": "Stealth", "ability": "dex", "ranks": 4, "classSkill": false, "miscBonus": -1, "trained": true, "armorCheckPenalty": true },
-    { "id": "survival", "name": "Survival", "ability": "wis", "ranks": 0, "classSkill": false, "miscBonus": 1, "trained": false, "armorCheckPenalty": false },
-    { "id": "use-magic-device", "name": "Use Magic Device", "ability": "cha", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false }
+    {
+      "id": "acrobatics",
+      "name": "Acrobatics",
+      "ability": "dex",
+      "ranks": 4,
+      "classSkill": false,
+      "miscBonus": -1,
+      "trained": true,
+      "armorCheckPenalty": true
+    },
+    {
+      "id": "appraise",
+      "name": "Appraise",
+      "ability": "int",
+      "ranks": 0,
+      "classSkill": false,
+      "miscBonus": 2,
+      "trained": false,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "diplomacy",
+      "name": "Diplomacy",
+      "ability": "cha",
+      "ranks": 3,
+      "classSkill": true,
+      "miscBonus": 1,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "disguise",
+      "name": "Disguise",
+      "ability": "cha",
+      "ranks": 0,
+      "classSkill": false,
+      "miscBonus": 1,
+      "trained": false,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "fly",
+      "name": "Fly",
+      "ability": "dex",
+      "ranks": 0,
+      "classSkill": true,
+      "miscBonus": -1,
+      "trained": false,
+      "armorCheckPenalty": true
+    },
+    {
+      "id": "knowledge-arcana",
+      "name": "Knowledge (Arcana)",
+      "ability": "int",
+      "ranks": 4,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "knowledge-planes",
+      "name": "Knowledge (Planes)",
+      "ability": "int",
+      "ranks": 1,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "perception",
+      "name": "Perception",
+      "ability": "wis",
+      "ranks": 4,
+      "classSkill": false,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "sense-motive",
+      "name": "Sense Motive",
+      "ability": "wis",
+      "ranks": 0,
+      "classSkill": false,
+      "miscBonus": 2,
+      "trained": false,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "spellcraft",
+      "name": "Spellcraft",
+      "ability": "int",
+      "ranks": 4,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "stealth",
+      "name": "Stealth",
+      "ability": "dex",
+      "ranks": 4,
+      "classSkill": false,
+      "miscBonus": -1,
+      "trained": true,
+      "armorCheckPenalty": true
+    },
+    {
+      "id": "survival",
+      "name": "Survival",
+      "ability": "wis",
+      "ranks": 0,
+      "classSkill": false,
+      "miscBonus": 1,
+      "trained": false,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "use-magic-device",
+      "name": "Use Magic Device",
+      "ability": "cha",
+      "ranks": 4,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    }
   ],
   "weapons": [
     {
       "id": "rapier",
       "name": "Rapier",
       "type": "melee",
-      "attackBonus": [7],
+      "attackBonus": [
+        7
+      ],
       "damageDice": "1d6",
       "damageBonus": 0,
       "critRange": 18,
       "critMultiplier": 2,
-      "tags": ["Weapon Finesse", "Spellstrike"]
+      "tags": [
+        "Weapon Finesse",
+        "Spellstrike"
+      ]
     },
     {
       "id": "dagger",
       "name": "Dagger",
       "type": "melee",
-      "attackBonus": [7],
+      "attackBonus": [
+        7
+      ],
       "damageDice": "1d4",
       "damageBonus": 0,
       "critRange": 19,
       "critMultiplier": 2,
-      "tags": ["Throwable"],
+      "tags": [
+        "Throwable"
+      ],
       "maxAmmo": 1,
       "currentAmmo": 1
     }
   ],
   "buffs": [
-    { "id": "arcane-pool-weapon", "name": "Arcane Pool (+1 weapon)", "active": false, "attackMod": 1, "damageMod": 1, "acMod": 0, "color": "primary" },
-    { "id": "shield-spell", "name": "Shield (cast)", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 4, "color": "secondary" },
-    { "id": "spell-combat", "name": "Spell Combat (−2 attacks)", "active": false, "attackMod": -2, "damageMod": 0, "acMod": 0, "color": "error" },
-    { "id": "true-strike", "name": "True Strike", "active": false, "attackMod": 20, "damageMod": 0, "acMod": 0, "color": "primary" }
+    {
+      "id": "arcane-pool-weapon",
+      "name": "Arcane Pool (+1 weapon)",
+      "active": false,
+      "attackMod": 1,
+      "damageMod": 1,
+      "acMod": 0,
+      "color": "primary"
+    },
+    {
+      "id": "shield-spell",
+      "name": "Shield (cast)",
+      "active": false,
+      "attackMod": 0,
+      "damageMod": 0,
+      "acMod": 4,
+      "color": "secondary"
+    },
+    {
+      "id": "spell-combat",
+      "name": "Spell Combat (−2 attacks)",
+      "active": false,
+      "attackMod": -2,
+      "damageMod": 0,
+      "acMod": 0,
+      "color": "error"
+    },
+    {
+      "id": "true-strike",
+      "name": "True Strike",
+      "active": false,
+      "attackMod": 20,
+      "damageMod": 0,
+      "acMod": 0,
+      "color": "primary"
+    }
   ],
   "dailyResources": [
-    { "id": "arcane-pool", "name": "Arcane Pool", "total": 6 },
-    { "id": "spells-1", "name": "Lvl 1 Spells", "total": 4 },
-    { "id": "spells-2", "name": "Lvl 2 Spells", "total": 2 }
+    {
+      "id": "arcane-pool",
+      "name": "Arcane Pool",
+      "total": 6
+    },
+    {
+      "id": "spells-1",
+      "name": "Lvl 1 Spells",
+      "total": 4
+    },
+    {
+      "id": "spells-2",
+      "name": "Lvl 2 Spells",
+      "total": 2
+    }
   ],
   "feats": [
     {
-      "id": "weapon-finesse", "index": 1, "name": "Weapon Finesse",
+      "id": "weapon-finesse",
+      "index": 1,
+      "name": "Weapon Finesse",
       "shortDesc": "Use DEX modifier instead of STR on attack rolls with light weapons and rapier.",
       "fullDesc": "With a light weapon, rapier, whip, or spiked chain made for a creature of your size, you may use your Dexterity modifier instead of your Strength modifier on attack rolls. This is why Shotrix's rapier and dagger both use +7 (BAB 3 + DEX 4)."
     },
     {
-      "id": "combat-casting", "index": 2, "name": "Combat Casting",
+      "id": "combat-casting",
+      "index": 2,
+      "name": "Combat Casting",
       "shortDesc": "+4 on concentration checks when casting defensively or while grappled.",
       "fullDesc": "You get a +4 bonus on concentration checks made to cast a spell or use a spell-like ability when casting on the defensive or while grappled. Combined with Spell Combat, Shotrix's concentration bonus is +10 (+4 INT + 4 level + 4 this feat vs. defensively)."
     },
     {
-      "id": "lamashtu-mark", "index": 3, "name": "Lamashtu's Mark",
+      "id": "lamashtu-mark",
+      "index": 3,
+      "name": "Lamashtu's Mark",
       "shortDesc": "1/day on a melee hit against a nonevil foe: target's CHA reduced by 1d4 for 1 hour (Fort DC 10+level+CHA mod negates).",
       "fullDesc": "Your abdomen bears ugly scars marking you as Lamashtu's favored. If visible, you gain +2 Intimidate but -2 Diplomacy. Once per day as a free action when striking a nonevil foe in melee, the target is temporarily deformed, reducing CHA by 1d4 for 1 hour. Fortitude DC (10 + character level + CHA modifier) negates."
     },
     {
-      "id": "burning-spell", "index": 4, "name": "Burning Spell (Metamagic)",
+      "id": "burning-spell",
+      "index": 4,
+      "name": "Burning Spell (Metamagic)",
       "shortDesc": "Acid/fire spells deal additional damage equal to 2× spell level at the start of the target's next turn.",
       "fullDesc": "When a creature takes acid or fire damage from the affected spell, that creature takes damage equal to 2× the spell's actual level at the start of its next turn. A burning spell uses a slot two levels higher. If a spell has both acid and fire descriptors, the caster chooses which type the burning damage is."
     },
     {
-      "id": "craft-wondrous", "index": 5, "name": "Craft Wondrous Item",
+      "id": "craft-wondrous",
+      "index": 5,
+      "name": "Craft Wondrous Item",
       "shortDesc": "Can create wondrous magic items. Costs half the base price in raw materials.",
       "fullDesc": "You can create a wide variety of magic wondrous items. Crafting takes 1 day for each 1,000 gp in price, consuming raw materials costing half the base price. You can also mend a broken wondrous item you could make, at half the materials and time."
     }
@@ -118,21 +320,198 @@
     }
   ],
   "spellSlots": [
-    { "level": 1, "total": 4 },
-    { "level": 2, "total": 2 }
+    {
+      "level": 1,
+      "total": 4
+    },
+    {
+      "level": 2,
+      "total": 2
+    }
   ],
   "spells": [
-    { "id": "acid-splash", "name": "Acid Splash", "level": 0, "school": "Conjuration", "castingTime": "1 standard action", "range": "Close (35 ft.)", "duration": "Instantaneous", "savingThrow": "None", "spellResistance": false, "components": "V, S", "description": "You fire a small orb of acid at the target as a ranged touch attack, dealing 1d3 points of acid damage.", "isAttackSpell": true },
-    { "id": "detect-magic-0", "name": "Detect Magic", "level": 0, "school": "Divination", "castingTime": "1 standard action", "range": "60 ft. cone", "duration": "Concentration, up to 4 min.", "savingThrow": "None", "spellResistance": false, "components": "V, S", "description": "You detect magical auras within a 60-foot cone." },
-    { "id": "ray-of-frost", "name": "Ray of Frost", "level": 0, "school": "Evocation", "castingTime": "1 standard action", "range": "Close (35 ft.)", "duration": "Instantaneous", "savingThrow": "None", "spellResistance": true, "components": "V, S", "description": "A ray of freezing air and ice deals 1d3 points of cold damage on a successful ranged touch attack.", "isAttackSpell": true },
-    { "id": "burning-hands", "name": "Burning Hands", "level": 1, "school": "Evocation", "castingTime": "1 standard action", "range": "15 ft. cone", "duration": "Instantaneous", "savingThrow": "Reflex half (DC 15)", "spellResistance": true, "components": "V, S", "description": "A cone of searing flame deals 4d4 points of fire damage to all creatures in the area.", "isAttackSpell": true },
-    { "id": "chill-touch", "name": "Chill Touch", "level": 1, "school": "Necromancy", "castingTime": "1 standard action", "range": "Touch", "duration": "Instantaneous", "savingThrow": "Fortitude partial or Will negates", "spellResistance": true, "components": "V, S", "description": "A touch from your hand deals 1d6 damage to living creatures and 1 point of STR damage (Fort negates STR). Ideal for Spellstrike delivery.", "isAttackSpell": true },
-    { "id": "frostbite", "name": "Frostbite", "level": 1, "school": "Transmutation", "castingTime": "1 standard action", "range": "Touch", "duration": "Instantaneous", "savingThrow": "None", "spellResistance": true, "components": "V, S", "description": "Target takes 1d6+4 nonlethal cold damage and is fatigued. Can touch up to 4 creatures (one charge per creature). Ideal for Spellstrike.", "isAttackSpell": true },
-    { "id": "magic-missile", "name": "Magic Missile", "level": 1, "school": "Evocation", "castingTime": "1 standard action", "range": "Medium (140 ft.)", "duration": "Instantaneous", "savingThrow": "None", "spellResistance": true, "components": "V, S", "description": "2 missiles each deal 1d4+1 force damage automatically (no attack roll needed).", "isAttackSpell": true },
-    { "id": "shield", "name": "Shield", "level": 1, "school": "Abjuration", "castingTime": "1 standard action", "range": "Personal", "duration": "4 minutes", "savingThrow": "None", "spellResistance": false, "components": "V, S", "description": "Creates an invisible shield of force that gives +4 shield bonus to AC and negates magic missile attacks. (Toggle the 'Shield' buff above to track AC change.)" },
-    { "id": "shocking-grasp", "name": "Shocking Grasp", "level": 1, "school": "Evocation", "castingTime": "1 standard action", "range": "Touch", "duration": "Instantaneous", "savingThrow": "None", "spellResistance": true, "components": "V, S", "description": "Melee touch attack deals 4d6 electricity damage. +3 bonus on the attack roll if the target is wearing metal armor. Ideal for Spellstrike.", "isAttackSpell": true },
-    { "id": "true-strike", "name": "True Strike", "level": 1, "school": "Divination", "castingTime": "1 standard action", "range": "Personal", "duration": "See text", "savingThrow": "None", "spellResistance": false, "components": "V, F", "description": "You gain a +20 insight bonus on your next single attack roll. Additionally, you are not affected by the miss chance that applies to attacks against a concealed target." },
-    { "id": "aggressive-thundercloud-2", "name": "Aggressive Thundercloud", "level": 2, "school": "Evocation", "castingTime": "1 standard action", "range": "Medium (140 ft.)", "duration": "4 rounds", "savingThrow": "Reflex negates (DC 16)", "spellResistance": true, "components": "V, S, M/DF", "description": "A 5-ft.-diameter flying storm cloud deals 3d6 electricity damage to any creature it moves over. You can direct the cloud as a move action.", "isAttackSpell": true },
-    { "id": "flaming-sphere", "name": "Flaming Sphere", "level": 2, "school": "Evocation", "castingTime": "1 standard action", "range": "Medium (140 ft.)", "duration": "4 rounds", "savingThrow": "Reflex negates (DC 16)", "spellResistance": true, "components": "V, S, M/DF", "description": "A 5-ft.-diameter burning globe rolls in whichever direction you point. Any creature it strikes takes 2d6 fire damage (Reflex DC 16 negates). You can move it 30 ft. per round as a move action.", "isAttackSpell": true }
+    {
+      "id": "acid-splash",
+      "name": "Acid Splash",
+      "level": 0,
+      "school": "Conjuration",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "Instantaneous",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, S",
+      "description": "You fire a small orb of acid at the target as a ranged touch attack, dealing 1d3 points of acid damage.",
+      "isAttackSpell": true,
+      "attackType": "rangedTouch",
+      "damageDice": "1d3"
+    },
+    {
+      "id": "detect-magic-0",
+      "name": "Detect Magic",
+      "level": 0,
+      "school": "Divination",
+      "castingTime": "1 standard action",
+      "range": "60 ft. cone",
+      "duration": "Concentration, up to 4 min.",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, S",
+      "description": "You detect magical auras within a 60-foot cone."
+    },
+    {
+      "id": "ray-of-frost",
+      "name": "Ray of Frost",
+      "level": 0,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "Instantaneous",
+      "savingThrow": "None",
+      "spellResistance": true,
+      "components": "V, S",
+      "description": "A ray of freezing air and ice deals 1d3 points of cold damage on a successful ranged touch attack.",
+      "isAttackSpell": true,
+      "attackType": "rangedTouch",
+      "damageDice": "1d3"
+    },
+    {
+      "id": "burning-hands",
+      "name": "Burning Hands",
+      "level": 1,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "15 ft. cone",
+      "duration": "Instantaneous",
+      "savingThrow": "Reflex half (DC 15)",
+      "spellResistance": true,
+      "components": "V, S",
+      "description": "A cone of searing flame deals 4d4 points of fire damage to all creatures in the area.",
+      "isAttackSpell": true,
+      "damageDice": "4d4"
+    },
+    {
+      "id": "chill-touch",
+      "name": "Chill Touch",
+      "level": 1,
+      "school": "Necromancy",
+      "castingTime": "1 standard action",
+      "range": "Touch",
+      "duration": "Instantaneous",
+      "savingThrow": "Fortitude partial or Will negates",
+      "spellResistance": true,
+      "components": "V, S",
+      "description": "A touch from your hand deals 1d6 damage to living creatures and 1 point of STR damage (Fort negates STR). Ideal for Spellstrike delivery.",
+      "isAttackSpell": true,
+      "attackType": "meleeTouch",
+      "damageDice": "1d6"
+    },
+    {
+      "id": "frostbite",
+      "name": "Frostbite",
+      "level": 1,
+      "school": "Transmutation",
+      "castingTime": "1 standard action",
+      "range": "Touch",
+      "duration": "Instantaneous",
+      "savingThrow": "None",
+      "spellResistance": true,
+      "components": "V, S",
+      "description": "Target takes 1d6+4 nonlethal cold damage and is fatigued. Can touch up to 4 creatures (one charge per creature). Ideal for Spellstrike.",
+      "isAttackSpell": true,
+      "attackType": "meleeTouch",
+      "damageDice": "1d6",
+      "damageBonus": 4
+    },
+    {
+      "id": "magic-missile",
+      "name": "Magic Missile",
+      "level": 1,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Medium (140 ft.)",
+      "duration": "Instantaneous",
+      "savingThrow": "None",
+      "spellResistance": true,
+      "components": "V, S",
+      "description": "2 missiles each deal 1d4+1 force damage automatically (no attack roll needed).",
+      "isAttackSpell": true,
+      "damageDice": "2d4",
+      "damageBonus": 2
+    },
+    {
+      "id": "shield",
+      "name": "Shield",
+      "level": 1,
+      "school": "Abjuration",
+      "castingTime": "1 standard action",
+      "range": "Personal",
+      "duration": "4 minutes",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, S",
+      "description": "Creates an invisible shield of force that gives +4 shield bonus to AC and negates magic missile attacks. (Toggle the 'Shield' buff above to track AC change.)"
+    },
+    {
+      "id": "shocking-grasp",
+      "name": "Shocking Grasp",
+      "level": 1,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Touch",
+      "duration": "Instantaneous",
+      "savingThrow": "None",
+      "spellResistance": true,
+      "components": "V, S",
+      "description": "Melee touch attack deals 4d6 electricity damage. +3 bonus on the attack roll if the target is wearing metal armor. Ideal for Spellstrike.",
+      "isAttackSpell": true,
+      "attackType": "meleeTouch",
+      "damageDice": "4d6"
+    },
+    {
+      "id": "true-strike",
+      "name": "True Strike",
+      "level": 1,
+      "school": "Divination",
+      "castingTime": "1 standard action",
+      "range": "Personal",
+      "duration": "See text",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, F",
+      "description": "You gain a +20 insight bonus on your next single attack roll. Additionally, you are not affected by the miss chance that applies to attacks against a concealed target."
+    },
+    {
+      "id": "aggressive-thundercloud-2",
+      "name": "Aggressive Thundercloud",
+      "level": 2,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Medium (140 ft.)",
+      "duration": "4 rounds",
+      "savingThrow": "Reflex negates (DC 16)",
+      "spellResistance": true,
+      "components": "V, S, M/DF",
+      "description": "A 5-ft.-diameter flying storm cloud deals 3d6 electricity damage to any creature it moves over. You can direct the cloud as a move action.",
+      "isAttackSpell": true,
+      "attackType": "rangedTouch",
+      "damageDice": "3d6"
+    },
+    {
+      "id": "flaming-sphere",
+      "name": "Flaming Sphere",
+      "level": 2,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Medium (140 ft.)",
+      "duration": "4 rounds",
+      "savingThrow": "Reflex negates (DC 16)",
+      "spellResistance": true,
+      "components": "V, S, M/DF",
+      "description": "A 5-ft.-diameter burning globe rolls in whichever direction you point. Any creature it strikes takes 2d6 fire damage (Reflex DC 16 negates). You can move it 30 ft. per round as a move action.",
+      "isAttackSpell": true,
+      "attackType": "rangedTouch",
+      "damageDice": "3d6"
+    }
   ]
 }
