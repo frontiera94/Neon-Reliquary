@@ -82,7 +82,7 @@ export function InitiativePanel({
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {sortedInOrder.map((token, idx) => {
+        {sortedInOrder.map((token) => {
           const originalIndex = map.initiative.order.indexOf(token.id)
           const isActive = originalIndex === map.initiative.currentIndex
           const isSelected = token.id === selectedTokenId

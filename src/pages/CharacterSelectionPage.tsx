@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
@@ -147,6 +147,13 @@ export function CharacterSelectionPage() {
           Manifest Character — {activeChar.name}
         </motion.button>
       )}
+
+      {/* GM link */}
+      <div className="absolute bottom-6">
+        <Link to="/gm" className="font-label text-xs text-tertiary hover:text-white transition-colors cursor-pointer">
+          Modalità GM →
+        </Link>
+      </div>
     </div>
   )
 }
