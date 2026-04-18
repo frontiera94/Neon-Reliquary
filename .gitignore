@@ -27,3 +27,6 @@ Thumbs.db
 *.tsbuildinfo
 .vercel
 .env*.local
+
+# Git worktrees
+.worktrees/
