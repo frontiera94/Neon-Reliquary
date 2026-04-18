@@ -68,17 +68,15 @@ export async function pushMap(id: string, secret: string, state: PublicMapState)
 export async function uploadBackground(
   id: string,
   secret: string,
-  file: File
+  dataUrl: string
 ): Promise<{ url: string; width: number; height: number }> {
-  const formData = new FormData()
-  formData.append('file', file)
-
   const res = await fetch(`/api/maps/${id}/background`, {
     method: 'POST',
     headers: {
+      'Content-Type': 'application/json',
       'x-gm-secret': secret,
     },
-    body: formData,
+    body: JSON.stringify({ dataUrl }),
   })
 
   if (!res.ok) {
