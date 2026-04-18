@@ -6,6 +6,7 @@
   "race": "Human",
   "alignment": "Neutral Evil",
   "portrait": "https://placehold.co/400x600/1f1f25/00daf3?text=Noorie",
+  "pdfPath": "/pdfs/noorie.pdf",
   "abilities": {
     "str": 12,
     "dex": 16,
@@ -718,5 +719,117 @@
       "components": "V, S, DF",
       "description": "Grants a creature limited protection from damage of one chosen energy type (acid, cold, electricity, fire, sonic). Protects against 10 points of that damage per attack."
     }
-  ]
+  ],
+  "inventory": [
+    {
+      "id": "no-armor",
+      "name": "Hide Armor",
+      "description": "+4 AC, medium armor. Fashioned from boar hide.",
+      "category": "armor",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "body"
+    },
+    {
+      "id": "no-shield",
+      "name": "Wooden Shield",
+      "description": "+2 AC shield bonus, carved with leafwork.",
+      "category": "armor",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "offHand"
+    },
+    {
+      "id": "no-scimitar",
+      "name": "Scimitar",
+      "description": "1d6 slashing, ×2 crit. Favored by druids.",
+      "category": "weapon",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "mainHand"
+    },
+    {
+      "id": "no-staff",
+      "name": "Quarterstaff",
+      "description": "1d6/1d6, versatile reach weapon.",
+      "category": "weapon",
+      "quantity": 1
+    },
+    {
+      "id": "no-sling",
+      "name": "Sling",
+      "description": "Ranged weapon using stones as ammunition.",
+      "category": "weapon",
+      "quantity": 1
+    },
+    {
+      "id": "no-sling-ammo",
+      "name": "Sling Bullets",
+      "description": "Smooth river stones, gathered fresh.",
+      "category": "consumable",
+      "quantity": 20
+    },
+    {
+      "id": "no-cure-mod",
+      "name": "Potion of Cure Moderate Wounds",
+      "description": "Heals 2d8+3 hit points.",
+      "category": "consumable",
+      "quantity": 2
+    },
+    {
+      "id": "no-antitoxin",
+      "name": "Antitoxin",
+      "description": "+5 alchemical bonus on Fortitude saves vs. poison.",
+      "category": "consumable",
+      "quantity": 2
+    },
+    {
+      "id": "no-herbalism",
+      "name": "Herbalism Kit",
+      "description": "Dried herbs and remedies for wilderness medicine.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "no-amulet-na",
+      "name": "Amulet of Natural Armor +1",
+      "description": "+1 natural armor bonus to AC.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "neck"
+    },
+    {
+      "id": "no-cloak-res",
+      "name": "Cloak of Resistance +1",
+      "description": "+1 resistance bonus on all saving throws.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "shoulders"
+    },
+    {
+      "id": "no-ring-prot",
+      "name": "Ring of Protection +1",
+      "description": "+1 deflection bonus to AC.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "ring1"
+    },
+    {
+      "id": "no-belt-con",
+      "name": "Belt of Mighty Constitution +2",
+      "description": "+2 enhancement bonus to Constitution.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "belt"
+    }
+  ],
+  "startingCoins": {
+    "gp": 62,
+    "sp": 20,
+    "cp": 14
+  }
 }

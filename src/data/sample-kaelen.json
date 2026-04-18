@@ -6,73 +6,393 @@
   "race": "Half-Elf",
   "alignment": "Chaotic Neutral",
   "portrait": "https://placehold.co/400x600/1f1f25/e9c349?text=Kaelen",
-  "abilities": { "str": 12, "dex": 20, "con": 14, "int": 16, "wis": 10, "cha": 14 },
+  "abilities": {
+    "str": 12,
+    "dex": 20,
+    "con": 14,
+    "int": 16,
+    "wis": 10,
+    "cha": 14
+  },
   "maxHp": 56,
-  "baseAttackBonus": [6, 1],
+  "baseAttackBonus": [
+    6,
+    1
+  ],
   "initiativeBonus": 7,
   "speed": 30,
   "armorClass": {
-    "total": 20, "touch": 17, "flatFooted": 14,
-    "armorBonus": 3, "shieldBonus": 0, "dexBonus": 5,
-    "naturalArmor": 0, "deflection": 1, "misc": 1,
+    "total": 20,
+    "touch": 17,
+    "flatFooted": 14,
+    "armorBonus": 3,
+    "shieldBonus": 0,
+    "dexBonus": 5,
+    "naturalArmor": 0,
+    "deflection": 1,
+    "misc": 1,
     "spellFailureChance": 15
   },
-  "savingThrows": { "fort": 4, "ref": 11, "will": 3, "fortBase": 2, "refBase": 6, "willBase": 2 },
+  "savingThrows": {
+    "fort": 4,
+    "ref": 11,
+    "will": 3,
+    "fortBase": 2,
+    "refBase": 6,
+    "willBase": 2
+  },
   "skills": [
-    { "id": "acrobatics", "name": "Acrobatics", "ability": "dex", "ranks": 8, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": true },
-    { "id": "bluff", "name": "Bluff", "ability": "cha", "ranks": 8, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "disable-device", "name": "Disable Device", "ability": "dex", "ranks": 8, "classSkill": true, "miscBonus": 4, "trained": true, "armorCheckPenalty": true },
-    { "id": "disguise", "name": "Disguise", "ability": "cha", "ranks": 5, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false },
-    { "id": "escape-artist", "name": "Escape Artist", "ability": "dex", "ranks": 4, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": true },
-    { "id": "perception", "name": "Perception", "ability": "wis", "ranks": 8, "classSkill": true, "miscBonus": 2, "trained": true, "armorCheckPenalty": false },
-    { "id": "sleight-of-hand", "name": "Sleight of Hand", "ability": "dex", "ranks": 8, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": true },
-    { "id": "stealth", "name": "Stealth", "ability": "dex", "ranks": 8, "classSkill": true, "miscBonus": 4, "trained": true, "armorCheckPenalty": true },
-    { "id": "use-magic-device", "name": "Use Magic Device", "ability": "cha", "ranks": 8, "classSkill": true, "miscBonus": 0, "trained": true, "armorCheckPenalty": false }
+    {
+      "id": "acrobatics",
+      "name": "Acrobatics",
+      "ability": "dex",
+      "ranks": 8,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": true
+    },
+    {
+      "id": "bluff",
+      "name": "Bluff",
+      "ability": "cha",
+      "ranks": 8,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "disable-device",
+      "name": "Disable Device",
+      "ability": "dex",
+      "ranks": 8,
+      "classSkill": true,
+      "miscBonus": 4,
+      "trained": true,
+      "armorCheckPenalty": true
+    },
+    {
+      "id": "disguise",
+      "name": "Disguise",
+      "ability": "cha",
+      "ranks": 5,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "escape-artist",
+      "name": "Escape Artist",
+      "ability": "dex",
+      "ranks": 4,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": true
+    },
+    {
+      "id": "perception",
+      "name": "Perception",
+      "ability": "wis",
+      "ranks": 8,
+      "classSkill": true,
+      "miscBonus": 2,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "sleight-of-hand",
+      "name": "Sleight of Hand",
+      "ability": "dex",
+      "ranks": 8,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": true
+    },
+    {
+      "id": "stealth",
+      "name": "Stealth",
+      "ability": "dex",
+      "ranks": 8,
+      "classSkill": true,
+      "miscBonus": 4,
+      "trained": true,
+      "armorCheckPenalty": true
+    },
+    {
+      "id": "use-magic-device",
+      "name": "Use Magic Device",
+      "ability": "cha",
+      "ranks": 8,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    }
   ],
   "weapons": [
     {
       "id": "shadow-blade",
       "name": "Shadow Blade",
       "type": "melee",
-      "attackBonus": [11, 6],
+      "attackBonus": [
+        11,
+        6
+      ],
       "damageDice": "1d6",
       "damageBonus": 8,
       "critRange": 18,
       "critMultiplier": 2,
-      "tags": ["+2 Keen", "Shadow"]
+      "tags": [
+        "+2 Keen",
+        "Shadow"
+      ]
     },
     {
       "id": "shortbow",
       "name": "Composite Shortbow",
       "type": "ranged",
-      "attackBonus": [11, 6],
+      "attackBonus": [
+        11,
+        6
+      ],
       "damageDice": "1d6",
       "damageBonus": 1,
       "critRange": 20,
       "critMultiplier": 3,
-      "tags": ["+1 STR"],
+      "tags": [
+        "+1 STR"
+      ],
       "maxAmmo": 20,
       "currentAmmo": 14
     }
   ],
   "buffs": [
-    { "id": "power-attack", "name": "Power Attack", "active": false, "attackMod": -2, "damageMod": 4, "acMod": 0, "color": "primary" },
-    { "id": "deadly-aim", "name": "Deadly Aim", "active": false, "attackMod": -2, "damageMod": 4, "acMod": 0, "color": "secondary" },
-    { "id": "sneak-attack", "name": "Sneak Attack", "active": false, "attackMod": 0, "damageMod": 0, "acMod": 0, "extraDamageDice": "4d6", "color": "error" },
-    { "id": "flanking", "name": "Flanking", "active": false, "attackMod": 2, "damageMod": 0, "acMod": 0, "meleeOnly": true, "color": "primary" }
+    {
+      "id": "power-attack",
+      "name": "Power Attack",
+      "active": false,
+      "attackMod": -2,
+      "damageMod": 4,
+      "acMod": 0,
+      "color": "primary"
+    },
+    {
+      "id": "deadly-aim",
+      "name": "Deadly Aim",
+      "active": false,
+      "attackMod": -2,
+      "damageMod": 4,
+      "acMod": 0,
+      "color": "secondary"
+    },
+    {
+      "id": "sneak-attack",
+      "name": "Sneak Attack",
+      "active": false,
+      "attackMod": 0,
+      "damageMod": 0,
+      "acMod": 0,
+      "extraDamageDice": "4d6",
+      "color": "error"
+    },
+    {
+      "id": "flanking",
+      "name": "Flanking",
+      "active": false,
+      "attackMod": 2,
+      "damageMod": 0,
+      "acMod": 0,
+      "meleeOnly": true,
+      "color": "primary"
+    }
   ],
   "dailyResources": [
-    { "id": "rogue-talent", "name": "Minor Magic", "total": 3 },
-    { "id": "evasion", "name": "Improved Evasion", "total": 1 }
+    {
+      "id": "rogue-talent",
+      "name": "Minor Magic",
+      "total": 3
+    },
+    {
+      "id": "evasion",
+      "name": "Improved Evasion",
+      "total": 1
+    }
   ],
   "feats": [
-    { "id": "sneak-attack-ability", "index": 1, "name": "Sneak Attack", "shortDesc": "The rogue's attack deals extra damage when she catches opponents off guard.", "fullDesc": "If a rogue can catch an opponent when he is unable to defend himself effectively, she can strike a vital spot for extra damage. The rogue's attack deals extra damage any time her target would be denied a Dexterity bonus to AC.", "bonusValue": 4, "bonusMax": 8, "bonusLabel": "Damage Dice" },
-    { "id": "trapfinding", "index": 2, "name": "Trapfinding", "shortDesc": "A rogue adds 1/2 her level on Perception checks and Disable Device checks.", "fullDesc": "A rogue adds 1/2 her level on Perception skill checks made to locate traps and on Disable Device skill checks (minimum +1). A rogue can use Disable Device to disarm magic traps." },
-    { "id": "evasion-feat", "index": 3, "name": "Evasion", "shortDesc": "If a rogue makes a successful Reflex save, she takes no damage.", "fullDesc": "At 2nd level and higher, a rogue can avoid even magical and unusual attacks with great agility. If she makes a successful Reflex saving throw against an attack that normally deals half damage on a successful save, she instead takes no damage." }
+    {
+      "id": "sneak-attack-ability",
+      "index": 1,
+      "name": "Sneak Attack",
+      "shortDesc": "The rogue's attack deals extra damage when she catches opponents off guard.",
+      "fullDesc": "If a rogue can catch an opponent when he is unable to defend himself effectively, she can strike a vital spot for extra damage. The rogue's attack deals extra damage any time her target would be denied a Dexterity bonus to AC.",
+      "bonusValue": 4,
+      "bonusMax": 8,
+      "bonusLabel": "Damage Dice"
+    },
+    {
+      "id": "trapfinding",
+      "index": 2,
+      "name": "Trapfinding",
+      "shortDesc": "A rogue adds 1/2 her level on Perception checks and Disable Device checks.",
+      "fullDesc": "A rogue adds 1/2 her level on Perception skill checks made to locate traps and on Disable Device skill checks (minimum +1). A rogue can use Disable Device to disarm magic traps."
+    },
+    {
+      "id": "evasion-feat",
+      "index": 3,
+      "name": "Evasion",
+      "shortDesc": "If a rogue makes a successful Reflex save, she takes no damage.",
+      "fullDesc": "At 2nd level and higher, a rogue can avoid even magical and unusual attacks with great agility. If she makes a successful Reflex saving throw against an attack that normally deals half damage on a successful save, she instead takes no damage."
+    }
   ],
   "classAbilities": [
-    { "id": "uncanny-dodge", "name": "Uncanny Dodge", "description": "The rogue cannot be caught flat-footed, even against invisible attackers.", "isSignature": true }
+    {
+      "id": "uncanny-dodge",
+      "name": "Uncanny Dodge",
+      "description": "The rogue cannot be caught flat-footed, even against invisible attackers.",
+      "isSignature": true
+    }
   ],
   "spellSlots": [],
-  "spells": []
+  "spells": [],
+  "inventory": [
+    {
+      "id": "ka-armor",
+      "name": "Mithral Chain Shirt +2",
+      "description": "+6 AC total, light armor. Silent as a whisper.",
+      "category": "armor",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "body"
+    },
+    {
+      "id": "ka-sword",
+      "name": "Short Sword +2",
+      "description": "A quick piercing blade, 1d6, ×2 crit.",
+      "category": "weapon",
+      "quantity": 2,
+      "equipped": true,
+      "slot": "mainHand"
+    },
+    {
+      "id": "ka-dagger",
+      "name": "Dagger +1",
+      "description": "A razor-edged backup blade.",
+      "category": "weapon",
+      "quantity": 3
+    },
+    {
+      "id": "ka-hand-xbow",
+      "name": "Hand Crossbow",
+      "description": "1d4 piercing, ×3 crit, 30 ft range increment.",
+      "category": "weapon",
+      "quantity": 1
+    },
+    {
+      "id": "ka-bolts",
+      "name": "Hand Crossbow Bolts",
+      "description": "Slender bolts for the hand crossbow.",
+      "category": "consumable",
+      "quantity": 20
+    },
+    {
+      "id": "ka-cure-serious",
+      "name": "Potion of Cure Serious Wounds",
+      "description": "Heals 3d8+5 hit points.",
+      "category": "consumable",
+      "quantity": 3
+    },
+    {
+      "id": "ka-invis",
+      "name": "Potion of Invisibility",
+      "description": "Grants invisibility for 3 minutes.",
+      "category": "consumable",
+      "quantity": 2
+    },
+    {
+      "id": "ka-tools",
+      "name": "Masterwork Thieves' Tools",
+      "description": "+2 circumstance to Disable Device.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "ka-cloak",
+      "name": "Cloak of Elvenkind",
+      "description": "+5 competence bonus to Stealth checks.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "shoulders"
+    },
+    {
+      "id": "ka-boots",
+      "name": "Boots of Speed",
+      "description": "Grants Haste for 10 rounds/day as a free action.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "feet"
+    },
+    {
+      "id": "ka-ring-prot",
+      "name": "Ring of Protection +2",
+      "description": "+2 deflection bonus to AC.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "ring1"
+    },
+    {
+      "id": "ka-shadow-kit",
+      "name": "Shadow Toolkit",
+      "description": "Grappling hook, smoke pellets, disguise materials.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "ka-amulet-na",
+      "name": "Amulet of Natural Armor +2",
+      "description": "+2 natural armor bonus to AC.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "neck"
+    },
+    {
+      "id": "ka-belt-dex",
+      "name": "Belt of Incredible Dexterity +4",
+      "description": "+4 enhancement bonus to Dexterity.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "belt"
+    },
+    {
+      "id": "ka-ring2-eva",
+      "name": "Ring of Evasion",
+      "description": "Grants the Evasion ability — no damage on a successful Reflex save.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "ring2"
+    },
+    {
+      "id": "ka-gloves",
+      "name": "Gloves of Reconnaissance",
+      "description": "See through 1 inch of solid material for 1 minute/day.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "hands"
+    }
+  ],
+  "startingCoins": {
+    "gp": 420,
+    "sp": 75,
+    "cp": 22
+  }
 }

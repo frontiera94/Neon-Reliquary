@@ -6,6 +6,7 @@
   "race": "Human",
   "alignment": "Chaotic Evil",
   "portrait": "https://placehold.co/400x600/1f1f25/e9c349?text=Knam",
+  "pdfPath": "/pdfs/knam.pdf",
   "abilities": {
     "str": 18,
     "dex": 14,
@@ -338,5 +339,115 @@
       "description": "A vivid cone of clashing colors springs from your hand. Creatures with 2 or fewer HD are knocked unconscious; 3-4 HD are blinded and stunned; 5+ HD are stunned for 1 round (all if they fail Will DC 13).",
       "isAttackSpell": true
     }
-  ]
+  ],
+  "inventory": [
+    {
+      "id": "kn-armor",
+      "name": "Breastplate",
+      "description": "+6 AC, medium armor. Dented from battle.",
+      "category": "armor",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "body"
+    },
+    {
+      "id": "kn-greataxe",
+      "name": "Greataxe",
+      "description": "Two-handed axe dealing 1d12 damage, ×3 crit.",
+      "category": "weapon",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "mainHand"
+    },
+    {
+      "id": "kn-handaxe",
+      "name": "Handaxe",
+      "description": "A light throwing axe, 1d6.",
+      "category": "weapon",
+      "quantity": 2
+    },
+    {
+      "id": "kn-cure-mod",
+      "name": "Potion of Cure Moderate Wounds",
+      "description": "Heals 2d8+3 hit points.",
+      "category": "consumable",
+      "quantity": 2
+    },
+    {
+      "id": "kn-rage-pot",
+      "name": "Potion of Bull's Strength",
+      "description": "+4 enhancement bonus to Strength for 4 minutes.",
+      "category": "consumable",
+      "quantity": 1
+    },
+    {
+      "id": "kn-backpack",
+      "name": "Backpack",
+      "description": "Holds gear for the road.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "kn-rations",
+      "name": "Trail Rations",
+      "description": "One day's worth of dried food.",
+      "category": "consumable",
+      "quantity": 4
+    },
+    {
+      "id": "kn-waterskin",
+      "name": "Waterskin",
+      "description": "Holds 1 gallon of liquid.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "kn-torches",
+      "name": "Torch",
+      "description": "Burns for 1 hour, illuminates 20 ft.",
+      "category": "gear",
+      "quantity": 6
+    },
+    {
+      "id": "kn-belt-str",
+      "name": "Belt of Giant Strength +2",
+      "description": "+2 enhancement bonus to Strength.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "belt"
+    },
+    {
+      "id": "kn-amulet-na",
+      "name": "Amulet of Natural Armor +1",
+      "description": "+1 natural armor bonus to AC.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "neck"
+    },
+    {
+      "id": "kn-cloak-res",
+      "name": "Cloak of Resistance +1",
+      "description": "+1 resistance bonus on all saving throws.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "shoulders"
+    },
+    {
+      "id": "kn-ring-prot",
+      "name": "Ring of Protection +1",
+      "description": "+1 deflection bonus to AC.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "ring1"
+    }
+  ],
+  "startingCoins": {
+    "gp": 78,
+    "sp": 4,
+    "cp": 0
+  }
 }

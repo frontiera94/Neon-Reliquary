@@ -16,6 +16,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const clearChat = useChatStore((s) => s.clearChat)
   const chats = useChatStore((s) => s.chats)
   const activeCharacterId = useCharacterStore((s) => s.activeCharacterId)
+  const activeChar = useCharacterStore((s) => s.activeCharacter())
   const chatCount = activeCharacterId ? (chats[activeCharacterId]?.length ?? 0) : 0
 
   const [diceType, setDiceType] = useState<DiceType>(20)
@@ -136,6 +137,22 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             </button>
           )}
         </div>
+
+        {/* Character Sheet PDF */}
+        {activeChar?.pdfPath && (
+          <div className="px-6 py-4 flex items-center justify-between border-b border-outline-variant/10">
+            <span className="font-label text-xs text-tertiary uppercase tracking-widest">
+              Character Sheet
+            </span>
+            <button
+              onClick={() => window.open(activeChar.pdfPath, '_blank', 'noopener,noreferrer')}
+              className="flex items-center gap-1.5 font-label text-[10px] uppercase tracking-widest text-tertiary hover:text-primary transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">picture_as_pdf</span>
+              Open PDF
+            </button>
+          </div>
+        )}
 
         {/* Roll History */}
         <div className="flex-1 overflow-y-auto">

@@ -6,6 +6,7 @@
   "race": "Human (Chelaxian)",
   "alignment": "Lawful Evil",
   "portrait": "https://placehold.co/400x600/1f1f25/00daf3?text=Shotrix",
+  "pdfPath": "/pdfs/shotrix-blackburn.pdf",
   "abilities": {
     "str": 10,
     "dex": 18,
@@ -513,5 +514,124 @@
       "attackType": "rangedTouch",
       "damageDice": "3d6"
     }
-  ]
+  ],
+  "inventory": [
+    {
+      "id": "sb-armor",
+      "name": "Mithral Shirt",
+      "description": "+4 AC, counts as light armor. Allows arcane casting.",
+      "category": "armor",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "body"
+    },
+    {
+      "id": "sb-longsword",
+      "name": "Longsword +1",
+      "description": "The magus's bonded weapon, 1d8+1, ×2 crit.",
+      "category": "weapon",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "mainHand"
+    },
+    {
+      "id": "sb-dagger",
+      "name": "Dagger",
+      "description": "A reliable backup blade.",
+      "category": "weapon",
+      "quantity": 2
+    },
+    {
+      "id": "sb-cure-mod",
+      "name": "Potion of Cure Moderate Wounds",
+      "description": "Heals 2d8+3 hit points.",
+      "category": "consumable",
+      "quantity": 3
+    },
+    {
+      "id": "sb-cure-light",
+      "name": "Potion of Cure Light Wounds",
+      "description": "Heals 1d8+1 hit points.",
+      "category": "consumable",
+      "quantity": 2
+    },
+    {
+      "id": "sb-scroll-haste",
+      "name": "Scroll of Haste",
+      "description": "Grants Haste for 4 rounds. Useful before a big fight.",
+      "category": "consumable",
+      "quantity": 1
+    },
+    {
+      "id": "sb-spellbook",
+      "name": "Spellbook",
+      "description": "Contains all prepared magus spells, bound in black leather.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "sb-components",
+      "name": "Spell Component Pouch",
+      "description": "Contains all common material components.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "sb-backpack",
+      "name": "Backpack",
+      "description": "Worn over the shoulder, always packed for quick departure.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "sb-headband",
+      "name": "Headband of Vast Intellect +2",
+      "description": "+2 enhancement bonus to Intelligence.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "headband"
+    },
+    {
+      "id": "sb-amulet-na",
+      "name": "Amulet of Natural Armor +1",
+      "description": "+1 natural armor bonus to AC.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "neck"
+    },
+    {
+      "id": "sb-cloak-res",
+      "name": "Cloak of Resistance +1",
+      "description": "+1 resistance bonus on all saving throws.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "shoulders"
+    },
+    {
+      "id": "sb-ring-prot",
+      "name": "Ring of Protection +1",
+      "description": "+1 deflection bonus to AC.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "ring1"
+    },
+    {
+      "id": "sb-belt-str",
+      "name": "Belt of Giant Strength +2",
+      "description": "+2 enhancement bonus to Strength.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "belt"
+    }
+  ],
+  "startingCoins": {
+    "gp": 95,
+    "sp": 60,
+    "cp": 10
+  }
 }

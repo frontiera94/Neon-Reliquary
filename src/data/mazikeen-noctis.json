@@ -6,6 +6,7 @@
   "race": "Tiefling",
   "alignment": "Lawful Evil",
   "portrait": "https://placehold.co/400x600/1f1f25/e9c349?text=Maze",
+  "pdfPath": "/pdfs/mazikeen-noctis.pdf",
   "abilities": {
     "str": 10,
     "dex": 19,
@@ -643,5 +644,115 @@
       "components": "V, S",
       "description": "Lesser restoration dispels any magical effects reducing one of the subject's ability scores or cures 1d4 points of temporary ability damage to one of the subject's ability scores. It also eliminates any fatigue suffered by the subject."
     }
-  ]
+  ],
+  "inventory": [
+    {
+      "id": "mz-robes",
+      "name": "Darkweave Robes",
+      "description": "Flowing black robes stitched with hexing sigils.",
+      "category": "armor",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "body"
+    },
+    {
+      "id": "mz-dagger",
+      "name": "Dagger",
+      "description": "The witch's only mundane weapon.",
+      "category": "weapon",
+      "quantity": 2,
+      "equipped": true,
+      "slot": "mainHand"
+    },
+    {
+      "id": "mz-cure-light",
+      "name": "Potion of Cure Light Wounds",
+      "description": "Heals 1d8+1 hit points.",
+      "category": "consumable",
+      "quantity": 3
+    },
+    {
+      "id": "mz-spell-comp",
+      "name": "Spell Component Pouch",
+      "description": "Contains all common verbal and material components.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "mz-scroll-slumber",
+      "name": "Scroll of Slumber",
+      "description": "Casts the Slumber hex as a targeted sleep effect.",
+      "category": "consumable",
+      "quantity": 2
+    },
+    {
+      "id": "mz-backpack",
+      "name": "Backpack",
+      "description": "Filled with herbs, bones, and mysterious curios.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "mz-candles",
+      "name": "Black Candle",
+      "description": "Used in rituals and for light.",
+      "category": "gear",
+      "quantity": 10
+    },
+    {
+      "id": "mz-familiar-satchel",
+      "name": "Familiar Satchel",
+      "description": "A woven bag for safely transporting a small familiar.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "mz-headband-int",
+      "name": "Headband of Vast Intellect +2",
+      "description": "+2 enhancement bonus to Intelligence.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "headband"
+    },
+    {
+      "id": "mz-hex-wand",
+      "name": "Wand of Mage Armor",
+      "description": "Casts Mage Armor. 50 charges.",
+      "category": "magic",
+      "quantity": 1
+    },
+    {
+      "id": "mz-amulet-na",
+      "name": "Amulet of Natural Armor +1",
+      "description": "+1 natural armor bonus to AC.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "neck"
+    },
+    {
+      "id": "mz-cloak-res",
+      "name": "Cloak of Resistance +1",
+      "description": "+1 resistance bonus on all saving throws.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "shoulders"
+    },
+    {
+      "id": "mz-ring-prot",
+      "name": "Ring of Protection +1",
+      "description": "+1 deflection bonus to AC.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "ring1"
+    }
+  ],
+  "startingCoins": {
+    "gp": 65,
+    "sp": 30,
+    "cp": 5
+  }
 }

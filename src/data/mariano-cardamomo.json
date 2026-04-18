@@ -6,6 +6,7 @@
   "race": "Halfling",
   "alignment": "Chaotic Evil",
   "portrait": "https://placehold.co/400x600/1f1f25/e9c349?text=Mariano",
+  "pdfPath": "/pdfs/mariano-cardamomo.pdf",
   "abilities": {
     "str": 6,
     "dex": 20,
@@ -47,7 +48,7 @@
       "ability": "dex",
       "ranks": 4,
       "classSkill": true,
-      "miscBonus": 2,
+      "miscBonus": 7,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -157,7 +158,7 @@
       "ability": "dex",
       "ranks": 4,
       "classSkill": true,
-      "miscBonus": 7,
+      "miscBonus": 12,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -211,37 +212,21 @@
       ]
     },
     {
-      "id": "light-crossbow-small",
-      "name": "Light Crossbow (Small)",
+      "id": "dagger-thrown",
+      "name": "Dagger (Thrown, Small)",
       "type": "ranged",
       "attackBonus": [
-        9
+        10
       ],
-      "damageDice": "1d6",
-      "damageBonus": 0,
+      "damageDice": "1d3",
+      "damageBonus": -2,
       "critRange": 19,
       "critMultiplier": 2,
+      "maxAmmo": 5,
       "tags": [
-        "Small",
-        "Range 30 ft."
-      ],
-      "maxAmmo": 20,
-      "currentAmmo": 20
-    },
-    {
-      "id": "sap",
-      "name": "Sap (Small)",
-      "type": "melee",
-      "attackBonus": [
-        9
-      ],
-      "damageDice": "1d4",
-      "damageBonus": -2,
-      "critRange": 20,
-      "critMultiplier": 2,
-      "tags": [
-        "Nonlethal",
-        "Finesse"
+        "Thrown",
+        "Weapon Focus",
+        "Range 10 ft."
       ]
     }
   ],
@@ -275,15 +260,6 @@
       "damageMod": 0,
       "acMod": 0,
       "color": "secondary"
-    },
-    {
-      "id": "deadly-aim",
-      "name": "Deadly Aim (−1 atk / +2 dmg ranged)",
-      "active": false,
-      "attackMod": -1,
-      "damageMod": 2,
-      "acMod": 0,
-      "color": "primary"
     },
     {
       "id": "debilitating-injury",
@@ -408,7 +384,7 @@
       "index": 13,
       "name": "Skill Focus (Stealth)",
       "shortDesc": "+3 bonus on Stealth checks. Increases to +6 with 10+ ranks.",
-      "fullDesc": "Mariano is particularly adept at Stealth. He gets a +3 bonus on all Stealth checks. This +3 is included in his Stealth total (19 = DEX 5 + ranks 4 + class skill 3 + size 4 + Skill Focus 3). This bonus increases to +6 at 10+ ranks."
+      "fullDesc": "Mariano is particularly adept at Stealth. He gets a +3 bonus on all Stealth checks. This +3 is included in his Stealth total (24 = DEX 5 + ranks 4 + class skill 3 + size 4 + Skill Focus 3 + Cloak 5). This bonus increases to +6 at 10+ ranks."
     },
     {
       "id": "extra-rogue-talent",
@@ -489,5 +465,157 @@
       "attackType": "rangedTouch",
       "damageDice": "1d3"
     }
-  ]
+  ],
+  "inventory": [
+    {
+      "id": "mc-armor",
+      "name": "+1 Studded Leather Armor",
+      "description": "+4 AC (armor +3, enhancement +1), light armor. Max DEX +5, no armor check penalty.",
+      "category": "armor",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "body"
+    },
+    {
+      "id": "mc-golden-dagger-1",
+      "name": "Golden Dagger",
+      "description": "A finely crafted dagger with a gilded blade. Primary hand for two-weapon fighting.",
+      "category": "weapon",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "mainHand"
+    },
+    {
+      "id": "mc-golden-dagger-2",
+      "name": "Golden Dagger",
+      "description": "Twin to the first — matching gilded blade, balanced for the off hand.",
+      "category": "weapon",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "offHand"
+    },
+    {
+      "id": "mc-belt-tumbling",
+      "name": "Belt of Tumbling",
+      "description": "+4 competence bonus on Acrobatics checks to move through a threatened square or enemy's space.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "belt"
+    },
+    {
+      "id": "mc-cloak",
+      "name": "Cloak of Elvenkind",
+      "description": "+5 competence bonus to Stealth checks. Faint illusion aura, CL 3rd.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "shoulders"
+    },
+    {
+      "id": "mc-boots-elvenkind",
+      "name": "Boots of Elvenkind",
+      "description": "+5 competence bonus to Stealth checks. Silent as shadow. Faint transmutation, CL 5th.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "feet"
+    },
+    {
+      "id": "mc-daggers",
+      "name": "Dagger (Small)",
+      "description": "Standard daggers for throwing. 1d3 damage, crit 19-20/×2, range increment 10 ft.",
+      "category": "weapon",
+      "quantity": 5
+    },
+    {
+      "id": "mc-poison-black-adder",
+      "name": "Poison: Black Adder Venom",
+      "description": "Injury; Fort DC 11; Freq 1 rnd (6); Effect 1d2 Con dmg; Cure 1 save.",
+      "category": "consumable",
+      "quantity": 1
+    },
+    {
+      "id": "mc-poison-oil-taggit",
+      "name": "Poison: Oil of Taggit",
+      "description": "Ingested; Fort DC 15; Onset 1 min; Effect unconsciousness 1d3 hours; Cure 1 save.",
+      "category": "consumable",
+      "quantity": 2
+    },
+    {
+      "id": "mc-cure-light",
+      "name": "Potion of Cure Light Wounds",
+      "description": "Heals 1d8+1 hit points.",
+      "category": "consumable",
+      "quantity": 1
+    },
+    {
+      "id": "mc-rope",
+      "name": "Rope (50 ft.)",
+      "description": "Standard hemp rope for climbing and binding.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "mc-grappling",
+      "name": "Grappling Hook",
+      "description": "For scaling walls and making escapes.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "mc-backpack",
+      "name": "Backpack",
+      "description": "Small backpack for carrying gear.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "mc-bedroll",
+      "name": "Bedroll",
+      "description": "Lightweight bedroll for camping.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "mc-flint-steel",
+      "name": "Flint and Steel",
+      "description": "For starting fires.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "mc-soap",
+      "name": "Soap",
+      "description": "A bar of soap.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "mc-waterskin",
+      "name": "Waterskin",
+      "description": "Holds 1 quart of liquid.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "mc-torch",
+      "name": "Torch",
+      "description": "Bright 20 ft., shadowy 40 ft. Burns 1 hour.",
+      "category": "gear",
+      "quantity": 5
+    },
+    {
+      "id": "mc-caltrops",
+      "name": "Caltrops",
+      "description": "Scatter to slow pursuers. Creatures moving through take 1 damage and must make DC 15 Reflex or speed halved for 24 hours.",
+      "category": "gear",
+      "quantity": 1
+    }
+  ],
+  "startingCoins": {
+    "gp": 1734,
+    "sp": 0,
+    "cp": 0
+  }
 }

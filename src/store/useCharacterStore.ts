@@ -6,6 +6,7 @@ import type { Skill } from '../types/skills'
 import type { Weapon, BuffToggle } from '../types/combat'
 import type { DailyResource, SpellSlot, Spell } from '../types/resources'
 import type { Feat, ClassAbility } from '../types/features'
+import type { InventoryItem, CoinPurse } from '../types/inventory'
 
 export interface FullCharacter extends Character {
   armorClass: ArmorClass
@@ -18,6 +19,9 @@ export interface FullCharacter extends Character {
   classAbilities: ClassAbility[]
   spellSlots: SpellSlot[]
   spells: Spell[]
+  inventory: InventoryItem[]
+  startingCoins?: CoinPurse
+  pdfPath?: string
 }
 
 interface CharacterStore {

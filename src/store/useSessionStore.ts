@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { SessionState, ActiveSummon } from '../types/session'
 import type { ConditionType } from '../types/combat'
+import type { CoinPurse } from '../types/inventory'
 
 interface SessionStore {
   sessions: Record<string, SessionState>
@@ -19,14 +20,18 @@ interface SessionStore {
   spendSpellSlot: (characterId: string, level: number, max: number) => void
   recoverSpellSlot: (characterId: string, level: number) => void
   setAmmo: (characterId: string, weaponId: string, amount: number) => void
+  setItemQuantity: (characterId: string, itemId: string, qty: number) => void
+  adjustItemQuantity: (characterId: string, itemId: string, delta: number) => void
+  setCoins: (characterId: string, coins: CoinPurse) => void
+  adjustCoin: (characterId: string, denom: keyof CoinPurse, delta: number) => void
   setSummon: (characterId: string, summon: ActiveSummon) => void
   adjustSummonHp: (characterId: string, delta: number) => void
   clearSummon: (characterId: string) => void
-  initSession: (characterId: string, maxHp: number) => void
+  initSession: (characterId: string, maxHp: number, startingCoins?: CoinPurse) => void
   longRest: (characterId: string, maxHp: number) => void
 }
 
-const defaultSession = (characterId: string, maxHp = 0): SessionState => ({
+const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurse): SessionState => ({
   characterId,
   currentHp: maxHp,
   tempHp: 0,
@@ -38,6 +43,8 @@ const defaultSession = (characterId: string, maxHp = 0): SessionState => ({
   spentSpellSlots: {},
   ammo: {},
   activeSummon: null,
+  itemQuantities: {},
+  coins: startingCoins ?? { gp: 0, sp: 0, cp: 0 },
 })
 
 export const useSessionStore = create<SessionStore>()(
@@ -48,11 +55,11 @@ export const useSessionStore = create<SessionStore>()(
       getSession: (id) =>
         get().sessions[id] ?? defaultSession(id),
 
-      initSession: (id, maxHp) =>
+      initSession: (id, maxHp, startingCoins) =>
         set((s) => ({
           sessions: s.sessions[id]
             ? s.sessions
-            : { ...s.sessions, [id]: defaultSession(id, maxHp) },
+            : { ...s.sessions, [id]: defaultSession(id, maxHp, startingCoins) },
         })),
 
       setHp: (id, hp) =>
@@ -253,6 +260,48 @@ export const useSessionStore = create<SessionStore>()(
             sessions: {
               ...s.sessions,
               [id]: { ...sess, ammo: { ...sess.ammo, [weaponId]: amount } },
+            },
+          }
+        }),
+
+      setItemQuantity: (id, itemId, qty) =>
+        set((s) => {
+          const sess = s.sessions[id] ?? defaultSession(id)
+          return {
+            sessions: {
+              ...s.sessions,
+              [id]: { ...sess, itemQuantities: { ...sess.itemQuantities, [itemId]: Math.max(0, qty) } },
+            },
+          }
+        }),
+
+      adjustItemQuantity: (id, itemId, delta) =>
+        set((s) => {
+          const sess = s.sessions[id] ?? defaultSession(id)
+          const current = sess.itemQuantities[itemId] ?? 0
+          return {
+            sessions: {
+              ...s.sessions,
+              [id]: { ...sess, itemQuantities: { ...sess.itemQuantities, [itemId]: Math.max(0, current + delta) } },
+            },
+          }
+        }),
+
+      setCoins: (id, coins) =>
+        set((s) => ({
+          sessions: {
+            ...s.sessions,
+            [id]: { ...(s.sessions[id] ?? defaultSession(id)), coins },
+          },
+        })),
+
+      adjustCoin: (id, denom, delta) =>
+        set((s) => {
+          const sess = s.sessions[id] ?? defaultSession(id)
+          return {
+            sessions: {
+              ...s.sessions,
+              [id]: { ...sess, coins: { ...sess.coins, [denom]: Math.max(0, (sess.coins[denom] ?? 0) + delta) } },
             },
           }
         }),

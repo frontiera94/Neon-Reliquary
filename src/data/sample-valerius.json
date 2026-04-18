@@ -503,5 +503,153 @@
       "components": "V, S, DF",
       "description": "Your height doubles, and your weight increases by a factor of eight. This increase changes your size category to Large."
     }
-  ]
+  ],
+  "inventory": [
+    {
+      "id": "va-armor",
+      "name": "Full Plate +2",
+      "description": "+11 AC total. Engraved with the symbol of the Inheritor.",
+      "category": "armor",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "body"
+    },
+    {
+      "id": "va-shield",
+      "name": "Heavy Steel Shield +1",
+      "description": "+3 AC shield bonus. Battle-scarred but sturdy.",
+      "category": "armor",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "offHand"
+    },
+    {
+      "id": "va-sword",
+      "name": "Longsword +3",
+      "description": "1d8+3 slashing, ×2 crit. Gleams faintly in darkness.",
+      "category": "weapon",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "mainHand"
+    },
+    {
+      "id": "va-crossbow",
+      "name": "Heavy Crossbow +1",
+      "description": "1d10+1 piercing, ×2 crit, 120 ft range.",
+      "category": "weapon",
+      "quantity": 1
+    },
+    {
+      "id": "va-bolts",
+      "name": "Crossbow Bolts",
+      "description": "Standard iron-tipped bolts.",
+      "category": "consumable",
+      "quantity": 20
+    },
+    {
+      "id": "va-divine-bolts",
+      "name": "Holy Crossbow Bolts",
+      "description": "+2d6 damage vs. evil outsiders and undead.",
+      "category": "consumable",
+      "quantity": 10
+    },
+    {
+      "id": "va-cure-crit",
+      "name": "Potion of Cure Critical Wounds",
+      "description": "Heals 4d8+10 hit points.",
+      "category": "consumable",
+      "quantity": 4
+    },
+    {
+      "id": "va-neutralize",
+      "name": "Potion of Neutralize Poison",
+      "description": "Immediately neutralizes all poisons affecting the drinker.",
+      "category": "consumable",
+      "quantity": 2
+    },
+    {
+      "id": "va-divine-focus",
+      "name": "Masterwork Holy Symbol",
+      "description": "Gilded symbol of Iomedae, divine focus for spells.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "va-belt",
+      "name": "Belt of Physical Might +4 (Str/Con)",
+      "description": "+4 enhancement bonus to Strength and Constitution.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "belt"
+    },
+    {
+      "id": "va-amulet",
+      "name": "Amulet of Natural Armor +3",
+      "description": "+3 natural armor bonus to AC.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "neck"
+    },
+    {
+      "id": "va-ring",
+      "name": "Ring of Protection +3",
+      "description": "+3 deflection bonus to AC.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "ring1"
+    },
+    {
+      "id": "va-cloak",
+      "name": "Cloak of Resistance +4",
+      "description": "+4 resistance bonus on all saving throws.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "shoulders"
+    },
+    {
+      "id": "va-boots",
+      "name": "Boots of Striding and Springing",
+      "description": "+10 ft enhancement to speed; +5 competence to Acrobatics jump checks.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "feet"
+    },
+    {
+      "id": "va-ring2",
+      "name": "Ring of Evasion",
+      "description": "Grants the Evasion ability.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "ring2"
+    },
+    {
+      "id": "va-gloves",
+      "name": "Gauntlets of Weapon Expertise",
+      "description": "+1 competence bonus on attack rolls with wielded weapons.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "hands"
+    },
+    {
+      "id": "va-wrists",
+      "name": "Bracers of the Avenging Knight",
+      "description": "Once/day, smite a target as a swift action (bonus = Cha mod to attack, +level to damage).",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "wrists"
+    }
+  ],
+  "startingCoins": {
+    "gp": 1620,
+    "sp": 150,
+    "cp": 0
+  }
 }

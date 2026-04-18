@@ -7,6 +7,7 @@ const navItems = [
   { to: '/combat', icon: 'swords', label: 'Combat' },
   { to: '/spells', icon: 'auto_stories', label: 'Spells' },
   { to: '/features', icon: 'auto_awesome', label: 'Features' },
+  { to: '/inventory', icon: 'inventory_2', label: 'Inventory' },
 ]
 
 export function Sidebar() {

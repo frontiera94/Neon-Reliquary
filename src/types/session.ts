@@ -1,4 +1,5 @@
 import type { ConditionType } from './combat'
+import type { CoinPurse } from './inventory'
 
 export interface ActiveSummon {
   spellId: string
@@ -18,4 +19,6 @@ export interface SessionState {
   spentSpellSlots: Record<number, number>
   ammo: Record<string, number>
   activeSummon: ActiveSummon | null
+  itemQuantities: Record<string, number>
+  coins: CoinPurse
 }

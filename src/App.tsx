@@ -6,6 +6,7 @@ import { SkillsPage } from './pages/SkillsPage'
 import { CombatPage } from './pages/CombatPage'
 import { SpellsPage } from './pages/SpellsPage'
 import { FeaturesPage } from './pages/FeaturesPage'
+import { InventoryPage } from './pages/InventoryPage'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="/combat" element={<CombatPage />} />
           <Route path="/spells" element={<SpellsPage />} />
           <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/inventory" element={<InventoryPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/characters" replace />} />
       </Routes>
