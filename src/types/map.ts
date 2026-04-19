@@ -1,6 +1,7 @@
 export type MapState = {
   id: string
   secret: string
+  name?: string
   createdAt: number
   updatedAt: number
   background: { url: string; width: number; height: number } | null

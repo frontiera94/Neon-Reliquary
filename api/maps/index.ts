@@ -12,14 +12,17 @@ export default async function handler(req: any, res: any) {
 
   const id = nanoid(10)
   const secret = nanoid(24)
+  const name: string | undefined = req.body?.name || undefined
+  const gridSize: number = typeof req.body?.gridSize === 'number' ? req.body.gridSize : 50
 
   const state = {
     id,
     secret,
+    ...(name !== undefined ? { name } : {}),
     createdAt: Date.now(),
     updatedAt: Date.now(),
     background: null,
-    grid: { size: 50 },
+    grid: { size: gridSize },
     tokens: [],
     shapes: [],
     labels: [],

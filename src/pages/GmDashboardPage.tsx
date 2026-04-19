@@ -2,40 +2,34 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGmCredentialsStore } from '../store/useGmCredentialsStore'
 import { createMap } from '../lib/map-api'
+import { CreateMapModal } from '../components/map/CreateMapModal'
 
 export function GmDashboardPage() {
   const navigate = useNavigate()
   const { activeMapId, saveCredential, clearCredential, setActiveMapId } = useGmCredentialsStore()
-  const [isCreating, setIsCreating] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const playerUrl = activeMapId ? window.location.origin + '/map/' + activeMapId : ''
 
-  async function handleCreate() {
-    setIsCreating(true)
-    try {
-      const { id, secret } = await createMap()
-      saveCredential(id, secret)
-      setActiveMapId(id)
-      navigate('/gm/map/' + id)
-    } finally {
-      setIsCreating(false)
-    }
+  async function handleCreate(name: string, gridSize: number) {
+    setError(null)
+    const { id, secret } = await createMap({ name, gridSize })
+    saveCredential(id, secret)
+    setActiveMapId(id)
+    navigate('/gm/map/' + id)
   }
 
-  async function handleNewMap() {
+  async function handleNewMap(name: string, gridSize: number) {
     if (!activeMapId) return
-    clearCredential(activeMapId)
-    setActiveMapId(null)
-    setIsCreating(true)
-    try {
-      const { id, secret } = await createMap()
-      saveCredential(id, secret)
-      setActiveMapId(id)
-      navigate('/gm/map/' + id)
-    } finally {
-      setIsCreating(false)
-    }
+    setError(null)
+    const prevMapId = activeMapId
+    const { id, secret } = await createMap({ name, gridSize })
+    clearCredential(prevMapId)
+    saveCredential(id, secret)
+    setActiveMapId(id)
+    navigate('/gm/map/' + id)
   }
 
   function handleCopyLink() {
@@ -51,6 +45,12 @@ export function GmDashboardPage() {
         <div className="font-headline text-3xl text-primary">Neon Reliquary</div>
         <div className="font-label text-tertiary text-sm uppercase tracking-wider mt-1">Modalità GM</div>
         <div className="bg-surface-container-high h-px w-full my-6" />
+
+        {error && (
+          <div className="bg-error/10 border-l-2 border-error px-3 py-2 mb-4 font-label text-xs text-error">
+            {error}
+          </div>
+        )}
 
         {activeMapId ? (
           <>
@@ -78,22 +78,20 @@ export function GmDashboardPage() {
             </button>
 
             <button
-              onClick={handleNewMap}
-              disabled={isCreating}
+              onClick={() => setShowCreateModal(true)}
               className="w-full py-2 mt-2 font-label text-sm text-tertiary hover:text-primary transition-colors"
               style={{ borderRadius: 0 }}
             >
-              {isCreating ? 'Creazione in corso...' : 'Nuova mappa'}
+              Nuova mappa
             </button>
           </>
         ) : (
           <button
-            onClick={handleCreate}
-            disabled={isCreating}
+            onClick={() => setShowCreateModal(true)}
             className="w-full py-3 bg-primary text-black font-label hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all"
             style={{ borderRadius: 0 }}
           >
-            {isCreating ? 'Creazione in corso...' : 'Crea nuova mappa'}
+            Crea nuova mappa
           </button>
         )}
       </div>
@@ -105,6 +103,13 @@ export function GmDashboardPage() {
       >
         ← Seleziona personaggio
       </button>
+
+      {showCreateModal && (
+        <CreateMapModal
+          onClose={() => setShowCreateModal(false)}
+          onCreate={activeMapId ? handleNewMap : handleCreate}
+        />
+      )}
     </div>
   )
 }

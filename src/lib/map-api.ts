@@ -1,10 +1,10 @@
 import type { PublicMapState } from '../types/map'
 
-export async function createMap(): Promise<{ id: string; secret: string; gmUrl: string; readOnlyUrl: string }> {
+export async function createMap(opts?: { name?: string; gridSize?: number }): Promise<{ id: string; secret: string; gmUrl: string; readOnlyUrl: string }> {
   const res = await fetch('/api/maps', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    body: JSON.stringify({ name: opts?.name, gridSize: opts?.gridSize }),
   })
 
   if (!res.ok) {

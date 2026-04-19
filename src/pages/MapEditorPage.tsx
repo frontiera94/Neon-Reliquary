@@ -92,7 +92,7 @@ export function MapEditorPage() {
           ← GM
         </button>
         <span className="text-tertiary opacity-50">/</span>
-        <span className="font-label text-xs text-white opacity-50">{id}</span>
+        <span className="font-label text-xs text-white opacity-50">{map?.name ?? id?.slice(0, 8)}</span>
         <div className="flex-1" />
         {isPushing && (
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
