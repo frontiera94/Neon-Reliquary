@@ -70,7 +70,7 @@ export function SpellsPage() {
     <div className="p-4 md:p-8 lg:p-12">
       {/* Header */}
       <header className="mb-10">
-        <h1 className="font-headline text-5xl font-bold text-on-surface mb-2 tracking-tight">
+        <h1 className="font-headline text-5xl font-bold text-white mb-2 tracking-tight">
           The Repository
         </h1>
         <p className="text-tertiary font-label uppercase text-sm tracking-[0.2em]">
@@ -78,9 +78,9 @@ export function SpellsPage() {
         </p>
 
         {arcaneFailure > 0 && (
-          <div className="mt-4 px-4 py-3 bg-error-container/20 border border-error/30 flex items-center gap-3">
+          <div className="mt-4 px-4 py-3 bg-error-container/20 border border-error/30 rounded-xl flex items-center gap-3">
             <span className="material-symbols-outlined text-error text-sm">warning</span>
-            <span className="font-label text-xs text-error uppercase tracking-widest">
+            <span className="font-label text-xs text-error uppercase tracking-widest font-bold">
               Arcane Spell Failure: {arcaneFailure}%
             </span>
           </div>
@@ -90,7 +90,7 @@ export function SpellsPage() {
         <div className="mt-4 flex items-center gap-2 flex-wrap">
           <button
             onClick={() => openRoll({ diceType: 20, count: 1, modifier: concMod, label: 'Concentration' })}
-            className="px-4 py-2 bg-surface-container border border-outline-variant/30 text-tertiary font-label text-xs uppercase tracking-widest hover:text-primary hover:border-primary/50 hover:shadow-[0_0_12px_rgba(0,218,243,0.2)] transition-all active:scale-95 flex items-center gap-2"
+            className="px-4 py-2 bg-surface-container/90 border border-white/10 rounded-xl text-tertiary font-label text-xs uppercase tracking-widest hover:text-primary hover:border-primary/50 hover:shadow-[0_0_12px_rgba(0,240,255,0.25)] transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>electric_bolt</span>
             Concentration ({concMod >= 0 ? `+${concMod}` : concMod})
@@ -98,10 +98,10 @@ export function SpellsPage() {
           {hasCombatCasting && (
             <button
               onClick={() => openRoll({ diceType: 20, count: 1, modifier: concMod + 4, label: 'Concentration (Defensive)' })}
-              className="px-4 py-2 bg-surface-container border border-outline-variant/30 text-tertiary font-label text-xs uppercase tracking-widest hover:text-secondary hover:border-secondary/50 hover:shadow-[0_0_12px_rgba(233,195,73,0.2)] transition-all active:scale-95 flex items-center gap-2"
+              className="px-4 py-2 bg-surface-container/90 border border-white/10 rounded-xl text-tertiary font-label text-xs uppercase tracking-widest hover:text-secondary hover:border-secondary/50 hover:shadow-[0_0_12px_rgba(217,70,239,0.3)] transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
             >
               <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>electric_bolt</span>
-              Defensive ({concMod + 4 >= 0 ? `+${concMod + 4}` : concMod + 4})
+              Defensive ({concMod + 4 >= 0 ? `+${concMod}` : concMod + 4})
             </button>
           )}
         </div>
@@ -109,8 +109,8 @@ export function SpellsPage() {
 
       {/* Spell slot tracker */}
       {char.spellSlots.length > 0 && (
-        <section className="mb-8 bg-surface-container p-6 border border-primary/30 shadow-[0_0_15px_rgba(0,218,243,0.08)]">
-          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-gold">
+        <section className="mb-8 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.06)]">
+          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent font-bold">
             Spell Slots
           </h2>
           <div className="flex flex-wrap gap-6">
@@ -119,10 +119,10 @@ export function SpellsPage() {
               const available = slot.total - spent
               return (
                 <div key={slot.level}>
-                  <p className="font-label text-[10px] text-primary uppercase tracking-widest mb-2">
+                  <p className="font-label text-[10px] text-primary uppercase tracking-widest mb-2 font-bold">
                     Level {slot.level}: {available}/{slot.total}
                   </p>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1.5">
                     {Array.from({ length: slot.total }).map((_, i) => {
                       const isSpent = i >= available
                       return (
@@ -133,15 +133,15 @@ export function SpellsPage() {
                               ? spendSpellSlot(char.id, slot.level, slot.total)
                               : recoverSpellSlot(char.id, slot.level)
                           }
-                          className={`w-7 h-7 transition-all flex items-center justify-center ${
+                          className={`w-7 h-7 rounded-md transition-all flex items-center justify-center cursor-pointer ${
                             isSpent
-                              ? 'bg-surface-container-highest border border-primary/30'
-                              : 'bg-transparent border border-primary shadow-[0_0_6px_rgba(0,218,243,0.3)] hover:bg-primary/10'
+                              ? 'bg-surface-container-highest border border-white/10'
+                              : 'bg-primary/20 border border-primary shadow-[0_0_8px_rgba(0,240,255,0.35)] hover:bg-primary/40'
                           }`}
                           aria-label={`Spell slot level ${slot.level} ${i + 1}`}
                         >
                           {isSpent && (
-                            <span className="material-symbols-outlined text-primary/50 leading-none" style={{ fontSize: '14px' }}>close</span>
+                            <span className="material-symbols-outlined text-primary/40 leading-none" style={{ fontSize: '14px' }}>close</span>
                           )}
                         </button>
                       )
@@ -162,13 +162,13 @@ export function SpellsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search spells..."
-            className="bg-surface-container-lowest pl-10 pr-4 py-3 font-label text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none w-64 border-b-2 border-transparent focus:border-primary transition-colors"
+            className="bg-surface-container-high/80 rounded-xl pl-10 pr-4 py-2.5 font-label text-sm text-on-surface placeholder:text-tertiary/50 outline-none w-64 border border-white/10 focus:border-primary transition-colors"
           />
         </div>
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setLevelFilter('all')}
-            className={`px-3 py-2 font-label text-xs uppercase tracking-widest transition-all ${levelFilter === 'all' ? 'bg-primary text-on-primary' : 'bg-surface-container text-tertiary hover:text-white'}`}
+            className={`px-3 py-2 font-label text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer ${levelFilter === 'all' ? 'bg-primary text-black font-bold shadow-[0_0_12px_rgba(0,240,255,0.4)]' : 'bg-surface-container text-tertiary hover:text-white border border-white/5'}`}
           >
             All
           </button>
@@ -176,7 +176,7 @@ export function SpellsPage() {
             <button
               key={lvl}
               onClick={() => setLevelFilter(lvl)}
-              className={`px-3 py-2 font-label text-xs uppercase tracking-widest transition-all ${levelFilter === lvl ? 'bg-primary text-on-primary' : 'bg-surface-container text-tertiary hover:text-white'}`}
+              className={`px-3 py-2 font-label text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer ${levelFilter === lvl ? 'bg-primary text-black font-bold shadow-[0_0_12px_rgba(0,240,255,0.4)]' : 'bg-surface-container text-tertiary hover:text-white border border-white/5'}`}
             >
               Lv {lvl}
             </button>
@@ -193,12 +193,12 @@ export function SpellsPage() {
           return (
             <div key={lvl} className="mb-8">
               <div className="flex items-center gap-4 mb-3">
-                <h3 className="font-label text-xs uppercase tracking-[0.2em] text-primary">
+                <h3 className="font-label text-xs uppercase tracking-[0.2em] text-primary font-bold">
                   Level {lvl}
                 </h3>
-                <div className="flex-1 h-px bg-outline-variant/20" />
+                <div className="flex-1 h-px bg-white/10" />
               </div>
-              <div className="space-y-px">
+              <div className="space-y-2">
                 {levelSpells.map((spell) => {
                   const slotMax = char.spellSlots.find((sl) => sl.level === spell.level)?.total ?? 0
                   const atkBonus = spell.attackType ? attackBonusFor(spell.attackType) : 0
@@ -249,30 +249,30 @@ function SpellRow({
   onDamage?: () => void
 }) {
   return (
-    <details className={`w-full group border transition-all ${isPrepared ? 'border-primary/50 shadow-[0_0_8px_rgba(0,218,243,0.15)]' : 'border-outline-variant/20'}`}>
-      <summary className={`transition-all flex items-center gap-4 p-4 cursor-pointer list-none ${isPrepared ? 'bg-primary/10 hover:bg-primary/15' : 'bg-surface-container hover:bg-surface-container-high'}`}>
+    <details className={`w-full group rounded-xl overflow-hidden border transition-all ${isPrepared ? 'border-primary/50 shadow-[0_0_12px_rgba(0,240,255,0.15)]' : 'border-white/[0.08]'}`}>
+      <summary className={`transition-all flex items-center gap-4 p-4 cursor-pointer list-none ${isPrepared ? 'bg-primary/10 hover:bg-primary/15' : 'bg-surface-container/90 hover:bg-surface-container-high'}`}>
         {/* Prepared toggle */}
         <button
           onClick={(e) => { e.preventDefault(); onTogglePrepare() }}
-          className={`w-5 h-5 flex-shrink-0 border transition-all flex items-center justify-center ${isPrepared ? 'bg-primary border-primary shadow-[0_0_6px_rgba(0,218,243,0.4)]' : 'border-outline-variant/30 hover:border-primary'}`}
+          className={`w-5 h-5 rounded-md flex-shrink-0 border transition-all flex items-center justify-center cursor-pointer ${isPrepared ? 'bg-primary border-primary shadow-[0_0_8px_rgba(0,240,255,0.5)]' : 'border-white/20 hover:border-primary'}`}
           aria-label={`${isPrepared ? 'Unprepare' : 'Prepare'} ${spell.name}`}
         >
           {isPrepared && (
-            <span className="material-symbols-outlined text-on-primary leading-none" style={{ fontSize: '14px' }}>check</span>
+            <span className="material-symbols-outlined text-black leading-none font-bold" style={{ fontSize: '14px' }}>check</span>
           )}
         </button>
         {/* Name + meta */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
-            <span className={`font-headline font-bold ${isPrepared ? 'text-primary' : 'text-secondary'}`}>{spell.name}</span>
+            <span className={`font-headline font-bold ${isPrepared ? 'text-primary' : 'text-white'}`}>{spell.name}</span>
             {isPrepared && (
-              <span className="font-label text-[9px] text-on-primary bg-primary px-1.5 py-0.5 uppercase tracking-widest">Prepared</span>
+              <span className="font-label text-[9px] text-black font-bold bg-primary px-2 py-0.5 rounded-full uppercase tracking-widest">Prepared</span>
             )}
-            <span className="font-label text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 uppercase">
+            <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-md uppercase">
               {spell.school}{spell.subschool ? ` (${spell.subschool})` : ''}
             </span>
             {spell.attackType && (
-              <span className="font-label text-[10px] text-error bg-error/10 px-1.5 py-0.5 uppercase">
+              <span className="font-label text-[10px] text-error bg-error/15 border border-error/30 px-2 py-0.5 rounded-md uppercase">
                 {spell.attackType === 'meleeTouch' ? 'Melee Touch' : spell.attackType === 'ray' ? 'Ray' : 'Ranged Touch'}
               </span>
             )}
@@ -286,27 +286,27 @@ function SpellRow({
         </span>
       </summary>
 
-      <div className="bg-surface-container-low px-6 pb-6 pt-3">
+      <div className="bg-surface-container-low/90 px-6 pb-6 pt-3 border-t border-white/5">
         <p className="font-body text-tertiary text-sm leading-relaxed mb-4">{spell.description}</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[10px] font-label uppercase tracking-widest">
           {spell.savingThrow && (
             <div>
-              <p className="text-primary mb-1">Saving Throw</p>
+              <p className="text-primary mb-1 font-bold">Saving Throw</p>
               <p className="text-on-surface-variant">{spell.savingThrow}</p>
             </div>
           )}
           <div>
-            <p className="text-primary mb-1">Spell Resist</p>
+            <p className="text-primary mb-1 font-bold">Spell Resist</p>
             <p className="text-on-surface-variant">{spell.spellResistance ? 'Yes' : 'No'}</p>
           </div>
           <div>
-            <p className="text-primary mb-1">Components</p>
+            <p className="text-primary mb-1 font-bold">Components</p>
             <p className="text-on-surface-variant">{spell.components}</p>
           </div>
           {spell.damageDice && (
             <div>
-              <p className="text-primary mb-1">Damage</p>
-              <p className="text-on-surface-variant">
+              <p className="text-primary mb-1 font-bold">Damage</p>
+              <p className="text-on-surface-variant font-bold">
                 {spell.damageDice}{spell.damageBonus ? `+${spell.damageBonus}` : ''}
               </p>
             </div>
@@ -316,7 +316,7 @@ function SpellRow({
           {onAttack && attackLabel && (
             <button
               onClick={onAttack}
-              className="px-5 py-3 bg-gradient-to-br from-primary to-primary-container text-on-primary font-label text-xs uppercase tracking-widest border border-white hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all active:scale-95"
+              className="px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-black font-bold font-label text-xs uppercase tracking-widest rounded-xl hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] transition-all active:scale-95 cursor-pointer"
             >
               {attackLabel}
             </button>
@@ -324,7 +324,7 @@ function SpellRow({
           {onDamage && (
             <button
               onClick={onDamage}
-              className="px-5 py-3 bg-surface-container-highest border border-error/40 text-error font-label text-xs uppercase tracking-widest hover:shadow-[0_0_15px_rgba(255,180,171,0.3)] hover:bg-error/10 transition-all active:scale-95"
+              className="px-5 py-2.5 bg-surface-container-highest border border-error/40 text-error font-label text-xs uppercase tracking-widest rounded-xl hover:shadow-[0_0_15px_rgba(255,75,96,0.3)] hover:bg-error/10 transition-all active:scale-95 cursor-pointer"
             >
               Roll Damage ({spell.damageDice}{spell.damageBonus ? `+${spell.damageBonus}` : ''})
             </button>

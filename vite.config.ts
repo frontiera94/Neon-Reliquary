@@ -85,7 +85,8 @@ function localMapApiPlugin(): Plugin {
         if (idMatch && method === 'GET') {
           const state = devMaps.get(idMatch[1])
           if (!state) return sendJson(res, 404, { error: 'not found' })
-          const { secret: _omit, ...pub } = state
+          const pub = { ...state }
+          delete pub.secret
           return sendJson(res, 200, pub)
         }
 

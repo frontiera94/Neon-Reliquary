@@ -13,8 +13,8 @@ const navItems = [
 export function BottomNav() {
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex overflow-x-auto"
-      style={{ backdropFilter: 'blur(12px)', background: 'rgba(19,19,24,0.9)', boxShadow: 'inset 0 1px 0 rgba(0,218,243,0.15), 0 -4px 20px -8px rgba(0,218,243,0.1)' }}
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex overflow-x-auto border-t border-white/[0.08]"
+      style={{ backdropFilter: 'blur(16px)', background: 'rgba(10,10,18,0.92)', boxShadow: '0 -4px 20px -8px rgba(0,240,255,0.15)' }}
     >
       {navItems.map(({ to, icon, label }) => (
         <NavLink
@@ -29,7 +29,7 @@ export function BottomNav() {
             <>
               <span
                 className="material-symbols-outlined text-xl"
-                style={isActive ? { filter: 'drop-shadow(0 0 8px #00daf3)' } : undefined}
+                style={isActive ? { filter: 'drop-shadow(0 0 8px #00f0ff)' } : undefined}
               >
                 {icon}
               </span>

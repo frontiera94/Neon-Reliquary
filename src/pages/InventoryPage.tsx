@@ -46,9 +46,9 @@ export function InventoryPage() {
       {/* Header */}
       <div className="max-w-5xl mx-auto mb-12">
         <h1 className="font-headline text-5xl md:text-7xl font-bold text-on-surface mb-4 tracking-tighter uppercase">
-          Inventory & <span className="text-secondary neon-glow-gold">Gear</span>
+          Inventory & <span className="text-secondary neon-glow-accent">Gear</span>
         </h1>
-        <div className="h-1 w-24 bg-primary mb-8" />
+        <div className="h-1 w-24 bg-gradient-to-r from-primary to-secondary rounded-full mb-8" />
         <p className="font-body text-tertiary text-lg max-w-2xl leading-relaxed">
           Equipment carried by {char.name}.
         </p>
@@ -58,8 +58,8 @@ export function InventoryPage() {
         {/* Equipment slot grid */}
         <section>
           <div className="flex items-center gap-4 mb-6">
-            <h2 className="font-headline text-2xl text-secondary uppercase tracking-tight">Equipment</h2>
-            <div className="flex-1 h-px bg-secondary/30" />
+            <h2 className="font-headline text-2xl text-white font-bold uppercase tracking-tight">Equipment</h2>
+            <div className="flex-1 h-px bg-white/10" />
           </div>
           <EquipmentSlotGrid items={inventory} />
         </section>
@@ -67,8 +67,8 @@ export function InventoryPage() {
         {/* Coin purse */}
         <section>
           <div className="flex items-center gap-4 mb-6">
-            <h2 className="font-headline text-2xl text-secondary uppercase tracking-tight">Coin Purse</h2>
-            <div className="flex-1 h-px bg-secondary/30" />
+            <h2 className="font-headline text-2xl text-white font-bold uppercase tracking-tight">Coin Purse</h2>
+            <div className="flex-1 h-px bg-white/10" />
           </div>
           <CoinPurseWidget
             coins={coins}
@@ -83,11 +83,11 @@ export function InventoryPage() {
           itemsByCategory.map(({ cat, items }) => (
             <section key={cat}>
               <div className="flex items-center gap-4 mb-6">
-                <h2 className="font-headline text-2xl text-secondary uppercase tracking-tight">
+                <h2 className="font-headline text-2xl text-white font-bold uppercase tracking-tight">
                   {CATEGORY_LABELS[cat]}
                 </h2>
-                <div className="flex-1 h-px bg-secondary/30" />
-                <span className="font-label text-[10px] text-tertiary uppercase tracking-widest">
+                <div className="flex-1 h-px bg-white/10" />
+                <span className="font-label text-xs text-primary/80 bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                   {items.length} item{items.length !== 1 ? 's' : ''}
                 </span>
               </div>

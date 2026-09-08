@@ -18,7 +18,9 @@ export function MapViewPage() {
         if (!current || current.updatedAt !== data.updatedAt) {
           useMapStore.getState().setMap(data)
         }
-      } catch {
+      } catch (e) {
+        // Silently ignore network poll dropouts
+        void e
       }
     }
     poll()

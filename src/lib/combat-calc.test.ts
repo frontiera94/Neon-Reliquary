@@ -106,6 +106,16 @@ describe('calcEffectiveWeapon', () => {
     const result = calcEffectiveWeapon(rangedWeapon, allBuffs, ['haste'])
     expect(result.attackBonus).toEqual([9])
   })
+
+  it('handles weapons with high BAB iterative attacks (4 attacks)', () => {
+    const iterativeWeapon: Weapon = {
+      ...meleeWeapon,
+      attackBonus: [16, 11, 6, 1],
+    }
+    const result = calcEffectiveWeapon(iterativeWeapon, allBuffs, ['power-attack', 'haste'])
+    // net mod: -3 + 1 = -2
+    expect(result.attackBonus).toEqual([14, 9, 4, -1])
+  })
 })
 
 // ─── formatAttackBonus ───────────────────────────────────────────────────────
@@ -121,6 +131,7 @@ describe('formatAttackBonus', () => {
 
   it('formats zero as +0', () => {
     expect(formatAttackBonus([0])).toBe('+0')
+    expect(formatAttackBonus([0, 0])).toBe('+0 / +0')
   })
 
   it('formats mixed positive and negative', () => {
@@ -129,6 +140,10 @@ describe('formatAttackBonus', () => {
 
   it('formats single entry with no slash', () => {
     expect(formatAttackBonus([8])).toBe('+8')
+  })
+
+  it('formats empty bonus array as empty string', () => {
+    expect(formatAttackBonus([])).toBe('')
   })
 })
 

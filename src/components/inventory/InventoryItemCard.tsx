@@ -21,14 +21,14 @@ export function InventoryItemCard({
 
   return (
     <div
-      className={`bg-surface-container p-4 border-l-4 border-primary transition-all hover:bg-surface-container-high hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] flex flex-col gap-3 ${qty === 0 ? 'opacity-50' : ''}`}
+      className={`bg-surface-container/70 backdrop-blur-md p-5 rounded-2xl border border-white/5 border-l-4 border-l-primary transition-all duration-300 hover:border-primary/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.15)] flex flex-col gap-3 group ${qty === 0 ? 'opacity-50' : ''}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-1 min-w-0">
-          <span className={`text-[10px] font-label uppercase tracking-[0.2em] bg-surface-container-lowest px-2 py-0.5 border self-start ${chipColor}`}>
+          <span className={`text-[10px] font-label uppercase tracking-widest px-2.5 py-0.5 rounded-full border self-start ${chipColor}`}>
             {item.category}
           </span>
-          <h3 className="font-headline text-xl font-bold text-on-surface leading-tight">{item.name}</h3>
+          <h3 className="font-headline text-xl font-bold text-white leading-tight">{item.name}</h3>
         </div>
 
         {/* Quantity controls */}
@@ -36,14 +36,14 @@ export function InventoryItemCard({
           <button
             onClick={() => onAdjust(-1)}
             disabled={qty <= 0}
-            className="w-7 h-7 flex items-center justify-center text-tertiary hover:text-white hover:bg-surface-container-high disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-tertiary hover:text-white hover:bg-white/10 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             <span className="material-symbols-outlined text-base">remove</span>
           </button>
-          <span className="font-label text-base text-on-surface w-8 text-center">×{qty}</span>
+          <span className="font-label text-base text-white w-8 text-center font-bold">×{qty}</span>
           <button
             onClick={() => onAdjust(1)}
-            className="w-7 h-7 flex items-center justify-center text-tertiary hover:text-primary hover:bg-surface-container-high transition-colors"
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-tertiary hover:text-primary hover:bg-white/10 active:scale-95 transition-all"
           >
             <span className="material-symbols-outlined text-base">add</span>
           </button>

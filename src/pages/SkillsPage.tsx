@@ -53,7 +53,7 @@ export function SkillsPage() {
       <header className="mb-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="font-headline text-5xl font-bold text-on-surface mb-2 tracking-tight">
+            <h1 className="font-headline text-5xl font-bold text-white mb-2 tracking-tight">
               Grimoire Skills
             </h1>
             <p className="text-tertiary font-label uppercase text-sm tracking-[0.2em]">
@@ -70,16 +70,16 @@ export function SkillsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search skills..."
-                className="bg-surface-container-lowest pl-10 pr-4 py-3 font-label text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none w-64 border-b-2 border-transparent focus:border-primary transition-colors"
+                className="bg-surface-container-high/80 rounded-xl pl-10 pr-4 py-2.5 font-label text-sm text-on-surface placeholder:text-tertiary/50 outline-none w-64 border border-white/10 focus:border-primary transition-colors"
               />
             </div>
             {/* Filter */}
             <button
               onClick={() => setTrainedOnly((v) => !v)}
-              className={`px-4 py-3 font-label text-xs uppercase tracking-widest border transition-all cursor-pointer ${
+              className={`px-4 py-2.5 rounded-xl font-label text-xs uppercase tracking-widest border transition-all cursor-pointer ${
                 trainedOnly
-                  ? 'border-primary text-primary bg-primary/10 shadow-[0_0_15px_rgba(0,218,243,0.3)]'
-                  : 'border-outline-variant/30 text-tertiary hover:border-outline'
+                  ? 'border-primary text-black bg-primary font-bold shadow-[0_0_15px_rgba(0,240,255,0.4)]'
+                  : 'border-white/10 text-tertiary hover:border-white/30 hover:text-white bg-surface-container'
               }`}
             >
               Trained Only
@@ -129,29 +129,29 @@ function SkillRow({
     <button
       onClick={onRoll}
       aria-label={`Roll ${skill.name}`}
-      className="w-full bg-surface-container flex items-center justify-between p-4 gap-4 border border-white/50 shadow-[0_0_18px_rgba(0,218,243,0.2)] hover:shadow-[0_0_35px_rgba(0,218,243,0.45)] hover:bg-surface-container-high transition-all active:scale-[0.99] text-left cursor-pointer"
+      className="w-full bg-surface-container/90 backdrop-blur-sm flex items-center justify-between p-4 gap-4 rounded-xl border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] hover:bg-surface-container-high transition-all active:scale-[0.99] text-left cursor-pointer group"
     >
       {/* Left: name + meta */}
-      <div className="flex items-center gap-3 flex-1 min-w-0">
+      <div className="flex items-center gap-3.5 flex-1 min-w-0">
         <div
-          className={`w-1.5 h-8 flex-shrink-0 ${
-            skill.trained ? 'bg-secondary' : 'bg-outline-variant/30'
+          className={`w-1.5 h-10 rounded-full flex-shrink-0 ${
+            skill.trained ? 'bg-secondary shadow-[0_0_8px_rgba(217,70,239,0.5)]' : 'bg-white/10'
           }`}
         />
         <div className="min-w-0">
-          <p className="font-headline font-bold text-secondary truncate leading-tight">
+          <p className="font-headline font-bold text-white group-hover:text-primary truncate leading-tight transition-colors">
             {skill.name}
           </p>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="font-label text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 uppercase">
+          <div className="flex items-center gap-2 mt-1">
+            <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-md uppercase font-bold">
               {ABILITY_SHORT[skill.ability]}
             </span>
             {skill.classSkill && (
-              <span className="font-label text-[10px] text-secondary/70 uppercase tracking-widest">
+              <span className="font-label text-[10px] text-secondary bg-secondary/15 border border-secondary/30 px-2 py-0.5 rounded-md uppercase tracking-wider font-bold">
                 Class
               </span>
             )}
-            <span className="font-label text-[10px] text-on-surface-variant">
+            <span className="font-label text-[10px] text-tertiary">
               Ranks: {skill.ranks}
             </span>
           </div>
@@ -159,8 +159,8 @@ function SkillRow({
       </div>
 
       {/* Bonus */}
-      <div className="w-20 h-20 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-primary to-primary-container text-on-primary">
-        <span className="font-label text-2xl font-black">
+      <div className="w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center bg-gradient-to-r from-primary to-primary-container text-black font-black shadow-[0_0_15px_rgba(0,240,255,0.3)] group-hover:shadow-[0_0_25px_rgba(0,240,255,0.5)] transition-all">
+        <span className="font-label text-2xl">
           {total >= 0 ? `+${total}` : total}
         </span>
       </div>

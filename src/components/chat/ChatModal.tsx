@@ -105,7 +105,7 @@ export function ChatModal() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[60] flex flex-col md:items-center md:justify-center p-0 md:p-6"
-          style={{ backdropFilter: 'blur(8px)', background: 'rgba(10,10,14,0.75)' }}
+          style={{ backdropFilter: 'blur(16px)', background: 'rgba(10,10,18,0.85)' }}
           onClick={closeChat}
         >
           <motion.div
@@ -113,13 +113,13 @@ export function ChatModal() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 24, stiffness: 280 }}
-            className="w-full h-full md:max-w-2xl md:h-[85vh] bg-surface-container flex flex-col border border-primary/20 shadow-[0_0_40px_rgba(0,218,243,0.1),0_0_80px_rgba(0,0,0,0.9)]"
+            className="w-full h-full md:max-w-2xl md:h-[85vh] bg-surface-container/95 backdrop-blur-xl flex flex-col border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,240,255,0.12),0_0_80px_rgba(0,0,0,0.9)] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/20 flex-shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0 bg-surface-container-high/50">
               <div>
-                <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-gold">
+                <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
                   Oracolo
                 </h2>
                 {character && (
@@ -130,7 +130,7 @@ export function ChatModal() {
               </div>
               <button
                 onClick={closeChat}
-                className="text-tertiary hover:text-primary transition-colors"
+                className="text-tertiary hover:text-primary transition-colors p-1 rounded-lg hover:bg-white/5 cursor-pointer"
                 aria-label="Chiudi"
               >
                 <span className="material-symbols-outlined">close</span>
@@ -138,26 +138,25 @@ export function ChatModal() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-              {messages.length === 0 && !isLoading ? (
-                <div className="flex flex-col items-center justify-center h-full gap-6 pb-8">
-                  <div className="text-center">
-                    <span
-                      className="material-symbols-outlined text-5xl text-primary/40"
-                      style={{ filter: 'drop-shadow(0 0 12px rgba(0,218,243,0.3))' }}
-                    >
-                      auto_awesome
-                    </span>
-                    <p className="font-label text-xs text-tertiary uppercase tracking-widest mt-3">
-                      Chiedi all'oracolo
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 justify-center max-w-sm">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center py-8">
+                  <span className="material-symbols-outlined text-4xl text-primary/40 mb-3">
+                    psychology
+                  </span>
+                  <p className="font-headline text-on-surface text-base mb-1">
+                    Interroga l'Oracolo
+                  </p>
+                  <p className="font-body text-xs text-tertiary max-w-sm mb-6">
+                    Chiedi regole, chiarimenti sulle abilità, incantesimi o lo stato della tua scheda Pathfinder 1e.
+                  </p>
+                  <div className="flex flex-col gap-2 w-full max-w-sm">
                     {SUGGESTIONS.map((s) => (
                       <button
                         key={s}
                         onClick={() => void sendMessage(s)}
-                        className="px-3 py-2 bg-surface-container-high text-on-surface font-body text-xs hover:bg-primary/10 hover:text-primary transition-colors border border-outline-variant/20 hover:border-primary/30"
+                        disabled={!character}
+                        className="text-left font-label text-xs px-3.5 py-2.5 bg-surface-container-high border border-white/10 rounded-xl hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all text-on-surface-variant cursor-pointer"
                       >
                         {s}
                       </button>
@@ -172,26 +171,26 @@ export function ChatModal() {
                       className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[85%] px-4 py-3 font-body text-sm leading-relaxed ${
+                        className={`max-w-[85%] px-4 py-3 font-body text-sm leading-relaxed rounded-2xl ${
                           msg.role === 'user'
-                            ? 'bg-primary/10 text-on-surface border border-primary/20 whitespace-pre-wrap'
-                            : 'bg-surface-container-highest text-on-surface prose-chat'
+                            ? 'bg-primary/15 text-white border border-primary/30 whitespace-pre-wrap rounded-br-none shadow-[0_0_15px_rgba(0,240,255,0.1)]'
+                            : 'bg-surface-container-highest border border-white/10 text-on-surface rounded-bl-none prose-chat'
                         }`}
                       >
                         {msg.role === 'user' ? msg.content : (
                           <Markdown
                             components={{
-                              h1: ({ children }) => <p style={{ color: '#e9c349', fontFamily: 'Noto Serif, serif', fontSize: '0.95rem', marginBottom: '0.25rem' }}>{children}</p>,
-                              h2: ({ children }) => <p style={{ color: '#e9c349', fontFamily: 'Noto Serif, serif', fontSize: '0.85rem', marginBottom: '0.25rem' }}>{children}</p>,
-                              h3: ({ children }) => <p style={{ color: '#e9c349', fontFamily: 'Space Grotesk, monospace', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem' }}>{children}</p>,
-                              strong: ({ children }) => <strong style={{ color: '#00daf3', fontWeight: 600 }}>{children}</strong>,
-                              em: ({ children }) => <em style={{ color: '#c6c6c6' }}>{children}</em>,
+                              h1: ({ children }) => <p style={{ color: '#d946ef', fontFamily: 'Noto Serif, serif', fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.25rem' }}>{children}</p>,
+                              h2: ({ children }) => <p style={{ color: '#d946ef', fontFamily: 'Noto Serif, serif', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.25rem' }}>{children}</p>,
+                              h3: ({ children }) => <p style={{ color: '#00f0ff', fontFamily: 'Space Grotesk, monospace', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem' }}>{children}</p>,
+                              strong: ({ children }) => <strong style={{ color: '#00f0ff', fontWeight: 600 }}>{children}</strong>,
+                              em: ({ children }) => <em style={{ color: '#cbd5e1' }}>{children}</em>,
                               ul: ({ children }) => <ul style={{ listStyleType: 'disc', paddingLeft: '1.25rem', margin: '0.25rem 0' }}>{children}</ul>,
                               ol: ({ children }) => <ol style={{ listStyleType: 'decimal', paddingLeft: '1.25rem', margin: '0.25rem 0' }}>{children}</ol>,
                               li: ({ children }) => <li style={{ marginBottom: '0.125rem' }}>{children}</li>,
-                              code: ({ children }) => <code style={{ background: '#1f1f25', padding: '0.1rem 0.3rem', fontFamily: 'Space Grotesk, monospace', fontSize: '0.75rem', color: '#00daf3' }}>{children}</code>,
+                              code: ({ children }) => <code style={{ background: '#0a0a12', padding: '0.1rem 0.35rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', fontFamily: 'Space Grotesk, monospace', fontSize: '0.75rem', color: '#00f0ff' }}>{children}</code>,
                               p: ({ children }) => <p style={{ marginBottom: '0.35rem' }}>{children}</p>,
-                              hr: () => <div style={{ margin: '0.5rem 0', height: '1px', background: 'rgba(63,71,83,0.3)' }} />,
+                              hr: () => <div style={{ margin: '0.5rem 0', height: '1px', background: 'rgba(255,255,255,0.1)' }} />,
                             }}
                           >
                             {msg.content}
@@ -203,11 +202,11 @@ export function ChatModal() {
 
                   {isLoading && (
                     <div className="flex justify-start">
-                      <div className="px-4 py-3 bg-surface-container-highest flex items-center gap-2">
+                      <div className="px-4 py-3 bg-surface-container-highest border border-white/10 rounded-2xl rounded-bl-none flex items-center gap-2">
                         <div style={{
-                          width: 16, height: 16, borderRadius: '50%',
-                          border: '2px solid rgba(198,198,198,0.25)',
-                          borderTopColor: '#c6c6c6',
+                          width: 14, height: 14, borderRadius: '50%',
+                          border: '2px solid rgba(0,240,255,0.3)',
+                          borderTopColor: '#00f0ff',
                           animation: 'chat-spin 0.8s linear infinite',
                           flexShrink: 0,
                         }} />
@@ -223,7 +222,7 @@ export function ChatModal() {
             </div>
 
             {/* Input */}
-            <div className="flex-shrink-0 border-t border-outline-variant/20 p-4 flex gap-3 items-end">
+            <div className="flex-shrink-0 border-t border-white/10 p-4 flex gap-3 items-end bg-surface-container-high/30">
               <textarea
                 ref={textareaRef}
                 value={text}
@@ -232,19 +231,19 @@ export function ChatModal() {
                 placeholder="Scrivi una domanda… (Invio per inviare, Shift+Invio per andare a capo)"
                 rows={2}
                 disabled={isLoading || !character}
-                className="flex-1 bg-surface-container-high text-on-surface font-body text-sm px-4 py-3 resize-none placeholder:text-tertiary/50 focus:outline-none focus:ring-1 focus:ring-primary/40 disabled:opacity-40 border border-outline-variant/20 focus:border-primary/40"
+                className="flex-1 bg-surface-container-high text-on-surface font-body text-sm px-4 py-3 resize-none rounded-xl placeholder:text-tertiary/60 focus:outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-40 border border-white/10 focus:border-primary/50"
               />
               <button
                 onClick={() => void sendMessage(text)}
                 disabled={isLoading || !text.trim() || !character}
                 aria-label="Invia"
-                className="flex-shrink-0 w-12 h-12 bg-primary text-on-primary flex items-center justify-center hover:shadow-[0_0_20px_rgba(0,218,243,0.4)] transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                className="flex-shrink-0 w-12 h-12 bg-primary text-black rounded-xl font-bold flex items-center justify-center hover:shadow-[0_0_20px_rgba(0,240,255,0.45)] transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none cursor-pointer"
               >
                 {isLoading ? (
                   <div style={{
                     width: 20, height: 20, borderRadius: '50%',
-                    border: '2px solid rgba(0,54,61,0.4)',
-                    borderTopColor: '#00363d',
+                    border: '2px solid rgba(0,0,0,0.3)',
+                    borderTopColor: '#000000',
                     animation: 'chat-spin 0.8s linear infinite',
                   }} />
                 ) : (

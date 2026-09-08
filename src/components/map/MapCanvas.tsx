@@ -203,7 +203,7 @@ export function MapCanvas({ map, isReadOnly, mapId, secret, selectedTokenId, onT
     } else if (activeTool === 'label') {
       const text = window.prompt('Etichetta:')
       if (text) {
-        useMapStore.getState().addLabel({ id, x: drawStart.x / gs2, y: drawStart.y / gs2, text, color: '#e9c349' })
+        useMapStore.getState().addLabel({ id, x: drawStart.x / gs2, y: drawStart.y / gs2, text, color: '#d946ef' })
         if (mapId && secret) useMapStore.getState().scheduleSync(mapId, secret)
       }
     }

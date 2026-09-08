@@ -141,6 +141,49 @@ describe('stat-calc engine', () => {
       expect(res.fortitude).toBe(5)
       expect(res.will).toBe(2)
     })
+
+    it('applies Sickened and Frightened (-2 each) to all saving throws', () => {
+      const effAbilities = calcEffectiveAbilities(baseAbilities, ['sickened', 'frightened'], [])
+      const res = calcEffectiveSaves(baseSaves, baseAbilities, effAbilities, ['sickened', 'frightened'], [])
+      // Fort: 5 - 2 (sickened) - 2 (frightened) = 1
+      expect(res.fortitude).toBe(1)
+      expect(res.reflex).toBe(0)
+      expect(res.will).toBe(-2)
+    })
+
+    it('applies flat numeric saveMod to all saves', () => {
+      const resistanceBuff: BuffToggle = {
+        id: 'resistance',
+        name: 'Resistance',
+        active: true,
+        attackMod: 0,
+        damageMod: 0,
+        acMod: 0,
+        saveMod: 1,
+      }
+      const effAbilities = calcEffectiveAbilities(baseAbilities, [], [resistanceBuff])
+      const res = calcEffectiveSaves(baseSaves, baseAbilities, effAbilities, [], [resistanceBuff])
+      expect(res.fortitude).toBe(6)
+      expect(res.reflex).toBe(5)
+      expect(res.will).toBe(3)
+    })
+
+    it('applies selective saveMod object to specific saves', () => {
+      const ironWillBuff: BuffToggle = {
+        id: 'iron-will',
+        name: 'Iron Will Buff',
+        active: true,
+        attackMod: 0,
+        damageMod: 0,
+        acMod: 0,
+        saveMod: { will: 2, fort: 1 },
+      }
+      const effAbilities = calcEffectiveAbilities(baseAbilities, [], [ironWillBuff])
+      const res = calcEffectiveSaves(baseSaves, baseAbilities, effAbilities, [], [ironWillBuff])
+      expect(res.fortitude).toBe(6)
+      expect(res.reflex).toBe(4)
+      expect(res.will).toBe(4)
+    })
   })
 
   describe('calcEffectiveArmorClass', () => {
@@ -178,6 +221,42 @@ describe('stat-calc engine', () => {
       expect(res.total).toBe(22)
       expect(res.touch).toBe(16)
       expect(res.flatFooted).toBe(20)
+    })
+
+    it('applies Stunned (-2 AC, loses Dex bonus)', () => {
+      const res = calcEffectiveArmorClass(baseAc, 2, 2, ['stunned'], [])
+      // -2 penalty and loses +2 dex -> total drops by 4
+      expect(res.total).toBe(14)
+      expect(res.touch).toBe(8)
+      expect(res.flatFooted).toBe(14)
+    })
+
+    it('appends special note for Prone condition without modifying total AC directly', () => {
+      const res = calcEffectiveArmorClass(baseAc, 2, 2, ['prone'], [])
+      expect(res.notes).toContain('-4 AC vs melee / +4 AC vs ranged (Prone)')
+      expect(res.total).toBe(18)
+    })
+
+    it('applies negative AC buffs like Barbarian Rage', () => {
+      const rageBuff: BuffToggle = {
+        id: 'rage',
+        name: 'Rage',
+        active: true,
+        attackMod: 0,
+        damageMod: 0,
+        acMod: -2,
+      }
+      const res = calcEffectiveArmorClass(baseAc, 2, 2, [], [rageBuff])
+      expect(res.total).toBe(16)
+      expect(res.touch).toBe(10)
+      expect(res.flatFooted).toBe(14)
+    })
+
+    it('does not subtract lost Dex bonus if Dex mod is zero or negative', () => {
+      const res = calcEffectiveArmorClass(baseAc, 0, 0, ['blinded'], [])
+      // only -2 penalty from blinded, no negative dex bonus deducted
+      expect(res.total).toBe(16)
+      expect(res.touch).toBe(10)
     })
   })
 
@@ -232,12 +311,84 @@ describe('stat-calc engine', () => {
       expect(res.attackBonus).toEqual([10, 5])
       expect(res.damageBonus).toBe(8)
     })
+
+    it('extracts extraDamageDice from active buffs like Sneak Attack', () => {
+      const sneakBuff: BuffToggle = {
+        id: 'sneak',
+        name: 'Sneak Attack',
+        active: true,
+        attackMod: 0,
+        damageMod: 0,
+        acMod: 0,
+        extraDamageDice: '+2d6',
+      }
+      const effAbilities = calcEffectiveAbilities(baseAbilities, [], [sneakBuff])
+      const res = calcEffectiveWeaponStats(
+        sword,
+        baseAbilities,
+        effAbilities,
+        [],
+        [sneakBuff],
+        ['sneak']
+      )
+      expect(res.extraDamageDice).toBe('+2d6')
+    })
+
+    it('applies Prone penalty to melee weapon (-4) but not to ranged weapon', () => {
+      const effAbilities = calcEffectiveAbilities(baseAbilities, ['prone'], [])
+      const meleeRes = calcEffectiveWeaponStats(
+        sword,
+        baseAbilities,
+        effAbilities,
+        ['prone'],
+        [],
+        []
+      )
+      expect(meleeRes.attackBonus).toEqual([4, -1]) // 8-4, 3-4
+
+      const bow: Weapon = {
+        id: 'bow',
+        name: 'Shortbow',
+        type: 'ranged',
+        attackBonus: [6],
+        damageDice: '1d6',
+        damageBonus: 0,
+        critRange: 20,
+        critMultiplier: 3,
+        tags: [],
+      }
+      const rangedRes = calcEffectiveWeaponStats(
+        bow,
+        baseAbilities,
+        effAbilities,
+        ['prone'],
+        [],
+        []
+      )
+      expect(rangedRes.attackBonus).toEqual([6]) // no -4 prone melee penalty
+    })
+
+    it('populates attackBreakdown and damageBreakdown with detailed records', () => {
+      const effAbilities = calcEffectiveAbilities(baseAbilities, ['shaken'], [])
+      const res = calcEffectiveWeaponStats(
+        sword,
+        baseAbilities,
+        effAbilities,
+        ['shaken'],
+        [],
+        []
+      )
+      expect(res.attackBreakdown).toContainEqual({ label: 'Base BAB/Mod', value: 8 })
+      expect(res.attackBreakdown).toContainEqual({ label: 'Shaken', value: -2 })
+      expect(res.damageBreakdown).toContainEqual({ label: 'Base Dmg', value: 6 })
+    })
   })
 
   describe('calcEffectiveSkills', () => {
     const skills: Skill[] = [
       { id: 'ath', name: 'Athletics', ability: 'str', ranks: 2, classSkill: true, trained: true, miscBonus: 0, armorCheckPenalty: true },
       { id: 'per', name: 'Perception', ability: 'wis', ranks: 4, classSkill: true, trained: true, miscBonus: 0, armorCheckPenalty: false },
+      { id: 'kno', name: 'Knowledge Arcana', ability: 'int', ranks: 3, classSkill: true, trained: true, miscBonus: 0, armorCheckPenalty: false },
     ]
 
     it('applies Shaken (-2 to all skill checks)', () => {
@@ -248,6 +399,24 @@ describe('stat-calc engine', () => {
       // Perception base: 4 ranks + 3 class + 1 wis = 8 -> minus 2 shaken = 6
       expect(res[1].effectiveTotal).toBe(6)
     })
+
+    it('applies Blinded (-4) to Perception and STR/DEX skills, but not INT skills', () => {
+      const effAbilities = calcEffectiveAbilities(baseAbilities, ['blinded'], [])
+      const res = calcEffectiveSkills(skills, baseAbilities, effAbilities, ['blinded'])
+      // Athletics (STR): 2 ranks + 3 class + 4 str = 9 -> minus 4 blinded = 5
+      expect(res[0].effectiveTotal).toBe(5)
+      // Perception (WIS, but has perception in name): 4 ranks + 3 class + 1 wis = 8 -> minus 4 blinded = 4
+      expect(res[1].effectiveTotal).toBe(4)
+      // Knowledge (INT): 3 ranks + 3 class + 0 int = 6 -> unaffected by blinded
+      expect(res[2].effectiveTotal).toBe(6)
+    })
+
+    it('applies Sickened and Frightened (-2 each)', () => {
+      const effAbilities = calcEffectiveAbilities(baseAbilities, ['sickened', 'frightened'], [])
+      const res = calcEffectiveSkills(skills, baseAbilities, effAbilities, ['sickened', 'frightened'])
+      // Athletics: 9 - 2 - 2 = 5
+      expect(res[0].effectiveTotal).toBe(5)
+    })
   })
 
   describe('getActiveActionRestrictions', () => {
@@ -256,6 +425,20 @@ describe('stat-calc engine', () => {
       expect(alerts).toHaveLength(2)
       expect(alerts[0].condition).toBe('nauseated')
       expect(alerts[1].condition).toBe('stunned')
+    })
+
+    it('handles all 6 recognized restriction conditions', () => {
+      const conditions = ['nauseated', 'stunned', 'paralyzed', 'dazed', 'prone', 'blinded'] as const
+      const alerts = getActiveActionRestrictions([...conditions])
+      expect(alerts).toHaveLength(6)
+
+      const conds = alerts.map((a) => a.condition)
+      expect(conds).toEqual(['nauseated', 'stunned', 'paralyzed', 'dazed', 'prone', 'blinded'])
+    })
+
+    it('returns empty array when conditions list has no restrictions', () => {
+      expect(getActiveActionRestrictions([])).toEqual([])
+      expect(getActiveActionRestrictions(['shaken', 'fatigued'])).toEqual([])
     })
   })
 })

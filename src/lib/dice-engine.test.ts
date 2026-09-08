@@ -37,6 +37,10 @@ describe('parseDiceFormula', () => {
     expect(parseDiceFormula('1d6-2')).toEqual({ count: 1, sides: 6, bonus: -2 })
   })
 
+  it('parses multi-digit count and bonus "10d6+15"', () => {
+    expect(parseDiceFormula('10d6+15')).toEqual({ count: 10, sides: 6, bonus: 15 })
+  })
+
   it('returns default {count:1, sides:20, bonus:0} for invalid input', () => {
     expect(parseDiceFormula('invalid')).toEqual({ count: 1, sides: 20, bonus: 0 })
     expect(parseDiceFormula('')).toEqual({ count: 1, sides: 20, bonus: 0 })
@@ -127,5 +131,34 @@ describe('rollDice', () => {
   it('multi-die formula includes count prefix', () => {
     const result = rollDice({ diceType: 6, count: 3, modifier: 0, label: 'Multi' })
     expect(result.formula).toMatch(/^3d6:/)
+  })
+
+  it('omits modifier from formula when modifier is 0', () => {
+    const result = rollDice({ diceType: 8, count: 1, modifier: 0, label: 'NoMod' })
+    expect(result.formula).not.toContain('+')
+    expect(result.formula).not.toContain('-')
+  })
+
+  it('passes through the breakdown array if provided', () => {
+    const breakdown = [
+      { label: 'BAB', value: 5 },
+      { label: 'STR', value: 3 },
+    ]
+    const result = rollDice({
+      diceType: 20,
+      count: 1,
+      modifier: 8,
+      label: 'WithBreakdown',
+      breakdown,
+    })
+    expect(result.breakdown).toEqual(breakdown)
+  })
+
+  it('records a recent timestamp', () => {
+    const before = Date.now()
+    const result = rollDice({ diceType: 6, count: 1, modifier: 0, label: 'Time' })
+    const after = Date.now()
+    expect(result.timestamp).toBeGreaterThanOrEqual(before)
+    expect(result.timestamp).toBeLessThanOrEqual(after)
   })
 })

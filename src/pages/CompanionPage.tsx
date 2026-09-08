@@ -117,17 +117,17 @@ export function CompanionPage() {
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
       {/* Multi-companion Switcher Tabs */}
       {companions.length > 1 && (
-        <div className="flex border-b border-outline-variant/30 gap-2 pb-2">
+        <div className="flex border-b border-white/10 gap-2 pb-2">
           {companions.map((comp) => {
             const isSelected = comp.id === activeCompanion.id
             return (
               <button
                 key={comp.id}
                 onClick={() => handleSelectCompanion(comp)}
-                className={`px-4 py-2 font-label text-xs uppercase tracking-wider transition-all flex items-center gap-2 border cursor-pointer ${
+                className={`px-4 py-2 font-label text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 border cursor-pointer ${
                   isSelected
-                    ? 'border-primary text-primary bg-primary/10 shadow-[0_0_15px_rgba(0,218,243,0.2)]'
-                    : 'border-outline-variant/30 text-tertiary hover:text-white'
+                    ? 'border-primary text-primary bg-primary/10 shadow-[0_0_15px_rgba(0,240,255,0.2)] font-bold'
+                    : 'border-white/10 text-tertiary hover:text-white hover:bg-white/5'
                 }`}
               >
                 <span className="material-symbols-outlined text-sm">pets</span>
@@ -139,38 +139,38 @@ export function CompanionPage() {
       )}
 
       {/* Companion Profile Header */}
-      <header className="bg-surface-container p-6 border border-primary shadow-[0_0_20px_rgba(0,218,243,0.15)] flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent pointer-events-none" />
+      <header className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_25px_rgba(0,240,255,0.08)] flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent pointer-events-none" />
 
         <div className="flex items-center gap-5 relative z-10 w-full md:w-auto">
           {activeCompanion.portrait ? (
             <img
               src={activeCompanion.portrait}
               alt={activeCompanion.name}
-              className="w-20 h-20 object-cover border-2 border-primary/50 flex-shrink-0 shadow-[0_0_15px_rgba(0,218,243,0.3)]"
+              className="w-20 h-20 object-cover rounded-2xl border-2 border-primary/50 flex-shrink-0 shadow-[0_0_15px_rgba(0,240,255,0.2)]"
             />
           ) : (
-            <div className="w-20 h-20 bg-surface-container-high border-2 border-primary/40 flex items-center justify-center text-primary flex-shrink-0">
+            <div className="w-20 h-20 bg-surface-container-high rounded-2xl border-2 border-primary/40 flex items-center justify-center text-primary flex-shrink-0 shadow-[0_0_15px_rgba(0,240,255,0.1)]">
               <span className="material-symbols-outlined text-4xl">pets</span>
             </div>
           )}
 
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-label text-[10px] uppercase px-2 py-0.5 bg-primary/20 text-primary border border-primary/40">
+              <span className="font-label text-[10px] uppercase px-2.5 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/40 font-semibold tracking-wider">
                 {activeCompanion.type.replace('_', ' ')}
               </span>
-              <span className="font-label text-[10px] uppercase px-2 py-0.5 bg-secondary/20 text-secondary border border-secondary/40">
+              <span className="font-label text-[10px] uppercase px-2.5 py-0.5 rounded-full bg-secondary/20 text-secondary border border-secondary/40 font-semibold tracking-wider">
                 {activeCompanion.size} {activeCompanion.species}
               </span>
               {activeCompanion.hitDice && (
-                <span className="font-label text-[10px] uppercase px-2 py-0.5 bg-surface-container-high text-tertiary border border-outline-variant/30">
+                <span className="font-label text-[10px] uppercase px-2.5 py-0.5 rounded-full bg-surface-container-high text-tertiary border border-white/10">
                   {activeCompanion.hitDice}
                 </span>
               )}
             </div>
 
-            <h1 className="font-headline text-3xl font-bold text-on-surface mt-1">
+            <h1 className="font-headline text-3xl font-bold text-white mt-1.5">
               {activeCompanion.name}
             </h1>
             <p className="font-label text-xs text-tertiary tracking-wider mt-0.5">
@@ -185,7 +185,7 @@ export function CompanionPage() {
             <span className="font-label text-[10px] text-tertiary uppercase tracking-widest block">
               Bound Master
             </span>
-            <span className="font-headline text-primary font-bold">{char.name}</span>
+            <span className="font-headline text-primary font-bold text-lg">{char.name}</span>
           </div>
         </div>
       </header>
@@ -193,14 +193,14 @@ export function CompanionPage() {
       {/* Main Grid: Vitality & Defenses */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Vitality Core */}
-        <section className="lg:col-span-6 bg-surface-container p-6 border border-primary shadow-[0_0_15px_rgba(0,218,243,0.1)] flex flex-col items-center justify-center text-center relative overflow-hidden">
-          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-gold">
+        <section className="lg:col-span-6 bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] flex flex-col items-center justify-center text-center relative overflow-hidden">
+          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
             Vitality Core
           </h2>
 
           <div
             className="font-label font-black text-primary"
-            style={{ fontSize: '4.5rem', lineHeight: 1, textShadow: '0 0 25px rgba(0,218,243,0.3)' }}
+            style={{ fontSize: '4.5rem', lineHeight: 1, textShadow: '0 0 25px rgba(0,240,255,0.3)' }}
           >
             {currentHp}
           </div>
@@ -211,7 +211,7 @@ export function CompanionPage() {
           <div className="mt-6 flex items-center gap-3">
             <button
               onClick={() => adjustCompanionHp(char.id, activeCompanion.id, -hpDelta, activeCompanion.maxHp)}
-              className="px-4 py-2 bg-error-container text-on-error-container hover:brightness-125 transition-all font-label text-xs uppercase tracking-widest cursor-pointer"
+              className="px-4 py-2 bg-error-container text-on-error-container hover:brightness-125 rounded-xl transition-all font-label text-xs uppercase tracking-widest cursor-pointer active:scale-95"
               aria-label="Decrease companion HP"
             >
               Damage
@@ -221,11 +221,11 @@ export function CompanionPage() {
               min={1}
               value={hpDelta}
               onChange={(e) => setHpDelta(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-16 bg-surface-container-high text-on-surface font-label text-lg font-bold text-center py-2 border border-outline-variant/50 focus:border-primary focus:outline-none"
+              className="w-16 bg-surface-container-high text-on-surface font-label text-lg font-bold text-center py-2 rounded-xl border border-white/10 focus:border-primary focus:outline-none"
             />
             <button
               onClick={() => adjustCompanionHp(char.id, activeCompanion.id, hpDelta, activeCompanion.maxHp)}
-              className="px-4 py-2 bg-primary-container text-on-primary-container hover:brightness-125 transition-all font-label text-xs uppercase tracking-widest cursor-pointer"
+              className="px-4 py-2 bg-primary-container text-on-primary-container hover:brightness-125 rounded-xl transition-all font-label text-xs uppercase tracking-widest cursor-pointer active:scale-95"
               aria-label="Increase companion HP"
             >
               Heal
@@ -236,12 +236,12 @@ export function CompanionPage() {
             {tempEdit === null ? (
               <button
                 onClick={() => setTempEdit(String(tempHp))}
-                className="px-3 py-1.5 bg-surface-container-lowest font-label text-xs text-primary hover:bg-surface-container-high transition-all cursor-pointer border border-primary/20"
+                className="px-3 py-1.5 bg-surface-container-lowest font-label text-xs text-primary hover:bg-surface-container-high rounded-xl transition-all cursor-pointer border border-primary/20"
               >
                 TEMP HP: {tempHp}
               </button>
             ) : (
-              <div className="flex items-center gap-1 bg-surface-container-lowest px-2 py-1 border border-primary">
+              <div className="flex items-center gap-1 bg-surface-container-lowest px-2 py-1 rounded-xl border border-primary">
                 <span className="font-label text-xs text-primary">TEMP HP:</span>
                 <input
                   autoFocus
@@ -262,15 +262,15 @@ export function CompanionPage() {
         </section>
 
         {/* Defense Grid */}
-        <section className="lg:col-span-6 bg-surface-container p-4 border border-primary shadow-[0_0_15px_rgba(0,218,243,0.1)] grid grid-cols-2 gap-3">
-          <div className="bg-surface-container-low p-4">
+        <section className="lg:col-span-6 bg-surface-container/70 backdrop-blur-md rounded-2xl p-4 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] grid grid-cols-2 gap-3">
+          <div className="bg-surface-container-low/80 rounded-xl p-4 border border-white/5">
             <p className="font-label text-[10px] uppercase tracking-widest text-tertiary">
               Armor Class
             </p>
-            <p className="font-label text-3xl font-bold text-on-surface mt-1">
+            <p className="font-label text-3xl font-bold text-white mt-1">
               {activeCompanion.armorClass.total + conditionAcMod}
             </p>
-            <p className="font-label text-[10px] text-on-surface-variant mt-1">
+            <p className="font-label text-[10px] text-tertiary mt-1">
               TOUCH: {activeCompanion.armorClass.touch + conditionAcMod} | FLAT:{' '}
               {activeCompanion.armorClass.flatFooted + conditionAcMod}
             </p>
@@ -285,9 +285,9 @@ export function CompanionPage() {
                 label: `${activeCompanion.name} Initiative`,
               })
             }
-            className="bg-surface-container-low p-4 text-left hover:bg-surface-container-high transition-all cursor-pointer group"
+            className="bg-surface-container-low/80 rounded-xl p-4 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-primary/40 transition-all cursor-pointer group"
           >
-            <p className="font-label text-[10px] uppercase tracking-widest text-primary">
+            <p className="font-label text-[10px] uppercase tracking-widest text-primary font-semibold">
               Initiative
             </p>
             <p className="font-label text-3xl font-bold text-primary mt-1">
@@ -309,12 +309,12 @@ export function CompanionPage() {
                 ],
               })
             }
-            className="bg-surface-container-low p-4 text-left hover:bg-surface-container-high transition-all cursor-pointer group"
+            className="bg-surface-container-low/80 rounded-xl p-4 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-secondary/40 transition-all cursor-pointer group"
           >
-            <p className="font-label text-[10px] uppercase tracking-widest text-secondary">
+            <p className="font-label text-[10px] uppercase tracking-widest text-secondary font-semibold">
               Fortitude
             </p>
-            <p className="font-label text-2xl font-bold text-on-surface mt-1">
+            <p className="font-label text-2xl font-bold text-white mt-1">
               +{activeCompanion.savingThrows.fort + conditionSaveMod}
             </p>
             <p className="font-label text-[10px] text-tertiary mt-0.5">Fort Save</p>
@@ -333,12 +333,12 @@ export function CompanionPage() {
                 ],
               })
             }
-            className="bg-surface-container-low p-4 text-left hover:bg-surface-container-high transition-all cursor-pointer group"
+            className="bg-surface-container-low/80 rounded-xl p-4 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-secondary/40 transition-all cursor-pointer group"
           >
-            <p className="font-label text-[10px] uppercase tracking-widest text-secondary">
+            <p className="font-label text-[10px] uppercase tracking-widest text-secondary font-semibold">
               Reflex
             </p>
-            <p className="font-label text-2xl font-bold text-on-surface mt-1">
+            <p className="font-label text-2xl font-bold text-white mt-1">
               +{activeCompanion.savingThrows.ref + conditionSaveMod}
             </p>
             <p className="font-label text-[10px] text-tertiary mt-0.5">Reflex Save</p>
@@ -357,12 +357,12 @@ export function CompanionPage() {
                 ],
               })
             }
-            className="col-span-2 bg-surface-container-low p-4 text-left hover:bg-surface-container-high transition-all cursor-pointer group"
+            className="col-span-2 bg-surface-container-low/80 rounded-xl p-4 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-secondary/40 transition-all cursor-pointer group"
           >
-            <p className="font-label text-[10px] uppercase tracking-widest text-secondary">
+            <p className="font-label text-[10px] uppercase tracking-widest text-secondary font-semibold">
               Willpower
             </p>
-            <p className="font-label text-2xl font-bold text-on-surface mt-1">
+            <p className="font-label text-2xl font-bold text-white mt-1">
               +{activeCompanion.savingThrows.will + conditionSaveMod}
             </p>
             <p className="font-label text-[10px] text-tertiary mt-0.5">Will Save</p>
@@ -371,8 +371,8 @@ export function CompanionPage() {
       </div>
 
       {/* Ability Scores Grid */}
-      <section className="bg-surface-container p-6 border border-primary shadow-[0_0_15px_rgba(0,218,243,0.1)]">
-        <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-gold">
+      <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
+        <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
           Companion Ability Scores
         </h2>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
@@ -390,7 +390,7 @@ export function CompanionPage() {
                     label: `${activeCompanion.name} ${ABILITY_NAMES[key]} Check`,
                   })
                 }
-                className="bg-surface-container-low p-3 hover:bg-surface-container-high hover:shadow-[0_0_15px_rgba(0,218,243,0.3)] transition-all text-center cursor-pointer border border-transparent hover:border-primary"
+                className="bg-surface-container-low/80 rounded-xl p-3 hover:bg-surface-container-high/80 hover:shadow-[0_0_15px_rgba(0,240,255,0.2)] transition-all text-center cursor-pointer border border-white/5 hover:border-primary/40 active:scale-95"
               >
                 <span className="font-label text-[10px] text-tertiary uppercase block">
                   {key.toUpperCase()}
@@ -406,8 +406,8 @@ export function CompanionPage() {
       </section>
 
       {/* Natural Attacks */}
-      <section className="bg-surface-container p-6 border border-primary shadow-[0_0_15px_rgba(0,218,243,0.1)]">
-        <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-gold">
+      <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
+        <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
           Natural Attacks & Tactics
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -419,12 +419,12 @@ export function CompanionPage() {
             return (
               <div
                 key={index}
-                className="bg-surface-container-low p-5 border-l-4 border-l-primary border border-outline-variant/20 flex flex-col justify-between"
+                className="bg-surface-container-low/80 rounded-xl p-5 border border-white/5 border-l-4 border-l-primary flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-headline text-xl font-bold text-on-surface">{atk.name}</h3>
-                    <span className="font-label text-xs text-secondary border border-secondary/30 px-2 py-0.5">
+                    <h3 className="font-headline text-xl font-bold text-white">{atk.name}</h3>
+                    <span className="font-label text-xs text-secondary border border-secondary/30 px-2.5 py-0.5 rounded-full font-semibold">
                       {critRange < 20 ? `${critRange}-20` : '20'}/x{critMult}
                     </span>
                   </div>
@@ -436,7 +436,7 @@ export function CompanionPage() {
                   )}
 
                   {atk.notes && (
-                    <p className="font-body text-xs text-on-surface-variant/90 mb-4 bg-surface-container-high/40 p-2 border-l-2 border-primary/50">
+                    <p className="font-body text-xs text-on-surface-variant/90 mb-4 bg-surface-container-high/40 p-2.5 rounded-lg border-l-2 border-primary/50">
                       {atk.notes}
                     </p>
                   )}
@@ -459,7 +459,7 @@ export function CompanionPage() {
                         ],
                       })
                     }
-                    className="flex-1 py-3 bg-primary text-on-primary font-label text-xs uppercase tracking-widest hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all font-bold cursor-pointer"
+                    className="flex-1 py-3 bg-gradient-to-r from-primary to-cyan-400 text-surface-lowest font-label text-xs uppercase tracking-widest hover:shadow-[0_0_20px_rgba(0,240,255,0.3)] rounded-xl transition-all font-bold cursor-pointer active:scale-95"
                   >
                     Strike (+{totalAttack})
                   </button>
@@ -481,7 +481,7 @@ export function CompanionPage() {
                         ],
                       })
                     }}
-                    className="flex-1 py-3 border border-secondary text-secondary font-label text-xs uppercase tracking-widest hover:bg-secondary/10 transition-all cursor-pointer"
+                    className="flex-1 py-3 border border-secondary text-secondary font-label text-xs uppercase tracking-widest hover:bg-secondary/10 rounded-xl transition-all font-semibold cursor-pointer active:scale-95"
                   >
                     Dmg ({atk.damageDice})
                   </button>
@@ -495,8 +495,8 @@ export function CompanionPage() {
       {/* Skills & Special Qualities */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Skills */}
-        <section className="bg-surface-container p-6 border border-primary shadow-[0_0_15px_rgba(0,218,243,0.1)]">
-          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-gold">
+        <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
+          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
             Trained Instincts & Skills
           </h2>
           <div className="space-y-2">
@@ -519,10 +519,10 @@ export function CompanionPage() {
                       ],
                     })
                   }
-                  className="w-full bg-surface-container-low hover:bg-surface-container-high p-3 flex items-center justify-between border border-outline-variant/20 hover:border-primary transition-all text-left cursor-pointer group"
+                  className="w-full bg-surface-container-low/80 hover:bg-surface-container-high/80 p-3.5 rounded-xl flex items-center justify-between border border-white/5 hover:border-primary/40 transition-all text-left cursor-pointer group active:scale-[0.99]"
                 >
                   <div>
-                    <span className="font-headline text-sm font-bold text-on-surface">
+                    <span className="font-headline text-sm font-bold text-white">
                       {skill.name}
                     </span>
                     {skill.notes && (
@@ -544,15 +544,15 @@ export function CompanionPage() {
         <div className="space-y-6">
           {/* Tricks */}
           {activeCompanion.tricks && activeCompanion.tricks.length > 0 && (
-            <section className="bg-surface-container p-6 border border-primary shadow-[0_0_15px_rgba(0,218,243,0.1)]">
-              <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-gold">
+            <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
+              <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
                 Known Tricks ({activeCompanion.tricks.length})
               </h2>
               <div className="flex flex-wrap gap-2">
                 {activeCompanion.tricks.map((trick, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 bg-surface-container-low border border-outline-variant/40 font-label text-xs text-on-surface"
+                    className="px-3 py-1 bg-surface-container-low/80 border border-white/10 rounded-full font-label text-xs text-white"
                   >
                     ✓ {trick}
                   </span>
@@ -563,17 +563,17 @@ export function CompanionPage() {
 
           {/* Special Qualities */}
           {activeCompanion.specialQualities && activeCompanion.specialQualities.length > 0 && (
-            <section className="bg-surface-container p-6 border border-primary shadow-[0_0_15px_rgba(0,218,243,0.1)]">
-              <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-gold">
+            <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
+              <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
                 Special Qualities & Abilities
               </h2>
               <div className="space-y-3">
                 {activeCompanion.specialQualities.map((sq, idx) => (
-                  <div key={idx} className="bg-surface-container-low p-3 border-l-2 border-primary">
+                  <div key={idx} className="bg-surface-container-low/80 p-3.5 rounded-xl border-l-4 border-l-primary border border-white/5">
                     <h4 className="font-headline text-xs uppercase tracking-wider text-primary font-bold">
                       {sq.name}
                     </h4>
-                    <p className="font-body text-xs text-on-surface-variant/80 mt-1 leading-relaxed">
+                    <p className="font-body text-xs text-tertiary mt-1 leading-relaxed">
                       {sq.description}
                     </p>
                   </div>
@@ -585,8 +585,8 @@ export function CompanionPage() {
       </div>
 
       {/* Companion Conditions */}
-      <section className="bg-surface-container p-6 border border-primary shadow-[0_0_15px_rgba(0,218,243,0.1)]">
-        <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-gold">
+      <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
+        <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
           Afflicted Conditions ({activeCompanion.name})
         </h2>
         <div className="flex flex-wrap gap-2">
@@ -598,17 +598,17 @@ export function CompanionPage() {
               <div key={cond} className="relative group">
                 <button
                   onClick={() => toggleCompanionCondition(char.id, activeCompanion.id, cond)}
-                  className={`px-3 py-1.5 font-label text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 font-label text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
                     isActive
                       ? 'bg-error text-on-error shadow-[0_0_10px_rgba(255,180,171,0.4)] font-bold'
-                      : 'bg-surface-container-low text-tertiary hover:text-error hover:bg-error-container'
+                      : 'bg-surface-container-low/80 text-tertiary hover:text-error hover:bg-error-container/30 border border-white/5'
                   }`}
                 >
                   {cond}
                 </button>
                 {/* Tooltip */}
                 <div className="pointer-events-none absolute bottom-full left-0 mb-2 w-56 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                  <div className="bg-black border border-error/40 p-2.5 shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
+                  <div className="bg-[#0e0e18] border border-error/40 p-2.5 rounded-xl shadow-[0_4px_24px_rgba(0,0,0,0.8)] backdrop-blur-md">
                     <p className="font-headline text-error text-[11px] uppercase tracking-wider font-bold mb-1">
                       {info.name}
                     </p>

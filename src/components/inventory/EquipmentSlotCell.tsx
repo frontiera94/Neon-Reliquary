@@ -23,12 +23,12 @@ export function EquipmentSlotCell({ slot, item }: { slot: EquipmentSlot; item?: 
 
   if (item) {
     return (
-      <div className="bg-surface-container-high border-l-4 border-secondary p-3 min-h-[88px] flex flex-col gap-1">
+      <div className="bg-surface-container/70 backdrop-blur-md border border-white/10 border-l-4 border-l-secondary rounded-xl p-3 min-h-[88px] flex flex-col gap-1 hover:border-secondary/40 hover:shadow-[0_0_15px_rgba(217,70,239,0.15)] transition-all">
         <div className="flex items-center gap-1.5">
           <span className="material-symbols-outlined text-secondary text-base">{icon}</span>
-          <span className="font-label text-[10px] uppercase tracking-[0.2em] text-secondary">{label}</span>
+          <span className="font-label text-[10px] uppercase tracking-wider text-secondary font-semibold">{label}</span>
         </div>
-        <span className="font-headline text-base text-on-surface leading-tight">{item.name}</span>
+        <span className="font-headline text-base text-white font-bold leading-tight">{item.name}</span>
         {item.description && (
           <span className="font-body text-xs text-tertiary line-clamp-2 leading-snug">{item.description}</span>
         )}
@@ -37,10 +37,10 @@ export function EquipmentSlotCell({ slot, item }: { slot: EquipmentSlot; item?: 
   }
 
   return (
-    <div className="bg-surface-container border-l-4 border-outline-variant/20 p-3 min-h-[88px] flex flex-col gap-1 opacity-50">
+    <div className="bg-surface-container/30 border border-white/5 border-l-4 border-l-outline-variant/30 rounded-xl p-3 min-h-[88px] flex flex-col gap-1 opacity-40">
       <div className="flex items-center gap-1.5">
         <span className="material-symbols-outlined text-tertiary text-base">{icon}</span>
-        <span className="font-label text-[10px] uppercase tracking-[0.2em] text-tertiary">{label}</span>
+        <span className="font-label text-[10px] uppercase tracking-wider text-tertiary">{label}</span>
       </div>
       <span className="font-headline text-base text-tertiary">—</span>
     </div>

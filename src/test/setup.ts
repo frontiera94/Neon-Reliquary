@@ -1,5 +1,14 @@
 // Global test setup for Vitest
-// Provides mock Storage and window for Zustand persist middleware in Node environment
+// Provides DOM extensions, mocks, and fallback Storage for Zustand persist middleware
+
+import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+import { afterEach } from 'vitest'
+
+// Automatically unmount React component trees after each test in JSDOM
+afterEach(() => {
+  cleanup()
+})
 
 class MemoryStorage implements Storage {
   private store = new Map<string, string>()
@@ -29,30 +38,58 @@ class MemoryStorage implements Storage {
   }
 }
 
-const memoryLocalStorage = new MemoryStorage()
-const memorySessionStorage = new MemoryStorage()
+// Fallback for Node environment
+if (typeof globalThis.localStorage === 'undefined') {
+  const memoryLocalStorage = new MemoryStorage()
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: memoryLocalStorage,
+    writable: true,
+    configurable: true,
+  })
+}
 
-Object.defineProperty(globalThis, 'localStorage', {
-  value: memoryLocalStorage,
-  writable: true,
-  configurable: true,
-})
+if (typeof globalThis.sessionStorage === 'undefined') {
+  const memorySessionStorage = new MemoryStorage()
+  Object.defineProperty(globalThis, 'sessionStorage', {
+    value: memorySessionStorage,
+    writable: true,
+    configurable: true,
+  })
+}
 
-Object.defineProperty(globalThis, 'sessionStorage', {
-  value: memorySessionStorage,
-  writable: true,
-  configurable: true,
-})
-
-// Zustand's default persist middleware uses `createJSONStorage(() => window.localStorage)`.
-// Defining `window` on `globalThis` enables Zustand to find localStorage without warning.
 if (typeof (globalThis as unknown as { window: unknown }).window === 'undefined') {
   Object.defineProperty(globalThis, 'window', {
     value: {
-      localStorage: memoryLocalStorage,
-      sessionStorage: memorySessionStorage,
+      localStorage: globalThis.localStorage,
+      sessionStorage: globalThis.sessionStorage,
     },
     writable: true,
     configurable: true,
   })
+}
+
+// Browser API mocks for JSDOM
+if (typeof window !== 'undefined') {
+  window.matchMedia = window.matchMedia || function (query: string) {
+    return {
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    } as unknown as MediaQueryList
+  }
+
+  window.ResizeObserver = window.ResizeObserver || class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+
+  if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {}
+  }
 }

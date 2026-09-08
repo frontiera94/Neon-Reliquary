@@ -91,7 +91,7 @@ export function CombatPage() {
           </div>
           <button
             onClick={() => setShowBuffModal(true)}
-            className="px-3 py-1.5 bg-primary/10 border border-primary text-primary font-label text-xs uppercase tracking-wider hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,218,243,0.3)] transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-1.5 bg-primary/10 border border-primary/40 text-primary font-label text-xs uppercase tracking-wider rounded-xl hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm">tune</span>
             Manage Buffs & Presets
@@ -102,13 +102,13 @@ export function CombatPage() {
           {allBuffs.map((buff) => {
             const isActive = activeBuffIds.includes(buff.id)
             const hex =
-              { primary: '#00daf3', secondary: '#e9c349', error: '#ffb4ab' }[buff.color ?? 'primary'] ??
-              '#00daf3'
+              { primary: '#00f0ff', secondary: '#d946ef', error: '#ff4b60' }[buff.color ?? 'primary'] ??
+              '#00f0ff'
             return (
               <button
                 key={buff.id}
                 onClick={() => toggleBuff(char.id, buff.id)}
-                className="flex items-center justify-between p-4 border transition-all cursor-pointer text-left bg-surface-container hover:bg-surface-container-high"
+                className="flex items-center justify-between p-4 border rounded-xl transition-all cursor-pointer text-left bg-surface-container/90 backdrop-blur-sm hover:bg-surface-container-high"
                 style={
                   isActive
                     ? {
@@ -116,16 +116,16 @@ export function CombatPage() {
                         backgroundColor: `${hex}1a`,
                         boxShadow: `0 0 20px ${hex}40`,
                       }
-                    : { borderColor: 'rgba(255,255,255,0.1)' }
+                    : { borderColor: 'rgba(255,255,255,0.08)' }
                 }
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className="w-2.5 h-2.5 flex-shrink-0 transition-all"
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all"
                     style={
                       isActive
                         ? { backgroundColor: hex, boxShadow: `0 0 8px ${hex}` }
-                        : { backgroundColor: 'rgba(255,255,255,0.15)' }
+                        : { backgroundColor: 'rgba(255,255,255,0.2)' }
                     }
                   />
                   <div className="min-w-0">
@@ -157,11 +157,11 @@ export function CombatPage() {
                   </div>
                 </div>
                 <span
-                  className="font-label text-[10px] uppercase tracking-widest px-2.5 py-1 flex-shrink-0 border transition-all ml-2"
+                  className="font-label text-[10px] uppercase tracking-widest px-2.5 py-0.5 flex-shrink-0 border rounded-full transition-all ml-2 font-bold"
                   style={
                     isActive
                       ? { color: hex, borderColor: hex, boxShadow: `0 0 8px ${hex}` }
-                      : { color: 'rgba(255,255,255,0.3)', borderColor: 'rgba(255,255,255,0.1)' }
+                      : { color: 'rgba(255,255,255,0.4)', borderColor: 'rgba(255,255,255,0.1)' }
                   }
                 >
                   {isActive ? 'ON' : 'OFF'}
@@ -314,10 +314,10 @@ export function CombatPage() {
                 <div className="flex-1 h-px bg-primary/30" />
               </div>
 
-              <div className="bg-surface-container border-l-4 border-primary p-5 space-y-4">
+              <div className="bg-surface-container/90 backdrop-blur-sm border border-white/10 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-surface-container-high border border-primary/20 overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-12 bg-surface-container-high border border-primary/30 rounded-xl overflow-hidden flex-shrink-0">
                       {comp.portrait ? (
                         <img src={comp.portrait} alt={comp.name} className="w-full h-full object-cover" />
                       ) : (
@@ -327,7 +327,7 @@ export function CombatPage() {
                       )}
                     </div>
                     <div>
-                      <h4 className="font-headline text-lg font-bold text-on-surface">{comp.name}</h4>
+                      <h4 className="font-headline text-lg font-bold text-white">{comp.name}</h4>
                       <p className="font-label text-[10px] text-tertiary uppercase tracking-wider">
                         {comp.type.replace('_', ' ')} • {comp.species} • AC {comp.armorClass.total}
                       </p>
@@ -338,7 +338,7 @@ export function CombatPage() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => adjustCompanionHp(char.id, comp.id, -1, comp.maxHp)}
-                      className="w-8 h-8 bg-surface-container-high hover:bg-error-container text-primary hover:text-on-error flex items-center justify-center font-bold text-sm cursor-pointer"
+                      className="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-error-container text-primary hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer border border-white/5 transition-colors"
                       title="-1 HP"
                     >
                       -
@@ -346,16 +346,16 @@ export function CombatPage() {
                     <div className="text-center min-w-[70px]">
                       <span className="font-label text-base font-bold text-primary">{compHp}</span>
                       <span className="font-label text-xs text-tertiary"> / {comp.maxHp} HP</span>
-                      <div className="w-full h-1 bg-surface-container-lowest mt-1">
+                      <div className="w-full h-1.5 bg-surface-container-lowest rounded-full overflow-hidden mt-1 border border-white/5">
                         <div
-                          className="h-full bg-primary transition-all duration-200"
+                          className="h-full bg-primary rounded-full transition-all duration-200"
                           style={{ width: `${hpPct}%` }}
                         />
                       </div>
                     </div>
                     <button
                       onClick={() => adjustCompanionHp(char.id, comp.id, 1, comp.maxHp)}
-                      className="w-8 h-8 bg-surface-container-high hover:bg-primary-container text-primary hover:text-on-primary flex items-center justify-center font-bold text-sm cursor-pointer"
+                      className="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-primary-container text-primary hover:text-black flex items-center justify-center font-bold text-sm cursor-pointer border border-white/5 transition-colors"
                       title="+1 HP"
                     >
                       +

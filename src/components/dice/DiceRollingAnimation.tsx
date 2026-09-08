@@ -28,7 +28,7 @@ export function DiceRollingAnimation({ diceType }: Props) {
 
       {/* Running numbers */}
       <motion.span
-        key={Date.now()}
+        key={`rolling-${diceType}`}
         animate={{ opacity: [0.3, 1, 0.3] }}
         transition={{ duration: 0.15, repeat: Infinity }}
         className="font-label text-4xl font-black text-primary/60"

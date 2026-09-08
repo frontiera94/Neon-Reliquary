@@ -36,13 +36,14 @@ Defined in `src/store/useCharacterStore.ts` (not in `src/types/`), it extends th
 
 `/characters` renders `CharacterSelectionPage` outside `MainLayout` (full-screen, no sidebar). All other routes (`/status`, `/skills`, `/combat`, `/spells`, `/features`) render inside `MainLayout` via `<Outlet>`. Unknown paths redirect to `/characters`.
 
-### Design system constraints
+### Design system constraints (Impeccable Cyber Glass)
 
-- **0px border-radius everywhere** — `rounded-*` classes produce sharp corners by design. `rounded-full` is the only exception (for circular elements).
-- **No 1px borders for layout separation** — use background-color shifts between surface tiers (`surface` → `surface-container` → `surface-container-high` → `surface-container-highest`).
-- Tailwind color tokens map to the full Material You palette in `tailwind.config.ts`. Use `primary` (#00daf3 cyan) for interactive/active states, `secondary` (#e9c349 gold) for headers/labels, `error` (#ffb4ab) for danger/nonlethal, `tertiary` (#c6c6c6) for muted text.
-- Font families: `font-headline` (Noto Serif) for titles, `font-body` (Manrope) for prose, `font-label` (Space Grotesk) for numbers and UI labels.
-- Interactive elements get a cyan glow on hover: `hover:shadow-[0_0_20px_rgba(0,218,243,0.3)]`.
+- **Dark Cyber Glass aesthetic** — Follows Impeccable guidelines (`impeccable.style/antipattern-examples/lazy-cool`): deep dark background (`#0a0a12`), electric cyan (`#00f0ff` / `#00daf3`) for primary CTA and glow accents, electric magenta (`#d946ef`) for secondary cyber accents, crisp white (`#f1f5f9` / `#ffffff`) for titles and primary text. Yellow/gold is eradicated except for realistic gold coins (`gp`) in the CoinPurse widget (`text-amber-400`).
+- **Smooth Geometry & Hierarchy** — Replaces rigid 0px brutalism with smooth rounded geometry: `rounded-xl` (buttons, chips, inputs), `rounded-2xl` (cards, bento items, modals), `rounded-3xl` (hero containers, large overlays), and `rounded-full` (pills, status badges, circular icons).
+- **Glassmorphism & Depth** — Panels use subtle alpha surfaces (`bg-surface-container/70` or `bg-[#121424]/60`), `backdrop-blur-md` or `backdrop-blur-xl`, with refined 1px translucent borders (`border-white/10` or `border-white/5`).
+- **Atmospheric Lighting** — Layout incorporates dual ambient glow orbs (`.glow-orb`) with cyan top-right and magenta bottom-left at low opacity (15-20%) with deep blur (`blur-[140px]`), preventing flat dark voids without washing out content contrast.
+- **Typography & Accessibility** — WCAG AA compliant contrast (≥4.5:1 text, ≥3:1 large headers). Font stacks: `font-headline` (Noto Serif), `font-body` (Inter / Manrope), `font-label` (JetBrains Mono / Space Grotesk).
+- **Interactive States** — Interactive controls use directional hover glow (`hover:shadow-[0_0_20px_rgba(0,240,255,0.25)]`), smooth transitions, and tactile active states (`active:scale-95`).
 
 ### Dice system
 

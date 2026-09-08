@@ -15,11 +15,14 @@ export function Sidebar() {
   const char = useCharacterStore((s) => s.activeCharacter())
 
   return (
-    <aside className="hidden md:flex flex-col h-screen w-64 bg-surface-container fixed left-0 top-0 pt-20 pb-8 z-40" style={{ boxShadow: 'inset -1px 0 0 rgba(0,218,243,0.12), 4px 0 24px -8px rgba(0,218,243,0.08)' }}>
+    <aside
+      className="hidden md:flex flex-col h-screen w-64 bg-surface-container/90 backdrop-blur-md fixed left-0 top-0 pt-20 pb-8 z-40 border-r border-white/[0.08]"
+      style={{ boxShadow: '4px 0 24px -8px rgba(0,240,255,0.08)' }}
+    >
       {char && (
         <div className="px-6 mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-surface-container-highest border border-primary/20 overflow-hidden flex-shrink-0">
+          <div className="flex items-center gap-3 p-2 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+            <div className="w-12 h-12 bg-surface-container-highest border border-primary/30 overflow-hidden flex-shrink-0 rounded-xl">
               {char.portrait ? (
                 <img src={char.portrait} alt={char.name} className="w-full h-full object-cover" />
               ) : (
@@ -28,17 +31,17 @@ export function Sidebar() {
                 </span>
               )}
             </div>
-            <div>
-              <h3 className="font-headline text-primary text-sm font-bold leading-tight">{char.name}</h3>
-              <p className="font-label text-tertiary text-[10px] uppercase tracking-wider">
-                Level {char.level} {char.class}
+            <div className="min-w-0">
+              <h3 className="font-headline text-white text-sm font-bold leading-tight truncate">{char.name}</h3>
+              <p className="font-label text-tertiary text-[10px] uppercase tracking-wider truncate">
+                Lv {char.level} {char.class}
               </p>
             </div>
           </div>
         </div>
       )}
 
-      <nav className="flex flex-col">
+      <nav className="flex flex-col gap-1 px-3">
         {navItems.map(({ to, icon, label }) => {
           const compCount = to === '/companion' ? (char?.companions?.length ?? 0) : 0
           return (
@@ -46,18 +49,18 @@ export function Sidebar() {
               key={to}
               to={to}
               className={({ isActive }) =>
-                `flex items-center justify-between px-6 py-4 font-label text-sm uppercase tracking-widest transition-all duration-200 ` +
+                `flex items-center justify-between px-4 py-3 font-label text-xs uppercase tracking-widest rounded-xl transition-all duration-200 ` +
                 (isActive
-                  ? 'text-primary bg-primary/5 shadow-[inset_4px_0_0_0_#00daf3]'
-                  : 'text-tertiary hover:text-white hover:bg-surface-container-high')
+                  ? 'text-primary bg-primary/10 border border-primary/30 shadow-[0_0_15px_rgba(0,240,255,0.15)]'
+                  : 'text-tertiary hover:text-white hover:bg-white/[0.04]')
               }
             >
-              <div className="flex items-center gap-4">
-                <span className="material-symbols-outlined">{icon}</span>
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-lg">{icon}</span>
                 {label}
               </div>
               {compCount > 0 && (
-                <span className="text-[10px] px-1.5 py-0.5 bg-primary/15 text-primary border border-primary/30 font-label">
+                <span className="text-[10px] px-2 py-0.5 bg-primary/15 text-primary border border-primary/30 font-label rounded-full">
                   {compCount}
                 </span>
               )}
