@@ -831,5 +831,103 @@
     "gp": 62,
     "sp": 20,
     "cp": 14
-  }
+  },
+  "companions": [
+    {
+      "id": "ash-wolf-companion",
+      "name": "Ignis (Ash Wolf)",
+      "type": "animal_companion",
+      "species": "Wolf",
+      "portrait": "https://images.unsplash.com/photo-1564865878688-9a244444042a?auto=format&fit=crop&w=400&q=80",
+      "size": "Medium",
+      "hitDice": "4 HD",
+      "level": 4,
+      "maxHp": 26,
+      "speed": "50 ft.",
+      "initiativeBonus": 3,
+      "armorClass": {
+        "total": 17,
+        "touch": 13,
+        "flatFooted": 14,
+        "naturalArmor": 4,
+        "dexBonus": 3,
+        "sizeBonus": 0,
+        "misc": 0
+      },
+      "savingThrows": {
+        "fort": 5,
+        "ref": 6,
+        "will": 2
+      },
+      "abilities": {
+        "str": 14,
+        "dex": 16,
+        "con": 15,
+        "int": 2,
+        "wis": 12,
+        "cha": 6
+      },
+      "baseAttackBonus": 3,
+      "attacks": [
+        {
+          "name": "Bite",
+          "bonus": 5,
+          "damageDice": "1d6+3",
+          "damageBonus": 3,
+          "critRange": 20,
+          "critMultiplier": 2,
+          "damageType": "Piercing / Slashing",
+          "notes": "Trip maneuver (+5 CMB) on successful hit"
+        }
+      ],
+      "skills": [
+        { "name": "Perception", "bonus": 8, "ability": "wis" },
+        { "name": "Stealth", "bonus": 7, "ability": "dex" },
+        { "name": "Survival", "bonus": 2, "ability": "wis", "notes": "+6 when tracking by scent" },
+        { "name": "Acrobatics", "bonus": 3, "ability": "dex" }
+      ],
+      "tricks": [
+        "Attack (all creatures)",
+        "Defend",
+        "Down",
+        "Fetch",
+        "Guard",
+        "Heel",
+        "Track"
+      ],
+      "specialQualities": [
+        {
+          "name": "Trip (Ex)",
+          "description": "A wolf that hits with its bite attack can attempt to trip the opponent as a free action without provoking attacks of opportunity.",
+          "type": "ex"
+        },
+        {
+          "name": "Scent (Ex)",
+          "description": "Can detect approaching enemies, sniff out hidden foes, and track by sense of smell within 30 ft.",
+          "type": "ex"
+        },
+        {
+          "name": "Evasion (Ex)",
+          "description": "If subjected to an attack that allows a Reflex save for half damage, takes no damage on a successful save.",
+          "type": "ex"
+        },
+        {
+          "name": "Link (Ex)",
+          "description": "Noorie can handle Ignis with a free action, or push with a move action, gaining a +4 circumstance bonus on Handle Animal checks.",
+          "type": "ex"
+        },
+        {
+          "name": "Share Spells (Ex)",
+          "description": "Noorie may cast a spell with a target of 'You' on Ignis instead of herself.",
+          "type": "ex"
+        }
+      ],
+      "senses": "Low-light vision, scent",
+      "masterLink": {
+        "shareSpells": true,
+        "linkBonus": 4,
+        "notes": "Free action to handle, +4 circumstance bonus."
+      }
+    }
+  ]
 }

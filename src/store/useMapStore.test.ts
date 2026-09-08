@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { useMapStore } from './useMapStore'
 import type { PublicMapState, Token } from '../types/map'
+import { pushMap } from '../lib/map-api'
 
 vi.mock('../lib/map-api', () => ({
   pushMap: vi.fn().mockResolvedValue(undefined),
@@ -241,6 +242,66 @@ describe('useMapStore', () => {
       }))
       useMapStore.getState().setInitiativeOrder(['a', 'b'])
       expect(useMapStore.getState().map!.initiative.currentIndex).toBe(1)
+    })
+  })
+
+  describe('setBackground', () => {
+    it('sets background image and dimensions', () => {
+      useMapStore.getState().setMap(makeMap())
+      useMapStore.getState().setBackground({ url: 'https://img.png', width: 800, height: 600 })
+      expect(useMapStore.getState().map?.background).toEqual({ url: 'https://img.png', width: 800, height: 600 })
+    })
+
+    it('clears background to null', () => {
+      useMapStore.getState().setMap(makeMap({ background: { url: 'https://img.png', width: 800, height: 600 } }))
+      useMapStore.getState().setBackground(null)
+      expect(useMapStore.getState().map?.background).toBeNull()
+    })
+  })
+
+  describe('scheduleSync', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+      vi.mocked(pushMap).mockClear()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('debounces calls and calls pushMap after 300ms', async () => {
+      const map = makeMap()
+      useMapStore.getState().setMap(map)
+
+      useMapStore.getState().scheduleSync('map-1', 'sec-1')
+      useMapStore.getState().scheduleSync('map-1', 'sec-1')
+      useMapStore.getState().scheduleSync('map-1', 'sec-1')
+
+      expect(pushMap).not.toHaveBeenCalled()
+
+      vi.advanceTimersByTime(300)
+      await vi.runAllTimersAsync()
+
+      expect(pushMap).toHaveBeenCalledOnce()
+      expect(pushMap).toHaveBeenCalledWith('map-1', 'sec-1', map)
+    })
+  })
+
+  describe('operations when map is null', () => {
+    it('handles operations safely without error', () => {
+      useMapStore.getState().moveToken('tok1', { x: 1, y: 1 })
+      useMapStore.getState().editHP('tok1', 5)
+      useMapStore.getState().addShape({ id: 's1', kind: 'rect', x: 0, y: 0, w: 1, h: 1, stroke: '#fff' })
+      useMapStore.getState().removeShape('s1')
+      useMapStore.getState().addLabel({ id: 'l1', x: 0, y: 0, text: 'hi', color: '#fff' })
+      useMapStore.getState().removeLabel('l1')
+      useMapStore.getState().paintFog(0, 0, true)
+      useMapStore.getState().paintFogRect(0, 0, 1, 1, true)
+      useMapStore.getState().setInitiativeOrder(['a'])
+      useMapStore.getState().setTokenInitiative('a', 10)
+      useMapStore.getState().advanceTurn()
+
+      expect(useMapStore.getState().map).toBeNull()
     })
   })
 })

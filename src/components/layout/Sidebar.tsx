@@ -8,6 +8,7 @@ const navItems = [
   { to: '/spells', icon: 'auto_stories', label: 'Spells' },
   { to: '/features', icon: 'auto_awesome', label: 'Features' },
   { to: '/inventory', icon: 'inventory_2', label: 'Inventory' },
+  { to: '/companion', icon: 'pets', label: 'Companion' },
 ]
 
 export function Sidebar() {
@@ -38,21 +39,31 @@ export function Sidebar() {
       )}
 
       <nav className="flex flex-col">
-        {navItems.map(({ to, icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `flex items-center gap-4 px-6 py-4 font-label text-sm uppercase tracking-widest transition-all duration-200 ` +
-              (isActive
-                ? 'text-primary bg-primary/5 shadow-[inset_4px_0_0_0_#00daf3]'
-                : 'text-tertiary hover:text-white hover:bg-surface-container-high')
-            }
-          >
-            <span className="material-symbols-outlined">{icon}</span>
-            {label}
-          </NavLink>
-        ))}
+        {navItems.map(({ to, icon, label }) => {
+          const compCount = to === '/companion' ? (char?.companions?.length ?? 0) : 0
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `flex items-center justify-between px-6 py-4 font-label text-sm uppercase tracking-widest transition-all duration-200 ` +
+                (isActive
+                  ? 'text-primary bg-primary/5 shadow-[inset_4px_0_0_0_#00daf3]'
+                  : 'text-tertiary hover:text-white hover:bg-surface-container-high')
+              }
+            >
+              <div className="flex items-center gap-4">
+                <span className="material-symbols-outlined">{icon}</span>
+                {label}
+              </div>
+              {compCount > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 bg-primary/15 text-primary border border-primary/30 font-label">
+                  {compCount}
+                </span>
+              )}
+            </NavLink>
+          )
+        })}
       </nav>
     </aside>
   )

@@ -7,12 +7,13 @@ const navItems = [
   { to: '/spells', icon: 'auto_stories', label: 'Spells' },
   { to: '/features', icon: 'auto_awesome', label: 'Features' },
   { to: '/inventory', icon: 'inventory_2', label: 'Inventory' },
+  { to: '/companion', icon: 'pets', label: 'Companion' },
 ]
 
 export function BottomNav() {
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex overflow-x-auto"
       style={{ backdropFilter: 'blur(12px)', background: 'rgba(19,19,24,0.9)', boxShadow: 'inset 0 1px 0 rgba(0,218,243,0.15), 0 -4px 20px -8px rgba(0,218,243,0.1)' }}
     >
       {navItems.map(({ to, icon, label }) => (
@@ -20,7 +21,7 @@ export function BottomNav() {
           key={to}
           to={to}
           className={({ isActive }) =>
-            `flex-1 flex flex-col items-center justify-center py-3 gap-1 font-label text-[10px] uppercase tracking-widest transition-all duration-200 ` +
+            `flex-1 min-w-[50px] flex flex-col items-center justify-center py-2.5 gap-0.5 font-label text-[9px] uppercase tracking-wider transition-all duration-200 ` +
             (isActive ? 'text-primary' : 'text-tertiary hover:text-white')
           }
         >

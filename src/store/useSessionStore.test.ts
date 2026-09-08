@@ -1,24 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-
-// Stub localStorage before the store module is imported so the persist
-// middleware finds a working storage implementation.
-const localStorageMock = (() => {
-  let store: Record<string, string> = {}
-  return {
-    getItem: (key: string) => store[key] ?? null,
-    setItem: (key: string, value: string) => { store[key] = value },
-    removeItem: (key: string) => { delete store[key] },
-    clear: () => { store = {} },
-  }
-})()
-
-vi.stubGlobal('localStorage', localStorageMock)
-
+import { describe, it, expect, beforeEach } from 'vitest'
 import { useSessionStore } from './useSessionStore'
 
 // Helper: reset to a clean slate before every test
 function resetStore() {
-  localStorageMock.clear()
+  localStorage.clear()
   useSessionStore.setState({ sessions: {} })
 }
 
@@ -42,6 +27,20 @@ describe('initSession', () => {
     useSessionStore.getState().setHp(CHAR, 10)
     useSessionStore.getState().initSession(CHAR, MAX_HP) // should not reset
     expect(useSessionStore.getState().getSession(CHAR).currentHp).toBe(10)
+  })
+
+  it('initializes session with startingCoins when provided', () => {
+    useSessionStore.getState().initSession(CHAR, MAX_HP, { gp: 50, sp: 20, cp: 10 })
+    const sess = useSessionStore.getState().getSession(CHAR)
+    expect(sess.coins).toEqual({ gp: 50, sp: 20, cp: 10 })
+  })
+
+  it('getSession returns defaultSession when session is not initialized', () => {
+    const sess = useSessionStore.getState().getSession('uninitialized-char')
+    expect(sess.characterId).toBe('uninitialized-char')
+    expect(sess.currentHp).toBe(0)
+    expect(sess.coins).toEqual({ gp: 0, sp: 0, cp: 0 })
+    expect(sess.activeBuffIds).toEqual([])
   })
 })
 
@@ -180,6 +179,31 @@ describe('buff toggling', () => {
     expect(sess.customBuffs?.some((b) => b.id === 'custom-1')).toBe(false)
     expect(sess.activeBuffIds).not.toContain('custom-1')
   })
+
+  it('addCustomBuff updates an existing custom buff when IDs match', () => {
+    useSessionStore.getState().addCustomBuff(CHAR, {
+      id: 'custom-1',
+      name: 'Heroism',
+      active: true,
+      attackMod: 2,
+      damageMod: 0,
+      acMod: 0,
+      isCustom: true,
+    })
+    useSessionStore.getState().addCustomBuff(CHAR, {
+      id: 'custom-1',
+      name: 'Greater Heroism',
+      active: true,
+      attackMod: 4,
+      damageMod: 0,
+      acMod: 0,
+      isCustom: true,
+    })
+    const sess = useSessionStore.getState().getSession(CHAR)
+    expect(sess.customBuffs).toHaveLength(1)
+    expect(sess.customBuffs?.[0].name).toBe('Greater Heroism')
+    expect(sess.customBuffs?.[0].attackMod).toBe(4)
+  })
 })
 
 // ─── Conditions ──────────────────────────────────────────────────────────────
@@ -267,6 +291,55 @@ describe('ammo tracking', () => {
     useSessionStore.getState().setAmmo(CHAR, 'bow', 20)
     useSessionStore.getState().setAmmo(CHAR, 'bow', 17)
     expect(useSessionStore.getState().getSession(CHAR).ammo['bow']).toBe(17)
+  })
+})
+
+// ─── Inventory tracking ──────────────────────────────────────────────────────
+
+describe('inventory tracking', () => {
+  beforeEach(() => {
+    resetStore()
+    useSessionStore.getState().initSession(CHAR, MAX_HP)
+  })
+
+  it('setItemQuantity sets quantity clamped at 0', () => {
+    useSessionStore.getState().setItemQuantity(CHAR, 'potion-heal', 3)
+    expect(useSessionStore.getState().getSession(CHAR).itemQuantities['potion-heal']).toBe(3)
+
+    useSessionStore.getState().setItemQuantity(CHAR, 'potion-heal', -5)
+    expect(useSessionStore.getState().getSession(CHAR).itemQuantities['potion-heal']).toBe(0)
+  })
+
+  it('adjustItemQuantity adjusts quantity with delta and clamps to 0', () => {
+    useSessionStore.getState().setItemQuantity(CHAR, 'torch', 5)
+    useSessionStore.getState().adjustItemQuantity(CHAR, 'torch', 2)
+    expect(useSessionStore.getState().getSession(CHAR).itemQuantities['torch']).toBe(7)
+
+    useSessionStore.getState().adjustItemQuantity(CHAR, 'torch', -10)
+    expect(useSessionStore.getState().getSession(CHAR).itemQuantities['torch']).toBe(0)
+  })
+})
+
+// ─── Currency tracking ───────────────────────────────────────────────────────
+
+describe('currency tracking', () => {
+  beforeEach(() => {
+    resetStore()
+    useSessionStore.getState().initSession(CHAR, MAX_HP)
+  })
+
+  it('setCoins sets coin purse directly', () => {
+    useSessionStore.getState().setCoins(CHAR, { gp: 100, sp: 50, cp: 20 })
+    expect(useSessionStore.getState().getSession(CHAR).coins).toEqual({ gp: 100, sp: 50, cp: 20 })
+  })
+
+  it('adjustCoin adjusts denomination and clamps at 0', () => {
+    useSessionStore.getState().setCoins(CHAR, { gp: 10, sp: 5, cp: 0 })
+    useSessionStore.getState().adjustCoin(CHAR, 'gp', 15)
+    expect(useSessionStore.getState().getSession(CHAR).coins.gp).toBe(25)
+
+    useSessionStore.getState().adjustCoin(CHAR, 'sp', -20)
+    expect(useSessionStore.getState().getSession(CHAR).coins.sp).toBe(0)
   })
 })
 
@@ -370,5 +443,65 @@ describe('longRest', () => {
     useSessionStore.getState().setSummon(CHAR, { spellId: 'x', optionId: 'y', currentHp: 20 })
     useSessionStore.getState().longRest(CHAR, MAX_HP)
     expect(useSessionStore.getState().getSession(CHAR).activeSummon).toBeNull()
+  })
+
+  it('resets companion HP, temp HP and conditions on longRest', () => {
+    useSessionStore.getState().adjustCompanionHp(CHAR, 'wolf', -10, 26)
+    useSessionStore.getState().setCompanionTempHp(CHAR, 'wolf', 5)
+    useSessionStore.getState().toggleCompanionCondition(CHAR, 'wolf', 'shaken')
+    useSessionStore.getState().longRest(CHAR, MAX_HP)
+    const sess = useSessionStore.getState().getSession(CHAR)
+    expect(sess.companionHp?.wolf).toBeUndefined() // defaults to maxHp
+    expect(sess.companionTempHp?.wolf).toBeUndefined()
+    expect(sess.companionConditions?.wolf).toBeUndefined()
+  })
+
+  it('preserves inventory items and coins across longRest', () => {
+    useSessionStore.getState().setItemQuantity(CHAR, 'potion', 5)
+    useSessionStore.getState().setCoins(CHAR, { gp: 100, sp: 20, cp: 5 })
+
+    useSessionStore.getState().longRest(CHAR, MAX_HP)
+
+    const sess = useSessionStore.getState().getSession(CHAR)
+    expect(sess.itemQuantities['potion']).toBe(5)
+    expect(sess.coins).toEqual({ gp: 100, sp: 20, cp: 5 })
+  })
+})
+
+// ─── Companion management ───────────────────────────────────────────────────
+
+describe('companion management', () => {
+  const COMP_ID = 'wolf-1'
+  const COMP_MAX_HP = 26
+
+  beforeEach(() => {
+    resetStore()
+    useSessionStore.getState().initSession(CHAR, MAX_HP)
+  })
+
+  it('adjustCompanionHp decreases and increases companion HP clamped to max', () => {
+    useSessionStore.getState().adjustCompanionHp(CHAR, COMP_ID, -6, COMP_MAX_HP)
+    expect(useSessionStore.getState().getSession(CHAR).companionHp?.[COMP_ID]).toBe(20)
+
+    useSessionStore.getState().adjustCompanionHp(CHAR, COMP_ID, 10, COMP_MAX_HP)
+    expect(useSessionStore.getState().getSession(CHAR).companionHp?.[COMP_ID]).toBe(COMP_MAX_HP)
+  })
+
+  it('setCompanionTempHp updates companion temp HP', () => {
+    useSessionStore.getState().setCompanionTempHp(CHAR, COMP_ID, 8)
+    expect(useSessionStore.getState().getSession(CHAR).companionTempHp?.[COMP_ID]).toBe(8)
+  })
+
+  it('toggleCompanionCondition toggles conditions on and off', () => {
+    useSessionStore.getState().toggleCompanionCondition(CHAR, COMP_ID, 'shaken')
+    expect(useSessionStore.getState().getSession(CHAR).companionConditions?.[COMP_ID]).toContain('shaken')
+
+    useSessionStore.getState().toggleCompanionCondition(CHAR, COMP_ID, 'shaken')
+    expect(useSessionStore.getState().getSession(CHAR).companionConditions?.[COMP_ID]).not.toContain('shaken')
+  })
+
+  it('setActiveCompanion sets active companion id', () => {
+    useSessionStore.getState().setActiveCompanion(CHAR, COMP_ID)
+    expect(useSessionStore.getState().getSession(CHAR).activeCompanionId).toBe(COMP_ID)
   })
 })

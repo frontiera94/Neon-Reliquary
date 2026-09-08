@@ -7,6 +7,7 @@ import type { Weapon, BuffToggle } from '../types/combat'
 import type { DailyResource, SpellSlot, Spell } from '../types/resources'
 import type { Feat, ClassAbility } from '../types/features'
 import type { InventoryItem, CoinPurse } from '../types/inventory'
+import type { Companion } from '../types/companion'
 
 export interface FullCharacter extends Character {
   armorClass: ArmorClass
@@ -22,6 +23,7 @@ export interface FullCharacter extends Character {
   inventory: InventoryItem[]
   startingCoins?: CoinPurse
   pdfPath?: string
+  companions?: Companion[]
 }
 
 interface CharacterStore {
@@ -30,6 +32,8 @@ interface CharacterStore {
   setActiveCharacter: (id: string) => void
   loadCharacter: (c: FullCharacter) => void
   removeCharacter: (id: string) => void
+  addCompanion: (characterId: string, companion: Companion) => void
+  removeCompanion: (characterId: string, companionId: string) => void
   activeCharacter: () => FullCharacter | null
 }
 
@@ -49,6 +53,27 @@ export const useCharacterStore = create<CharacterStore>()(
         set((state) => ({
           characters: state.characters.filter((x) => x.id !== id),
           activeCharacterId: state.activeCharacterId === id ? null : state.activeCharacterId,
+        })),
+      addCompanion: (characterId, companion) =>
+        set((state) => ({
+          characters: state.characters.map((c) => {
+            if (c.id !== characterId) return c
+            const existing = c.companions ?? []
+            const updated = existing.some((x) => x.id === companion.id)
+              ? existing.map((x) => (x.id === companion.id ? companion : x))
+              : [...existing, companion]
+            return { ...c, companions: updated }
+          }),
+        })),
+      removeCompanion: (characterId, companionId) =>
+        set((state) => ({
+          characters: state.characters.map((c) => {
+            if (c.id !== characterId) return c
+            return {
+              ...c,
+              companions: (c.companions ?? []).filter((x) => x.id !== companionId),
+            }
+          }),
         })),
       activeCharacter: () => {
         const { characters, activeCharacterId } = get()

@@ -22,4 +22,8 @@ export interface SessionState {
   activeSummon: ActiveSummon | null
   itemQuantities: Record<string, number>
   coins: CoinPurse
+  companionHp?: Record<string, number>
+  companionTempHp?: Record<string, number>
+  companionConditions?: Record<string, ConditionType[]>
+  activeCompanionId?: string
 }

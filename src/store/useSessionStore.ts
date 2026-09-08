@@ -29,6 +29,11 @@ interface SessionStore {
   setSummon: (characterId: string, summon: ActiveSummon) => void
   adjustSummonHp: (characterId: string, delta: number) => void
   clearSummon: (characterId: string) => void
+  setCompanionHp: (characterId: string, companionId: string, hp: number) => void
+  adjustCompanionHp: (characterId: string, companionId: string, delta: number, maxHp: number) => void
+  setCompanionTempHp: (characterId: string, companionId: string, temp: number) => void
+  toggleCompanionCondition: (characterId: string, companionId: string, condition: ConditionType) => void
+  setActiveCompanion: (characterId: string, companionId: string) => void
   initSession: (characterId: string, maxHp: number, startingCoins?: CoinPurse) => void
   longRest: (characterId: string, maxHp: number) => void
 }
@@ -48,6 +53,9 @@ const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurs
   activeSummon: null,
   itemQuantities: {},
   coins: startingCoins ?? { gp: 0, sp: 0, cp: 0 },
+  companionHp: {},
+  companionTempHp: {},
+  companionConditions: {},
 })
 
 export const useSessionStore = create<SessionStore>()(
@@ -380,6 +388,93 @@ export const useSessionStore = create<SessionStore>()(
           },
         })),
 
+      setCompanionHp: (charId, companionId, hp) =>
+        set((s) => {
+          const sess = s.sessions[charId] ?? defaultSession(charId)
+          return {
+            sessions: {
+              ...s.sessions,
+              [charId]: {
+                ...sess,
+                companionHp: {
+                  ...(sess.companionHp ?? {}),
+                  [companionId]: hp,
+                },
+              },
+            },
+          }
+        }),
+
+      adjustCompanionHp: (charId, companionId, delta, maxHp) =>
+        set((s) => {
+          const sess = s.sessions[charId] ?? defaultSession(charId)
+          const current = sess.companionHp?.[companionId] ?? maxHp
+          return {
+            sessions: {
+              ...s.sessions,
+              [charId]: {
+                ...sess,
+                companionHp: {
+                  ...(sess.companionHp ?? {}),
+                  [companionId]: Math.min(maxHp, current + delta),
+                },
+              },
+            },
+          }
+        }),
+
+      setCompanionTempHp: (charId, companionId, temp) =>
+        set((s) => {
+          const sess = s.sessions[charId] ?? defaultSession(charId)
+          return {
+            sessions: {
+              ...s.sessions,
+              [charId]: {
+                ...sess,
+                companionTempHp: {
+                  ...(sess.companionTempHp ?? {}),
+                  [companionId]: temp,
+                },
+              },
+            },
+          }
+        }),
+
+      toggleCompanionCondition: (charId, companionId, condition) =>
+        set((s) => {
+          const sess = s.sessions[charId] ?? defaultSession(charId)
+          const currConds = sess.companionConditions?.[companionId] ?? []
+          const updated = currConds.includes(condition)
+            ? currConds.filter((c) => c !== condition)
+            : [...currConds, condition]
+          return {
+            sessions: {
+              ...s.sessions,
+              [charId]: {
+                ...sess,
+                companionConditions: {
+                  ...(sess.companionConditions ?? {}),
+                  [companionId]: updated,
+                },
+              },
+            },
+          }
+        }),
+
+      setActiveCompanion: (charId, companionId) =>
+        set((s) => {
+          const sess = s.sessions[charId] ?? defaultSession(charId)
+          return {
+            sessions: {
+              ...s.sessions,
+              [charId]: {
+                ...sess,
+                activeCompanionId: companionId,
+              },
+            },
+          }
+        }),
+
       longRest: (id, maxHp) =>
         set((s) => ({
           sessions: {
@@ -395,6 +490,9 @@ export const useSessionStore = create<SessionStore>()(
               activeBuffIds: [],
               conditions: [],
               activeSummon: null,
+              companionHp: {},
+              companionTempHp: {},
+              companionConditions: {},
             },
           },
         })),

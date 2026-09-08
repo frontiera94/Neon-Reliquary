@@ -7,6 +7,7 @@ import { CombatPage } from './pages/CombatPage'
 import { SpellsPage } from './pages/SpellsPage'
 import { FeaturesPage } from './pages/FeaturesPage'
 import { InventoryPage } from './pages/InventoryPage'
+import { CompanionPage } from './pages/CompanionPage'
 import { GmDashboardPage } from './pages/GmDashboardPage'
 import { MapEditorPage } from './pages/MapEditorPage'
 import { MapViewPage } from './pages/MapViewPage'
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/spells" element={<SpellsPage />} />
           <Route path="/features" element={<FeaturesPage />} />
           <Route path="/inventory" element={<InventoryPage />} />
+          <Route path="/companion" element={<CompanionPage />} />
         </Route>
         <Route path="/gm" element={<GmDashboardPage />} />
         <Route path="/gm/map/:id" element={<MapEditorPage />} />

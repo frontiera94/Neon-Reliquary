@@ -754,5 +754,124 @@
     "gp": 65,
     "sp": 30,
     "cp": 5
-  }
+  },
+  "companions": [
+    {
+      "id": "salem-familiar",
+      "name": "Salem (a.k.a. Blackjack)",
+      "type": "familiar",
+      "species": "Cat",
+      "portrait": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=400&q=80",
+      "size": "Tiny",
+      "hitDice": "4 HD",
+      "level": 4,
+      "maxHp": 19,
+      "speed": "30 ft.",
+      "initiativeBonus": 2,
+      "armorClass": {
+        "total": 17,
+        "touch": 14,
+        "flatFooted": 15,
+        "naturalArmor": 2,
+        "dexBonus": 2,
+        "sizeBonus": 2,
+        "misc": 1
+      },
+      "savingThrows": {
+        "fort": 0,
+        "ref": 3,
+        "will": 5
+      },
+      "abilities": {
+        "str": 3,
+        "dex": 15,
+        "con": 8,
+        "int": 7,
+        "wis": 12,
+        "cha": 7
+      },
+      "baseAttackBonus": 2,
+      "attacks": [
+        {
+          "name": "Bite",
+          "bonus": 6,
+          "damageDice": "1d3-4",
+          "damageBonus": 0,
+          "critRange": 20,
+          "critMultiplier": 2,
+          "damageType": "Piercing / Slashing",
+          "notes": "Weapon Finesse, min 1 dmg"
+        },
+        {
+          "name": "2 Claws",
+          "bonus": 6,
+          "damageDice": "1d2-4",
+          "damageBonus": 0,
+          "critRange": 20,
+          "critMultiplier": 2,
+          "damageType": "Slashing",
+          "notes": "Weapon Finesse, min 1 dmg"
+        },
+        {
+          "name": "Deliver Touch Spell / Hex",
+          "bonus": 6,
+          "damageDice": "Spell",
+          "critRange": 20,
+          "damageType": "Magical",
+          "notes": "Delivers touch spell or hex designated by Mazikeen"
+        }
+      ],
+      "skills": [
+        { "name": "Stealth", "bonus": 14, "ability": "dex", "notes": "+8 size, +4 racial" },
+        { "name": "Perception", "bonus": 5, "ability": "wis" },
+        { "name": "Acrobatics", "bonus": 10, "ability": "dex", "notes": "+4 racial on jumping" },
+        { "name": "Climb", "bonus": 6, "ability": "dex" }
+      ],
+      "specialQualities": [
+        {
+          "name": "Witch's Familiar (Spell Store)",
+          "description": "Salem stores all of Mazikeen's spells. If Salem is lost or killed, spells cannot be prepared until replaced.",
+          "type": "passive"
+        },
+        {
+          "name": "Deliver Touch Spells (Su)",
+          "description": "At 4th level, Salem can deliver touch spells or hexes for Mazikeen. If designated, Salem touches the target as an attack.",
+          "type": "su"
+        },
+        {
+          "name": "Empathic Link (Su)",
+          "description": "Mazikeen has an empathic link with Salem up to a distance of 1 mile, communicating emotions and basic intent.",
+          "type": "su"
+        },
+        {
+          "name": "Alertness (Ex)",
+          "description": "Grants Mazikeen +2 on Perception and Sense Motive checks while within arm's reach.",
+          "type": "ex"
+        },
+        {
+          "name": "Improved Evasion (Ex)",
+          "description": "Takes no damage on a successful Reflex save for half damage, and only half damage on a failed save.",
+          "type": "ex"
+        },
+        {
+          "name": "Bonus Familiar Resistance",
+          "description": "Salem gains Cold, Electricity, and Fire resistance 1.",
+          "type": "passive"
+        },
+        {
+          "name": "Share Spells (Ex)",
+          "description": "Mazikeen may cast a spell with a target of 'You' on Salem instead of herself.",
+          "type": "ex"
+        }
+      ],
+      "senses": "Low-light vision, scent",
+      "masterLink": {
+        "alertnessToMaster": true,
+        "deliverTouchSpells": true,
+        "empathicLink": true,
+        "shareSpells": true,
+        "notes": "Salem stores all spells and delivers touch attacks/hexes."
+      }
+    }
+  ]
 }

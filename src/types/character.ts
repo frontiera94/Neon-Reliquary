@@ -20,4 +20,6 @@ export interface Character {
   baseAttackBonus: number[]
   initiativeBonus: number
   speed: number
+  spellResistance?: number
+  damageReduction?: string
 }

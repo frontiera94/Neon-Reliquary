@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
@@ -19,7 +20,7 @@ import { BuffManagerModal } from '../components/combat/BuffManagerModal'
 export function CombatPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
-  const { toggleBuff, adjustHp, initSession, setAmmo, setSummon, adjustSummonHp, clearSummon } =
+  const { toggleBuff, adjustHp, initSession, setAmmo, setSummon, adjustSummonHp, clearSummon, adjustCompanionHp } =
     useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
 
@@ -293,6 +294,147 @@ export function CombatPage() {
             openRoll={openRoll}
           />
         </>
+      )}
+
+      {/* Bonded Companion Combat Section */}
+      {char.companions && char.companions.length > 0 && (
+        (() => {
+          const comp = char.companions[0]
+          const compHp = session.companionHp?.[comp.id] ?? comp.maxHp
+          const hpPct = Math.max(0, Math.min(100, (compHp / comp.maxHp) * 100))
+
+          return (
+            <div className="space-y-3">
+              <div className="relative flex items-center gap-4">
+                <div className="flex-1 h-px bg-primary/30" />
+                <span className="font-label text-[10px] text-primary uppercase tracking-[0.25em] flex-shrink-0 flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-sm">pets</span>
+                  Bonded Companion — {comp.name}
+                </span>
+                <div className="flex-1 h-px bg-primary/30" />
+              </div>
+
+              <div className="bg-surface-container border-l-4 border-primary p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-surface-container-high border border-primary/20 overflow-hidden flex-shrink-0">
+                      {comp.portrait ? (
+                        <img src={comp.portrait} alt={comp.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="material-symbols-outlined text-primary flex items-center justify-center h-full w-full">
+                          pets
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-headline text-lg font-bold text-on-surface">{comp.name}</h4>
+                      <p className="font-label text-[10px] text-tertiary uppercase tracking-wider">
+                        {comp.type.replace('_', ' ')} • {comp.species} • AC {comp.armorClass.total}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* HP bar and adjusters */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => adjustCompanionHp(char.id, comp.id, -1, comp.maxHp)}
+                      className="w-8 h-8 bg-surface-container-high hover:bg-error-container text-primary hover:text-on-error flex items-center justify-center font-bold text-sm cursor-pointer"
+                      title="-1 HP"
+                    >
+                      -
+                    </button>
+                    <div className="text-center min-w-[70px]">
+                      <span className="font-label text-base font-bold text-primary">{compHp}</span>
+                      <span className="font-label text-xs text-tertiary"> / {comp.maxHp} HP</span>
+                      <div className="w-full h-1 bg-surface-container-lowest mt-1">
+                        <div
+                          className="h-full bg-primary transition-all duration-200"
+                          style={{ width: `${hpPct}%` }}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => adjustCompanionHp(char.id, comp.id, 1, comp.maxHp)}
+                      className="w-8 h-8 bg-surface-container-high hover:bg-primary-container text-primary hover:text-on-primary flex items-center justify-center font-bold text-sm cursor-pointer"
+                      title="+1 HP"
+                    >
+                      +
+                    </button>
+
+                    <Link
+                      to="/companion"
+                      className="ml-2 px-3 py-1.5 bg-primary/10 border border-primary text-primary font-label text-[10px] uppercase tracking-widest hover:bg-primary/20 transition-all flex items-center gap-1"
+                    >
+                      Sheet
+                      <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Natural Attacks quick roll */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-2 border-t border-outline-variant/10">
+                  {comp.attacks.map((atk) => {
+                    const parsed = parseDiceFormula(atk.damageDice)
+                    const totalDmgMod = (atk.damageBonus ?? 0) + parsed.bonus
+                    const isTouch = atk.damageDice.toLowerCase().includes('spell')
+
+                    return (
+                      <div
+                        key={atk.name}
+                        className="bg-surface-container-high p-3 flex items-center justify-between gap-2"
+                      >
+                        <div>
+                          <p className="font-headline text-xs font-bold text-on-surface">{atk.name}</p>
+                          <p className="font-label text-[10px] text-tertiary">
+                            {atk.damageDice}{!isTouch && totalDmgMod > 0 ? `+${totalDmgMod}` : ''}
+                          </p>
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() =>
+                              openRoll({
+                                diceType: 20,
+                                count: 1,
+                                modifier: atk.bonus,
+                                label: `${comp.name} — ${atk.name} Atk`,
+                                critRange: atk.critRange ?? 20,
+                              })
+                            }
+                            className="px-2.5 py-1 bg-primary text-on-primary font-label text-xs font-bold uppercase hover:shadow-[0_0_10px_rgba(0,218,243,0.3)] transition-all cursor-pointer"
+                          >
+                            +{atk.bonus}
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (isTouch) {
+                                openRoll({
+                                  diceType: 20,
+                                  count: 1,
+                                  modifier: atk.bonus,
+                                  label: `${comp.name} — Touch Attack`,
+                                })
+                              } else {
+                                openRoll({
+                                  diceType: parsed.sides,
+                                  count: parsed.count,
+                                  modifier: totalDmgMod,
+                                  label: `${comp.name} — ${atk.name} Dmg`,
+                                })
+                              }
+                            }}
+                            className="px-2.5 py-1 bg-surface-container-lowest border border-outline-variant/30 text-secondary hover:bg-surface-container-highest font-label text-xs font-bold transition-all cursor-pointer"
+                          >
+                            Dmg
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          )
+        })()
       )}
 
       {/* Unified Buff Manager Modal */}

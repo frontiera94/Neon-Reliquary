@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
@@ -109,6 +110,30 @@ export function StatusPage() {
         {restrictions.length > 0 && (
           <div className="lg:col-span-12">
             <ActionAlertBanner restrictions={restrictions} />
+          </div>
+        )}
+
+        {/* Bonded Companion Quick Banner */}
+        {char.companions && char.companions.length > 0 && (
+          <div className="lg:col-span-12 bg-surface-container border border-primary/30 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-primary text-2xl">pets</span>
+              <div>
+                <p className="font-headline text-sm font-bold text-on-surface">
+                  Bonded Companion: <span className="text-secondary">{char.companions[0].name}</span>
+                </p>
+                <p className="font-label text-[10px] text-tertiary uppercase">
+                  {char.companions[0].type.replace('_', ' ')} • {char.companions[0].species} • HP {session.companionHp?.[char.companions[0].id] ?? char.companions[0].maxHp} / {char.companions[0].maxHp}
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/companion"
+              className="px-4 py-2 bg-primary/10 border border-primary text-primary font-label text-xs uppercase tracking-widest hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,218,243,0.3)] transition-all flex items-center gap-2"
+            >
+              Open Companion Sheet
+              <span className="material-symbols-outlined text-xs">arrow_forward</span>
+            </Link>
           </div>
         )}
 

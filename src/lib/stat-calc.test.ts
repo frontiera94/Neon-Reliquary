@@ -61,6 +61,42 @@ describe('stat-calc engine', () => {
       expect(res.mods.str).toBe(6)
       expect(res.deltas.str).toBe(2)
     })
+
+    it('applies paralyzed (STR and DEX become 0, modifier becomes -5)', () => {
+      const res = calcEffectiveAbilities(baseAbilities, ['paralyzed'], [])
+      expect(res.scores.str).toBe(0)
+      expect(res.scores.dex).toBe(0)
+      expect(res.mods.str).toBe(-5)
+      expect(res.mods.dex).toBe(-5)
+      expect(res.breakdowns.str).toContainEqual({ label: 'Paralyzed', value: -18 })
+      expect(res.breakdowns.dex).toContainEqual({ label: 'Paralyzed', value: -14 })
+    })
+
+    it('stacks multiple ability score buffs simultaneously', () => {
+      const bull: BuffToggle = {
+        id: 'bull',
+        name: "Bull's Strength",
+        active: true,
+        attackMod: 0,
+        damageMod: 0,
+        acMod: 0,
+        abilityMods: { str: 4 },
+      }
+      const cat: BuffToggle = {
+        id: 'cat',
+        name: "Cat's Grace",
+        active: true,
+        attackMod: 0,
+        damageMod: 0,
+        acMod: 0,
+        abilityMods: { dex: 4 },
+      }
+      const res = calcEffectiveAbilities(baseAbilities, [], [bull, cat])
+      expect(res.scores.str).toBe(22)
+      expect(res.scores.dex).toBe(18)
+      expect(res.mods.str).toBe(6)
+      expect(res.mods.dex).toBe(4)
+    })
   })
 
   describe('calcEffectiveSaves', () => {
