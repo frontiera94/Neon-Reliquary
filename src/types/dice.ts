@@ -6,6 +6,7 @@ export interface DiceRoll {
   modifier: number
   label: string
   critRange?: number
+  breakdown?: { label: string; value: number }[]
 }
 
 export interface RollResult {
@@ -19,4 +20,5 @@ export interface RollResult {
   isCriticalConfirmed: boolean
   formula: string
   timestamp: number
+  breakdown?: { label: string; value: number }[]
 }

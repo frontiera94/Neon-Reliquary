@@ -129,8 +129,30 @@ export function DiceOverlayModal() {
                   )}
 
                   {/* Formula breakdown */}
-                  <div className="w-full bg-surface-container-lowest p-4 font-label text-xs text-on-surface-variant text-center">
-                    {lastResult.formula}
+                  <div className="w-full bg-surface-container-lowest p-4 font-label text-xs text-on-surface-variant text-center space-y-2">
+                    <div>{lastResult.formula}</div>
+                    {lastResult.breakdown && lastResult.breakdown.length > 0 && (
+                      <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+                        {lastResult.breakdown.map((item, idx) => {
+                          const isPositive = item.value > 0
+                          const isNegative = item.value < 0
+                          const badgeClass = isNegative
+                            ? 'bg-error/15 border-error/40 text-error'
+                            : isPositive
+                            ? 'bg-primary/15 border-primary/40 text-primary'
+                            : 'bg-surface-container-high border-outline-variant/30 text-tertiary'
+
+                          return (
+                            <span
+                              key={idx}
+                              className={`px-2 py-0.5 border text-[10px] font-label font-bold tracking-wider ${badgeClass}`}
+                            >
+                              {isPositive ? `+${item.value}` : item.value} {item.label}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 </>
               ) : null}

@@ -48,6 +48,7 @@ export function rollDice(roll: DiceRoll): RollResult {
     isCriticalConfirmed: false,
     formula,
     timestamp: Date.now(),
+    breakdown: roll.breakdown,
   }
 }
 

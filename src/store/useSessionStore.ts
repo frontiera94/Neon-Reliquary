@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { SessionState, ActiveSummon } from '../types/session'
-import type { ConditionType } from '../types/combat'
+import type { ConditionType, BuffToggle } from '../types/combat'
 import type { CoinPurse } from '../types/inventory'
 
 interface SessionStore {
@@ -15,6 +15,8 @@ interface SessionStore {
   recoverResource: (characterId: string, resourceId: string) => void
   setResourceSpent: (characterId: string, resourceId: string, amount: number) => void
   toggleBuff: (characterId: string, buffId: string) => void
+  addCustomBuff: (characterId: string, buff: BuffToggle) => void
+  removeCustomBuff: (characterId: string, buffId: string) => void
   toggleCondition: (characterId: string, condition: ConditionType) => void
   toggleSpellPrepared: (characterId: string, spellId: string, level: number, slotMax: number) => void
   spendSpellSlot: (characterId: string, level: number, max: number) => void
@@ -39,6 +41,7 @@ const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurs
   spentResources: {},
   activeBuffIds: [],
   conditions: [],
+  customBuffs: [],
   preparedSpellIds: [],
   spentSpellSlots: {},
   ammo: {},
@@ -167,6 +170,43 @@ export const useSessionStore = create<SessionStore>()(
                 activeBuffIds: active
                   ? sess.activeBuffIds.filter((b) => b !== buffId)
                   : [...sess.activeBuffIds, buffId],
+              },
+            },
+          }
+        }),
+
+      addCustomBuff: (id, buff) =>
+        set((s) => {
+          const sess = s.sessions[id] ?? defaultSession(id)
+          const existing = sess.customBuffs ?? []
+          const updated = existing.some((b) => b.id === buff.id)
+            ? existing.map((b) => (b.id === buff.id ? buff : b))
+            : [...existing, buff]
+          const activeBuffIds = sess.activeBuffIds.includes(buff.id)
+            ? sess.activeBuffIds
+            : [...sess.activeBuffIds, buff.id]
+          return {
+            sessions: {
+              ...s.sessions,
+              [id]: {
+                ...sess,
+                customBuffs: updated,
+                activeBuffIds,
+              },
+            },
+          }
+        }),
+
+      removeCustomBuff: (id, buffId) =>
+        set((s) => {
+          const sess = s.sessions[id] ?? defaultSession(id)
+          return {
+            sessions: {
+              ...s.sessions,
+              [id]: {
+                ...sess,
+                customBuffs: (sess.customBuffs ?? []).filter((b) => b.id !== buffId),
+                activeBuffIds: sess.activeBuffIds.filter((b) => b !== buffId),
               },
             },
           }

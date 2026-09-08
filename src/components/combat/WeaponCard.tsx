@@ -1,5 +1,6 @@
-import { formatAttackBonus, formatDamage, calcEffectiveWeapon } from '../../lib/combat-calc'
+import { formatAttackBonus, formatDamage } from '../../lib/combat-calc'
 import type { Weapon } from '../../types/combat'
+import type { EffectiveWeaponCalculated } from '../../lib/stat-calc'
 
 export function WeaponCard({
   weapon,
@@ -17,7 +18,7 @@ export function WeaponCard({
   onAmmoChange,
 }: {
   weapon: Weapon
-  effective: ReturnType<typeof calcEffectiveWeapon>
+  effective: EffectiveWeaponCalculated
   ammo?: number
   maxAmmo?: number
   twfActive: boolean

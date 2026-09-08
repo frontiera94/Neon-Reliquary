@@ -26,6 +26,13 @@ export interface BuffToggle {
   isTwf?: boolean
   /** Extra damage dice rolled separately when this buff is active (e.g. "2d6") */
   extraDamageDice?: string
+  /** Global or per-save modifiers */
+  saveMod?: number | { fort?: number; ref?: number; will?: number }
+  /** Direct ability score modifiers (e.g. +4 STR from Bull's Strength) */
+  abilityMods?: Partial<Record<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha', number>>
+  description?: string
+  isCustom?: boolean
+  duration?: string
 }
 
 export type ConditionType =

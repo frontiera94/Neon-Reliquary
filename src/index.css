@@ -3,6 +3,41 @@
 
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #00daf3;
+  --color-secondary: #e9c349;
+  --color-tertiary: #c6c6c6;
+  --color-error: #ffb4ab;
+  --color-surface: #131318;
+  --color-surface-container: #1f1f25;
+  --color-surface-container-low: #1b1b20;
+  --color-surface-container-high: #2a292f;
+  --color-surface-container-highest: #35343a;
+  --color-surface-container-lowest: #0e0e13;
+  --color-surface-variant: #35343a;
+  --color-surface-bright: #39383e;
+  --color-outline: #89919e;
+  --color-outline-variant: #3f4753;
+  --color-on-surface: #e4e1e9;
+  --color-on-surface-variant: #bfc7d5;
+  --color-on-primary: #00363d;
+  --color-on-secondary: #3c2f00;
+  --color-on-tertiary: #2f3131;
+  --color-on-error: #690005;
+  --color-background: #131318;
+  --color-inverse-surface: #e4e1e9;
+  --color-inverse-primary: #006875;
+  --color-primary-container: #00a4b7;
+  --font-headline: 'Noto Serif', serif;
+  --font-body: 'Manrope', sans-serif;
+  --font-label: 'Space Grotesk', monospace;
+  --radius-DEFAULT: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-full: 9999px;
+}
+
 body {
   background-color: #131318;
   font-family: 'Manrope', sans-serif;

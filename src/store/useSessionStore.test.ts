@@ -149,6 +149,37 @@ describe('buff toggling', () => {
     expect(ids).toContain('haste')
     expect(ids).toContain('prayer')
   })
+
+  it('addCustomBuff stores custom buff and auto-activates it', () => {
+    useSessionStore.getState().addCustomBuff(CHAR, {
+      id: 'custom-1',
+      name: 'Heroism',
+      active: true,
+      attackMod: 2,
+      damageMod: 0,
+      acMod: 0,
+      isCustom: true,
+    })
+    const sess = useSessionStore.getState().getSession(CHAR)
+    expect(sess.customBuffs?.some((b) => b.id === 'custom-1')).toBe(true)
+    expect(sess.activeBuffIds).toContain('custom-1')
+  })
+
+  it('removeCustomBuff deletes custom buff and deactivates it', () => {
+    useSessionStore.getState().addCustomBuff(CHAR, {
+      id: 'custom-1',
+      name: 'Heroism',
+      active: true,
+      attackMod: 2,
+      damageMod: 0,
+      acMod: 0,
+      isCustom: true,
+    })
+    useSessionStore.getState().removeCustomBuff(CHAR, 'custom-1')
+    const sess = useSessionStore.getState().getSession(CHAR)
+    expect(sess.customBuffs?.some((b) => b.id === 'custom-1')).toBe(false)
+    expect(sess.activeBuffIds).not.toContain('custom-1')
+  })
 })
 
 // ─── Conditions ──────────────────────────────────────────────────────────────

@@ -1,0 +1,225 @@
+import { describe, it, expect } from 'vitest'
+import {
+  calcEffectiveAbilities,
+  calcEffectiveSaves,
+  calcEffectiveArmorClass,
+  calcEffectiveWeaponStats,
+  calcEffectiveSkills,
+  getActiveActionRestrictions,
+} from './stat-calc'
+import type { Weapon, BuffToggle } from '../types/combat'
+import type { SavingThrow, ArmorClass } from '../types/defense'
+import type { Skill } from '../types/skills'
+
+describe('stat-calc engine', () => {
+  const baseAbilities = {
+    str: 18, // +4
+    dex: 14, // +2
+    con: 14, // +2
+    int: 10, // +0
+    wis: 12, // +1
+    cha: 8,  // -1
+  }
+
+  describe('calcEffectiveAbilities', () => {
+    it('returns unmodified abilities when no conditions or buffs are active', () => {
+      const res = calcEffectiveAbilities(baseAbilities, [], [])
+      expect(res.scores.str).toBe(18)
+      expect(res.mods.str).toBe(4)
+      expect(res.deltas.str).toBe(0)
+    })
+
+    it('applies fatigued (-2 STR, -2 DEX) reducing mods', () => {
+      const res = calcEffectiveAbilities(baseAbilities, ['fatigued'], [])
+      expect(res.scores.str).toBe(16)
+      expect(res.mods.str).toBe(3)
+      expect(res.deltas.str).toBe(-1)
+      expect(res.scores.dex).toBe(12)
+      expect(res.mods.dex).toBe(1)
+      expect(res.deltas.dex).toBe(-1)
+    })
+
+    it('applies exhausted (-6 STR, -6 DEX)', () => {
+      const res = calcEffectiveAbilities(baseAbilities, ['exhausted'], [])
+      expect(res.scores.str).toBe(12)
+      expect(res.mods.str).toBe(1)
+      expect(res.deltas.str).toBe(-3)
+    })
+
+    it('applies ability buffs like Bull Strength (+4 STR)', () => {
+      const buff: BuffToggle = {
+        id: 'test-bull',
+        name: "Bull's Strength",
+        active: true,
+        attackMod: 0,
+        damageMod: 0,
+        acMod: 0,
+        abilityMods: { str: 4 },
+      }
+      const res = calcEffectiveAbilities(baseAbilities, [], [buff])
+      expect(res.scores.str).toBe(22)
+      expect(res.mods.str).toBe(6)
+      expect(res.deltas.str).toBe(2)
+    })
+  })
+
+  describe('calcEffectiveSaves', () => {
+    const baseSaves: SavingThrow = {
+      fort: 5,
+      ref: 4,
+      will: 2,
+      fortBase: 3,
+      refBase: 2,
+      willBase: 1,
+    }
+
+    it('applies Shaken (-2 to all saves)', () => {
+      const effAbilities = calcEffectiveAbilities(baseAbilities, ['shaken'], [])
+      const res = calcEffectiveSaves(baseSaves, baseAbilities, effAbilities, ['shaken'], [])
+      expect(res.fortitude).toBe(3)
+      expect(res.reflex).toBe(2)
+      expect(res.will).toBe(0)
+    })
+
+    it('cascades DEX penalty from Fatigued into Reflex save', () => {
+      const effAbilities = calcEffectiveAbilities(baseAbilities, ['fatigued'], [])
+      const res = calcEffectiveSaves(baseSaves, baseAbilities, effAbilities, ['fatigued'], [])
+      // DEX went from 14 (+2) to 12 (+1) -> -1 to Reflex
+      expect(res.reflex).toBe(3)
+      expect(res.fortitude).toBe(5)
+    })
+
+    it('applies Haste (+1 Reflex)', () => {
+      const hasteBuff: BuffToggle = {
+        id: 'haste',
+        name: 'Haste',
+        active: true,
+        attackMod: 1,
+        damageMod: 0,
+        acMod: 1,
+        saveMod: { ref: 1 },
+      }
+      const effAbilities = calcEffectiveAbilities(baseAbilities, [], [hasteBuff])
+      const res = calcEffectiveSaves(baseSaves, baseAbilities, effAbilities, [], [hasteBuff])
+      expect(res.reflex).toBe(5)
+      expect(res.fortitude).toBe(5)
+      expect(res.will).toBe(2)
+    })
+  })
+
+  describe('calcEffectiveArmorClass', () => {
+    const baseAc: ArmorClass = {
+      total: 18,
+      touch: 12,
+      flatFooted: 16,
+      armorBonus: 6,
+      shieldBonus: 0,
+      dexBonus: 2,
+      naturalArmor: 0,
+      deflection: 0,
+      misc: 0,
+      spellFailureChance: 0,
+    }
+
+    it('applies Blinded (-2 AC, loses Dex)', () => {
+      // baseDexMod is 2
+      const res = calcEffectiveArmorClass(baseAc, 2, 2, ['blinded'], [])
+      // loses DEX (+2) and takes -2 penalty -> total drops by 4
+      expect(res.total).toBe(14)
+      expect(res.touch).toBe(8)
+    })
+
+    it('applies AC buff', () => {
+      const buff: BuffToggle = {
+        id: 'shield',
+        name: 'Shield',
+        active: true,
+        attackMod: 0,
+        damageMod: 0,
+        acMod: 4,
+      }
+      const res = calcEffectiveArmorClass(baseAc, 2, 2, [], [buff])
+      expect(res.total).toBe(22)
+      expect(res.touch).toBe(16)
+      expect(res.flatFooted).toBe(20)
+    })
+  })
+
+  describe('calcEffectiveWeaponStats', () => {
+    const sword: Weapon = {
+      id: 'greatsword',
+      name: 'Greatsword',
+      type: 'melee',
+      attackBonus: [8, 3],
+      damageDice: '2d6',
+      damageBonus: 6,
+      critRange: 19,
+      critMultiplier: 2,
+      tags: ['two-handed'],
+    }
+
+    it('applies Shaken and Sickened to attack and damage', () => {
+      const effAbilities = calcEffectiveAbilities(baseAbilities, ['shaken', 'sickened'], [])
+      const res = calcEffectiveWeaponStats(
+        sword,
+        baseAbilities,
+        effAbilities,
+        ['shaken', 'sickened'],
+        [],
+        []
+      )
+      // Shaken (-2) + Sickened (-2) = -4 attack
+      expect(res.attackBonus).toEqual([4, -1])
+      // Sickened (-2) damage
+      expect(res.damageBonus).toBe(4)
+    })
+
+    it('applies STR shift from Fatigued and Bull Strength', () => {
+      const bull: BuffToggle = {
+        id: 'bull',
+        name: 'Bull',
+        active: true,
+        attackMod: 0,
+        damageMod: 0,
+        acMod: 0,
+        abilityMods: { str: 4 }, // +2 mod
+      }
+      const effAbilities = calcEffectiveAbilities(baseAbilities, [], [bull])
+      const res = calcEffectiveWeaponStats(
+        sword,
+        baseAbilities,
+        effAbilities,
+        [],
+        [bull],
+        ['bull']
+      )
+      expect(res.attackBonus).toEqual([10, 5])
+      expect(res.damageBonus).toBe(8)
+    })
+  })
+
+  describe('calcEffectiveSkills', () => {
+    const skills: Skill[] = [
+      { id: 'ath', name: 'Athletics', ability: 'str', ranks: 2, classSkill: true, trained: true, miscBonus: 0, armorCheckPenalty: true },
+      { id: 'per', name: 'Perception', ability: 'wis', ranks: 4, classSkill: true, trained: true, miscBonus: 0, armorCheckPenalty: false },
+    ]
+
+    it('applies Shaken (-2 to all skill checks)', () => {
+      const effAbilities = calcEffectiveAbilities(baseAbilities, ['shaken'], [])
+      const res = calcEffectiveSkills(skills, baseAbilities, effAbilities, ['shaken'])
+      // Athletics base: 2 ranks + 3 class + 4 str = 9 -> minus 2 shaken = 7
+      expect(res[0].effectiveTotal).toBe(7)
+      // Perception base: 4 ranks + 3 class + 1 wis = 8 -> minus 2 shaken = 6
+      expect(res[1].effectiveTotal).toBe(6)
+    })
+  })
+
+  describe('getActiveActionRestrictions', () => {
+    it('returns warning for Nauseated and danger for Stunned', () => {
+      const alerts = getActiveActionRestrictions(['nauseated', 'stunned'])
+      expect(alerts).toHaveLength(2)
+      expect(alerts[0].condition).toBe('nauseated')
+      expect(alerts[1].condition).toBe('stunned')
+    })
+  })
+})

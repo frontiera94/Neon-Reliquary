@@ -1,4 +1,4 @@
-import type { ConditionType } from './combat'
+import type { ConditionType, BuffToggle } from './combat'
 import type { CoinPurse } from './inventory'
 
 export interface ActiveSummon {
@@ -15,6 +15,7 @@ export interface SessionState {
   spentResources: Record<string, number>
   activeBuffIds: string[]
   conditions: ConditionType[]
+  customBuffs?: BuffToggle[]
   preparedSpellIds: string[]
   spentSpellSlots: Record<number, number>
   ammo: Record<string, number>
