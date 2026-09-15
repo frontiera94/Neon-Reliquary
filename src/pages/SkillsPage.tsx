@@ -28,12 +28,22 @@ export function SkillsPage() {
       session.conditions
     )
 
-    return calculated.filter((s) => {
-      if (trainedOnly && !s.trained) return false
-      if (search && !s.name.toLowerCase().includes(search.toLowerCase())) return false
-      return true
-    })
+    return calculated
+      .filter((s) => {
+        if (trainedOnly && !s.trained) return false
+        if (search && !s.name.toLowerCase().includes(search.toLowerCase())) return false
+        return true
+      })
+      .sort((a, b) => a.name.localeCompare(b.name))
   }, [char, session, search, trainedOnly])
+
+  const { leftSkills, rightSkills } = useMemo(() => {
+    const half = Math.ceil(effectiveSkills.length / 2)
+    return {
+      leftSkills: effectiveSkills.slice(0, half),
+      rightSkills: effectiveSkills.slice(half),
+    }
+  }, [effectiveSkills])
 
   if (!char) {
     return (
@@ -89,29 +99,52 @@ export function SkillsPage() {
       </header>
 
       {/* Skills Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {effectiveSkills.map((skill) => (
-          <SkillRow
-            key={skill.id}
-            skill={skill}
-            total={skill.effectiveTotal}
-            onRoll={() =>
-              openRoll({
-                diceType: 20,
-                count: 1,
-                modifier: skill.effectiveTotal,
-                label: `${skill.name} Check`,
-                breakdown: skill.breakdown,
-              })
-            }
-          />
-        ))}
-        {effectiveSkills.length === 0 && (
-          <div className="col-span-2 py-16 text-center text-tertiary font-label text-sm uppercase tracking-widest">
-            No skills found
+      {effectiveSkills.length === 0 ? (
+        <div className="py-16 text-center text-tertiary font-label text-sm uppercase tracking-widest">
+          No skills found
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          <div className="flex flex-col gap-4">
+            {leftSkills.map((skill) => (
+              <SkillRow
+                key={skill.id}
+                skill={skill}
+                total={skill.effectiveTotal}
+                onRoll={() =>
+                  openRoll({
+                    diceType: 20,
+                    count: 1,
+                    modifier: skill.effectiveTotal,
+                    label: `${skill.name} Check`,
+                    breakdown: skill.breakdown,
+                  })
+                }
+              />
+            ))}
           </div>
-        )}
-      </div>
+          {rightSkills.length > 0 && (
+            <div className="flex flex-col gap-4">
+              {rightSkills.map((skill) => (
+                <SkillRow
+                  key={skill.id}
+                  skill={skill}
+                  total={skill.effectiveTotal}
+                  onRoll={() =>
+                    openRoll({
+                      diceType: 20,
+                      count: 1,
+                      modifier: skill.effectiveTotal,
+                      label: `${skill.name} Check`,
+                      breakdown: skill.breakdown,
+                    })
+                  }
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
