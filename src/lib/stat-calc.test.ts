@@ -382,6 +382,28 @@ describe('stat-calc engine', () => {
       expect(res.attackBreakdown).toContainEqual({ label: 'Shaken', value: -2 })
       expect(res.damageBreakdown).toContainEqual({ label: 'Base Dmg', value: 6 })
     })
+
+    it('sets hasteActive to true when Haste buff is active', () => {
+      const hasteBuff: BuffToggle = {
+        id: 'haste',
+        name: 'Haste',
+        active: true,
+        attackMod: 1,
+        damageMod: 0,
+        acMod: 1,
+      }
+      const effAbilities = calcEffectiveAbilities(baseAbilities, [], [hasteBuff])
+      const res = calcEffectiveWeaponStats(
+        sword,
+        baseAbilities,
+        effAbilities,
+        [],
+        [hasteBuff],
+        ['haste']
+      )
+      expect(res.hasteActive).toBe(true)
+      expect(res.attackBonus).toEqual([9, 4]) // 8+1, 3+1
+    })
   })
 
   describe('calcEffectiveSkills', () => {

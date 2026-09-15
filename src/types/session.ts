@@ -1,4 +1,4 @@
-import type { ConditionType, BuffToggle } from './combat'
+import type { ConditionType, BuffToggle, ActionEconomyState } from './combat'
 import type { CoinPurse } from './inventory'
 
 export interface ActiveSummon {
@@ -26,4 +26,6 @@ export interface SessionState {
   companionTempHp?: Record<string, number>
   companionConditions?: Record<string, ConditionType[]>
   activeCompanionId?: string
+  actionEconomy?: ActionEconomyState
+  currentRound?: number
 }

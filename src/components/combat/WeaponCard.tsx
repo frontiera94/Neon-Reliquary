@@ -9,6 +9,7 @@ export function WeaponCard({
   maxAmmo,
   twfActive,
   offhandPenalty,
+  hasteActive,
   sneakAttackDice,
   extraDiceLabel,
   onAttackRoll,
@@ -16,6 +17,7 @@ export function WeaponCard({
   onDamageRoll,
   onSneakAttackRoll,
   onAmmoChange,
+  onFullAttackRoll,
 }: {
   weapon: Weapon
   effective: EffectiveWeaponCalculated
@@ -23,17 +25,21 @@ export function WeaponCard({
   maxAmmo?: number
   twfActive: boolean
   offhandPenalty: number
+  hasteActive?: boolean
   sneakAttackDice?: string
   extraDiceLabel?: string
-  onAttackRoll: () => void
+  onAttackRoll: (attackIndex?: number) => void
   onOffhandRoll: () => void
   onDamageRoll: () => void
   onSneakAttackRoll?: () => void
   onAmmoChange?: (v: number) => void
+  onFullAttackRoll?: () => void
 }) {
+  const isHaste = hasteActive ?? effective.hasteActive ?? effective.activeBuffNames?.some((b) => /haste/i.test(b)) ?? false
   const isMelee = weapon.type === 'melee'
   const showOffhand = twfActive && isMelee
   const offhandBonus = effective.attackBonus[0] + offhandPenalty
+  const hasMultipleAttacks = effective.attackBonus.length > 1 || showOffhand || isHaste
 
   return (
     <div className={`bg-surface-container/90 backdrop-blur-sm p-6 relative group transition-all hover:bg-surface-container-high rounded-2xl border border-white/[0.08] shadow-[0_4px_24px_rgba(0,0,0,0.35)] hover:border-primary/30`}>
@@ -62,26 +68,80 @@ export function WeaponCard({
         </div>
       </div>
 
-      {/* Attack row */}
-      <div className={`grid gap-4 mb-4 ${showOffhand ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        <button
-          onClick={onAttackRoll}
-          className="flex flex-col items-center justify-center py-5 bg-gradient-to-r from-primary to-primary-container text-black font-bold border border-white/40 shadow-[0_0_20px_rgba(0,240,255,0.25)] hover:shadow-[0_0_35px_rgba(0,240,255,0.45)] rounded-xl transition-all active:scale-95 cursor-pointer"
-        >
-          <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-90">
-            {showOffhand ? 'Primary' : 'Attack'}
-          </span>
-          <span className="text-3xl font-black font-label">{formatAttackBonus(effective.attackBonus)}</span>
-        </button>
-
-        {showOffhand && (
+      {/* Attack Section */}
+      <div className="space-y-2.5 mb-4">
+        {/* Full Attack trigger button when multiple attacks or TWF active */}
+        {hasMultipleAttacks && onFullAttackRoll && (
           <button
-            onClick={onOffhandRoll}
-            className="flex flex-col items-center justify-center py-5 bg-surface-container-high border border-primary/40 text-primary shadow-[0_0_15px_rgba(0,240,255,0.15)] hover:shadow-[0_0_28px_rgba(0,240,255,0.35)] rounded-xl transition-all active:scale-95 cursor-pointer"
+            onClick={onFullAttackRoll}
+            className="w-full py-2.5 bg-gradient-to-r from-primary/20 via-primary/30 to-secondary/20 hover:from-primary/30 hover:to-secondary/30 border border-primary/50 text-white font-label text-xs uppercase tracking-widest font-bold rounded-xl transition-all hover:shadow-[0_0_20px_rgba(0,240,255,0.3)] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
           >
-            <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-80">Off-hand</span>
-            <span className="text-3xl font-black font-label">{formatAttackBonus([offhandBonus])}</span>
+            <span className="material-symbols-outlined text-base text-primary">fast_forward</span>
+            <span>
+              Full Attack Routine ({formatAttackBonus(effective.attackBonus)}
+              {isHaste ? ` + Haste (${effective.attackBonus[0] >= 0 ? `+${effective.attackBonus[0]}` : effective.attackBonus[0]})` : ''}
+              {showOffhand ? ` / Off ${offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus}` : ''})
+            </span>
           </button>
+        )}
+
+        {/* Individual Iterative Attacks */}
+        {effective.attackBonus.length > 1 ? (
+          <div className={`grid gap-2 ${effective.attackBonus.length + (showOffhand ? 1 : 0) > 3 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3'}`}>
+            {effective.attackBonus.map((bonus, idx) => (
+              <button
+                key={idx}
+                onClick={() => onAttackRoll(idx)}
+                className="py-3 px-2 bg-gradient-to-b from-primary/25 to-primary/10 hover:from-primary/35 hover:to-primary/20 text-white font-bold border border-primary/40 shadow-[0_0_12px_rgba(0,240,255,0.15)] hover:shadow-[0_0_20px_rgba(0,240,255,0.3)] rounded-xl transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center"
+              >
+                <span className="text-[9px] font-label uppercase tracking-widest text-primary mb-0.5">
+                  {idx + 1}° Attack
+                </span>
+                <span className="text-xl font-black font-label text-white">
+                  {bonus >= 0 ? `+${bonus}` : bonus}
+                </span>
+              </button>
+            ))}
+
+            {showOffhand && (
+              <button
+                onClick={onOffhandRoll}
+                className="py-3 px-2 bg-surface-container-high border border-secondary/40 text-secondary shadow-[0_0_12px_rgba(217,70,239,0.15)] hover:shadow-[0_0_20px_rgba(217,70,239,0.3)] rounded-xl transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center"
+              >
+                <span className="text-[9px] font-label uppercase tracking-widest mb-0.5 opacity-80">
+                  Off-hand
+                </span>
+                <span className="text-xl font-black font-label">
+                  {offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus}
+                </span>
+              </button>
+            )}
+          </div>
+        ) : (
+          /* Single Attack or Single + Off-hand */
+          <div className={`grid gap-4 ${showOffhand ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            <button
+              onClick={() => onAttackRoll(0)}
+              className="flex flex-col items-center justify-center py-5 bg-gradient-to-r from-primary to-primary-container text-black font-bold border border-white/40 shadow-[0_0_20px_rgba(0,240,255,0.25)] hover:shadow-[0_0_35px_rgba(0,240,255,0.45)] rounded-xl transition-all active:scale-95 cursor-pointer"
+            >
+              <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-90">
+                {showOffhand ? 'Primary Attack' : 'Attack'}
+              </span>
+              <span className="text-3xl font-black font-label">
+                {formatAttackBonus(effective.attackBonus)}
+              </span>
+            </button>
+
+            {showOffhand && (
+              <button
+                onClick={onOffhandRoll}
+                className="flex flex-col items-center justify-center py-5 bg-surface-container-high border border-primary/40 text-primary shadow-[0_0_15px_rgba(0,240,255,0.15)] hover:shadow-[0_0_28px_rgba(0,240,255,0.35)] rounded-xl transition-all active:scale-95 cursor-pointer"
+              >
+                <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-80">Off-hand</span>
+                <span className="text-3xl font-black font-label">{formatAttackBonus([offhandBonus])}</span>
+              </button>
+            )}
+          </div>
         )}
       </div>
 

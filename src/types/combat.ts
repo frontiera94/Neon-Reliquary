@@ -45,3 +45,41 @@ export interface AmmoTracker {
   current: number
   max: number
 }
+
+export type CombatManeuverType =
+  | 'grapple'
+  | 'trip'
+  | 'disarm'
+  | 'bullRush'
+  | 'sunder'
+  | 'overrun'
+  | 'dirtyTrick'
+  | 'reposition'
+  | 'steal'
+
+export interface ManeuverDetail {
+  type: CombatManeuverType
+  name: string
+  bonus: number
+  provokesAoO: boolean
+  breakdown: { label: string; value: number }[]
+  featApplied?: string
+  description?: string
+  cmdBonus?: number
+}
+
+export interface CombatManeuversCalculated {
+  cmb: number
+  cmd: number
+  maneuvers: Record<CombatManeuverType, ManeuverDetail>
+  breakdownCmb: { label: string; value: number }[]
+  breakdownCmd: { label: string; value: number }[]
+}
+
+export interface ActionEconomyState {
+  standard: boolean
+  move: boolean
+  swift: boolean
+  immediate: boolean
+  fullRound: boolean
+}

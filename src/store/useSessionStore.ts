@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { SessionState, ActiveSummon } from '../types/session'
-import type { ConditionType, BuffToggle } from '../types/combat'
+import type { ConditionType, BuffToggle, ActionEconomyState } from '../types/combat'
 import type { CoinPurse } from '../types/inventory'
 
 interface SessionStore {
@@ -34,8 +34,47 @@ interface SessionStore {
   setCompanionTempHp: (characterId: string, companionId: string, temp: number) => void
   toggleCompanionCondition: (characterId: string, companionId: string, condition: ConditionType) => void
   setActiveCompanion: (characterId: string, companionId: string) => void
+  toggleRoundAction: (characterId: string, action: keyof ActionEconomyState) => void
+  resetRoundActions: (characterId: string) => void
+  nextRound: (characterId: string) => void
+  resetCombatRound: (characterId: string) => void
+  setCombatRound: (characterId: string, round: number) => void
   initSession: (characterId: string, maxHp: number, startingCoins?: CoinPurse) => void
   longRest: (characterId: string, maxHp: number) => void
+}
+
+export const defaultActionEconomy = (): ActionEconomyState => ({
+  standard: false,
+  move: false,
+  swift: false,
+  immediate: false,
+  fullRound: false,
+})
+
+export function computeNextActionEconomy(
+  current: ActionEconomyState,
+  action: keyof ActionEconomyState
+): ActionEconomyState {
+  const nextVal = !current[action]
+  const updated: ActionEconomyState = { ...current, [action]: nextVal }
+
+  if (action === 'fullRound') {
+    if (nextVal) {
+      updated.standard = true
+      updated.move = true
+    } else {
+      updated.standard = false
+      updated.move = false
+    }
+  } else if (action === 'standard' || action === 'move') {
+    if (!nextVal) {
+      updated.fullRound = false
+    } else if (updated.standard && updated.move) {
+      updated.fullRound = true
+    }
+  }
+
+  return updated
 }
 
 const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurse): SessionState => ({
@@ -56,6 +95,8 @@ const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurs
   companionHp: {},
   companionTempHp: {},
   companionConditions: {},
+  actionEconomy: defaultActionEconomy(),
+  currentRound: 1,
 })
 
 export const useSessionStore = create<SessionStore>()(
@@ -475,6 +516,82 @@ export const useSessionStore = create<SessionStore>()(
           }
         }),
 
+      toggleRoundAction: (charId, action) =>
+        set((s) => {
+          const sess = s.sessions[charId] ?? defaultSession(charId)
+          const current = sess.actionEconomy ?? defaultActionEconomy()
+          const updated = computeNextActionEconomy(current, action)
+
+          return {
+            sessions: {
+              ...s.sessions,
+              [charId]: {
+                ...sess,
+                actionEconomy: updated,
+              },
+            },
+          }
+        }),
+
+      resetRoundActions: (charId) =>
+        set((s) => {
+          const sess = s.sessions[charId] ?? defaultSession(charId)
+          return {
+            sessions: {
+              ...s.sessions,
+              [charId]: {
+                ...sess,
+                actionEconomy: defaultActionEconomy(),
+                currentRound: (sess.currentRound ?? 1) + 1,
+              },
+            },
+          }
+        }),
+
+      nextRound: (charId) =>
+        set((s) => {
+          const sess = s.sessions[charId] ?? defaultSession(charId)
+          return {
+            sessions: {
+              ...s.sessions,
+              [charId]: {
+                ...sess,
+                actionEconomy: defaultActionEconomy(),
+                currentRound: (sess.currentRound ?? 1) + 1,
+              },
+            },
+          }
+        }),
+
+      resetCombatRound: (charId) =>
+        set((s) => {
+          const sess = s.sessions[charId] ?? defaultSession(charId)
+          return {
+            sessions: {
+              ...s.sessions,
+              [charId]: {
+                ...sess,
+                actionEconomy: defaultActionEconomy(),
+                currentRound: 1,
+              },
+            },
+          }
+        }),
+
+      setCombatRound: (charId, round) =>
+        set((s) => {
+          const sess = s.sessions[charId] ?? defaultSession(charId)
+          return {
+            sessions: {
+              ...s.sessions,
+              [charId]: {
+                ...sess,
+                currentRound: Math.max(1, round),
+              },
+            },
+          }
+        }),
+
       longRest: (id, maxHp) =>
         set((s) => ({
           sessions: {
@@ -493,6 +610,8 @@ export const useSessionStore = create<SessionStore>()(
               companionHp: {},
               companionTempHp: {},
               companionConditions: {},
+              actionEconomy: defaultActionEconomy(),
+              currentRound: 1,
             },
           },
         })),

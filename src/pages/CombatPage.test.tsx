@@ -165,4 +165,83 @@ describe('CombatPage component', () => {
     // Off-hand button should now be rendered
     expect(screen.getByText('Off-hand')).toBeInTheDocument()
   })
+
+  it('renders Action Economy Tracker and toggles actions', () => {
+    render(
+      <MemoryRouter>
+        <CombatPage />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByText('Round Action Economy')).toBeInTheDocument()
+    expect(screen.getByText('Standard')).toBeInTheDocument()
+    expect(screen.getByText('Movement')).toBeInTheDocument()
+    expect(screen.getByText('Full-Round')).toBeInTheDocument()
+
+    // Click Standard action
+    const standardBtn = screen.getByText('Standard').closest('button')
+    expect(standardBtn).not.toBeNull()
+    fireEvent.click(standardBtn!)
+
+    const session = useSessionStore.getState().getSession('combat-test-char')
+    expect(session.actionEconomy?.standard).toBe(true)
+
+    // Click New Turn to reset
+    const newTurnBtn = screen.getByText('New Turn').closest('button')
+    fireEvent.click(newTurnBtn!)
+    expect(useSessionStore.getState().getSession('combat-test-char').actionEconomy?.standard).toBe(false)
+  })
+
+  it('renders Combat Maneuvers panel with CMB and CMD', () => {
+    render(
+      <MemoryRouter>
+        <CombatPage />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByText('Maneuvers & Tactics (CMB / CMD)')).toBeInTheDocument()
+    // Click header to expand
+    const header = screen.getByText('Maneuvers & Tactics (CMB / CMD)')
+    fireEvent.click(header)
+
+    // Check maneuvers are listed
+    expect(screen.getByText('Sbilanciare (Trip)')).toBeInTheDocument()
+    expect(screen.getByText('Disarmare (Disarm)')).toBeInTheDocument()
+    expect(screen.getByText('Lotta (Grapple)')).toBeInTheDocument()
+  })
+
+  it('renders iterative attack buttons and triggers full attack modal', () => {
+    const multiAttackChar: FullCharacter = {
+      ...combatChar,
+      weapons: [
+        {
+          ...combatChar.weapons[0],
+          attackBonus: [11, 6, 1],
+        },
+      ],
+    }
+    useCharacterStore.setState({
+      characters: [multiAttackChar],
+      activeCharacterId: 'combat-test-char',
+    })
+
+    render(
+      <MemoryRouter>
+        <CombatPage />
+      </MemoryRouter>
+    )
+
+    // Should show iterative buttons
+    expect(screen.getByText('1° Attack')).toBeInTheDocument()
+    expect(screen.getByText('2° Attack')).toBeInTheDocument()
+    expect(screen.getByText('3° Attack')).toBeInTheDocument()
+
+    // Should show Full Attack routine button
+    const fullAtkBtn = screen.getByText(/Full Attack Routine/)
+    expect(fullAtkBtn).toBeInTheDocument()
+
+    // Click Full Attack routine button -> opens modal
+    fireEvent.click(fullAtkBtn)
+    expect(screen.getByText('Full Attack Sequence')).toBeInTheDocument()
+  })
 })

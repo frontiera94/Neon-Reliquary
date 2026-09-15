@@ -7,6 +7,7 @@ import {
   calcEffectiveAbilities,
   calcEffectiveArmorClass,
   calcEffectiveWeaponStats,
+  calcCombatManeuvers,
   getActiveActionRestrictions,
 } from '../lib/stat-calc'
 import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
@@ -16,15 +17,34 @@ import { SummonedCreaturePanel } from '../components/combat/SummonedCreaturePane
 import { WeaponCard } from '../components/combat/WeaponCard'
 import { ActionAlertBanner } from '../components/combat/ActionAlertBanner'
 import { BuffManagerModal } from '../components/combat/BuffManagerModal'
+import { ActionEconomyTracker } from '../components/combat/ActionEconomyTracker'
+import { CombatManeuversPanel } from '../components/combat/CombatManeuversPanel'
+import { FullAttackModal } from '../components/combat/FullAttackModal'
+import { CombatSpellsSection } from '../components/combat/CombatSpellsSection'
+import type { Weapon } from '../types/combat'
 
 export function CombatPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
-  const { toggleBuff, adjustHp, initSession, setAmmo, setSummon, adjustSummonHp, clearSummon, adjustCompanionHp } =
-    useSessionStore()
+  const {
+    toggleBuff,
+    adjustHp,
+    initSession,
+    setAmmo,
+    setSummon,
+    adjustSummonHp,
+    clearSummon,
+    adjustCompanionHp,
+    toggleRoundAction,
+    resetRoundActions,
+    resetCombatRound,
+    spendSpellSlot,
+    recoverSpellSlot,
+  } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
 
   const [showBuffModal, setShowBuffModal] = useState(false)
+  const [fullAttackWeapon, setFullAttackWeapon] = useState<Weapon | null>(null)
 
   if (!char) {
     return (
@@ -58,7 +78,19 @@ export function CombatPage() {
 
   const restrictions = getActiveActionRestrictions(session.conditions)
 
+  const activeBuffsList = allBuffs.filter((b) => activeBuffIds.includes(b.id))
+
+  const maneuversCalc = calcCombatManeuvers(
+    char,
+    effectiveAbilities,
+    session.conditions,
+    activeBuffsList
+  )
+
   const twfActive = allBuffs.some((b) => b.isTwf && activeBuffIds.includes(b.id))
+  const hasteActive = allBuffs.some(
+    (b) => (b.id === 'haste' || b.id === 'preset-haste' || /haste/i.test(b.name)) && activeBuffIds.includes(b.id)
+  )
   const hasTwfFeat = char.feats.some((f) => /two.weapon fighting/i.test(f.name))
   const offhandPenalty = hasTwfFeat ? 0 : -4
   const extraDiceBuff = allBuffs.find((b) => b.extraDamageDice && activeBuffIds.includes(b.id))
@@ -77,6 +109,16 @@ export function CombatPage() {
     <div className="p-4 md:p-8 space-y-6">
       {/* Tactical Restrictions Banner */}
       <ActionAlertBanner restrictions={restrictions} />
+
+      {/* Round Action Economy Tracker */}
+      <ActionEconomyTracker
+        actionEconomy={session.actionEconomy}
+        currentRound={session.currentRound ?? 1}
+        onToggleAction={(act) => toggleRoundAction(char.id, act)}
+        onResetActions={() => resetRoundActions(char.id)}
+        onNewTurn={() => resetRoundActions(char.id)}
+        onResetRound={() => resetCombatRound(char.id)}
+      />
 
       {/* Global Buff Bar */}
       <section className="w-full">
@@ -172,13 +214,40 @@ export function CombatPage() {
         </div>
       </section>
 
-      {/* HP Widget */}
+      {/* HP & Defense Widget */}
       <CombatHPWidget
         hp={session.currentHp}
         maxHp={char.maxHp}
         ac={effectiveAc.total}
+        cmb={maneuversCalc.cmb}
+        cmd={maneuversCalc.cmd}
         onAdjust={(d) => adjustHp(char.id, d, char.maxHp)}
       />
+
+      {/* Combat Maneuvers & Tactics Panel */}
+      <CombatManeuversPanel
+        maneuversCalc={maneuversCalc}
+        openRoll={openRoll}
+      />
+
+      {/* Combat Spells Section (if character has spells) */}
+      {char.spells && char.spells.length > 0 && (
+        <CombatSpellsSection
+          spells={char.spells}
+          spellSlots={char.spellSlots}
+          preparedSpellIds={session.preparedSpellIds}
+          spentSpellSlots={session.spentSpellSlots}
+          charClass={char.class}
+          charLevel={char.level}
+          abilities={effectiveAbilities.scores}
+          baseAttackBonus={char.baseAttackBonus}
+          spellFailureChance={char.armorClass.spellFailureChance}
+          feats={char.feats}
+          openRoll={openRoll}
+          onSpendSlot={(lvl, max) => spendSpellSlot(char.id, lvl, max)}
+          onRecoverSlot={(lvl) => recoverSpellSlot(char.id, lvl)}
+        />
+      )}
 
       {/* Summon Ally Picker */}
       {summonableSpells.length > 0 && (
@@ -219,18 +288,24 @@ export function CombatPage() {
               maxAmmo={weapon.maxAmmo}
               twfActive={twfActive}
               offhandPenalty={offhandPenalty}
+              hasteActive={hasteActive}
               sneakAttackDice={sneakAttackDice}
               extraDiceLabel={extraDiceLabel}
-              onAttackRoll={() =>
+              onAttackRoll={(attackIndex = 0) => {
+                const bonus = effective.attackBonus[attackIndex] ?? effective.attackBonus[0]
+                const label =
+                  effective.attackBonus.length > 1
+                    ? `${weapon.name} ${attackIndex + 1}° Attack`
+                    : `${weapon.name} Attack`
                 openRoll({
                   diceType: 20,
                   count: 1,
-                  modifier: effective.attackBonus[0],
-                  label: `${weapon.name} Attack`,
+                  modifier: bonus,
+                  label,
                   critRange: weapon.critRange,
                   breakdown: effective.attackBreakdown,
                 })
-              }
+              }}
               onOffhandRoll={() =>
                 openRoll({
                   diceType: 20,
@@ -244,6 +319,7 @@ export function CombatPage() {
                   ],
                 })
               }
+              onFullAttackRoll={() => setFullAttackWeapon(weapon)}
               onDamageRoll={() => {
                 const { count, sides, bonus } = parseDiceFormula(weapon.damageDice)
                 openRoll({
@@ -435,6 +511,52 @@ export function CombatPage() {
             </div>
           )
         })()
+      )}
+
+      {/* Full Attack Routine Modal */}
+      {fullAttackWeapon && (
+        <FullAttackModal
+          isOpen={!!fullAttackWeapon}
+          onClose={() => setFullAttackWeapon(null)}
+          weapon={fullAttackWeapon}
+          effective={calcEffectiveWeaponStats(
+            fullAttackWeapon,
+            char.abilities,
+            effectiveAbilities,
+            session.conditions,
+            allBuffs,
+            activeBuffIds
+          )}
+          twfActive={twfActive}
+          offhandPenalty={offhandPenalty}
+          hasteActive={hasteActive}
+          sneakAttackDice={sneakAttackDice}
+          extraDiceLabel={extraDiceLabel}
+          onRollDamage={(dmgLabel, dmgMod, isCritical) => {
+            const { count, sides } = parseDiceFormula(fullAttackWeapon.damageDice)
+            const finalCount = isCritical ? count * fullAttackWeapon.critMultiplier : count
+            const finalMod = isCritical ? dmgMod * fullAttackWeapon.critMultiplier : dmgMod
+            openRoll({
+              diceType: sides,
+              count: finalCount,
+              modifier: finalMod,
+              label: isCritical ? `${dmgLabel} [CRIT x${fullAttackWeapon.critMultiplier}]` : dmgLabel,
+            })
+          }}
+          onRollExtraDice={
+            sneakAttackDice
+              ? () => {
+                  const { count, sides } = parseDiceFormula(sneakAttackDice)
+                  openRoll({
+                    diceType: sides,
+                    count,
+                    modifier: 0,
+                    label: `${extraDiceLabel} Roll`,
+                  })
+                }
+              : undefined
+          }
+        />
       )}
 
       {/* Unified Buff Manager Modal */}
