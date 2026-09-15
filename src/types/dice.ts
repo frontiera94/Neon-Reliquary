@@ -6,7 +6,10 @@ export interface DiceRoll {
   modifier: number
   label: string
   critRange?: number
+  critMultiplier?: number
   breakdown?: { label: string; value: number }[]
+  followUpRoll?: DiceRoll
+  followUpLabel?: string
 }
 
 export interface RollResult {

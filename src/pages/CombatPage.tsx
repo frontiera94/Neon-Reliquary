@@ -11,6 +11,7 @@ import {
   getActiveActionRestrictions,
 } from '../lib/stat-calc'
 import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
+import { formatDamage } from '../lib/combat-calc'
 import { SummonSection } from '../components/combat/SummonSection'
 import { SummonedCreaturePanel } from '../components/combat/SummonedCreaturePanel'
 import { WeaponCard } from '../components/combat/WeaponCard'
@@ -180,28 +181,57 @@ export function CombatPage() {
                         effective.attackBonus.length > 1
                           ? `${weapon.name} ${attackIndex + 1}° Attack`
                           : `${weapon.name} Attack`
+
+                      const { count: dmgCount, sides: dmgSides, bonus: dmgBonus } = parseDiceFormula(weapon.damageDice)
+                      const followUpRoll = {
+                        diceType: dmgSides as any,
+                        count: dmgCount,
+                        modifier: effective.damageBonus + dmgBonus,
+                        label: `${weapon.name} Damage`,
+                        breakdown: effective.damageBreakdown,
+                      }
+
+                      if (weapon.type === 'ranged' && ammo !== undefined && ammo > 0) {
+                        setAmmo(char.id, weapon.id, ammo - 1)
+                      }
+
                       openRoll({
                         diceType: 20,
                         count: 1,
                         modifier: bonus,
                         label,
                         critRange: weapon.critRange,
+                        critMultiplier: weapon.critMultiplier,
                         breakdown: effective.attackBreakdown,
+                        followUpRoll,
+                        followUpLabel: formatDamage(weapon.damageDice, effective.damageBonus),
                       })
                     }}
-                    onOffhandRoll={() =>
+                    onOffhandRoll={() => {
+                      const { count: dmgCount, sides: dmgSides, bonus: dmgBonus } = parseDiceFormula(weapon.damageDice)
+                      const followUpRoll = {
+                        diceType: dmgSides as any,
+                        count: dmgCount,
+                        modifier: effective.damageBonus + dmgBonus,
+                        label: `${weapon.name} Damage`,
+                        breakdown: effective.damageBreakdown,
+                      }
+
                       openRoll({
                         diceType: 20,
                         count: 1,
                         modifier: effective.attackBonus[0] + offhandPenalty,
                         label: `${weapon.name} Off-hand`,
                         critRange: weapon.critRange,
+                        critMultiplier: weapon.critMultiplier,
                         breakdown: [
                           ...effective.attackBreakdown,
                           { label: 'Off-hand Penalty', value: offhandPenalty },
                         ],
+                        followUpRoll,
+                        followUpLabel: formatDamage(weapon.damageDice, effective.damageBonus),
                       })
-                    }
+                    }}
                     onFullAttackRoll={() => setFullAttackWeapon(weapon)}
                     onDamageRoll={() => {
                       const { count, sides, bonus } = parseDiceFormula(weapon.damageDice)
@@ -403,6 +433,7 @@ export function CombatPage() {
             <section className="w-full">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-secondary text-lg">bolt</span>
                   <h3 className="font-headline text-sm uppercase tracking-widest text-secondary font-bold">
                     Combat Buff Protocols
                   </h3>
@@ -419,7 +450,7 @@ export function CombatPage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
                 {allBuffs.map((buff) => {
                   const isActive = activeBuffIds.includes(buff.id)
                   const hex =
@@ -429,7 +460,7 @@ export function CombatPage() {
                     <button
                       key={buff.id}
                       onClick={() => toggleBuff(char.id, buff.id)}
-                      className="flex items-center justify-between p-3.5 border rounded-xl transition-all cursor-pointer text-left bg-surface-container/90 backdrop-blur-sm hover:bg-surface-container-high"
+                      className="flex items-center justify-between p-3 border rounded-xl transition-all cursor-pointer text-left bg-surface-container/90 backdrop-blur-sm hover:bg-surface-container-high active:scale-[0.99]"
                       style={
                         isActive
                           ? {
@@ -451,7 +482,7 @@ export function CombatPage() {
                         />
                         <div className="min-w-0">
                           <p
-                            className="font-headline text-sm font-bold uppercase tracking-wider truncate"
+                            className="font-headline text-xs md:text-sm font-bold uppercase tracking-wider truncate"
                             style={{ color: isActive ? hex : undefined }}
                           >
                             {buff.name}
