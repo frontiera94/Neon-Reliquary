@@ -189,12 +189,12 @@ export function WeaponCard({
                 <button
                   type="button"
                   onClick={onOffhandRoll}
-                  className="py-2.5 px-3 bg-surface-container-high hover:bg-surface-container-highest border border-secondary/40 hover:border-secondary text-secondary shadow-[0_0_12px_rgba(217,70,239,0.12)] hover:shadow-[0_0_20px_rgba(217,70,239,0.25)] rounded-xl transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center min-h-[58px]"
+                  className="py-2.5 px-3 bg-gradient-to-b from-secondary/20 to-secondary/10 hover:from-secondary/30 hover:to-secondary/20 text-white border border-secondary/40 hover:border-secondary shadow-[0_0_12px_rgba(217,70,239,0.15)] hover:shadow-[0_0_20px_rgba(217,70,239,0.3)] rounded-xl transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center min-h-[58px]"
                 >
-                  <span className="text-[9px] font-label uppercase tracking-widest mb-0.5 opacity-80 font-semibold">
+                  <span className="text-[9px] font-label uppercase tracking-widest text-secondary mb-0.5 font-semibold">
                     Off-hand
                   </span>
-                  <span className="text-xl font-black font-label">
+                  <span className="text-xl font-black font-label text-white">
                     {offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus}
                   </span>
                 </button>
@@ -219,12 +219,12 @@ export function WeaponCard({
               <button
                 type="button"
                 onClick={onOffhandRoll}
-                className="p-3 bg-surface-container-high hover:bg-surface-container-highest border border-secondary/40 hover:border-secondary text-secondary shadow-[0_0_12px_rgba(217,70,239,0.15)] hover:shadow-[0_0_20px_rgba(217,70,239,0.3)] rounded-xl transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center min-h-[58px]"
+                className="p-3 bg-gradient-to-b from-secondary/25 to-secondary/10 hover:from-secondary/35 hover:to-secondary/20 text-white border border-secondary/40 hover:border-secondary shadow-[0_0_12px_rgba(217,70,239,0.15)] hover:shadow-[0_0_20px_rgba(217,70,239,0.3)] rounded-xl transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center min-h-[58px]"
               >
-                <span className="text-[9px] font-label uppercase tracking-widest mb-0.5 opacity-90 font-semibold">
+                <span className="text-[9px] font-label uppercase tracking-widest text-secondary mb-0.5 font-semibold">
                   Off-hand
                 </span>
-                <span className="text-xl font-black font-label">
+                <span className="text-xl font-black font-label text-white">
                   {formatAttackBonus([offhandBonus])}
                 </span>
               </button>
@@ -266,7 +266,7 @@ export function WeaponCard({
               <button
                 type="button"
                 onClick={onDamageRoll}
-                className="group/dmg p-3 bg-surface-container-high hover:bg-surface-container-highest border border-white/10 hover:border-secondary/40 text-white rounded-xl shadow-[0_0_10px_rgba(217,70,239,0.1)] hover:shadow-[0_0_18px_rgba(217,70,239,0.25)] transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-center min-h-[58px]"
+                className="group/dmg p-3 bg-gradient-to-b from-secondary/25 to-secondary/10 hover:from-secondary/35 hover:to-secondary/20 border border-secondary/40 hover:border-secondary text-white rounded-xl shadow-[0_0_12px_rgba(217,70,239,0.15)] hover:shadow-[0_0_20px_rgba(217,70,239,0.3)] transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-center min-h-[58px]"
               >
                 <div className="flex items-center gap-1 mb-0.5">
                   <span className="text-[9px] font-label font-bold text-secondary/70 bg-secondary/10 px-1 rounded">2</span>
@@ -282,7 +282,7 @@ export function WeaponCard({
               <button
                 type="button"
                 onClick={onSneakAttackRoll}
-                className="group/sneak p-3 bg-error-container/20 hover:bg-error-container/35 border border-error/40 hover:border-error text-error rounded-xl shadow-[0_0_12px_rgba(255,75,96,0.15)] hover:shadow-[0_0_20px_rgba(255,75,96,0.3)] transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-center min-h-[58px]"
+                className="group/sneak p-3 bg-gradient-to-b from-error/25 to-error/10 hover:from-error/35 hover:to-error/20 border border-error/40 hover:border-error text-error rounded-xl shadow-[0_0_12px_rgba(255,75,96,0.15)] hover:shadow-[0_0_20px_rgba(255,75,96,0.3)] transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-center min-h-[58px]"
               >
                 <span className="text-[9px] font-label uppercase tracking-widest text-error mb-0.5 font-bold truncate max-w-full">
                   {extraDiceLabel ?? 'Extra Dmg'}
@@ -296,7 +296,7 @@ export function WeaponCard({
             <button
               type="button"
               onClick={onDamageRoll}
-              className="group/dmg relative flex items-center justify-between px-4 py-3 bg-surface-container-high/90 hover:bg-surface-container-highest border border-white/10 hover:border-secondary/40 text-white rounded-xl shadow-[0_0_12px_rgba(217,70,239,0.1)] hover:shadow-[0_0_22px_rgba(217,70,239,0.25)] transition-all cursor-pointer active:scale-[0.98] w-full min-h-[58px]"
+              className="group/dmg relative flex items-center justify-between px-4 py-3 bg-gradient-to-r from-secondary/20 via-secondary/10 to-surface-container-high hover:from-secondary/30 hover:to-surface-container-highest border border-secondary/40 hover:border-secondary text-white rounded-xl shadow-[0_0_15px_rgba(217,70,239,0.15)] hover:shadow-[0_0_25px_rgba(217,70,239,0.3)] transition-all cursor-pointer active:scale-[0.98] w-full min-h-[58px]"
             >
               <div className="text-left">
                 <div className="flex items-center gap-1 mb-1">

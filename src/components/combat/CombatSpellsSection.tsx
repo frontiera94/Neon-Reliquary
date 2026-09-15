@@ -577,7 +577,7 @@ export function CombatSpellsSection({
                       {spell.damageDice && (
                         <button
                           onClick={() => handleDamageRoll(spell)}
-                          className="px-2.5 py-1 rounded-lg bg-surface-container border border-white/10 hover:border-secondary/40 text-white font-label text-[11px] font-bold uppercase transition-all cursor-pointer active:scale-95 flex items-center gap-1"
+                          className="px-2.5 py-1 rounded-lg bg-surface-container border border-secondary/30 hover:border-secondary text-secondary font-label text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95 flex items-center gap-1 hover:shadow-[0_0_8px_rgba(217,70,239,0.25)]"
                           title={`Roll Damage (${spell.damageDice})`}
                         >
                           <span className="material-symbols-outlined text-xs">swords</span>
