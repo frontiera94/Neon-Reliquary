@@ -264,6 +264,25 @@ export function CombatPage() {
               })}
             </div>
 
+            {/* Combat Spells Section (positioned under weapons in primary action column) */}
+            {char.spells && char.spells.length > 0 && (
+              <CombatSpellsSection
+                spells={char.spells}
+                spellSlots={char.spellSlots}
+                preparedSpellIds={session.preparedSpellIds}
+                spentSpellSlots={session.spentSpellSlots}
+                charClass={char.class}
+                charLevel={char.level}
+                abilities={effectiveAbilities.scores}
+                baseAttackBonus={char.baseAttackBonus}
+                spellFailureChance={char.armorClass.spellFailureChance}
+                feats={char.feats}
+                openRoll={openRoll}
+                onSpendSlot={(lvl, max) => spendSpellSlot(char.id, lvl, max)}
+                onRecoverSlot={(lvl) => recoverSpellSlot(char.id, lvl)}
+              />
+            )}
+
             {/* Summoned Creature Panel */}
             {activeSummonOption && activeSummon && (
               <div className="space-y-4">
@@ -523,25 +542,6 @@ export function CombatPage() {
                 })}
               </div>
             </section>
-
-            {/* Combat Spells Section (if character has spells) */}
-            {char.spells && char.spells.length > 0 && (
-              <CombatSpellsSection
-                spells={char.spells}
-                spellSlots={char.spellSlots}
-                preparedSpellIds={session.preparedSpellIds}
-                spentSpellSlots={session.spentSpellSlots}
-                charClass={char.class}
-                charLevel={char.level}
-                abilities={effectiveAbilities.scores}
-                baseAttackBonus={char.baseAttackBonus}
-                spellFailureChance={char.armorClass.spellFailureChance}
-                feats={char.feats}
-                openRoll={openRoll}
-                onSpendSlot={(lvl, max) => spendSpellSlot(char.id, lvl, max)}
-                onRecoverSlot={(lvl) => recoverSpellSlot(char.id, lvl)}
-              />
-            )}
 
             {/* Combat Maneuvers & Tactics Panel */}
             <CombatManeuversPanel

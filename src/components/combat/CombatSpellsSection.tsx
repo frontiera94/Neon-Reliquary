@@ -50,6 +50,15 @@ export function CombatSpellsSection({
 }: CombatSpellsSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true)
   const [activeLevelFilter, setActiveLevelFilter] = useState<number | 'all'>('all')
+  const [sortBy, setSortBy] = useState<'level' | 'offensive' | 'name'>('level')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [pinnedSpellIds, setPinnedSpellIds] = useState<string[]>([])
+
+  const togglePin = (spellId: string) => {
+    setPinnedSpellIds((prev) =>
+      prev.includes(spellId) ? prev.filter((id) => id !== spellId) : [...prev, spellId]
+    )
+  }
 
   const cl = casterLevel ?? charLevel
   const castAbil = getSpellcastingAbility(charClass)
@@ -65,9 +74,42 @@ export function CombatSpellsSection({
     (s) => s.level === 0 || preparedSpellIds.includes(s.id)
   )
 
-  const displayedSpells = combatSpells.filter(
-    (s) => activeLevelFilter === 'all' || s.level === activeLevelFilter
-  )
+  const filteredSpells = combatSpells.filter((s) => {
+    if (activeLevelFilter !== 'all' && s.level !== activeLevelFilter) return false
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      const matchName = s.name.toLowerCase().includes(q)
+      const matchSchool = s.school.toLowerCase().includes(q)
+      const matchDesc = s.description?.toLowerCase().includes(q)
+      const matchDamage = s.damageDice?.toLowerCase().includes(q)
+      if (!matchName && !matchSchool && !matchDesc && !matchDamage) return false
+    }
+    return true
+  })
+
+  const displayedSpells = [...filteredSpells].sort((a, b) => {
+    const aPinned = pinnedSpellIds.includes(a.id)
+    const bPinned = pinnedSpellIds.includes(b.id)
+    if (aPinned && !bPinned) return -1
+    if (!aPinned && bPinned) return 1
+
+    if (sortBy === 'offensive') {
+      const aOffensive = !!(a.attackType || a.damageDice)
+      const bOffensive = !!(b.attackType || b.damageDice)
+      if (aOffensive && !bOffensive) return -1
+      if (!aOffensive && bOffensive) return 1
+      if (a.level !== b.level) return a.level - b.level
+      return a.name.localeCompare(b.name)
+    }
+
+    if (sortBy === 'name') {
+      return a.name.localeCompare(b.name)
+    }
+
+    // Default 'level'
+    if (a.level !== b.level) return a.level - b.level
+    return a.name.localeCompare(b.name)
+  })
 
   const availableLevels = [...new Set(combatSpells.map((s) => s.level))].sort((a, b) => a - b)
 
@@ -302,63 +344,159 @@ export function CombatSpellsSection({
             </div>
           </div>
 
-          {/* Spell Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {displayedSpells.map((spell) => {
-              const slot = spellSlots.find((s) => s.level === spell.level)
-              const max = slot?.total ?? 0
-              const spent = spentSpellSlots[spell.level] ?? 0
-              const hasSlots = spell.level === 0 || max === 0 || spent < max
-              const remaining = Math.max(0, max - spent)
-              const dc = 10 + spell.level + castingMod
-              const hasSomatic = spell.components?.includes('S')
-              const showsAsf = spellFailureChance > 0 && hasSomatic
-
-              return (
-                <div
-                  key={spell.id}
-                  className={`p-4 rounded-xl border transition-all flex flex-col justify-between gap-3 ${
-                    hasSlots
-                      ? 'bg-surface-container-high/80 border-white/10 hover:border-secondary/40 shadow-[0_4px_16px_rgba(0,0,0,0.2)]'
-                      : 'bg-surface-container-lowest/60 border-white/5 opacity-55'
-                  }`}
+          {/* Search & Sort Controls Bar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1">
+            {/* Search Input */}
+            <div className="relative flex-1 min-w-[200px] max-w-md">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary text-base select-none pointer-events-none">
+                search
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search combat spells (name, school, damage)..."
+                className="w-full bg-surface-container border border-white/10 hover:border-secondary/40 focus:border-secondary rounded-xl pl-9 pr-8 py-1.5 text-xs text-white placeholder:text-tertiary font-label outline-none transition-all shadow-inner"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary hover:text-white cursor-pointer p-0.5"
+                  aria-label="Clear search"
                 >
-                  <div>
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary border border-secondary/30 text-[9px] font-label uppercase tracking-widest font-bold">
-                            {spell.level === 0 ? 'Cantrip' : `Level ${spell.level}`}
-                          </span>
-                          <span className="text-tertiary text-[10px] font-label uppercase tracking-wider">
-                            {spell.school}
-                          </span>
-                          {showsAsf && (
-                            <span
-                              className="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 font-mono text-[9px] font-bold uppercase tracking-wider cursor-help flex items-center gap-0.5"
-                              title={`Arcane Spell Failure: ${spellFailureChance}% chance of failure due to Somatic component (S)`}
-                            >
-                              <span className="material-symbols-outlined text-[10px] text-amber-400">warning</span>
-                              ASF {spellFailureChance}%
-                            </span>
-                          )}
-                        </div>
-                        <h4 className="font-headline text-base font-bold text-white mt-1">
-                          {spell.name}
-                        </h4>
-                      </div>
+                  <span className="material-symbols-outlined text-xs">close</span>
+                </button>
+              )}
+            </div>
 
-                      {spell.savingThrow && (
-                        <div className="text-right flex-shrink-0">
-                          <span className="font-label text-[9px] text-tertiary uppercase tracking-widest block">
-                            DC
-                          </span>
-                          <span className="font-mono text-sm font-black text-secondary">
-                            {dc}
-                          </span>
+            {/* Sort Controls */}
+            <div className="flex items-center gap-1 bg-surface-container border border-white/10 p-1 rounded-xl text-xs font-label flex-wrap sm:flex-nowrap">
+              <span className="px-2 text-[10px] text-tertiary uppercase tracking-wider font-semibold select-none">
+                Sort:
+              </span>
+              <button
+                type="button"
+                onClick={() => setSortBy('level')}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer font-semibold ${
+                  sortBy === 'level'
+                    ? 'bg-secondary text-black font-bold shadow-[0_0_8px_rgba(217,70,239,0.4)]'
+                    : 'text-tertiary hover:text-white hover:bg-white/5'
+                }`}
+              >
+                Level
+              </button>
+              <button
+                type="button"
+                onClick={() => setSortBy('offensive')}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer font-semibold ${
+                  sortBy === 'offensive'
+                    ? 'bg-secondary text-black font-bold shadow-[0_0_8px_rgba(217,70,239,0.4)]'
+                    : 'text-tertiary hover:text-white hover:bg-white/5'
+                }`}
+                title="Attacks & Damage spells first"
+              >
+                Attack / Dmg
+              </button>
+              <button
+                type="button"
+                onClick={() => setSortBy('name')}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer font-semibold ${
+                  sortBy === 'name'
+                    ? 'bg-secondary text-black font-bold shadow-[0_0_8px_rgba(217,70,239,0.4)]'
+                    : 'text-tertiary hover:text-white hover:bg-white/5'
+                }`}
+              >
+                A-Z
+              </button>
+            </div>
+          </div>
+
+          {/* Spell Cards Grid */}
+          {displayedSpells.length === 0 ? (
+            <div className="p-8 text-center text-tertiary font-label text-xs uppercase tracking-wider bg-surface-container-lowest/50 rounded-xl border border-white/5">
+              No combat spells matching your search criteria
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {displayedSpells.map((spell) => {
+                const slot = spellSlots.find((s) => s.level === spell.level)
+                const max = slot?.total ?? 0
+                const spent = spentSpellSlots[spell.level] ?? 0
+                const hasSlots = spell.level === 0 || max === 0 || spent < max
+                const remaining = Math.max(0, max - spent)
+                const dc = 10 + spell.level + castingMod
+                const hasSomatic = spell.components?.includes('S')
+                const showsAsf = spellFailureChance > 0 && hasSomatic
+                const isPinned = pinnedSpellIds.includes(spell.id)
+
+                return (
+                  <div
+                    key={spell.id}
+                    className={`p-4 rounded-xl border transition-all flex flex-col justify-between gap-3 ${
+                      isPinned
+                        ? 'bg-surface-container-high/90 border-amber-400/40 shadow-[0_0_15px_rgba(251,191,36,0.12)]'
+                        : hasSlots
+                        ? 'bg-surface-container-high/80 border-white/10 hover:border-secondary/40 shadow-[0_4px_16px_rgba(0,0,0,0.2)]'
+                        : 'bg-surface-container-lowest/60 border-white/5 opacity-55'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary border border-secondary/30 text-[9px] font-label uppercase tracking-widest font-bold">
+                              {spell.level === 0 ? 'Cantrip' : `Level ${spell.level}`}
+                            </span>
+                            <span className="text-tertiary text-[10px] font-label uppercase tracking-wider">
+                              {spell.school}
+                            </span>
+                            {showsAsf && (
+                              <span
+                                className="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 font-mono text-[9px] font-bold uppercase tracking-wider cursor-help flex items-center gap-0.5"
+                                title={`Arcane Spell Failure: ${spellFailureChance}% chance of failure due to Somatic component (S)`}
+                              >
+                                <span className="material-symbols-outlined text-[10px] text-amber-400">warning</span>
+                                ASF {spellFailureChance}%
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="font-headline text-base font-bold text-white mt-1">
+                            {spell.name}
+                          </h4>
                         </div>
-                      )}
-                    </div>
+
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {spell.savingThrow && (
+                            <div className="text-right">
+                              <span className="font-label text-[9px] text-tertiary uppercase tracking-widest block">
+                                DC
+                              </span>
+                              <span className="font-mono text-sm font-black text-secondary">
+                                {dc}
+                              </span>
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              togglePin(spell.id)
+                            }}
+                            className={`p-1 rounded-lg transition-all cursor-pointer ${
+                              isPinned
+                                ? 'text-amber-400 hover:text-amber-300'
+                                : 'text-tertiary/40 hover:text-tertiary hover:bg-white/5'
+                            }`}
+                            title={isPinned ? 'Rimuovi dai preferiti' : 'Fissa tra i preferiti in alto'}
+                            aria-label={isPinned ? `Unpin ${spell.name}` : `Pin ${spell.name}`}
+                          >
+                            <span className="material-symbols-outlined text-lg leading-none">
+                              {isPinned ? 'star' : 'star_border'}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
 
                     <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-[10px] font-label text-tertiary">
                       <span>Time: <strong className="text-white">{spell.castingTime}</strong></span>
@@ -467,8 +605,9 @@ export function CombatSpellsSection({
               )
             })}
           </div>
-        </div>
-      )}
-    </div>
-  )
+        )}
+      </div>
+    )}
+  </div>
+)
 }

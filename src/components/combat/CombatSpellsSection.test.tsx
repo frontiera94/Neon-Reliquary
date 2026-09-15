@@ -345,4 +345,74 @@ describe('CombatSpellsSection', () => {
     expect(screen.getByText('Ray of Frost')).toBeInTheDocument()
     expect(screen.getByText('Shocking Grasp')).toBeInTheDocument()
   })
+
+  it('filters spells dynamically with the search input', () => {
+    renderComponent()
+
+    const searchInput = screen.getByPlaceholderText(/search combat spells/i)
+    expect(searchInput).toBeInTheDocument()
+
+    // Type "frost" -> only Ray of Frost should remain
+    fireEvent.change(searchInput, { target: { value: 'frost' } })
+    expect(screen.getByText('Ray of Frost')).toBeInTheDocument()
+    expect(screen.queryByText('Shocking Grasp')).not.toBeInTheDocument()
+    expect(screen.queryByText('Detect Magic')).not.toBeInTheDocument()
+
+    // Clear search using clear button
+    const clearBtn = screen.getByRole('button', { name: /clear search/i })
+    fireEvent.click(clearBtn)
+    expect(screen.getByText('Ray of Frost')).toBeInTheDocument()
+    expect(screen.getByText('Shocking Grasp')).toBeInTheDocument()
+
+    // Search by school e.g. "Abjuration" -> Shield
+    fireEvent.change(searchInput, { target: { value: 'abjuration' } })
+    expect(screen.getByText('Shield')).toBeInTheDocument()
+    expect(screen.queryByText('Ray of Frost')).not.toBeInTheDocument()
+  })
+
+  it('allows sorting spells by Attack / Dmg and Alphabetical', () => {
+    renderComponent()
+
+    // Sort Attack / Dmg first
+    const atkSortBtn = screen.getByRole('button', { name: /attack \/ dmg/i })
+    fireEvent.click(atkSortBtn)
+
+    // Spells with attackType or damageDice (Ray of Frost, Shocking Grasp) come before Shield & Detect Magic
+    const headings = screen.getAllByRole('heading', { level: 4 }).map(h => h.textContent)
+    const shockIdx = headings.indexOf('Shocking Grasp')
+    const rayIdx = headings.indexOf('Ray of Frost')
+    const shieldIdx = headings.indexOf('Shield')
+    const detectIdx = headings.indexOf('Detect Magic')
+
+    expect(shockIdx).toBeLessThan(shieldIdx)
+    expect(rayIdx).toBeLessThan(detectIdx)
+
+    // Sort A-Z
+    const azSortBtn = screen.getByRole('button', { name: /a-z/i })
+    fireEvent.click(azSortBtn)
+
+    const azHeadings = screen.getAllByRole('heading', { level: 4 }).map(h => h.textContent)
+    expect(azHeadings).toEqual(['Detect Magic', 'Ray of Frost', 'Shield', 'Shocking Grasp'])
+  })
+
+  it('pins favorite spells to the top and allows unpinning', () => {
+    renderComponent()
+
+    // Pin Shocking Grasp
+    const pinShockingBtn = screen.getByRole('button', { name: /pin shocking grasp/i })
+    fireEvent.click(pinShockingBtn)
+
+    // Shocking Grasp is now pinned, its button aria-label changes to Unpin
+    expect(screen.getByRole('button', { name: /unpin shocking grasp/i })).toBeInTheDocument()
+
+    // When pinned, it should appear before unpinned spells even if they are lower level
+    const headings = screen.getAllByRole('heading', { level: 4 }).map(h => h.textContent)
+    expect(headings[0]).toBe('Shocking Grasp')
+
+    // Unpin it
+    const unpinShockingBtn = screen.getByRole('button', { name: /unpin shocking grasp/i })
+    fireEvent.click(unpinShockingBtn)
+    expect(screen.getByRole('button', { name: /pin shocking grasp/i })).toBeInTheDocument()
+  })
 })
+
