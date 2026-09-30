@@ -22,6 +22,7 @@ import { FullAttackModal } from '../components/combat/FullAttackModal'
 import { CombatSpellsSection } from '../components/combat/CombatSpellsSection'
 import { CombatTacticalHUD } from '../components/combat/CombatTacticalHUD'
 import type { Weapon } from '../types/combat'
+import type { DiceType } from '../types/dice'
 
 export function CombatPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
@@ -184,7 +185,7 @@ export function CombatPage() {
 
                       const { count: dmgCount, sides: dmgSides, bonus: dmgBonus } = parseDiceFormula(weapon.damageDice)
                       const followUpRoll = {
-                        diceType: dmgSides as any,
+                        diceType: dmgSides as DiceType,
                         count: dmgCount,
                         modifier: effective.damageBonus + dmgBonus,
                         label: `${weapon.name} Damage`,
@@ -210,7 +211,7 @@ export function CombatPage() {
                     onOffhandRoll={() => {
                       const { count: dmgCount, sides: dmgSides, bonus: dmgBonus } = parseDiceFormula(weapon.damageDice)
                       const followUpRoll = {
-                        diceType: dmgSides as any,
+                        diceType: dmgSides as DiceType,
                         count: dmgCount,
                         modifier: effective.damageBonus + dmgBonus,
                         label: `${weapon.name} Damage`,

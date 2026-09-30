@@ -2,7 +2,7 @@
   "id": "mariano-cardamomo",
   "name": "Mariano Cardamomo",
   "class": "Rogue",
-  "level": 4,
+  "level": 5,
   "race": "Halfling",
   "alignment": "Chaotic Evil",
   "portrait": "https://placehold.co/400x600/1f1f25/e9c349?text=Mariano",
@@ -15,7 +15,7 @@
     "wis": 14,
     "cha": 17
   },
-  "maxHp": 39,
+  "maxHp": 47,
   "baseAttackBonus": [
     3
   ],
@@ -46,7 +46,7 @@
       "id": "acrobatics",
       "name": "Acrobatics",
       "ability": "dex",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 7,
       "trained": true,
@@ -56,7 +56,7 @@
       "id": "bluff",
       "name": "Bluff",
       "ability": "cha",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 1,
       "trained": true,
@@ -66,9 +66,9 @@
       "id": "climb",
       "name": "Climb",
       "ability": "str",
-      "ranks": 2,
+      "ranks": 0,
       "classSkill": false,
-      "miscBonus": 0,
+      "miscBonus": 2,
       "trained": false,
       "armorCheckPenalty": true
     },
@@ -76,7 +76,7 @@
       "id": "disable-device",
       "name": "Disable Device",
       "ability": "dex",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 2,
       "trained": true,
@@ -86,7 +86,7 @@
       "id": "escape-artist",
       "name": "Escape Artist",
       "ability": "dex",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 0,
       "trained": true,
@@ -96,7 +96,7 @@
       "id": "intimidate",
       "name": "Intimidate",
       "ability": "cha",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 0,
       "trained": true,
@@ -106,7 +106,7 @@
       "id": "knowledge-dungeoneering",
       "name": "Knowledge (Dungeoneering)",
       "ability": "int",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 0,
       "trained": true,
@@ -116,7 +116,7 @@
       "id": "knowledge-local",
       "name": "Knowledge (Local)",
       "ability": "int",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 3,
       "trained": true,
@@ -126,7 +126,7 @@
       "id": "perception",
       "name": "Perception",
       "ability": "wis",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 2,
       "trained": true,
@@ -136,7 +136,7 @@
       "id": "sense-motive",
       "name": "Sense Motive",
       "ability": "wis",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 0,
       "trained": true,
@@ -146,7 +146,7 @@
       "id": "sleight-of-hand",
       "name": "Sleight of Hand",
       "ability": "dex",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 3,
       "trained": true,
@@ -156,7 +156,7 @@
       "id": "stealth",
       "name": "Stealth",
       "ability": "dex",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 12,
       "trained": true,
@@ -166,9 +166,9 @@
       "id": "survival",
       "name": "Survival",
       "ability": "wis",
-      "ranks": 1,
+      "ranks": 0,
       "classSkill": false,
-      "miscBonus": 0,
+      "miscBonus": 1,
       "trained": false,
       "armorCheckPenalty": false
     },
@@ -186,7 +186,7 @@
       "id": "use-magic-device",
       "name": "Use Magic Device",
       "ability": "cha",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 0,
       "trained": true,
@@ -233,13 +233,13 @@
   "buffs": [
     {
       "id": "sneak-attack",
-      "name": "Sneak Attack +2d6",
+      "name": "Sneak Attack +3d6",
       "active": false,
       "attackMod": 0,
       "damageMod": 0,
       "acMod": 0,
       "color": "error",
-      "extraDamageDice": "2d6"
+      "extraDamageDice": "3d6"
     },
     {
       "id": "two-weapon-fighting",
@@ -279,6 +279,12 @@
       "label": "Uses"
     },
     {
+      "id": "major-magic-vanish",
+      "name": "Major Magic: Vanish (2/day)",
+      "total": 2,
+      "label": "Uses"
+    },
+    {
       "id": "cure-light-wounds",
       "name": "Potion of Cure Light Wounds (1d8+1)",
       "total": 1,
@@ -289,9 +295,9 @@
     {
       "id": "sneak-attack",
       "index": 1,
-      "name": "Sneak Attack +2d6",
-      "shortDesc": "+2d6 damage when target is denied DEX to AC or when flanking. Ranged only within 30 ft.",
-      "fullDesc": "If Mariano can catch an opponent when he is unable to defend himself effectively, he can strike vital spots for extra damage. Any time the target is denied a Dexterity bonus to AC, or when Mariano flanks the target, the attack deals +2d6 extra damage. This extra damage is not multiplied on a critical hit. Ranged sneak attacks only count if the target is within 30 feet."
+      "name": "Sneak Attack +3d6",
+      "shortDesc": "+3d6 damage when target is denied DEX to AC or when flanking. Ranged only within 30 ft.",
+      "fullDesc": "If Mariano can catch an opponent when he is unable to defend himself effectively, he can strike vital spots for extra damage. Any time the target is denied a Dexterity bonus to AC, or when Mariano flanks the target, the attack deals +3d6 extra damage. This extra damage is not multiplied on a critical hit. Ranged sneak attacks only count if the target is within 30 feet."
     },
     {
       "id": "finesse-training",
@@ -336,17 +342,14 @@
       "index": 7,
       "name": "Trapfinding",
       "shortDesc": "+2 Perception to find traps, +2 Disable Device. Can disarm magical traps.",
-      "fullDesc": "Mariano adds +2 on Perception checks made to locate traps and to Disable Device checks. He can use the Disable Device skill to disarm magic traps. This bonus is already included in his skill totals (Disable Device 14, Perception 11).",
-      "bonusValue": 2,
-      "bonusMax": 2,
-      "bonusLabel": "Trap Bonus"
+      "fullDesc": "Mariano adds +2 on Perception checks made to locate traps and to Disable Device checks. He can use the Disable Device skill to disarm magic traps. This bonus is already included in his skill totals (Disable Device 15, Perception 12)."
     },
     {
       "id": "minor-magic",
       "index": 8,
       "name": "Minor Magic: Acid Splash",
-      "shortDesc": "Cast Acid Splash at will as a spell-like ability (CL 4, DC 14).",
-      "fullDesc": "Rogue talent. Mariano can cast Acid Splash at will as a spell-like ability. Caster level 4, save DC 14 (INT-based). Acid Splash: ranged touch attack, deals 1d3 acid damage. Bookish Rogue feat allows him to swap this spell by studying a spellbook for 10 minutes."
+      "shortDesc": "Cast Acid Splash at will as a spell-like ability (CL 5, DC 14).",
+      "fullDesc": "Rogue talent. Mariano can cast Acid Splash at will as a spell-like ability. Caster level 5, save DC 14 (INT-based). Acid Splash: ranged touch attack, deals 1d3 acid damage. Bookish Rogue feat allows him to swap this spell by studying a spellbook for 10 minutes."
     },
     {
       "id": "underhanded",
@@ -384,28 +387,59 @@
       "index": 13,
       "name": "Skill Focus (Stealth)",
       "shortDesc": "+3 bonus on Stealth checks. Increases to +6 with 10+ ranks.",
-      "fullDesc": "Mariano is particularly adept at Stealth. He gets a +3 bonus on all Stealth checks. This +3 is included in his Stealth total (24 = DEX 5 + ranks 4 + class skill 3 + size 4 + Skill Focus 3 + Cloak 5). This bonus increases to +6 at 10+ ranks."
+      "fullDesc": "Mariano is particularly adept at Stealth. He gets a +3 bonus on all Stealth checks. This +3 is included in his Stealth total (25 = DEX 5 + ranks 5 + class skill 3 + size 4 + Skill Focus 3 + Cloak 5). This bonus increases to +6 at 10+ ranks."
     },
     {
       "id": "extra-rogue-talent",
       "index": 14,
-      "name": "Extra Unchained Rogue Talent",
-      "shortDesc": "Gain one additional unchained rogue talent.",
-      "fullDesc": "Through constant practice, Mariano has learned an additional special trick. He gained the Underhanded rogue talent through this feat. Can be taken multiple times, each time granting one additional rogue talent."
+      "name": "Extra Unchained Rogue Talent (2x)",
+      "shortDesc": "Gain two additional unchained rogue talents (Underhanded and Major Magic).",
+      "fullDesc": "Through constant practice, Mariano has learned additional special tricks. He has taken this feat twice, granting him the Underhanded and Major Magic (Vanish) rogue talents."
+    },
+    {
+      "id": "major-magic",
+      "index": 15,
+      "name": "Major Magic: Vanish (2/day)",
+      "shortDesc": "Cast Vanish 2/day as a spell-like ability (CL 5, DC 15).",
+      "fullDesc": "Rogue talent. Mariano can cast Vanish twice per day as a spell-like ability. Caster level 5, save DC 15 (INT-based: 10 + 1 spell level + 4 INT mod). Bookish Rogue feat allows him to swap this spell by studying a spellbook for 10 minutes.",
+      "bonusValue": 2,
+      "bonusMax": 2,
+      "bonusLabel": "Uses/day"
+    },
+    {
+      "id": "rogues-edge",
+      "index": 16,
+      "name": "Rogue's Edge (Perception)",
+      "shortDesc": "Skill Unlock for Perception (5 ranks): Alert to sounds in sleep (halved DC increase), distance DC modifier reduced to +1 per 20 ft.",
+      "fullDesc": "At 5th level, an unchained rogue gains Rogue's Edge, allowing them to unlock signature skill abilities. Mariano chose Perception: with 5 ranks, he remains alert to sounds even in his sleep (the normal DC increase to Perception checks when sleeping is halved), and the distance modifier on the DC of Perception checks he attempts is reduced to +1 per 20 feet (instead of +1 per 10 feet)."
     },
     {
       "id": "bookish-rogue",
-      "index": 15,
+      "index": 17,
       "name": "Bookish Rogue",
-      "shortDesc": "Spend 10 minutes with a spellbook to permanently swap Minor Magic spell to any same-level sorcerer/wizard spell in it.",
-      "fullDesc": "By studying a spellbook for 10 minutes, Mariano can change the spell he is able to cast using his Minor Magic talent to any sorcerer/wizard spell of the same level contained in the spellbook. This change is permanent until he takes the time to change it again."
+      "shortDesc": "Spend 10 minutes with a spellbook to permanently swap Minor Magic or Major Magic spell to any same-level sorcerer/wizard spell in it.",
+      "fullDesc": "By studying a spellbook for 10 minutes, Mariano can change one spell he is able to cast using his Minor Magic or Major Magic talent to one sorcerer/wizard spell of the same level contained in the spellbook. This change is permanent until he takes the time to change it via this feat again."
     },
     {
       "id": "halfling-racial",
-      "index": 16,
+      "index": 18,
       "name": "Halfling Racial Traits",
       "shortDesc": "Fearless (+2 vs fear), Halfling Luck (+1 all saves), Keen Senses (+2 Perception), Sure-Footed (+2 Acrobatics/Climb), size bonus (+1 AC/attack), speed 20 ft.",
       "fullDesc": "Mariano benefits from several halfling racial traits: Fearless (+2 racial bonus on saves vs. fear, stacks with Halfling Luck); Halfling Luck (+1 racial bonus on all saving throws, included in saves); Keen Senses (+2 bonus on Perception, included); Sure-Footed (+2 racial bonus on Acrobatics and Climb, included); Small size (+1 size bonus to AC and attack rolls, included); base speed 20 ft."
+    },
+    {
+      "id": "bonus-critical-confirmation",
+      "index": 19,
+      "name": "Bonus Critical Confirmation (Halfling Favored Class: Daggers 3x)",
+      "shortDesc": "+1 circumstance bonus on critical hit confirmation rolls with daggers.",
+      "fullDesc": "Halfling favored class bonus for rogue (chosen 3 times): adds a +1/2 circumstance bonus per selection (+1 total) on critical hit confirmation rolls with daggers. Does not stack with Critical Focus."
+    },
+    {
+      "id": "character-traits",
+      "index": 20,
+      "name": "Character Traits",
+      "shortDesc": "Good Slip (+1 Bluff, 1/day reroll Will near Chelish human ally), Indomitable Faith (+1 Will), Reactionary (+2 Initiative).",
+      "fullDesc": "Mariano has three traits: 1) Good Slip (Hell's Vengeance Player's Guide p.13): +1 trait bonus on Bluff, Bluff is a class skill, and 1/day reroll a Will save before success/failure is known when adjacent to a human ally of Chelish descent; 2) Indomitable Faith (Ultimate Campaign): +1 trait bonus on Will saves; 3) Reactionary (Advanced Player's Guide p.328): +2 trait bonus on Initiative checks."
     }
   ],
   "classAbilities": [
@@ -422,9 +456,21 @@
       "isSignature": true
     },
     {
+      "id": "rogues-edge-ca",
+      "name": "Rogue's Edge (Perception)",
+      "description": "5th-level Unchained Rogue ability. Unlocks Perception skill powers: alert to sounds in sleep (halved sleeping DC penalty), distance penalty on Perception checks reduced to +1 per 20 ft.",
+      "isSignature": true
+    },
+    {
       "id": "minor-magic-ca",
       "name": "Minor Magic: Acid Splash",
-      "description": "Rogue talent — cast Acid Splash at will as a spell-like ability. CL 4, DC 14 (INT-based). Ranged touch attack dealing 1d3 acid damage. Can swap spell via Bookish Rogue feat (10 min with a spellbook).",
+      "description": "Rogue talent — cast Acid Splash at will as a spell-like ability. CL 5, DC 14 (INT-based). Ranged touch attack dealing 1d3 acid damage. Can swap spell via Bookish Rogue feat (10 min with a spellbook).",
+      "isSignature": false
+    },
+    {
+      "id": "major-magic-ca",
+      "name": "Major Magic: Vanish (2/day)",
+      "description": "Rogue talent — cast Vanish 2 times a day as a spell-like ability. CL 5, DC 15 (INT-based). 1 round/level duration (5 rounds). Can swap spell via Bookish Rogue feat (10 min with a spellbook).",
       "isSignature": false
     },
     {
@@ -446,7 +492,12 @@
       "isSignature": false
     }
   ],
-  "spellSlots": [],
+  "spellSlots": [
+    {
+      "level": 1,
+      "total": 2
+    }
+  ],
   "spells": [
     {
       "id": "acid-splash",
@@ -464,6 +515,20 @@
       "isAttackSpell": true,
       "attackType": "rangedTouch",
       "damageDice": "1d3"
+    },
+    {
+      "id": "vanish",
+      "name": "Vanish",
+      "level": 1,
+      "school": "Illusion",
+      "subschool": "Glamer",
+      "castingTime": "1 standard action",
+      "range": "Touch",
+      "duration": "5 rounds (1 round/level, CL 5)",
+      "savingThrow": "Will negates (harmless)",
+      "spellResistance": true,
+      "components": "V, S",
+      "description": "One creature vanishes, becoming invisible as per invisibility for 1 round per caster level (up to 5 rounds). The spell instantly ends if the target attacks any creature."
     }
   ],
   "inventory": [

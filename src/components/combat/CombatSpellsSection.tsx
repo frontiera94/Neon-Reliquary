@@ -23,7 +23,7 @@ export interface CombatSpellsSectionProps {
 
 function getSpellcastingAbility(charClass: string): 'int' | 'wis' | 'cha' {
   const cls = charClass.toLowerCase()
-  if (/wizard|magus|witch|alchemist|investigator|arcanist/.test(cls)) {
+  if (/wizard|magus|witch|alchemist|investigator|arcanist|rogue/.test(cls)) {
     return 'int'
   }
   if (/sorcerer|bard|oracle|summoner|skald|bloodrager|paladin/.test(cls)) {

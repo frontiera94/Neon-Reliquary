@@ -21,4 +21,4 @@ Characters in the app as of 2026-04-07:
 - Noorie (Druid 4, Ash Subdomain)
 - Shotrix Blackburn (Magus 4)
 - Mazikeen Noctis (unknown class — not yet verified)
-- Mariano Cardamomo (unknown class — not yet verified)
+- Mariano Cardamomo (Unchained Rogue 5)

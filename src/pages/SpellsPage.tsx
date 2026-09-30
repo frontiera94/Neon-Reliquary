@@ -9,7 +9,7 @@ import type { AbilityScore } from '../types/character'
 function concentrationMod(charClass: string, level: number, abilities: AbilityScore): number {
   const cls = charClass.toLowerCase()
   let abilMod: number
-  if (/wizard|magus|witch|alchemist|investigator|arcanist/.test(cls)) {
+  if (/wizard|magus|witch|alchemist|investigator|arcanist|rogue/.test(cls)) {
     abilMod = abilityMod(abilities.int)
   } else if (/sorcerer|bard|oracle|summoner|skald|bloodrager/.test(cls)) {
     abilMod = abilityMod(abilities.cha)
