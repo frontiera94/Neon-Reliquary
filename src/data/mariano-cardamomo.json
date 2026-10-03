@@ -409,9 +409,9 @@
     {
       "id": "rogues-edge",
       "index": 16,
-      "name": "Rogue's Edge (Perception)",
-      "shortDesc": "Skill Unlock for Perception (5 ranks): Alert to sounds in sleep (halved DC increase), distance DC modifier reduced to +1 per 20 ft.",
-      "fullDesc": "At 5th level, an unchained rogue gains Rogue's Edge, allowing them to unlock signature skill abilities. Mariano chose Perception: with 5 ranks, he remains alert to sounds even in his sleep (the normal DC increase to Perception checks when sleeping is halved), and the distance modifier on the DC of Perception checks he attempts is reduced to +1 per 20 feet (instead of +1 per 10 feet)."
+      "name": "Rogue's Edge (Acrobatics)",
+      "shortDesc": "Skill Unlock for Acrobatics (5 ranks): Move normal speed through threatened square at DC +5 (instead of +10); retain DEX to AC on Acrobatics DC ≤ 20.",
+      "fullDesc": "At 5th level, an unchained rogue gains Rogue's Edge, allowing them to unlock signature skill abilities. Mariano chose Acrobatics: with 5 ranks, he can move at normal speed through a threatened square without provoking an attack of opportunity by increasing the DC of the check by 5 (instead of by 10). He is also not denied his Dexterity bonus when attempting Acrobatics checks with DCs of 20 or lower."
     },
     {
       "id": "bookish-rogue",
@@ -457,8 +457,8 @@
     },
     {
       "id": "rogues-edge-ca",
-      "name": "Rogue's Edge (Perception)",
-      "description": "5th-level Unchained Rogue ability. Unlocks Perception skill powers: alert to sounds in sleep (halved sleeping DC penalty), distance penalty on Perception checks reduced to +1 per 20 ft.",
+      "name": "Rogue's Edge (Acrobatics)",
+      "description": "5th-level Unchained Rogue ability. Unlocks Acrobatics skill powers: move normal speed through threatened square by increasing DC by +5 (instead of +10), and not denied DEX bonus when attempting Acrobatics checks with DCs of 20 or lower.",
       "isSignature": true
     },
     {
