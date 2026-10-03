@@ -115,73 +115,79 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+        className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl"
         onClick={onClose}
       >
         <motion.section
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="relative w-full max-w-2xl max-h-[90vh] bg-surface-container border border-primary/40 shadow-[0_0_50px_rgba(0,218,243,0.2)] flex flex-col overflow-hidden"
+          transition={{ type: 'spring', damping: 24, stiffness: 300 }}
+          className="relative w-full max-w-2xl max-h-[90vh] bg-surface-container/95 backdrop-blur-2xl border border-white/15 shadow-[0_0_60px_rgba(0,240,255,0.2)] rounded-3xl flex flex-col overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <header className="px-6 py-4 border-b border-outline-variant/30 flex items-center justify-between bg-surface-container-high">
+          <header className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-surface-container-high/60 backdrop-blur-md">
             <div>
-              <h2 className="font-headline text-lg uppercase tracking-widest text-primary font-bold">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 text-[10px] font-label uppercase tracking-widest font-bold">
+                  Tactical Protocol
+                </span>
+                <span className="font-label text-[10px] text-slate-400 uppercase tracking-wider">
+                  PF1e Stacking
+                </span>
+              </div>
+              <h2 className="font-headline text-lg sm:text-xl uppercase tracking-wider text-white font-bold">
                 Combat Buffs & Protocols
               </h2>
-              <p className="font-label text-[11px] text-tertiary uppercase tracking-wider">
-                PF1e Dynamic Tactical Stacking
-              </p>
             </div>
             <button
               onClick={onClose}
-              className="text-tertiary hover:text-white p-1 transition-colors"
+              className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
               aria-label="Close modal"
             >
-              <span className="material-symbols-outlined text-2xl">close</span>
+              <span className="material-symbols-outlined text-xl">close</span>
             </button>
           </header>
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-outline-variant/30 bg-surface-container-low overflow-x-auto">
+          <div className="p-2 border-b border-white/10 bg-surface-container-lowest/80 flex gap-1.5 overflow-x-auto">
             <button
               onClick={() => setActiveTab('presets')}
-              className={`flex-1 min-w-[110px] py-3 px-3 font-label text-xs uppercase tracking-wider text-center transition-all border-b-2 ${
+              className={`flex-1 min-w-[110px] py-2 px-3 rounded-xl font-label text-xs uppercase tracking-wider text-center transition-all cursor-pointer font-bold ${
                 activeTab === 'presets'
-                  ? 'border-primary text-primary bg-primary/5'
-                  : 'border-transparent text-tertiary hover:text-white'
+                  ? 'bg-primary text-black shadow-[0_0_15px_rgba(0,240,255,0.4)]'
+                  : 'text-slate-300 hover:text-white hover:bg-white/5'
               }`}
             >
               PF1e Presets
             </button>
             <button
               onClick={() => setActiveTab('active')}
-              className={`flex-1 min-w-[110px] py-3 px-3 font-label text-xs uppercase tracking-wider text-center transition-all border-b-2 ${
+              className={`flex-1 min-w-[110px] py-2 px-3 rounded-xl font-label text-xs uppercase tracking-wider text-center transition-all cursor-pointer font-bold ${
                 activeTab === 'active'
-                  ? 'border-primary text-primary bg-primary/5'
-                  : 'border-transparent text-tertiary hover:text-white'
+                  ? 'bg-primary text-black shadow-[0_0_15px_rgba(0,240,255,0.4)]'
+                  : 'text-slate-300 hover:text-white hover:bg-white/5'
               }`}
             >
               Active ({activeBuffIds.length})
             </button>
             <button
               onClick={() => setActiveTab('create')}
-              className={`flex-1 min-w-[110px] py-3 px-3 font-label text-xs uppercase tracking-wider text-center transition-all border-b-2 ${
+              className={`flex-1 min-w-[110px] py-2 px-3 rounded-xl font-label text-xs uppercase tracking-wider text-center transition-all cursor-pointer font-bold ${
                 activeTab === 'create'
-                  ? 'border-primary text-primary bg-primary/5'
-                  : 'border-transparent text-tertiary hover:text-white'
+                  ? 'bg-primary text-black shadow-[0_0_15px_rgba(0,240,255,0.4)]'
+                  : 'text-slate-300 hover:text-white hover:bg-white/5'
               }`}
             >
               + Custom Buff
             </button>
             <button
               onClick={() => setActiveTab('conditions')}
-              className={`flex-1 min-w-[110px] py-3 px-3 font-label text-xs uppercase tracking-wider text-center transition-all border-b-2 ${
+              className={`flex-1 min-w-[110px] py-2 px-3 rounded-xl font-label text-xs uppercase tracking-wider text-center transition-all cursor-pointer font-bold ${
                 activeTab === 'conditions'
-                  ? 'border-secondary text-secondary bg-secondary/5'
-                  : 'border-transparent text-tertiary hover:text-white'
+                  ? 'bg-secondary text-white shadow-[0_0_15px_rgba(217,70,239,0.4)]'
+                  : 'text-slate-300 hover:text-white hover:bg-white/5'
               }`}
             >
               Conditions ({session.conditions.length})
@@ -189,7 +195,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
           </div>
 
           {/* Scrollable Body */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
             {/* TAB: PRESETS */}
             {activeTab === 'presets' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -198,41 +204,41 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                   return (
                     <div
                       key={preset.id}
-                      className={`p-4 border transition-all flex flex-col justify-between ${
+                      className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
                         isActive
-                          ? 'border-primary bg-primary/10 shadow-[0_0_15px_rgba(0,218,243,0.15)]'
-                          : 'border-outline-variant/30 bg-surface-container-low hover:border-outline'
+                          ? 'border-primary/60 bg-primary/10 shadow-[0_0_20px_rgba(0,240,255,0.15)]'
+                          : 'border-white/10 bg-surface-container-high/40 hover:border-white/20 hover:bg-surface-container-high/60'
                       }`}
                     >
                       <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-headline text-sm font-bold text-on-surface">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <h4 className="font-headline text-sm font-bold text-white">
                             {preset.name}
                           </h4>
                           <span
-                            className={`font-label text-[9px] uppercase px-1.5 py-0.5 border ${
+                            className={`font-label text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
                               isActive
-                                ? 'border-primary text-primary'
-                                : 'border-outline text-tertiary'
+                                ? 'bg-primary text-black shadow-[0_0_8px_rgba(0,240,255,0.4)]'
+                                : 'bg-white/5 border border-white/10 text-slate-400'
                             }`}
                           >
                             {isActive ? 'ACTIVE' : 'READY'}
                           </span>
                         </div>
-                        <p className="font-body text-xs text-on-surface-variant/80 mb-3">
+                        <p className="font-body text-xs text-slate-300 mb-3 leading-relaxed">
                           {preset.description}
                         </p>
                       </div>
 
                       <button
                         onClick={() => handleTogglePreset(preset)}
-                        className={`w-full py-2 font-label text-xs uppercase tracking-widest transition-all ${
+                        className={`w-full py-2 rounded-xl font-label text-xs uppercase tracking-wider font-bold transition-all cursor-pointer active:scale-[0.98] ${
                           isActive
-                            ? 'bg-error/20 border border-error text-error hover:bg-error/30'
-                            : 'bg-primary/20 border border-primary text-primary hover:bg-primary/30'
+                            ? 'bg-error text-white hover:bg-error/90 shadow-[0_0_12px_rgba(255,75,96,0.3)]'
+                            : 'bg-primary/15 border border-primary/40 text-primary hover:bg-primary hover:text-black hover:shadow-[0_0_15px_rgba(0,240,255,0.3)]'
                         }`}
                       >
-                        {isActive ? 'DISMISS BUFF' : 'ENGAGE BUFF'}
+                        {isActive ? 'Dismiss Buff' : 'Engage Buff'}
                       </button>
                     </div>
                   )
@@ -244,7 +250,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
             {activeTab === 'active' && (
               <div className="space-y-3">
                 {allAvailableBuffs.length === 0 ? (
-                  <p className="text-center font-label text-xs text-tertiary py-8 uppercase tracking-widest">
+                  <p className="text-center font-label text-xs text-slate-400 py-8 uppercase tracking-widest">
                     No buffs configured for this character.
                   </p>
                 ) : (
@@ -253,29 +259,29 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                     return (
                       <div
                         key={buff.id}
-                        className={`p-4 border transition-all flex items-center justify-between gap-4 ${
+                        className={`p-4 rounded-2xl border transition-all flex items-center justify-between gap-4 ${
                           isActive
-                            ? 'border-primary bg-primary/10'
-                            : 'border-outline-variant/20 bg-surface-container-low opacity-75'
+                            ? 'border-primary/50 bg-primary/10 shadow-[0_0_15px_rgba(0,240,255,0.1)]'
+                            : 'border-white/10 bg-surface-container-high/40'
                         }`}
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span
                               className={`w-2.5 h-2.5 rounded-full ${
-                                isActive ? 'bg-primary shadow-[0_0_8px_#00daf3]' : 'bg-tertiary/40'
+                                isActive ? 'bg-primary shadow-[0_0_8px_#00daf3]' : 'bg-slate-600'
                               }`}
                             />
-                            <h4 className="font-headline text-sm font-bold text-on-surface truncate">
+                            <h4 className="font-headline text-sm font-bold text-white truncate">
                               {buff.name}
                             </h4>
                             {buff.isCustom && (
-                              <span className="font-label text-[9px] text-secondary border border-secondary/40 px-1">
+                              <span className="font-label text-[9px] font-bold text-secondary border border-secondary/40 px-1.5 py-0.5 rounded-md bg-secondary/10">
                                 CUSTOM
                               </span>
                             )}
                           </div>
-                          <p className="font-label text-xs text-tertiary mt-1">
+                          <p className="font-label text-xs text-slate-300 mt-1">
                             {[
                               buff.attackMod ? `${buff.attackMod > 0 ? '+' : ''}${buff.attackMod} Att` : '',
                               buff.damageMod ? `${buff.damageMod > 0 ? '+' : ''}${buff.damageMod} Dmg` : '',
@@ -291,10 +297,10 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <button
                             onClick={() => toggleBuff(char.id, buff.id)}
-                            className={`px-3 py-1.5 font-label text-xs uppercase tracking-wider border transition-all ${
+                            className={`px-4 py-1.5 rounded-xl font-label text-xs uppercase font-bold tracking-wider transition-all cursor-pointer active:scale-95 ${
                               isActive
-                                ? 'border-primary text-primary bg-primary/20 hover:bg-primary/30'
-                                : 'border-outline text-tertiary hover:text-white'
+                                ? 'bg-primary text-black shadow-[0_0_12px_rgba(0,240,255,0.35)]'
+                                : 'bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10'
                             }`}
                           >
                             {isActive ? 'ON' : 'OFF'}
@@ -303,7 +309,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                           {buff.isCustom && (
                             <button
                               onClick={() => removeCustomBuff(char.id, buff.id)}
-                              className="p-1.5 text-tertiary hover:text-error transition-colors"
+                              className="p-1.5 text-slate-400 hover:text-error rounded-lg hover:bg-error/10 transition-colors cursor-pointer"
                               title="Delete custom buff"
                             >
                               <span className="material-symbols-outlined text-lg">delete</span>
@@ -321,7 +327,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
             {activeTab === 'create' && (
               <form onSubmit={handleCreateBuff} className="space-y-4">
                 <div>
-                  <label className="block font-label text-xs text-secondary uppercase tracking-wider mb-1">
+                  <label className="block font-label text-xs text-slate-300 uppercase tracking-wider font-semibold mb-1.5">
                     Buff / Spell Name
                   </label>
                   <input
@@ -330,58 +336,60 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Divine Favor, Cat's Grace, Heroism..."
-                    className="w-full bg-surface-container-lowest border border-outline-variant/40 px-3 py-2 font-body text-sm text-on-surface focus:border-primary outline-none"
+                    className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-3.5 py-2.5 font-body text-sm text-white placeholder:text-slate-500 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                   />
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block font-label text-xs text-tertiary uppercase tracking-wider mb-1">
+                    <label className="block font-label text-xs text-slate-300 uppercase tracking-wider font-semibold mb-1.5">
                       Attack Mod
                     </label>
                     <input
                       type="number"
                       value={attackMod}
                       onChange={(e) => setAttackMod(parseInt(e.target.value) || 0)}
-                      className="w-full bg-surface-container-lowest border border-outline-variant/40 px-3 py-2 font-label text-sm text-center text-on-surface focus:border-primary outline-none"
+                      className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-3 py-2 font-label text-sm text-center text-white focus:border-primary outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block font-label text-xs text-tertiary uppercase tracking-wider mb-1">
+                    <label className="block font-label text-xs text-slate-300 uppercase tracking-wider font-semibold mb-1.5">
                       Damage Mod
                     </label>
                     <input
                       type="number"
                       value={damageMod}
                       onChange={(e) => setDamageMod(parseInt(e.target.value) || 0)}
-                      className="w-full bg-surface-container-lowest border border-outline-variant/40 px-3 py-2 font-label text-sm text-center text-on-surface focus:border-primary outline-none"
+                      className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-3 py-2 font-label text-sm text-center text-white focus:border-primary outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block font-label text-xs text-tertiary uppercase tracking-wider mb-1">
+                    <label className="block font-label text-xs text-slate-300 uppercase tracking-wider font-semibold mb-1.5">
                       AC Mod
                     </label>
                     <input
                       type="number"
                       value={acMod}
                       onChange={(e) => setAcMod(parseInt(e.target.value) || 0)}
-                      className="w-full bg-surface-container-lowest border border-outline-variant/40 px-3 py-2 font-label text-sm text-center text-on-surface focus:border-primary outline-none"
+                      className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-3 py-2 font-label text-sm text-center text-white focus:border-primary outline-none"
                     />
                   </div>
                 </div>
 
                 {/* Saves Section */}
-                <div className="p-3 border border-outline-variant/20 bg-surface-container-low">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-label text-xs text-secondary uppercase tracking-wider">
+                <div className="p-4 rounded-2xl border border-white/10 bg-surface-container-high/40">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-label text-xs text-secondary uppercase tracking-wider font-bold">
                       Saving Throws
                     </span>
                     <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={() => setSaveType('all')}
-                        className={`font-label text-[10px] uppercase px-2 py-0.5 border ${
-                          saveType === 'all' ? 'border-primary text-primary' : 'border-outline text-tertiary'
+                        className={`font-label text-xs uppercase px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                          saveType === 'all'
+                            ? 'bg-primary text-black shadow-[0_0_8px_rgba(0,240,255,0.3)]'
+                            : 'bg-white/5 border border-white/10 text-slate-300 hover:text-white'
                         }`}
                       >
                         All Saves
@@ -389,8 +397,10 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                       <button
                         type="button"
                         onClick={() => setSaveType('specific')}
-                        className={`font-label text-[10px] uppercase px-2 py-0.5 border ${
-                          saveType === 'specific' ? 'border-primary text-primary' : 'border-outline text-tertiary'
+                        className={`font-label text-xs uppercase px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                          saveType === 'specific'
+                            ? 'bg-primary text-black shadow-[0_0_8px_rgba(0,240,255,0.3)]'
+                            : 'bg-white/5 border border-white/10 text-slate-300 hover:text-white'
                         }`}
                       >
                         Fort / Ref / Will
@@ -405,36 +415,36 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                         placeholder="All Saves modifier (+/-)"
                         value={globalSaveMod}
                         onChange={(e) => setGlobalSaveMod(parseInt(e.target.value) || 0)}
-                        className="w-full bg-surface-container-lowest border border-outline-variant/40 px-3 py-2 font-label text-sm text-center text-on-surface focus:border-primary outline-none"
+                        className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-3 py-2 font-label text-sm text-center text-white focus:border-primary outline-none"
                       />
                     </div>
                   ) : (
                     <div className="grid grid-cols-3 gap-2">
                       <div>
-                        <span className="block font-label text-[10px] text-tertiary mb-1">FORT</span>
+                        <span className="block font-label text-[10px] text-slate-400 mb-1">FORT</span>
                         <input
                           type="number"
                           value={fortMod}
                           onChange={(e) => setFortMod(parseInt(e.target.value) || 0)}
-                          className="w-full bg-surface-container-lowest border border-outline-variant/40 px-2 py-1 font-label text-xs text-center text-on-surface focus:border-primary outline-none"
+                          className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-2 py-1.5 font-label text-xs text-center text-white focus:border-primary outline-none"
                         />
                       </div>
                       <div>
-                        <span className="block font-label text-[10px] text-tertiary mb-1">REF</span>
+                        <span className="block font-label text-[10px] text-slate-400 mb-1">REF</span>
                         <input
                           type="number"
                           value={refMod}
                           onChange={(e) => setRefMod(parseInt(e.target.value) || 0)}
-                          className="w-full bg-surface-container-lowest border border-outline-variant/40 px-2 py-1 font-label text-xs text-center text-on-surface focus:border-primary outline-none"
+                          className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-2 py-1.5 font-label text-xs text-center text-white focus:border-primary outline-none"
                         />
                       </div>
                       <div>
-                        <span className="block font-label text-[10px] text-tertiary mb-1">WILL</span>
+                        <span className="block font-label text-[10px] text-slate-400 mb-1">WILL</span>
                         <input
                           type="number"
                           value={willMod}
                           onChange={(e) => setWillMod(parseInt(e.target.value) || 0)}
-                          className="w-full bg-surface-container-lowest border border-outline-variant/40 px-2 py-1 font-label text-xs text-center text-on-surface focus:border-primary outline-none"
+                          className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-2 py-1.5 font-label text-xs text-center text-white focus:border-primary outline-none"
                         />
                       </div>
                     </div>
@@ -442,36 +452,36 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                 </div>
 
                 {/* Ability Scores Section */}
-                <div className="p-3 border border-outline-variant/20 bg-surface-container-low">
-                  <span className="block font-label text-xs text-secondary uppercase tracking-wider mb-2">
+                <div className="p-4 rounded-2xl border border-white/10 bg-surface-container-high/40">
+                  <span className="block font-label text-xs text-secondary uppercase tracking-wider font-bold mb-3">
                     Ability Score Enhancements (+/-)
                   </span>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <span className="block font-label text-[10px] text-tertiary mb-1">STR</span>
+                      <span className="block font-label text-[10px] text-slate-400 mb-1">STR</span>
                       <input
                         type="number"
                         value={strMod}
                         onChange={(e) => setStrMod(parseInt(e.target.value) || 0)}
-                        className="w-full bg-surface-container-lowest border border-outline-variant/40 px-2 py-1 font-label text-xs text-center text-on-surface focus:border-primary outline-none"
+                        className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-2 py-1.5 font-label text-xs text-center text-white focus:border-primary outline-none"
                       />
                     </div>
                     <div>
-                      <span className="block font-label text-[10px] text-tertiary mb-1">DEX</span>
+                      <span className="block font-label text-[10px] text-slate-400 mb-1">DEX</span>
                       <input
                         type="number"
                         value={dexMod}
                         onChange={(e) => setDexMod(parseInt(e.target.value) || 0)}
-                        className="w-full bg-surface-container-lowest border border-outline-variant/40 px-2 py-1 font-label text-xs text-center text-on-surface focus:border-primary outline-none"
+                        className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-2 py-1.5 font-label text-xs text-center text-white focus:border-primary outline-none"
                       />
                     </div>
                     <div>
-                      <span className="block font-label text-[10px] text-tertiary mb-1">CON</span>
+                      <span className="block font-label text-[10px] text-slate-400 mb-1">CON</span>
                       <input
                         type="number"
                         value={conMod}
                         onChange={(e) => setConMod(parseInt(e.target.value) || 0)}
-                        className="w-full bg-surface-container-lowest border border-outline-variant/40 px-2 py-1 font-label text-xs text-center text-on-surface focus:border-primary outline-none"
+                        className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-2 py-1.5 font-label text-xs text-center text-white focus:border-primary outline-none"
                       />
                     </div>
                   </div>
@@ -480,7 +490,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                 {/* Additional Settings */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-label text-xs text-tertiary uppercase tracking-wider mb-1">
+                    <label className="block font-label text-xs text-slate-300 uppercase tracking-wider font-semibold mb-1.5">
                       Extra Damage Dice
                     </label>
                     <input
@@ -488,16 +498,16 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                       placeholder="e.g. 1d6 or 2d6"
                       value={extraDice}
                       onChange={(e) => setExtraDice(e.target.value)}
-                      className="w-full bg-surface-container-lowest border border-outline-variant/40 px-3 py-2 font-label text-sm text-on-surface focus:border-primary outline-none"
+                      className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-3 py-2 font-label text-sm text-white placeholder:text-slate-500 focus:border-primary outline-none"
                     />
                   </div>
                   <div className="flex items-center pt-6">
-                    <label className="flex items-center gap-2 cursor-pointer font-label text-xs text-tertiary uppercase">
+                    <label className="flex items-center gap-2 cursor-pointer font-label text-xs text-slate-300 uppercase">
                       <input
                         type="checkbox"
                         checked={meleeOnly}
                         onChange={(e) => setMeleeOnly(e.target.checked)}
-                        className="w-4 h-4 accent-primary"
+                        className="w-4 h-4 rounded accent-primary cursor-pointer"
                       />
                       Melee weapons only
                     </label>
@@ -505,22 +515,22 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                 </div>
 
                 <div className="flex items-center gap-3 pt-2">
-                  <span className="font-label text-xs text-tertiary uppercase">Accent:</span>
+                  <span className="font-label text-xs text-slate-300 uppercase font-semibold">Accent:</span>
                   {(['primary', 'secondary', 'error'] as const).map((c) => (
                     <button
                       type="button"
                       key={c}
                       onClick={() => setColor(c)}
-                      className={`w-6 h-6 border transition-all ${
+                      className={`w-7 h-7 rounded-lg border transition-all cursor-pointer ${
                         c === 'primary' ? 'bg-primary' : c === 'secondary' ? 'bg-secondary' : 'bg-error'
-                      } ${color === c ? 'ring-2 ring-white scale-110' : 'opacity-60'}`}
+                      } ${color === c ? 'ring-2 ring-white scale-110' : 'opacity-50 hover:opacity-80'}`}
                     />
                   ))}
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3 mt-4 bg-primary text-on-primary font-label text-sm uppercase tracking-widest hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all font-bold"
+                  className="w-full py-3 mt-4 rounded-xl bg-primary text-black font-label text-sm uppercase tracking-widest hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] transition-all font-bold cursor-pointer active:scale-[0.99]"
                 >
                   Manifest Custom Buff
                 </button>
@@ -536,43 +546,46 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                   return (
                     <div
                       key={cond}
-                      className={`p-4 border transition-all flex flex-col justify-between ${
+                      className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
                         isActive
-                          ? 'border-error bg-error/10 shadow-[0_0_15px_rgba(255,180,171,0.2)]'
-                          : 'border-outline-variant/30 bg-surface-container-low hover:border-outline'
+                          ? 'border-error/60 bg-error/15 shadow-[0_0_20px_rgba(255,75,96,0.2)]'
+                          : 'border-white/10 bg-surface-container-high/40 hover:border-white/20 hover:bg-surface-container-high/60'
                       }`}
                     >
                       <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-headline text-sm font-bold text-on-surface">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <h4 className="font-headline text-base font-bold text-white">
                             {info.name}
                           </h4>
                           <span
-                            className={`font-label text-[9px] uppercase px-1.5 py-0.5 border ${
+                            className={`font-label text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
                               isActive
-                                ? 'border-error text-error font-bold'
-                                : 'border-outline text-tertiary'
+                                ? 'bg-error text-white shadow-[0_0_8px_rgba(255,75,96,0.4)]'
+                                : 'bg-white/5 border border-white/10 text-slate-400'
                             }`}
                           >
                             {isActive ? 'AFFLICTED' : 'CLEAR'}
                           </span>
                         </div>
-                        <p className="font-body text-xs text-on-surface-variant mb-2">
+                        <p className="font-body text-xs text-slate-300 mb-2.5 leading-relaxed">
                           {info.summary}
                         </p>
-                        <ul className="space-y-0.5 font-label text-[10px] text-tertiary">
+                        <ul className="space-y-1 font-label text-xs text-slate-300">
                           {info.penalties.map((pen, i) => (
-                            <li key={i}>• {pen}</li>
+                            <li key={i} className="flex items-start gap-1.5">
+                              <span className="text-secondary select-none font-bold">•</span>
+                              <span className="leading-snug">{pen}</span>
+                            </li>
                           ))}
                         </ul>
                       </div>
 
                       <button
                         onClick={() => toggleCondition(char.id, cond)}
-                        className={`w-full mt-3 py-1.5 font-label text-xs uppercase tracking-widest border transition-all ${
+                        className={`w-full mt-3.5 py-2 rounded-xl font-label text-xs uppercase tracking-wider font-bold transition-all cursor-pointer active:scale-[0.98] ${
                           isActive
-                            ? 'bg-error/20 border-error text-error hover:bg-error/30'
-                            : 'border-outline text-tertiary hover:text-white hover:border-primary'
+                            ? 'bg-error text-white hover:bg-error/90 shadow-[0_0_12px_rgba(255,75,96,0.3)]'
+                            : 'bg-white/5 border border-white/15 text-slate-200 hover:bg-primary/20 hover:text-primary hover:border-primary/50 hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]'
                         }`}
                       >
                         {isActive ? 'Remove Condition' : 'Apply Condition'}
