@@ -1,0 +1,4 @@
+#!/bin/sh
+# Git pre-commit hook to run and validate all tests before allowing a commit
+node scripts/validate-tests.mjs
+exit $?

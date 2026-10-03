@@ -9,7 +9,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:watch-all": "node scripts/watch-and-test.mjs",
+    "test:validate": "node scripts/validate-tests.mjs",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@vercel/blob": "^2.3.3",

@@ -10,6 +10,9 @@ npm run build      # Type-check then production build (tsc -b && vite build)
 npm run lint       # ESLint across all .ts/.tsx files
 npm run preview    # Serve the dist/ build locally
 npx tsc --noEmit   # Type-check without building
+npm test           # Run all vitest tests once
+npm run test:watch-all # File watcher hook: re-runs and validates all tests on every file save
+npm run test:validate  # Run test validation script (used by lifecycle and git hooks)
 ```
 
 The test suite is powered by Vitest (`npm test`). Global setup in `src/test/setup.ts` provides storage mocks for Zustand stores. TypeScript strict mode is enabled with `noUnusedLocals` and `noUnusedParameters` — unused imports are a build error.

@@ -1,0 +1,16 @@
+{
+  "test-on-code-edit": {
+    "PostToolUse": [
+      {
+        "matcher": "replace_file_content|write_to_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ../scripts/validate-tests.mjs",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}
