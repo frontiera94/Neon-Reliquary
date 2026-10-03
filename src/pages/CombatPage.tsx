@@ -91,16 +91,22 @@ export function CombatPage() {
   )
   const hasTwfFeat = char.feats.some((f) => /two.weapon fighting/i.test(f.name))
   const offhandPenalty = hasTwfFeat ? 0 : -4
-  const extraDiceBuff = allBuffs.find((b) => b.extraDamageDice && activeBuffIds.includes(b.id))
-  const sneakAttackDice = extraDiceBuff?.extraDamageDice
-  const extraDiceLabel = extraDiceBuff
-    ? extraDiceBuff.name.split(' ').slice(0, 2).join(' ')
-    : 'Extra Dmg'
 
   const summonableSpells = char.spells.filter((s) => s.summonOptions && s.summonOptions.length > 0)
   const activeSummon = session.activeSummon
   const activeSummonOption = activeSummon
     ? summonableSpells.flatMap((s) => s.summonOptions ?? []).find((o) => o.id === activeSummon.optionId) ?? null
+    : null
+
+  const fullAttackEffective = fullAttackWeapon
+    ? calcEffectiveWeaponStats(
+        fullAttackWeapon,
+        char.abilities,
+        effectiveAbilities,
+        session.conditions,
+        allBuffs,
+        activeBuffIds
+      )
     : null
 
   return (
@@ -162,8 +168,8 @@ export function CombatPage() {
                     twfActive={twfActive}
                     offhandPenalty={offhandPenalty}
                     hasteActive={hasteActive}
-                    sneakAttackDice={sneakAttackDice}
-                    extraDiceLabel={extraDiceLabel}
+                    sneakAttackDice={effective.extraDamageDice}
+                    extraDiceLabel={effective.extraDiceLabel ?? 'Extra Dmg'}
                     onAttackRoll={(attackIndex = 0) => {
                       const bonus = effective.attackBonus[attackIndex] ?? effective.attackBonus[0]
                       const label =
@@ -233,14 +239,14 @@ export function CombatPage() {
                       })
                     }}
                     onSneakAttackRoll={
-                      sneakAttackDice
+                      effective.extraDamageDice
                         ? () => {
-                            const { count, sides } = parseDiceFormula(sneakAttackDice)
+                            const { count, sides } = parseDiceFormula(effective.extraDamageDice!)
                             openRoll({
                               diceType: sides,
                               count,
                               modifier: 0,
-                              label: `${extraDiceLabel} Roll`,
+                              label: `${effective.extraDiceLabel ?? 'Extra Dmg'} Roll`,
                             })
                           }
                         : undefined
@@ -504,9 +510,24 @@ export function CombatPage() {
                                 buff.attackMod !== 0
                                   ? `${buff.attackMod > 0 ? '+' : ''}${buff.attackMod} Att`
                                   : '',
-                                buff.damageMod !== 0 ? `+${buff.damageMod} Dmg` : '',
+                                buff.damageMod !== 0
+                                  ? `${buff.damageMod > 0 ? '+' : ''}${buff.damageMod} Dmg`
+                                  : '',
                                 buff.acMod !== 0 ? `${buff.acMod > 0 ? '+' : ''}${buff.acMod} AC` : '',
                                 buff.extraDamageDice ? `+${buff.extraDamageDice}` : '',
+                                ...(buff.abilityMods
+                                  ? Object.entries(buff.abilityMods)
+                                      .filter(([, v]) => v !== undefined && v !== 0)
+                                      .map(([k, v]) => `${(v as number) > 0 ? '+' : ''}${v} ${k.toUpperCase()}`)
+                                  : []),
+                                ...(typeof buff.saveMod === 'number' && buff.saveMod !== 0
+                                  ? [`${buff.saveMod > 0 ? '+' : ''}${buff.saveMod} Saves`]
+                                  : typeof buff.saveMod === 'object' && buff.saveMod !== null
+                                    ? Object.entries(buff.saveMod)
+                                        .filter(([, v]) => v !== undefined && v !== 0)
+                                        .map(([k, v]) => `${(v as number) > 0 ? '+' : ''}${v} ${k === 'fort' ? 'Fort' : k === 'ref' ? 'Ref' : k === 'will' ? 'Will' : k}`)
+                                    : []),
+                                buff.meleeOnly ? 'Melee only' : '',
                               ]
                                 .filter(Boolean)
                                 .join(' / ') || 'Active'
@@ -557,24 +578,17 @@ export function CombatPage() {
       </div>
 
       {/* Full Attack Routine Modal */}
-      {fullAttackWeapon && (
+      {fullAttackWeapon && fullAttackEffective && (
         <FullAttackModal
           isOpen={!!fullAttackWeapon}
           onClose={() => setFullAttackWeapon(null)}
           weapon={fullAttackWeapon}
-          effective={calcEffectiveWeaponStats(
-            fullAttackWeapon,
-            char.abilities,
-            effectiveAbilities,
-            session.conditions,
-            allBuffs,
-            activeBuffIds
-          )}
+          effective={fullAttackEffective}
           twfActive={twfActive}
           offhandPenalty={offhandPenalty}
           hasteActive={hasteActive}
-          sneakAttackDice={sneakAttackDice}
-          extraDiceLabel={extraDiceLabel}
+          sneakAttackDice={fullAttackEffective.extraDamageDice}
+          extraDiceLabel={fullAttackEffective.extraDiceLabel ?? 'Extra Dmg'}
           onRollDamage={(dmgLabel, dmgMod, isCritical) => {
             const { count, sides } = parseDiceFormula(fullAttackWeapon.damageDice)
             const finalCount = isCritical ? count * fullAttackWeapon.critMultiplier : count
@@ -587,14 +601,14 @@ export function CombatPage() {
             })
           }}
           onRollExtraDice={
-            sneakAttackDice
+            fullAttackEffective.extraDamageDice
               ? () => {
-                  const { count, sides } = parseDiceFormula(sneakAttackDice)
+                  const { count, sides } = parseDiceFormula(fullAttackEffective.extraDamageDice!)
                   openRoll({
                     diceType: sides,
                     count,
                     modifier: 0,
-                    label: `${extraDiceLabel} Roll`,
+                    label: `${fullAttackEffective.extraDiceLabel ?? 'Extra Dmg'} Roll`,
                   })
                 }
               : undefined

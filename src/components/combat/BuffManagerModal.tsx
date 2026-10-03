@@ -287,6 +287,18 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                               buff.damageMod ? `${buff.damageMod > 0 ? '+' : ''}${buff.damageMod} Dmg` : '',
                               buff.acMod ? `${buff.acMod > 0 ? '+' : ''}${buff.acMod} AC` : '',
                               buff.extraDamageDice ? `+${buff.extraDamageDice} Dice` : '',
+                              ...(buff.abilityMods
+                                ? Object.entries(buff.abilityMods)
+                                    .filter(([, v]) => v !== undefined && v !== 0)
+                                    .map(([k, v]) => `${(v as number) > 0 ? '+' : ''}${v} ${k.toUpperCase()}`)
+                                : []),
+                              ...(typeof buff.saveMod === 'number' && buff.saveMod !== 0
+                                ? [`${buff.saveMod > 0 ? '+' : ''}${buff.saveMod} Saves`]
+                                : typeof buff.saveMod === 'object' && buff.saveMod !== null
+                                  ? Object.entries(buff.saveMod)
+                                      .filter(([, v]) => v !== undefined && v !== 0)
+                                      .map(([k, v]) => `${(v as number) > 0 ? '+' : ''}${v} ${k === 'fort' ? 'Fort' : k === 'ref' ? 'Ref' : k === 'will' ? 'Will' : k}`)
+                                  : []),
                               buff.meleeOnly ? 'Melee only' : '',
                             ]
                               .filter(Boolean)

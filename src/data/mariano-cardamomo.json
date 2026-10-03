@@ -259,6 +259,7 @@
       "attackMod": 2,
       "damageMod": 0,
       "acMod": 0,
+      "meleeOnly": true,
       "color": "secondary"
     },
     {
