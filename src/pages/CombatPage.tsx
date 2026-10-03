@@ -36,10 +36,6 @@ export function CombatPage() {
     adjustSummonHp,
     clearSummon,
     adjustCompanionHp,
-    toggleRoundAction,
-    resetRoundActions,
-    resetCombatRound,
-    nextRound,
     spendSpellSlot,
     recoverSpellSlot,
   } = useSessionStore()
@@ -117,15 +113,7 @@ export function CombatPage() {
           ac={effectiveAc.total}
           cmb={maneuversCalc.cmb}
           cmd={maneuversCalc.cmd}
-          currentRound={session.currentRound ?? 1}
-          actionEconomy={session.actionEconomy}
           onAdjustHp={(d) => adjustHp(char.id, d, char.maxHp)}
-          onToggleAction={(act) => toggleRoundAction(char.id, act)}
-          onNewTurn={() => {
-            resetRoundActions(char.id)
-            nextRound(char.id)
-          }}
-          onResetRound={() => resetCombatRound(char.id)}
         />
       </div>
 

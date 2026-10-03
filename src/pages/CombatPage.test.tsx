@@ -166,32 +166,6 @@ describe('CombatPage component', () => {
     expect(screen.getByText('Off-hand')).toBeInTheDocument()
   })
 
-  it('renders Action Economy Tracker and toggles actions', () => {
-    render(
-      <MemoryRouter>
-        <CombatPage />
-      </MemoryRouter>
-    )
-
-    expect(screen.getByText('Round Action Economy')).toBeInTheDocument()
-    expect(screen.getByText('Standard')).toBeInTheDocument()
-    expect(screen.getByText('Movement')).toBeInTheDocument()
-    expect(screen.getByText('Full-Round')).toBeInTheDocument()
-
-    // Click Standard action
-    const standardBtn = screen.getByText('Standard').closest('button')
-    expect(standardBtn).not.toBeNull()
-    fireEvent.click(standardBtn!)
-
-    const session = useSessionStore.getState().getSession('combat-test-char')
-    expect(session.actionEconomy?.standard).toBe(true)
-
-    // Click New Turn to reset
-    const newTurnBtn = screen.getByText('New Turn').closest('button')
-    fireEvent.click(newTurnBtn!)
-    expect(useSessionStore.getState().getSession('combat-test-char').actionEconomy?.standard).toBe(false)
-  })
-
   it('renders Combat Maneuvers panel with CMB and CMD', () => {
     render(
       <MemoryRouter>
