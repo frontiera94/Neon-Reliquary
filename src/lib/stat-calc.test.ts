@@ -334,6 +334,52 @@ describe('stat-calc engine', () => {
       expect(res.extraDamageDice).toBe('+2d6')
     })
 
+    it('does not leak meleeOnly extraDamageDice to ranged weapons', () => {
+      const jabbingBuff: BuffToggle = {
+        id: 'jabbing-style',
+        name: 'Jabbing Style',
+        active: true,
+        attackMod: 0,
+        damageMod: 0,
+        acMod: 0,
+        extraDamageDice: '1d6',
+        meleeOnly: true,
+      }
+      const bow: Weapon = {
+        id: 'bow',
+        name: 'Shortbow',
+        type: 'ranged',
+        attackBonus: [6],
+        damageDice: '1d6',
+        damageBonus: 0,
+        critRange: 20,
+        critMultiplier: 3,
+        tags: [],
+      }
+      const effAbilities = calcEffectiveAbilities(baseAbilities, [], [jabbingBuff])
+      const meleeRes = calcEffectiveWeaponStats(
+        sword,
+        baseAbilities,
+        effAbilities,
+        [],
+        [jabbingBuff],
+        ['jabbing-style']
+      )
+      expect(meleeRes.extraDamageDice).toBe('1d6')
+      expect(meleeRes.extraDiceLabel).toBe('Jabbing Style')
+
+      const rangedRes = calcEffectiveWeaponStats(
+        bow,
+        baseAbilities,
+        effAbilities,
+        [],
+        [jabbingBuff],
+        ['jabbing-style']
+      )
+      expect(rangedRes.extraDamageDice).toBeUndefined()
+      expect(rangedRes.extraDiceLabel).toBeUndefined()
+    })
+
     it('applies Prone penalty to melee weapon (-4) but not to ranged weapon', () => {
       const effAbilities = calcEffectiveAbilities(baseAbilities, ['prone'], [])
       const meleeRes = calcEffectiveWeaponStats(

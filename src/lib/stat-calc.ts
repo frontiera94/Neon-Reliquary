@@ -46,6 +46,7 @@ export interface EffectiveWeaponCalculated {
   acMod: number
   activeBuffNames: string[]
   extraDamageDice?: string
+  extraDiceLabel?: string
   attackBreakdown: { label: string; value: number }[]
   damageBreakdown: { label: string; value: number }[]
   hasteActive?: boolean
@@ -365,7 +366,7 @@ export function calcEffectiveWeaponStats(
   }
 
   // Find extra damage dice from active buffs (e.g. Sneak Attack, Flaming, etc.)
-  const extraDiceBuff = activeBuffs.find((b) => b.extraDamageDice)
+  const extraDiceBuff = applicableBuffs.find((b) => b.extraDamageDice)
   const totalAcMod = activeBuffs.reduce((sum, b) => sum + (b.acMod || 0), 0)
   const isHaste = applicableBuffs.some(
     (b) => b.id === 'haste' || b.id === 'preset-haste' || /haste/i.test(b.name)
@@ -377,6 +378,9 @@ export function calcEffectiveWeaponStats(
     acMod: totalAcMod,
     activeBuffNames: applicableBuffs.map((b) => b.name),
     extraDamageDice: extraDiceBuff?.extraDamageDice,
+    extraDiceLabel: extraDiceBuff
+      ? extraDiceBuff.name.split(' ').slice(0, 2).join(' ')
+      : undefined,
     attackBreakdown,
     damageBreakdown,
     hasteActive: isHaste,

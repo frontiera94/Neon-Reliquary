@@ -122,5 +122,37 @@ describe('Character JSON integrity', () => {
       expect(mariano.classAbilities.some((ca) => ca.id === 'rogues-edge-ca')).toBe(true)
       expect(mariano.classAbilities.some((ca) => ca.id === 'major-magic-ca')).toBe(true)
     })
+
+    it('has flanking buff configured with meleeOnly', () => {
+      const flanking = mariano.buffs.find((b) => b.id === 'flanking')
+      expect(flanking).toBeDefined()
+      expect(flanking?.meleeOnly).toBe(true)
+    })
+  })
+
+  describe('Combat buff meleeOnly restrictions for ranged weapon characters', () => {
+    it('sample-kaelen has power-attack configured as meleeOnly', () => {
+      const raw = fs.readFileSync(path.join(dataDir, 'sample-kaelen.json'), 'utf8')
+      const kaelen = JSON.parse(raw) as FullCharacter
+      const pa = kaelen.buffs.find((b) => b.id === 'power-attack')
+      expect(pa).toBeDefined()
+      expect(pa?.meleeOnly).toBe(true)
+    })
+
+    it('sample-valerius has power-attack configured as meleeOnly', () => {
+      const raw = fs.readFileSync(path.join(dataDir, 'sample-valerius.json'), 'utf8')
+      const valerius = JSON.parse(raw) as FullCharacter
+      const pa = valerius.buffs.find((b) => b.id === 'power-attack')
+      expect(pa).toBeDefined()
+      expect(pa?.meleeOnly).toBe(true)
+    })
+
+    it('knam has power-attack configured as meleeOnly', () => {
+      const raw = fs.readFileSync(path.join(dataDir, 'knam.json'), 'utf8')
+      const knam = JSON.parse(raw) as FullCharacter
+      const pa = knam.buffs.find((b) => b.id === 'power-attack')
+      expect(pa).toBeDefined()
+      expect(pa?.meleeOnly).toBe(true)
+    })
   })
 })
