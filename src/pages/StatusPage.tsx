@@ -10,10 +10,17 @@ import {
   calcEffectiveArmorClass,
   calcEffectiveSaves,
   getActiveActionRestrictions,
+  evaluateVitalStatus,
 } from '../lib/stat-calc'
 import { ActionAlertBanner } from '../components/combat/ActionAlertBanner'
 import { BuffManagerModal } from '../components/combat/BuffManagerModal'
 import type { ConditionType } from '../types/combat'
+
+const COLOR_MAP: Record<string, string> = {
+  primary: 'text-primary',
+  secondary: 'text-secondary',
+  'on-surface': 'text-on-surface',
+}
 
 const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const
 const ABILITY_NAMES = {
@@ -79,6 +86,7 @@ export function StatusPage() {
 
   const hp = session.currentHp
   const maxHp = char.maxHp
+  const vitalStatus = evaluateVitalStatus(hp, char.abilities.con)
 
   const spentByResource = (id: string) => session.spentResources[id] ?? 0
 
@@ -150,6 +158,24 @@ export function StatusPage() {
             >
               {hp}
             </div>
+            {vitalStatus !== 'conscious' && (
+              <div className="mt-2">
+                <span
+                  className={`px-3 py-1 rounded-full font-label text-xs uppercase tracking-widest font-black inline-flex items-center gap-1.5 ${
+                    vitalStatus === 'dead'
+                      ? 'bg-black text-error border border-error/60 shadow-[0_0_15px_rgba(255,75,96,0.6)]'
+                      : vitalStatus === 'dying'
+                        ? 'bg-error text-white shadow-[0_0_15px_rgba(255,75,96,0.5)] animate-pulse'
+                        : 'bg-amber-400 text-surface font-bold shadow-[0_0_10px_rgba(251,191,36,0.4)]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-xs">
+                    {vitalStatus === 'dead' ? 'skull' : 'warning'}
+                  </span>
+                  {vitalStatus === 'dead' ? 'Dead' : vitalStatus === 'dying' ? 'Dying' : 'Disabled (0 HP)'}
+                </span>
+              </div>
+            )}
             <div className="font-label text-tertiary tracking-widest uppercase mt-2 text-xs">
               Current Hit Points
             </div>
@@ -253,6 +279,7 @@ export function StatusPage() {
           <DefenseCard
             label="Armor Class"
             value={effectiveAc.total}
+            showSign={false}
             sub={`TOUCH: ${effectiveAc.touch} | FLAT: ${effectiveAc.flatFooted}${
               effectiveAc.notes.length > 0 ? ` (${effectiveAc.notes.join(', ')})` : ''
             }`}
@@ -506,23 +533,28 @@ function DefenseCard({
   value,
   sub,
   color = 'on-surface',
+  showSign = true,
   onRoll,
 }: {
   label: string
   value: number
   sub: string
   color?: string
+  showSign?: boolean
   onRoll?: () => void
 }) {
+  const textColor = COLOR_MAP[color] ?? 'text-on-surface'
+  const displayVal = showSign && value >= 0 ? `+${value}` : `${value}`
+
   if (onRoll) {
     return (
       <button
         onClick={onRoll}
         className="bg-surface-container hover:bg-surface-container-high rounded-xl border border-white/5 hover:border-primary/40 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)] p-5 transition-all cursor-pointer group relative w-full text-left"
       >
-        <p className={`font-label text-[10px] uppercase tracking-widest text-${color} font-bold`}>{label}</p>
+        <p className={`font-label text-[10px] uppercase tracking-widest ${textColor} font-bold`}>{label}</p>
         <p className="font-label text-4xl font-black text-on-surface">
-          {value >= 0 ? `+${value}` : value}
+          {displayVal}
         </p>
         <p className="font-label text-[10px] text-on-surface-variant mt-1 font-mono">{sub}</p>
       </button>
@@ -531,9 +563,9 @@ function DefenseCard({
 
   return (
     <div className="bg-surface-container rounded-xl border border-white/5 p-5 relative w-full">
-      <p className={`font-label text-[10px] uppercase tracking-widest text-${color} font-bold`}>{label}</p>
+      <p className={`font-label text-[10px] uppercase tracking-widest ${textColor} font-bold`}>{label}</p>
       <p className="font-label text-4xl font-black text-on-surface">
-        {value >= 0 ? `+${value}` : value}
+        {displayVal}
       </p>
       <p className="font-label text-[10px] text-on-surface-variant mt-1 font-mono">{sub}</p>
     </div>

@@ -32,6 +32,28 @@ function getSpellcastingAbility(charClass: string): 'int' | 'wis' | 'cha' {
   return 'wis'
 }
 
+function isSpontaneousCaster(charClass: string): boolean {
+  const cls = charClass.toLowerCase()
+  return /sorcerer|bard|oracle|inquisitor|summoner|bloodrager|skald|hunter/.test(cls)
+}
+
+function getSpellFocusBonus(school: string, feats: { id?: string; name: string }[]): number {
+  if (!school || !feats.length) return 0
+  const schoolLower = school.toLowerCase()
+  let bonus = 0
+  for (const f of feats) {
+    const nameLower = f.name.toLowerCase()
+    if (nameLower.includes('spell focus') && nameLower.includes(schoolLower)) {
+      if (nameLower.includes('greater')) {
+        bonus = Math.max(bonus, 2)
+      } else {
+        bonus = Math.max(bonus, 1)
+      }
+    }
+  }
+  return bonus
+}
+
 export function CombatSpellsSection({
   spells,
   spellSlots,
@@ -69,9 +91,10 @@ export function CombatSpellsSection({
   const dexMod = abilityMod(abilities.dex)
   const strMod = abilityMod(abilities.str)
 
-  // Spells that are prepared, or cantrips (level 0)
+  // Spells that are prepared, cantrips (level 0), or known spells for spontaneous casters
+  const isSpontaneous = isSpontaneousCaster(charClass)
   const combatSpells = spells.filter(
-    (s) => s.level === 0 || preparedSpellIds.includes(s.id)
+    (s) => s.level === 0 || isSpontaneous || preparedSpellIds.includes(s.id)
   )
 
   const filteredSpells = combatSpells.filter((s) => {
@@ -425,7 +448,8 @@ export function CombatSpellsSection({
                 const spent = spentSpellSlots[spell.level] ?? 0
                 const hasSlots = spell.level === 0 || max === 0 || spent < max
                 const remaining = Math.max(0, max - spent)
-                const dc = 10 + spell.level + castingMod
+                const spellFocusBonus = getSpellFocusBonus(spell.school, feats)
+                const dc = 10 + spell.level + castingMod + spellFocusBonus
                 const hasSomatic = spell.components?.includes('S')
                 const showsAsf = spellFailureChance > 0 && hasSomatic
                 const isPinned = pinnedSpellIds.includes(spell.id)

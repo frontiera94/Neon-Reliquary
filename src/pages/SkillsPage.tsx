@@ -21,11 +21,18 @@ export function SkillsPage() {
     const activeBuffs = allBuffs.filter((b) => session.activeBuffIds.includes(b.id))
     const effectiveAbilities = calcEffectiveAbilities(char.abilities, session.conditions, activeBuffs)
 
+    const equippedItems = (char.inventory ?? []).filter((i) =>
+      session.equippedItemIds ? session.equippedItemIds.includes(i.id) : i.equipped
+    )
+    const equippedAcp = equippedItems.reduce((sum, item) => sum + (item.armorCheckPenalty ?? 0), 0)
+    const acp = equippedAcp || (char.armorClass?.armorCheckPenalty ?? 0)
+
     const calculated = calcEffectiveSkills(
       char.skills,
       char.abilities,
       effectiveAbilities,
-      session.conditions
+      session.conditions,
+      acp
     )
 
     return calculated

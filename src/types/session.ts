@@ -21,6 +21,7 @@ export interface SessionState {
   ammo: Record<string, number>
   activeSummon: ActiveSummon | null
   itemQuantities: Record<string, number>
+  equippedItemIds?: string[]
   coins: CoinPurse
   companionHp?: Record<string, number>
   companionTempHp?: Record<string, number>

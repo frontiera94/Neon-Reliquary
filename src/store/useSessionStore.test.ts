@@ -258,19 +258,51 @@ describe('spell slot management', () => {
     expect(useSessionStore.getState().getSession(CHAR).spentSpellSlots[3] ?? 0).toBe(0)
   })
 
-  it('toggleSpellPrepared adds spell and spends a slot', () => {
+  it('toggleSpellPrepared adds spell without consuming a spell slot', () => {
     useSessionStore.getState().toggleSpellPrepared(CHAR, 'magic-missile', 1, 4)
     const sess = useSessionStore.getState().getSession(CHAR)
     expect(sess.preparedSpellIds).toContain('magic-missile')
-    expect(sess.spentSpellSlots[1]).toBe(1)
+    expect(sess.spentSpellSlots[1] ?? 0).toBe(0)
   })
 
-  it('toggleSpellPrepared removes spell and recovers a slot', () => {
+  it('toggleSpellPrepared removes spell without altering spent slots', () => {
     useSessionStore.getState().toggleSpellPrepared(CHAR, 'magic-missile', 1, 4)
     useSessionStore.getState().toggleSpellPrepared(CHAR, 'magic-missile', 1, 4)
     const sess = useSessionStore.getState().getSession(CHAR)
     expect(sess.preparedSpellIds).not.toContain('magic-missile')
-    expect(sess.spentSpellSlots[1]).toBe(0)
+    expect(sess.spentSpellSlots[1] ?? 0).toBe(0)
+  })
+
+  it('prepareSpell and unprepareSpell support multiple prepared instances', () => {
+    useSessionStore.getState().prepareSpell(CHAR, 'magic-missile')
+    useSessionStore.getState().prepareSpell(CHAR, 'magic-missile')
+    let sess = useSessionStore.getState().getSession(CHAR)
+    expect(sess.preparedSpellIds.filter((x) => x === 'magic-missile')).toHaveLength(2)
+
+    useSessionStore.getState().unprepareSpell(CHAR, 'magic-missile')
+    sess = useSessionStore.getState().getSession(CHAR)
+    expect(sess.preparedSpellIds.filter((x) => x === 'magic-missile')).toHaveLength(1)
+  })
+
+  it('toggleItemEquipped toggles items in equippedItemIds', () => {
+    useSessionStore.getState().toggleItemEquipped(CHAR, 'item-cloak')
+    expect(useSessionStore.getState().getSession(CHAR).equippedItemIds).toContain('item-cloak')
+    useSessionStore.getState().toggleItemEquipped(CHAR, 'item-cloak')
+    expect(useSessionStore.getState().getSession(CHAR).equippedItemIds).not.toContain('item-cloak')
+  })
+
+  it('initSession populates initialEquippedIds on legacy sessions where equippedItemIds is undefined', () => {
+    useSessionStore.setState((s) => ({
+      sessions: {
+        ...s.sessions,
+        [CHAR]: {
+          ...s.sessions[CHAR]!,
+          equippedItemIds: undefined,
+        },
+      },
+    }))
+    useSessionStore.getState().initSession(CHAR, MAX_HP, undefined, ['ring-1', 'armor-1'])
+    expect(useSessionStore.getState().getSession(CHAR).equippedItemIds).toEqual(['ring-1', 'armor-1'])
   })
 })
 

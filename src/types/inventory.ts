@@ -15,9 +15,13 @@ export interface InventoryItem {
   quantity: number
   equipped?: boolean
   slot?: EquipmentSlot
+  armorBonus?: number
+  armorCheckPenalty?: number
+  spellFailureChance?: number
 }
 
 export interface CoinPurse {
+  pp?: number
   gp: number
   sp: number
   cp: number

@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { useCharacterStore } from '../store/useCharacterStore'
-import type { Feat } from '../types/features'
+import type { Feat, ClassAbility } from '../types/features'
 
 export function FeaturesPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeTab, setActiveTab] = useState<'all' | 'feats' | 'class'>('all')
 
   if (!char) return (
     <div className="flex items-center justify-center h-64 text-tertiary font-label text-sm uppercase tracking-widest">
@@ -11,6 +14,24 @@ export function FeaturesPage() {
   )
 
   const signatureAbility = char.classAbilities.find((a) => a.isSignature)
+
+  const query = searchQuery.trim().toLowerCase()
+  const filteredFeats = char.feats.filter((f) =>
+    !query ||
+    f.name.toLowerCase().includes(query) ||
+    f.shortDesc.toLowerCase().includes(query) ||
+    f.fullDesc.toLowerCase().includes(query)
+  )
+
+  const filteredAbilities = (char.classAbilities ?? []).filter((a) =>
+    !query ||
+    a.name.toLowerCase().includes(query) ||
+    a.description.toLowerCase().includes(query)
+  )
+
+  const showFeats = activeTab === 'all' || activeTab === 'feats'
+  const showAbilities = activeTab === 'all' || activeTab === 'class'
+  const totalResults = (showFeats ? filteredFeats.length : 0) + (showAbilities ? filteredAbilities.length : 0)
 
   return (
     <div className="p-6 md:p-12 lg:p-16">
@@ -31,7 +52,7 @@ export function FeaturesPage() {
         <div className="md:col-span-4 bg-surface-container-high/90 backdrop-blur-sm p-6 flex flex-col justify-between border border-white/10 rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
           <div>
             <span className="font-label text-[10px] uppercase tracking-[0.2em] text-primary font-bold block mb-2">
-              Total Unlocked
+              Total Feats
             </span>
             <div className="font-headline text-5xl font-black text-white">{char.feats.length}</div>
           </div>
@@ -62,13 +83,120 @@ export function FeaturesPage() {
           </div>
         )}
 
-        {/* Feat accordion */}
-        <div className="md:col-span-12 space-y-3 mt-4">
-          {char.feats.map((feat) => (
-            <FeatAccordionItem key={feat.id} feat={feat} />
-          ))}
+        {/* Filter & Search Bar */}
+        <div className="md:col-span-12 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between mt-4">
+          <div className="flex gap-2">
+            {(['all', 'feats', 'class'] as const).map((tab) => {
+              const label = tab === 'all' ? 'All' : tab === 'feats' ? 'Feats' : 'Class Abilities'
+              const count = tab === 'all' ? char.feats.length + char.classAbilities.length : tab === 'feats' ? char.feats.length : char.classAbilities.length
+              const isActive = activeTab === tab
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 rounded-xl font-label text-xs uppercase tracking-wider font-semibold transition-all cursor-pointer flex items-center gap-2 ${
+                    isActive
+                      ? 'bg-primary text-surface font-bold shadow-[0_0_15px_rgba(0,240,255,0.3)]'
+                      : 'bg-surface-container/60 text-tertiary border border-white/5 hover:text-white hover:bg-surface-container'
+                  }`}
+                >
+                  {label}
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isActive ? 'bg-black/20 text-black' : 'bg-white/10 text-tertiary'}`}>
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="relative flex-1 max-w-xs">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary text-lg">
+              search
+            </span>
+            <input
+              type="text"
+              placeholder="Search features..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-surface-container/60 border border-white/10 rounded-xl pl-9 pr-3 py-2 text-sm text-white placeholder-tertiary focus:outline-none focus:border-primary/50 transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* List of features */}
+        <div className="md:col-span-12 space-y-6">
+          {totalResults === 0 ? (
+            <p className="font-body text-tertiary italic text-center py-8">No features match your search.</p>
+          ) : (
+            <>
+              {/* Class Abilities Section */}
+              {showAbilities && filteredAbilities.length > 0 && (
+                <div className="space-y-3">
+                  {activeTab === 'all' && (
+                    <div className="flex items-center gap-4 pt-2">
+                      <h2 className="font-headline text-xl text-white font-bold uppercase tracking-tight">Class Abilities</h2>
+                      <div className="flex-1 h-px bg-white/10" />
+                    </div>
+                  )}
+                  {filteredAbilities.map((ability, index) => (
+                    <ClassAbilityItem key={ability.id} ability={ability} index={index + 1} />
+                  ))}
+                </div>
+              )}
+
+              {/* Feats Section */}
+              {showFeats && filteredFeats.length > 0 && (
+                <div className="space-y-3">
+                  {activeTab === 'all' && (
+                    <div className="flex items-center gap-4 pt-2">
+                      <h2 className="font-headline text-xl text-white font-bold uppercase tracking-tight">Feats</h2>
+                      <div className="flex-1 h-px bg-white/10" />
+                    </div>
+                  )}
+                  {filteredFeats.map((feat) => (
+                    <FeatAccordionItem key={feat.id} feat={feat} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
+    </div>
+  )
+}
+
+function ClassAbilityItem({ ability, index }: { ability: ClassAbility; index: number }) {
+  return (
+    <div className="group border border-white/10 rounded-xl overflow-hidden bg-surface-container-low/90 backdrop-blur-sm hover:border-secondary/40 transition-colors shadow-[0_2px_12px_rgba(0,0,0,0.2)]">
+      <details className="w-full">
+        <summary className="flex items-center justify-between p-6 cursor-pointer hover:bg-surface-container transition-colors list-none">
+          <div className="flex items-center gap-6">
+            <span className="font-label text-secondary font-bold text-lg w-8 flex-shrink-0">
+              {index.toString().padStart(2, '0')}
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="font-headline text-xl font-bold text-white group-hover:text-secondary uppercase tracking-tight transition-colors">
+                  {ability.name}
+                </h4>
+                {ability.isSignature && (
+                  <span className="font-label text-[10px] uppercase tracking-wider text-primary bg-primary/20 border border-primary/30 px-2 py-0.5 rounded font-bold">
+                    Signature
+                  </span>
+                )}
+              </div>
+              <p className="font-body text-tertiary text-sm line-clamp-1 italic">{ability.description}</p>
+            </div>
+          </div>
+          <span className="material-symbols-outlined text-secondary transition-transform flex-shrink-0 ml-4 group-open:rotate-180">
+            expand_more
+          </span>
+        </summary>
+        <div className="px-14 pb-8 pt-2 border-t border-white/5 font-body text-tertiary leading-relaxed text-sm">
+          {ability.description}
+        </div>
+      </details>
     </div>
   )
 }
@@ -79,7 +207,7 @@ function FeatAccordionItem({ feat }: { feat: Feat }) {
       <details className="w-full">
         <summary className="flex items-center justify-between p-6 cursor-pointer hover:bg-surface-container transition-colors list-none">
           <div className="flex items-center gap-6">
-            <span className="font-label text-secondary font-bold text-lg w-8 flex-shrink-0">
+            <span className="font-label text-primary font-bold text-lg w-8 flex-shrink-0">
               {feat.index.toString().padStart(2, '0')}
             </span>
             <div>
@@ -120,3 +248,4 @@ function FeatAccordionItem({ feat }: { feat: Feat }) {
     </div>
   )
 }
+

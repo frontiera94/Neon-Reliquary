@@ -9,16 +9,30 @@ const SLOT_ORDER: EquipmentSlot[] = [
   'ring2',    'mainHand', 'offHand',
 ]
 
-export function EquipmentSlotGrid({ items }: { items: InventoryItem[] }) {
+export function EquipmentSlotGrid({
+  items,
+  equippedIds,
+  onUnequip,
+}: {
+  items: InventoryItem[]
+  equippedIds?: string[]
+  onUnequip?: (itemId: string) => void
+}) {
   const slotMap = new Map<EquipmentSlot, InventoryItem>()
   for (const item of items) {
-    if (item.equipped && item.slot) slotMap.set(item.slot, item)
+    const isEquipped = equippedIds ? equippedIds.includes(item.id) : (item.equipped ?? false)
+    if (isEquipped && item.slot) slotMap.set(item.slot, item)
   }
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
       {SLOT_ORDER.map((slot) => (
-        <EquipmentSlotCell key={slot} slot={slot} item={slotMap.get(slot)} />
+        <EquipmentSlotCell
+          key={slot}
+          slot={slot}
+          item={slotMap.get(slot)}
+          onUnequip={onUnequip}
+        />
       ))}
     </div>
   )

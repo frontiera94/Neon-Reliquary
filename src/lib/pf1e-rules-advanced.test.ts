@@ -4,6 +4,7 @@ import {
   calcEffectiveArmorClass,
   calcEffectiveSaves,
   calcEffectiveWeaponStats,
+  evaluateVitalStatus,
 } from './stat-calc'
 import type { AbilityKey } from './stat-calc'
 import type { BuffToggle, Weapon } from '../types/combat'
@@ -275,13 +276,6 @@ describe('Pathfinder 1e Advanced Rules & Cascading Engine', () => {
   })
 
   describe('5. Health Thresholds & Vital States in Pathfinder 1e', () => {
-    function evaluateVitalStatus(currentHp: number, conScore: number): 'conscious' | 'disabled' | 'dying' | 'dead' {
-      if (currentHp > 0) return 'conscious'
-      if (currentHp === 0) return 'disabled'
-      if (currentHp > -conScore) return 'dying'
-      return 'dead'
-    }
-
     it('correctly categorizes vital status according to PF1e rules', () => {
       const con = 14
 

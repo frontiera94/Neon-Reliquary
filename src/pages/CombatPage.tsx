@@ -21,6 +21,7 @@ import { CombatManeuversPanel } from '../components/combat/CombatManeuversPanel'
 import { FullAttackModal } from '../components/combat/FullAttackModal'
 import { CombatSpellsSection } from '../components/combat/CombatSpellsSection'
 import { CombatTacticalHUD } from '../components/combat/CombatTacticalHUD'
+import { ActionEconomyTracker } from '../components/combat/ActionEconomyTracker'
 import type { Weapon } from '../types/combat'
 import type { DiceType } from '../types/dice'
 
@@ -38,6 +39,10 @@ export function CombatPage() {
     adjustCompanionHp,
     spendSpellSlot,
     recoverSpellSlot,
+    toggleRoundAction,
+    resetRoundActions,
+    nextRound,
+    resetCombatRound,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
 
@@ -117,6 +122,7 @@ export function CombatPage() {
           hp={session.currentHp}
           maxHp={char.maxHp}
           ac={effectiveAc.total}
+          conScore={effectiveAbilities.scores.con}
           cmb={maneuversCalc.cmb}
           cmd={maneuversCalc.cmd}
           onAdjustHp={(d) => adjustHp(char.id, d, char.maxHp)}
@@ -126,6 +132,16 @@ export function CombatPage() {
       <div className="p-4 md:p-8 pt-0 space-y-6">
         {/* Tactical Restrictions Banner */}
         <ActionAlertBanner restrictions={restrictions} />
+
+        {/* Action Economy Tracker */}
+        <ActionEconomyTracker
+          actionEconomy={session.actionEconomy}
+          currentRound={session.currentRound}
+          onToggleAction={(action) => toggleRoundAction(char.id, action)}
+          onResetActions={() => resetRoundActions(char.id)}
+          onNewTurn={() => nextRound(char.id)}
+          onResetRound={() => resetCombatRound(char.id)}
+        />
 
         {/* 2-Column Tactical Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -204,12 +220,20 @@ export function CombatPage() {
                     }}
                     onOffhandRoll={() => {
                       const { count: dmgCount, sides: dmgSides, bonus: dmgBonus } = parseDiceFormula(weapon.damageDice)
+                      const strMod = effectiveAbilities.mods.str
+                      const offhandDmgPenalty = strMod > 0 ? Math.ceil(strMod * 0.5) : 0
+                      const offhandDmgBonus = effective.damageBonus - offhandDmgPenalty
                       const followUpRoll = {
                         diceType: dmgSides as DiceType,
                         count: dmgCount,
-                        modifier: effective.damageBonus + dmgBonus,
-                        label: `${weapon.name} Damage`,
-                        breakdown: effective.damageBreakdown,
+                        modifier: offhandDmgBonus + dmgBonus,
+                        label: `${weapon.name} Damage (Off-hand)`,
+                        breakdown: [
+                          ...effective.damageBreakdown,
+                          ...(offhandDmgPenalty > 0
+                            ? [{ label: 'Off-hand Str (0.5x)', value: -offhandDmgPenalty }]
+                            : []),
+                        ],
                       }
 
                       openRoll({
@@ -224,7 +248,7 @@ export function CombatPage() {
                           { label: 'Off-hand Penalty', value: offhandPenalty },
                         ],
                         followUpRoll,
-                        followUpLabel: formatDamage(weapon.damageDice, effective.damageBonus),
+                        followUpLabel: formatDamage(weapon.damageDice, offhandDmgBonus),
                       })
                     }}
                     onFullAttackRoll={() => setFullAttackWeapon(weapon)}
@@ -378,8 +402,10 @@ export function CombatPage() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-2 border-t border-outline-variant/10">
                         {comp.attacks.map((atk) => {
                           const parsed = parseDiceFormula(atk.damageDice)
-                          const totalDmgMod = (atk.damageBonus ?? 0) + parsed.bonus
                           const isTouch = atk.damageDice.toLowerCase().includes('spell')
+                          const baseDmgBonus = atk.damageBonus !== undefined && atk.damageBonus !== parsed.bonus
+                            ? atk.damageBonus + parsed.bonus
+                            : (atk.damageBonus ?? parsed.bonus)
 
                           return (
                             <div
@@ -389,7 +415,9 @@ export function CombatPage() {
                               <div>
                                 <p className="font-headline text-xs font-bold text-on-surface">{atk.name}</p>
                                 <p className="font-label text-[10px] text-tertiary">
-                                  {atk.damageDice}{!isTouch && totalDmgMod > 0 ? `+${totalDmgMod}` : ''}
+                                  {isTouch
+                                    ? atk.damageDice
+                                    : formatDamage(`${parsed.count}d${parsed.sides}`, baseDmgBonus)}
                                 </p>
                               </div>
                               <div className="flex gap-1">
@@ -420,7 +448,7 @@ export function CombatPage() {
                                       openRoll({
                                         diceType: parsed.sides,
                                         count: parsed.count,
-                                        modifier: totalDmgMod,
+                                        modifier: baseDmgBonus,
                                         label: `${comp.name} — ${atk.name} Dmg`,
                                       })
                                     }

@@ -321,12 +321,30 @@ export function calcEffectiveWeaponStats(
 
   // Ability modifier shifts
   if (weapon.type === 'melee') {
-    const strDelta = effectiveAbilities.mods.str - abilityMod(baseAbilities.str)
-    if (strDelta !== 0) {
-      totalAttMod += strDelta
-      totalDmgMod += strDelta
-      attackBreakdown.push({ label: 'STR Mod', value: strDelta })
-      damageBreakdown.push({ label: 'STR Mod', value: strDelta })
+    const isTwoHanded = weapon.tags?.some((t) => /2-handed|two-handed/i.test(t)) ?? false
+    const baseStrMod = abilityMod(baseAbilities.str)
+    const effStrMod = effectiveAbilities.mods.str
+
+    const strAttDelta = effStrMod - baseStrMod
+    if (strAttDelta !== 0) {
+      totalAttMod += strAttDelta
+      attackBreakdown.push({ label: 'STR Mod', value: strAttDelta })
+    }
+
+    const baseStrDmg = isTwoHanded
+      ? (baseStrMod > 0 ? Math.floor(baseStrMod * 1.5) : baseStrMod)
+      : baseStrMod
+    const effStrDmg = isTwoHanded
+      ? (effStrMod > 0 ? Math.floor(effStrMod * 1.5) : effStrMod)
+      : effStrMod
+    const strDmgDelta = effStrDmg - baseStrDmg
+
+    if (strDmgDelta !== 0) {
+      totalDmgMod += strDmgDelta
+      damageBreakdown.push({
+        label: isTwoHanded ? 'STR Mod (1.5x)' : 'STR Mod',
+        value: strDmgDelta,
+      })
     }
   } else {
     const dexDelta = effectiveAbilities.mods.dex - abilityMod(baseAbilities.dex)
@@ -387,18 +405,37 @@ export function calcEffectiveWeaponStats(
   }
 }
 
+export type VitalStatus = 'conscious' | 'disabled' | 'dying' | 'dead'
+
 /**
- * Calculates effective skill totals with ability shifts, Shaken, Sickened, and Blinded penalties.
+ * Categorizes a character's vital state according to Pathfinder 1e rules.
+ * - > 0 HP: conscious
+ * - == 0 HP: disabled
+ * - < 0 and > -Con: dying
+ * - <= -Con: dead
+ */
+export function evaluateVitalStatus(currentHp: number, conScore: number): VitalStatus {
+  if (currentHp > 0) return 'conscious'
+  if (currentHp === 0) return 'disabled'
+  if (currentHp > -conScore) return 'dying'
+  return 'dead'
+}
+
+/**
+ * Calculates effective skill totals with ability shifts, Shaken, Sickened, Blinded penalties,
+ * and armor check penalties on applicable skills.
  */
 export function calcEffectiveSkills(
   skills: Skill[],
   _baseAbilities: Record<AbilityKey, number>,
   effectiveAbilities: EffectiveAbilities,
-  conditions: ConditionType[]
+  conditions: ConditionType[],
+  armorCheckPenalty = 0
 ): EffectiveSkill[] {
+  const absAcp = Math.abs(armorCheckPenalty)
   return skills.map((s) => {
     const effMod = effectiveAbilities.mods[s.ability]
-    const baseTotal = s.ranks + (s.classSkill && s.ranks > 0 ? 3 : 0) + effMod + s.miscBonus
+    let baseTotal = s.ranks + (s.classSkill && s.ranks > 0 ? 3 : 0) + effMod + s.miscBonus
 
     const breakdown: { label: string; value: number }[] = [
       { label: 'Ranks', value: s.ranks },
@@ -409,6 +446,11 @@ export function calcEffectiveSkills(
     breakdown.push({ label: `${s.ability.toUpperCase()} Mod`, value: effMod })
     if (s.miscBonus !== 0) {
       breakdown.push({ label: 'Misc', value: s.miscBonus })
+    }
+
+    if (s.armorCheckPenalty && absAcp > 0) {
+      baseTotal -= absAcp
+      breakdown.push({ label: 'Armor Check Penalty', value: -absAcp })
     }
 
     let penalty = 0

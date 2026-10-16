@@ -9,23 +9,25 @@ export function DiceOverlayModal() {
   const { isOpen, isRolling, pendingRoll, lastResult, openRoll, setResult, close } = useDiceStore()
   const isConfirmingRef = useRef(false)
   const [critConfirmed, setCritConfirmed] = useState<boolean | null>(null)
+  const [confirmationResult, setConfirmationResult] = useState<number | null>(null)
 
   useEffect(() => {
     if (!isOpen || !pendingRoll) return
     const timer = setTimeout(() => {
       const result = rollDice(pendingRoll)
       if (isConfirmingRef.current) {
-        setCritConfirmed(result.naturalRolls[0] !== 1)
+        setCritConfirmed(result.naturalRolls[0] === 1 ? false : null)
+        setConfirmationResult(result.total)
         isConfirmingRef.current = false
       }
       setResult(result)
     }, 1200)
     return () => clearTimeout(timer)
-  }, [isOpen, pendingRoll])
+  }, [isOpen, pendingRoll, setResult])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { close(); setCritConfirmed(null) }
+      if (e.key === 'Escape') { close(); setCritConfirmed(null); setConfirmationResult(null) }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -167,7 +169,57 @@ export function DiceOverlayModal() {
               <div className="p-6 md:p-8 pt-0 flex flex-col gap-2.5">
                 {pendingRoll?.followUpRoll ? (
                   <>
-                    {critConfirmed === null && lastResult.isCriticalThreat ? (
+                    {confirmationResult !== null ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-center gap-2 py-1 px-3 rounded-lg bg-secondary/15 border border-secondary/30 text-secondary font-label text-xs font-bold">
+                          <span className="material-symbols-outlined text-sm">verified</span>
+                          <span>Confirmation Roll: {confirmationResult}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            className="flex-1 py-3.5 bg-gradient-to-r from-secondary to-secondary-container text-white font-label font-bold text-xs uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(217,70,239,0.35)] hover:shadow-[0_0_30px_rgba(217,70,239,0.55)] transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                            onClick={() => {
+                              const followUp = pendingRoll.followUpRoll
+                              if (!followUp) return
+                              const mult = pendingRoll.critMultiplier ?? 2
+                              const finalRoll: DiceRoll = {
+                                ...followUp,
+                                count: followUp.count * mult,
+                                modifier: followUp.modifier * mult,
+                                label: `${followUp.label} [CRIT x${mult}]`,
+                              }
+                              setCritConfirmed(null)
+                              setConfirmationResult(null)
+                              openRoll(finalRoll)
+                            }}
+                          >
+                            <span className="material-symbols-outlined text-base">colorize</span>
+                            <span>Roll Crit Dmg (x{pendingRoll.critMultiplier ?? 2})</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="flex-1 py-3.5 bg-surface-container-high hover:bg-surface-container-highest border border-white/10 hover:border-primary/40 text-white font-label font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                            onClick={() => {
+                              const followUp = pendingRoll.followUpRoll
+                              if (!followUp) return
+                              const finalRoll: DiceRoll = {
+                                ...followUp,
+                                count: followUp.count,
+                                modifier: followUp.modifier,
+                                label: followUp.label,
+                              }
+                              setCritConfirmed(null)
+                              setConfirmationResult(null)
+                              openRoll(finalRoll)
+                            }}
+                          >
+                            <span className="material-symbols-outlined text-base text-primary">colorize</span>
+                            <span>Roll Normal Dmg</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : critConfirmed === null && lastResult.isCriticalThreat ? (
                       <div className="flex gap-3">
                         <button
                           type="button"
@@ -194,6 +246,7 @@ export function DiceOverlayModal() {
                               label: followUp.label,
                             }
                             setCritConfirmed(null)
+                            setConfirmationResult(null)
                             openRoll(finalRoll)
                           }}
                         >
@@ -219,6 +272,7 @@ export function DiceOverlayModal() {
                               : followUp.label,
                           }
                           setCritConfirmed(null)
+                          setConfirmationResult(null)
                           openRoll(finalRoll)
                         }}
                       >

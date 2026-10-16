@@ -17,10 +17,13 @@ const CATEGORY_LABELS: Record<ItemCategory, string> = {
 
 export function InventoryPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
-  const { getSession, initSession, adjustItemQuantity, adjustCoin } = useSessionStore()
+  const { getSession, initSession, adjustItemQuantity, adjustCoin, toggleItemEquipped } = useSessionStore()
 
   useEffect(() => {
-    if (char) initSession(char.id, char.maxHp, char.startingCoins)
+    if (char) {
+      const defaultEquipped = (char.inventory ?? []).filter((i) => i.equipped).map((i) => i.id)
+      initSession(char.id, char.maxHp, char.startingCoins, defaultEquipped)
+    }
   }, [char, initSession])
 
   if (!char) return (
@@ -61,7 +64,11 @@ export function InventoryPage() {
             <h2 className="font-headline text-2xl text-white font-bold uppercase tracking-tight">Equipment</h2>
             <div className="flex-1 h-px bg-white/10" />
           </div>
-          <EquipmentSlotGrid items={inventory} />
+          <EquipmentSlotGrid
+            items={inventory}
+            equippedIds={session.equippedItemIds}
+            onUnequip={(itemId) => toggleItemEquipped(char.id, itemId)}
+          />
         </section>
 
         {/* Coin purse */}
@@ -94,12 +101,17 @@ export function InventoryPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {items.map((item) => {
                   const qty = session.itemQuantities?.[item.id] ?? item.quantity
+                  const isItemEquipped = session.equippedItemIds
+                    ? session.equippedItemIds.includes(item.id)
+                    : (item.equipped ?? false)
                   return (
                     <InventoryItemCard
                       key={item.id}
                       item={item}
                       qty={qty}
+                      isEquipped={isItemEquipped}
                       onAdjust={(delta) => adjustItemQuantity(char.id, item.id, delta)}
+                      onToggleEquip={() => toggleItemEquipped(char.id, item.id)}
                     />
                   )
                 })}

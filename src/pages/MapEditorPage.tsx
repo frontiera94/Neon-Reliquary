@@ -86,8 +86,7 @@ export function MapEditorPage() {
       <div className="bg-surface-container-highest h-12 flex items-center px-4 gap-3 z-10 shrink-0">
         <button
           onClick={() => navigate('/gm')}
-          className="font-label text-tertiary text-sm hover:text-primary transition-colors"
-          style={{ borderRadius: 0 }}
+          className="font-label text-tertiary text-sm hover:text-primary transition-colors px-2 py-1 rounded-lg cursor-pointer"
         >
           ← GM
         </button>
@@ -107,15 +106,13 @@ export function MapEditorPage() {
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="font-label text-xs text-tertiary hover:text-primary transition-colors px-2 py-1"
-          style={{ borderRadius: 0 }}
+          className="font-label text-xs text-tertiary hover:text-primary hover:bg-white/5 transition-colors px-2.5 py-1 rounded-lg cursor-pointer"
         >
-          {isUploading ? 'Caricamento...' : '\uD83D\uDDBC Sfondo'}
+          {isUploading ? 'Caricamento...' : '🖼 Sfondo'}
         </button>
         <button
           onClick={() => setShowAddToken(true)}
-          className="font-label text-xs text-primary bg-primary/20 px-3 py-1 hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all"
-          style={{ borderRadius: 0 }}
+          className="font-label text-xs text-primary bg-primary/20 px-3 py-1.5 rounded-lg hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all cursor-pointer font-semibold"
         >
           + Aggiungi token
         </button>
@@ -170,10 +167,10 @@ export function MapEditorPage() {
           onClick={() => setShowAddToken(false)}
         >
           <div
-            className="bg-surface-container p-6 w-80"
+            className="bg-surface-container/95 backdrop-blur-md p-6 w-80 rounded-2xl border border-white/10 shadow-[0_0_30px_rgba(0,240,255,0.15)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="font-label text-secondary text-sm mb-4">Aggiungi token</div>
+            <div className="font-headline text-secondary text-base font-bold mb-4 uppercase tracking-tight">Aggiungi token</div>
 
             <div className="flex flex-col gap-3">
               <div>
@@ -182,8 +179,7 @@ export function MapEditorPage() {
                   type="text"
                   value={newToken.name}
                   onChange={(e) => setNewToken((p) => ({ ...p, name: e.target.value }))}
-                  className="bg-surface-container-high font-label text-white p-2 w-full outline-none"
-                  style={{ borderRadius: 0 }}
+                  className="bg-surface-container-high/80 font-label text-white p-2.5 w-full outline-none rounded-xl border border-white/10 focus:border-primary/50 transition-colors"
                 />
               </div>
 
@@ -194,8 +190,7 @@ export function MapEditorPage() {
                   maxLength={2}
                   value={newToken.initial}
                   onChange={(e) => setNewToken((p) => ({ ...p, initial: e.target.value }))}
-                  className="bg-surface-container-high font-label text-white p-2 w-full outline-none"
-                  style={{ borderRadius: 0 }}
+                  className="bg-surface-container-high/80 font-label text-white p-2.5 w-full outline-none rounded-xl border border-white/10 focus:border-primary/50 transition-colors"
                 />
               </div>
 
@@ -206,8 +201,7 @@ export function MapEditorPage() {
                     type="color"
                     value={newToken.color}
                     onChange={(e) => setNewToken((p) => ({ ...p, color: e.target.value }))}
-                    className="w-12 h-8 cursor-pointer"
-                    style={{ borderRadius: 0 }}
+                    className="w-12 h-9 cursor-pointer rounded-lg border border-white/10 bg-transparent"
                   />
                 </div>
                 <div className="flex-1">
@@ -217,8 +211,7 @@ export function MapEditorPage() {
                     min={1}
                     value={newToken.hp}
                     onChange={(e) => setNewToken((p) => ({ ...p, hp: Number(e.target.value) }))}
-                    className="bg-surface-container-high font-label text-white p-2 w-full outline-none"
-                    style={{ borderRadius: 0 }}
+                    className="bg-surface-container-high/80 font-label text-white p-2.5 w-full outline-none rounded-xl border border-white/10 focus:border-primary/50 transition-colors"
                   />
                 </div>
               </div>
@@ -228,8 +221,7 @@ export function MapEditorPage() {
                 <select
                   value={newToken.kind}
                   onChange={(e) => setNewToken((p) => ({ ...p, kind: e.target.value as Token['kind'] }))}
-                  className="bg-surface-container-high font-label text-white p-2 w-full outline-none"
-                  style={{ borderRadius: 0 }}
+                  className="bg-surface-container-high/80 font-label text-white p-2.5 w-full outline-none rounded-xl border border-white/10 focus:border-primary/50 transition-colors"
                 >
                   <option value="pc">PC</option>
                   <option value="enemy">Nemico</option>
@@ -241,15 +233,13 @@ export function MapEditorPage() {
             <div className="flex gap-2 mt-5">
               <button
                 onClick={handleAddToken}
-                className="flex-1 py-2 bg-primary text-black font-label text-sm hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all"
-                style={{ borderRadius: 0 }}
+                className="flex-1 py-2.5 bg-gradient-to-r from-primary to-cyan-400 text-black font-label text-sm font-bold rounded-xl hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all cursor-pointer"
               >
                 Aggiungi
               </button>
               <button
                 onClick={() => setShowAddToken(false)}
-                className="flex-1 py-2 bg-surface-container-high text-tertiary font-label text-sm hover:text-white transition-colors"
-                style={{ borderRadius: 0 }}
+                className="flex-1 py-2.5 bg-surface-container-high text-tertiary font-label text-sm font-semibold rounded-xl hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
                 Annulla
               </button>

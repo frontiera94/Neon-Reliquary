@@ -19,6 +19,9 @@ interface SessionStore {
   removeCustomBuff: (characterId: string, buffId: string) => void
   toggleCondition: (characterId: string, condition: ConditionType) => void
   toggleSpellPrepared: (characterId: string, spellId: string, level: number, slotMax: number) => void
+  prepareSpell: (characterId: string, spellId: string) => void
+  unprepareSpell: (characterId: string, spellId: string) => void
+  toggleItemEquipped: (characterId: string, itemId: string) => void
   spendSpellSlot: (characterId: string, level: number, max: number) => void
   recoverSpellSlot: (characterId: string, level: number) => void
   setAmmo: (characterId: string, weaponId: string, amount: number) => void
@@ -39,7 +42,7 @@ interface SessionStore {
   nextRound: (characterId: string) => void
   resetCombatRound: (characterId: string) => void
   setCombatRound: (characterId: string, round: number) => void
-  initSession: (characterId: string, maxHp: number, startingCoins?: CoinPurse) => void
+  initSession: (characterId: string, maxHp: number, startingCoins?: CoinPurse, initialEquippedIds?: string[]) => void
   longRest: (characterId: string, maxHp: number) => void
 }
 
@@ -77,7 +80,7 @@ export function computeNextActionEconomy(
   return updated
 }
 
-const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurse): SessionState => ({
+const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurse, initialEquippedIds?: string[]): SessionState => ({
   characterId,
   currentHp: maxHp,
   tempHp: 0,
@@ -91,6 +94,7 @@ const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurs
   ammo: {},
   activeSummon: null,
   itemQuantities: {},
+  equippedItemIds: initialEquippedIds ?? [],
   coins: startingCoins ?? { gp: 0, sp: 0, cp: 0 },
   companionHp: {},
   companionTempHp: {},
@@ -107,12 +111,30 @@ export const useSessionStore = create<SessionStore>()(
       getSession: (id) =>
         get().sessions[id] ?? defaultSession(id),
 
-      initSession: (id, maxHp, startingCoins) =>
-        set((s) => ({
-          sessions: s.sessions[id]
-            ? s.sessions
-            : { ...s.sessions, [id]: defaultSession(id, maxHp, startingCoins) },
-        })),
+      initSession: (id, maxHp, startingCoins, initialEquippedIds) =>
+        set((s) => {
+          const existing = s.sessions[id]
+          if (!existing) {
+            return {
+              sessions: {
+                ...s.sessions,
+                [id]: defaultSession(id, maxHp, startingCoins, initialEquippedIds),
+              },
+            }
+          }
+          if (existing.equippedItemIds === undefined && initialEquippedIds) {
+            return {
+              sessions: {
+                ...s.sessions,
+                [id]: {
+                  ...existing,
+                  equippedItemIds: initialEquippedIds,
+                },
+              },
+            }
+          }
+          return s
+        }),
 
       setHp: (id, hp) =>
         set((s) => ({
@@ -278,15 +300,10 @@ export const useSessionStore = create<SessionStore>()(
           }
         }),
 
-      toggleSpellPrepared: (id, spellId, level, slotMax) =>
+      toggleSpellPrepared: (id, spellId) =>
         set((s) => {
           const sess = s.sessions[id] ?? defaultSession(id)
           const isPrepared = sess.preparedSpellIds.includes(spellId)
-          const currentSpent = sess.spentSpellSlots[level] ?? 0
-          // Preparing: spend a slot if available. Unpreparing: recover a slot.
-          const newSpent = isPrepared
-            ? Math.max(0, currentSpent - 1)
-            : Math.min(slotMax, currentSpent + 1)
           return {
             sessions: {
               ...s.sessions,
@@ -295,10 +312,54 @@ export const useSessionStore = create<SessionStore>()(
                 preparedSpellIds: isPrepared
                   ? sess.preparedSpellIds.filter((x) => x !== spellId)
                   : [...sess.preparedSpellIds, spellId],
-                spentSpellSlots: {
-                  ...sess.spentSpellSlots,
-                  [level]: newSpent,
-                },
+              },
+            },
+          }
+        }),
+
+      prepareSpell: (id, spellId) =>
+        set((s) => {
+          const sess = s.sessions[id] ?? defaultSession(id)
+          return {
+            sessions: {
+              ...s.sessions,
+              [id]: {
+                ...sess,
+                preparedSpellIds: [...sess.preparedSpellIds, spellId],
+              },
+            },
+          }
+        }),
+
+      unprepareSpell: (id, spellId) =>
+        set((s) => {
+          const sess = s.sessions[id] ?? defaultSession(id)
+          const idx = sess.preparedSpellIds.indexOf(spellId)
+          if (idx === -1) return s
+          const next = [...sess.preparedSpellIds]
+          next.splice(idx, 1)
+          return {
+            sessions: {
+              ...s.sessions,
+              [id]: {
+                ...sess,
+                preparedSpellIds: next,
+              },
+            },
+          }
+        }),
+
+      toggleItemEquipped: (id, itemId) =>
+        set((s) => {
+          const sess = s.sessions[id] ?? defaultSession(id)
+          const list = sess.equippedItemIds ?? []
+          const has = list.includes(itemId)
+          return {
+            sessions: {
+              ...s.sessions,
+              [id]: {
+                ...sess,
+                equippedItemIds: has ? list.filter((x) => x !== itemId) : [...list, itemId],
               },
             },
           }

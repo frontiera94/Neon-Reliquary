@@ -9,6 +9,7 @@ export interface ArmorClass {
   deflection: number
   misc: number
   spellFailureChance: number
+  armorCheckPenalty?: number
 }
 
 export interface SavingThrow {

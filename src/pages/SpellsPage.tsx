@@ -22,7 +22,7 @@ function concentrationMod(charClass: string, level: number, abilities: AbilitySc
 export function SpellsPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => char ? s.getSession(char.id) : null)
-  const { toggleSpellPrepared, spendSpellSlot, recoverSpellSlot } = useSessionStore()
+  const { toggleSpellPrepared, prepareSpell, unprepareSpell, spendSpellSlot, recoverSpellSlot } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
   const [search, setSearch] = useState('')
   const [levelFilter, setLevelFilter] = useState<number | 'all'>('all')
@@ -49,6 +49,7 @@ export function SpellsPage() {
 
   const preparedIds = session?.preparedSpellIds ?? []
   const spentSlots = session?.spentSpellSlots ?? {}
+  const isSpontaneous = /sorcerer|bard|oracle|inquisitor|summoner|bloodrager|skald|hunter/i.test(char.class)
 
   const arcaneFailure = char.armorClass.spellFailureChance ?? 0
   const concMod = concentrationMod(char.class, char.level, char.abilities)
@@ -74,7 +75,7 @@ export function SpellsPage() {
           The Repository
         </h1>
         <p className="text-tertiary font-label uppercase text-sm tracking-[0.2em]">
-          Arcane Knowledge & Prepared Invocations
+          {isSpontaneous ? 'Spontaneous Spells Known & Slot Management' : 'Arcane Knowledge & Prepared Invocations'}
         </p>
 
         {arcaneFailure > 0 && (
@@ -190,25 +191,42 @@ export function SpellsPage() {
         .map((lvl) => {
           const levelSpells = filteredSpells.filter((s) => s.level === lvl)
           if (levelSpells.length === 0) return null
+          const slotMax = char.spellSlots.find((sl) => sl.level === lvl)?.total ?? 0
+          const levelPreparedCount = preparedIds.filter((id) =>
+            char.spells.some((s) => s.id === id && s.level === lvl)
+          ).length
+          const isLevelFull = slotMax > 0 && levelPreparedCount >= slotMax
+
           return (
             <div key={lvl} className="mb-8">
               <div className="flex items-center gap-4 mb-3">
                 <h3 className="font-label text-xs uppercase tracking-[0.2em] text-primary font-bold">
-                  Level {lvl}
+                  Level {lvl} {!isSpontaneous && slotMax > 0 ? `· Prepared: ${levelPreparedCount}/${slotMax}` : ''}
                 </h3>
                 <div className="flex-1 h-px bg-white/10" />
               </div>
               <div className="space-y-2">
                 {levelSpells.map((spell) => {
-                  const slotMax = char.spellSlots.find((sl) => sl.level === spell.level)?.total ?? 0
                   const atkBonus = spell.attackType ? attackBonusFor(spell.attackType) : 0
+                  const count = preparedIds.filter((id) => id === spell.id).length
+                  const isPrepared = isSpontaneous || count > 0
+                  const canPrepareMore = !isLevelFull
+
                   return (
                     <SpellRow
                       key={spell.id}
                       spell={spell}
-                      isPrepared={preparedIds.includes(spell.id)}
+                      isSpontaneous={isSpontaneous}
+                      isPrepared={isPrepared}
+                      preparedCount={count}
+                      canPrepareMore={canPrepareMore}
                       attackLabel={spell.attackType ? `${attackLabel[spell.attackType]} (${atkBonus >= 0 ? `+${atkBonus}` : atkBonus})` : undefined}
-                      onTogglePrepare={() => toggleSpellPrepared(char.id, spell.id, spell.level, slotMax)}
+                      onTogglePrepare={() => {
+                        if (!isPrepared && !canPrepareMore) return
+                        toggleSpellPrepared(char.id, spell.id, spell.level, slotMax)
+                      }}
+                      onAddPrepare={canPrepareMore ? () => prepareSpell(char.id, spell.id) : undefined}
+                      onRemovePrepare={() => unprepareSpell(char.id, spell.id)}
                       onAttack={
                         spell.attackType
                           ? () => openRoll({ diceType: 20, count: 1, modifier: atkBonus, label: `${spell.name} (Attack)` })
@@ -217,8 +235,8 @@ export function SpellsPage() {
                       onDamage={
                         spell.damageDice
                           ? () => {
-                              const { count, sides, bonus } = parseDiceFormula(spell.damageDice!)
-                              openRoll({ diceType: sides, count, modifier: (spell.damageBonus ?? 0) + bonus, label: `${spell.name} (Damage)` })
+                              const { count: dCount, sides, bonus } = parseDiceFormula(spell.damageDice!)
+                              openRoll({ diceType: sides, count: dCount, modifier: (spell.damageBonus ?? 0) + bonus, label: `${spell.name} (Damage)` })
                             }
                           : undefined
                       }
@@ -236,37 +254,93 @@ export function SpellsPage() {
 function SpellRow({
   spell,
   isPrepared,
+  isSpontaneous = false,
+  preparedCount = 0,
+  canPrepareMore = true,
   attackLabel,
   onTogglePrepare,
+  onAddPrepare,
+  onRemovePrepare,
   onAttack,
   onDamage,
 }: {
   spell: Spell
   isPrepared: boolean
+  isSpontaneous?: boolean
+  preparedCount?: number
+  canPrepareMore?: boolean
   attackLabel?: string
   onTogglePrepare: () => void
+  onAddPrepare?: () => void
+  onRemovePrepare?: () => void
   onAttack?: () => void
   onDamage?: () => void
 }) {
   return (
     <details className={`w-full group rounded-xl overflow-hidden border transition-all ${isPrepared ? 'border-primary/50 shadow-[0_0_12px_rgba(0,240,255,0.15)]' : 'border-white/[0.08]'}`}>
       <summary className={`transition-all flex items-center gap-4 p-4 cursor-pointer list-none ${isPrepared ? 'bg-primary/10 hover:bg-primary/15' : 'bg-surface-container/90 hover:bg-surface-container-high'}`}>
-        {/* Prepared toggle */}
-        <button
-          onClick={(e) => { e.preventDefault(); onTogglePrepare() }}
-          className={`w-5 h-5 rounded-md flex-shrink-0 border transition-all flex items-center justify-center cursor-pointer ${isPrepared ? 'bg-primary border-primary shadow-[0_0_8px_rgba(0,240,255,0.5)]' : 'border-white/20 hover:border-primary'}`}
-          aria-label={`${isPrepared ? 'Unprepare' : 'Prepare'} ${spell.name}`}
-        >
-          {isPrepared && (
-            <span className="material-symbols-outlined text-black leading-none font-bold" style={{ fontSize: '14px' }}>check</span>
-          )}
-        </button>
+        {/* Prepared toggle or Spontaneous badge */}
+        {isSpontaneous ? (
+          <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/40 px-2 py-0.5 rounded-md uppercase font-bold flex-shrink-0">
+            Known
+          </span>
+        ) : (
+          <button
+            onClick={(e) => { e.preventDefault(); onTogglePrepare() }}
+            disabled={!isPrepared && !canPrepareMore}
+            className={`w-5 h-5 rounded-md flex-shrink-0 border transition-all flex items-center justify-center ${
+              isPrepared
+                ? 'bg-primary border-primary shadow-[0_0_8px_rgba(0,240,255,0.5)] cursor-pointer'
+                : !canPrepareMore
+                ? 'border-white/10 opacity-30 cursor-not-allowed'
+                : 'border-white/20 hover:border-primary cursor-pointer'
+            }`}
+            aria-label={`${isPrepared ? 'Unprepare' : 'Prepare'} ${spell.name}`}
+            title={!isPrepared && !canPrepareMore ? 'All slots prepared for this level' : undefined}
+          >
+            {isPrepared && (
+              <span className="material-symbols-outlined text-black leading-none font-bold" style={{ fontSize: '14px' }}>check</span>
+            )}
+          </button>
+        )}
         {/* Name + meta */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
             <span className={`font-headline font-bold ${isPrepared ? 'text-primary' : 'text-white'}`}>{spell.name}</span>
-            {isPrepared && (
-              <span className="font-label text-[9px] text-black font-bold bg-primary px-2 py-0.5 rounded-full uppercase tracking-widest">Prepared</span>
+            {!isSpontaneous && isPrepared && (
+              <div
+                className="flex items-center gap-1.5 bg-primary/20 border border-primary/40 rounded-full px-2 py-0.5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="font-label text-[9px] text-primary font-bold uppercase tracking-widest">
+                  Prepared {preparedCount > 1 ? `x${preparedCount}` : ''}
+                </span>
+                {onRemovePrepare && (
+                  <button
+                    onClick={(e) => { e.preventDefault(); onRemovePrepare() }}
+                    className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-primary hover:text-white hover:bg-primary/40 text-[10px] font-bold cursor-pointer"
+                    title="Remove one prepared copy"
+                    aria-label={`Remove one prepared ${spell.name}`}
+                  >
+                    -
+                  </button>
+                )}
+                {onAddPrepare && (
+                  <button
+                    onClick={(e) => { e.preventDefault(); onAddPrepare() }}
+                    disabled={!canPrepareMore}
+                    className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-primary text-[10px] font-bold ${
+                      canPrepareMore
+                        ? 'hover:text-white hover:bg-primary/40 cursor-pointer'
+                        : 'opacity-30 cursor-not-allowed'
+                    }`}
+                    title={canPrepareMore ? 'Prepare an additional copy' : 'No more slots available for this level'}
+                    aria-label={`Prepare another copy of ${spell.name}`}
+                  >
+                    +
+                  </button>
+                )}
+              </div>
             )}
             <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-md uppercase">
               {spell.school}{spell.subschool ? ` (${spell.subschool})` : ''}

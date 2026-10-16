@@ -322,27 +322,50 @@ export function FullAttackModal({
                             <span>Confirm Crit</span>
                           </button>
                         )}
-                        <button
-                          onClick={() =>
-                            onRollDamage(
-                              `${weapon.name} (${r.label}) Dmg`,
-                              totalDmgMod,
-                              isCritConfirmed
-                            )
-                          }
-                          className={`w-full sm:w-auto px-3.5 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 ${
-                            isCritConfirmed
-                              ? 'bg-secondary/25 hover:bg-secondary/35 border border-secondary text-secondary shadow-[0_0_12px_rgba(217,70,239,0.3)] hover:shadow-[0_0_18px_rgba(217,70,239,0.5)]'
-                              : 'bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary hover:shadow-[0_0_12px_rgba(0,240,255,0.25)]'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-xs">swords</span>
-                          {isCritConfirmed ? (
-                            <span>Roll Crit Dmg (x{weapon.critMultiplier})</span>
-                          ) : (
+                        {isCritConfirmed ? (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <button
+                              onClick={() =>
+                                onRollDamage(
+                                  `${weapon.name} (${r.label}) Dmg`,
+                                  totalDmgMod,
+                                  true
+                                )
+                              }
+                              className="w-full sm:w-auto px-3 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 bg-secondary/25 hover:bg-secondary/35 border border-secondary text-secondary shadow-[0_0_12px_rgba(217,70,239,0.3)] hover:shadow-[0_0_18px_rgba(217,70,239,0.5)]"
+                            >
+                              <span className="material-symbols-outlined text-xs">swords</span>
+                              <span>Roll Crit Dmg (x{weapon.critMultiplier})</span>
+                            </button>
+                            <button
+                              onClick={() =>
+                                onRollDamage(
+                                  `${weapon.name} (${r.label}) Dmg`,
+                                  totalDmgMod,
+                                  false
+                                )
+                              }
+                              className="w-full sm:w-auto px-3 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 bg-surface-container-high hover:bg-surface-container-highest border border-white/10 hover:border-primary/40 text-primary"
+                            >
+                              <span className="material-symbols-outlined text-xs">swords</span>
+                              <span>Roll Normal Dmg</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              onRollDamage(
+                                `${weapon.name} (${r.label}) Dmg`,
+                                totalDmgMod,
+                                false
+                              )
+                            }
+                            className="w-full sm:w-auto px-3.5 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary hover:shadow-[0_0_12px_rgba(0,240,255,0.25)]"
+                          >
+                            <span className="material-symbols-outlined text-xs">swords</span>
                             <span>Roll Dmg ({weapon.damageDice}{totalDmgMod >= 0 ? `+${totalDmgMod}` : totalDmgMod})</span>
-                          )}
-                        </button>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

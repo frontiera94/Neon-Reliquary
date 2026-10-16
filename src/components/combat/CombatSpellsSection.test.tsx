@@ -414,5 +414,16 @@ describe('CombatSpellsSection', () => {
     fireEvent.click(unpinShockingBtn)
     expect(screen.getByRole('button', { name: /pin shocking grasp/i })).toBeInTheDocument()
   })
+
+  it('displays all known spells for spontaneous casters even with empty preparedSpellIds', () => {
+    renderComponent({
+      charClass: 'Inquisitor',
+      preparedSpellIds: [],
+    })
+
+    // Both level 1 spells (Shocking Grasp, Shield) should be displayed without preparation
+    expect(screen.getByText('Shocking Grasp')).toBeInTheDocument()
+    expect(screen.getByText('Shield')).toBeInTheDocument()
+  })
 })
 

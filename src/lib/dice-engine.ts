@@ -53,8 +53,9 @@ export function rollDice(roll: DiceRoll): RollResult {
 }
 
 export function parseDiceFormula(formula: string): { count: number; sides: DiceType; bonus: number } {
-  // e.g. "2d6", "1d8+3", "d20+5"
-  const match = formula.match(/^(\d*)d(\d+)([+-]\d+)?$/)
+  // e.g. "2d6", "1d8+3", "1d8 + 2", "d20+5"
+  const clean = formula.trim().replace(/\s+/g, '')
+  const match = clean.match(/^(\d*)d(\d+)([+-]\d+)?$/i)
   if (!match) return { count: 1, sides: 20, bonus: 0 }
   const count = match[1] ? parseInt(match[1]) : 1
   const sides = parseInt(match[2]) as DiceType

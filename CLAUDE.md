@@ -29,7 +29,7 @@ The test suite is powered by Vitest (`npm test`). Global setup in `src/test/setu
 
 ### Data flow for combat calculations
 
-`CombatPage` calls `calcEffectiveWeapon(weapon, char.buffs, session.activeBuffIds)` from `src/lib/combat-calc.ts` to derive display values. Buff modifiers live on the `BuffToggle` objects in `FullCharacter.buffs`; active state lives in `SessionState.activeBuffIds`. The two are joined at render time — never precomputed.
+`CombatPage` calls `calcEffectiveWeaponStats(weapon, char.abilities, effectiveAbilities, session.conditions, allBuffs, session.activeBuffIds)` from `src/lib/stat-calc.ts` to derive display values. Buff modifiers live on the `BuffToggle` objects in `FullCharacter.buffs`; active state lives in `SessionState.activeBuffIds`. The two are joined at render time — never precomputed.
 
 ### `FullCharacter` is the central type
 
