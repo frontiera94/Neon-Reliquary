@@ -7,6 +7,7 @@ import { useInspectorStore } from '../store/useInspectorStore'
 import { abilityMod } from '../lib/dice-engine'
 import { CONDITION_INFO } from '../lib/conditions'
 import { conditionInspectorItem } from '../lib/inspector-items'
+import { getSpellAvailability } from '../lib/spell-availability'
 import {
   calcEffectiveAbilities,
   calcEffectiveArmorClass,
@@ -51,6 +52,8 @@ export function StatusPage() {
     setTempHp,
     toggleCondition,
     longRest,
+    spendSpellSlot,
+    recoverSpellSlot,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
   const openInspector = useInspectorStore((s) => s.openInspector)
@@ -86,6 +89,7 @@ export function StatusPage() {
     activeBuffs
   )
   const restrictions = getActiveActionRestrictions(session.conditions)
+  const spellAvailability = getSpellAvailability(char, session)
 
   const hp = session.currentHp
   const maxHp = char.maxHp
@@ -415,6 +419,51 @@ export function StatusPage() {
             )
           })}
         </section>
+
+        {/* Spell Slots */}
+        {spellAvailability.levels.some((level) => level.total > 0) && (
+          <section className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
+                Spell Slots
+              </h2>
+              <span className="font-label text-[10px] text-tertiary uppercase tracking-wider tabular-nums">
+                {spellAvailability.remainingSlots}/{spellAvailability.totalSlots} remaining
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-6">
+              {spellAvailability.levels.filter((level) => level.total > 0).map((level) => (
+                <div key={level.level}>
+                  <p className="font-label text-[10px] text-tertiary uppercase tracking-widest mb-2 font-bold tabular-nums">
+                    Level {level.level}: {level.remaining}/{level.total}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Array.from({ length: level.total }).map((_, index) => {
+                      const isSpent = index >= level.remaining
+                      return (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() =>
+                            isSpent
+                              ? recoverSpellSlot(char.id, level.level)
+                              : spendSpellSlot(char.id, level.level, level.total)
+                          }
+                          aria-label={`Toggle spell slot level ${level.level} ${index + 1}`}
+                          className={`min-h-[32px] min-w-[32px] rounded-md border transition-all cursor-pointer ${
+                            isSpent
+                              ? 'bg-surface-container-highest border-white/10 hover:border-primary/40'
+                              : 'bg-primary border-primary shadow-[0_0_8px_rgba(0,240,255,0.35)] hover:brightness-110'
+                          }`}
+                        />
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Daily Resources */}
         {char.dailyResources.length > 0 && (

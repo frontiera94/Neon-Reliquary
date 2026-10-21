@@ -290,16 +290,6 @@
       "id": "darkness-sla",
       "name": "Darkness (SLA)",
       "total": 1
-    },
-    {
-      "id": "spells-1",
-      "name": "Lvl 1 Spells",
-      "total": 5
-    },
-    {
-      "id": "spells-2",
-      "name": "Lvl 2 Spells",
-      "total": 3
     }
   ],
   "feats": [
@@ -822,10 +812,28 @@
         }
       ],
       "skills": [
-        { "name": "Stealth", "bonus": 14, "ability": "dex", "notes": "+8 size, +4 racial" },
-        { "name": "Perception", "bonus": 5, "ability": "wis" },
-        { "name": "Acrobatics", "bonus": 10, "ability": "dex", "notes": "+4 racial on jumping" },
-        { "name": "Climb", "bonus": 6, "ability": "dex" }
+        {
+          "name": "Stealth",
+          "bonus": 14,
+          "ability": "dex",
+          "notes": "+8 size, +4 racial"
+        },
+        {
+          "name": "Perception",
+          "bonus": 5,
+          "ability": "wis"
+        },
+        {
+          "name": "Acrobatics",
+          "bonus": 10,
+          "ability": "dex",
+          "notes": "+4 racial on jumping"
+        },
+        {
+          "name": "Climb",
+          "bonus": 6,
+          "ability": "dex"
+        }
       ],
       "specialQualities": [
         {
@@ -873,5 +881,9 @@
         "notes": "Salem stores all spells and delivers touch attacks/hexes."
       }
     }
-  ]
+  ],
+  "spellcasting": {
+    "mode": "prepared",
+    "ability": "int"
+  }
 }

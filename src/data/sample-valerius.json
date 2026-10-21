@@ -319,26 +319,6 @@
       "id": "bane",
       "name": "Bane",
       "total": 12
-    },
-    {
-      "id": "spells-1",
-      "name": "Lvl 1 Spells",
-      "total": 5
-    },
-    {
-      "id": "spells-2",
-      "name": "Lvl 2 Spells",
-      "total": 4
-    },
-    {
-      "id": "spells-3",
-      "name": "Lvl 3 Spells",
-      "total": 4
-    },
-    {
-      "id": "spells-4",
-      "name": "Lvl 4 Spells",
-      "total": 3
     }
   ],
   "feats": [
@@ -652,5 +632,9 @@
     "gp": 1620,
     "sp": 150,
     "cp": 0
+  },
+  "spellcasting": {
+    "mode": "spontaneous",
+    "ability": "wis"
   }
 }

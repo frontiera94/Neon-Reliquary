@@ -110,10 +110,14 @@ describe('Character JSON integrity', () => {
       expect(totalRanks).toBe(60)
     })
 
-    it('has Vanish and Acid Splash with 1st-level spell slot', () => {
-      expect(mariano.spells.some((s) => s.id === 'vanish')).toBe(true)
-      expect(mariano.spells.some((s) => s.id === 'acid-splash')).toBe(true)
-      expect(mariano.spellSlots.find((s) => s.level === 1)?.total).toBe(2)
+    it('models Vanish as a 2/day SLA and Acid Splash as at-will', () => {
+      const vanish = mariano.spells.find((s) => s.id === 'vanish')
+      const acidSplash = mariano.spells.find((s) => s.id === 'acid-splash')
+      expect(vanish?.source).toBe('sla')
+      expect(vanish?.resourceId).toBe('major-magic-vanish')
+      expect(acidSplash?.atWill).toBe(true)
+      expect(mariano.spellSlots).toHaveLength(0)
+      expect(mariano.dailyResources.find((r) => r.id === 'major-magic-vanish')?.total).toBe(2)
     })
 
     it('has Major Magic and Rogue\'s Edge features', () => {

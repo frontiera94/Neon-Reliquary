@@ -16,6 +16,9 @@ export interface SessionState {
   activeBuffIds: string[]
   conditions: ConditionType[]
   customBuffs?: BuffToggle[]
+  /** Canonical prepared-copy counts keyed by spell id. */
+  preparedSpells?: Record<string, number>
+  /** Derived flattened list kept for backwards compatibility. */
   preparedSpellIds: string[]
   spentSpellSlots: Record<number, number>
   ammo: Record<string, number>

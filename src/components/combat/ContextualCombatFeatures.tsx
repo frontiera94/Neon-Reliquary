@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useCharacterStore, type FullCharacter } from '../../store/useCharacterStore'
 import { useSessionStore } from '../../store/useSessionStore'
 import { useInspectorStore } from '../../store/useInspectorStore'
@@ -67,6 +67,9 @@ export interface ContextualCombatFeaturesProps {
   maxPassive?: number
   compact?: boolean
   limit?: number
+  /** Fold the feature grid into a single summary row. */
+  collapsible?: boolean
+  defaultCollapsed?: boolean
 }
 
 /**
@@ -80,7 +83,10 @@ export function ContextualCombatFeatures({
   maxPassive = 4,
   compact = false,
   limit,
+  collapsible = false,
+  defaultCollapsed = false,
 }: ContextualCombatFeaturesProps) {
+  const [isCollapsed, setIsCollapsed] = useState(collapsible && defaultCollapsed)
   const storeCharacter = useCharacterStore((s) => s.activeCharacter())
   const character = characterProp ?? storeCharacter
   const storeSession = useSessionStore((s) => (character ? s.getSession(character.id) : null))
@@ -111,17 +117,58 @@ export function ContextualCombatFeatures({
 
   if (!character || !session || features.length === 0) return null
 
+  const summary = GROUP_ORDER.map((actionType) => {
+    const count = groups[actionType]?.length ?? 0
+    return count > 0 ? `${ACTION_ECONOMY_LABEL[actionType]} ${count}` : null
+  })
+    .filter(Boolean)
+    .join(' · ')
+
   return (
-    <section className={`bg-[#11131c] border border-white/10 rounded-xl ${compact ? 'p-3' : 'p-4'} ${className}`}>
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <h3 className="font-headline text-sm uppercase tracking-widest text-secondary font-bold">
-          Combat Features
-        </h3>
-        <span className="font-label text-[10px] text-tertiary tabular-nums uppercase tracking-wider">
-          {features.length} available
-        </span>
+    <section className={`rounded-2xl border border-white/10 bg-surface-container/70 backdrop-blur-sm ${compact ? 'p-3' : 'p-4'} ${className}`}>
+      <div
+        role={collapsible ? 'button' : undefined}
+        tabIndex={collapsible ? 0 : undefined}
+        onClick={collapsible ? () => setIsCollapsed((value) => !value) : undefined}
+        onKeyDown={
+          collapsible
+            ? (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  setIsCollapsed((value) => !value)
+                }
+              }
+            : undefined
+        }
+        aria-expanded={collapsible ? !isCollapsed : undefined}
+        aria-label={collapsible ? (isCollapsed ? 'Show combat features' : 'Hide combat features') : undefined}
+        className={`flex items-center justify-between gap-3 ${isCollapsed ? '' : 'mb-3'} ${
+          collapsible ? 'cursor-pointer select-none rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60' : ''
+        }`}
+      >
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+          <h3 className="font-headline text-base font-bold text-white">
+            Combat Features
+          </h3>
+          <span className="font-label text-[10px] tabular-nums text-tertiary">
+            {features.length} available
+          </span>
+          {isCollapsed && summary && (
+            <span className="w-full truncate font-label text-[10px] text-tertiary/80">
+              {summary}
+            </span>
+          )}
+        </div>
+        <div className="flex flex-shrink-0 items-center gap-2">
+          {collapsible && (
+            <span className={`material-symbols-outlined text-tertiary transition-transform ${isCollapsed ? '' : 'rotate-180'}`}>
+              expand_more
+            </span>
+          )}
+        </div>
       </div>
 
+      {!isCollapsed && (
       <div className="space-y-3">
         {GROUP_ORDER.map((actionType) => {
           const group = groups[actionType]
@@ -212,6 +259,7 @@ export function ContextualCombatFeatures({
           )
         })}
       </div>
+      )}
     </section>
   )
 }

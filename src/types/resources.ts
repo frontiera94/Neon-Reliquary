@@ -31,6 +31,8 @@ export interface SummonOption {
 
 export type SpellAttackType = 'rangedTouch' | 'meleeTouch' | 'ray'
 
+export type SpellSource = 'class' | 'domain' | 'sla' | 'bloodline' | 'item'
+
 export interface Spell {
   id: string
   name: string
@@ -50,4 +52,12 @@ export interface Spell {
   damageDice?: string
   damageBonus?: number
   summonOptions?: SummonOption[]
+  /** Where the spell comes from. Defaults to 'class'. */
+  source?: SpellSource
+  /** Domain/bloodline/class feature spells that never need preparation. */
+  alwaysPrepared?: boolean
+  /** Spell-like abilities or cantrips that do not consume slots. */
+  atWill?: boolean
+  /** Daily resource that powers an SLA (e.g. Mariano's Vanish). */
+  resourceId?: string
 }

@@ -9,13 +9,12 @@ import {
   calcEffectiveAbilities,
   calcEffectiveArmorClass,
   calcEffectiveSaves,
-  calcSpellDc,
   deriveBuffFromSpell,
   findMatchingBuffForSpell,
-  getCastingAbilityKey,
   isSpellBuffCandidate,
 } from '../../lib/stat-calc'
 import { abilityMod } from '../../lib/dice-engine'
+import { getSpellAvailability } from '../../lib/spell-availability'
 import { CONDITION_INFO } from '../../lib/conditions'
 import { ACTION_ECONOMY_LABEL, categorizeFeatures } from '../../lib/action-economy'
 import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
@@ -379,6 +378,7 @@ function BentoLibraryColumn() {
   const addCustomBuff = useSessionStore((s) => s.addCustomBuff)
   const spendSpellSlot = useSessionStore((s) => s.spendSpellSlot)
   const recoverSpellSlot = useSessionStore((s) => s.recoverSpellSlot)
+  const spendResource = useSessionStore((s) => s.spendResource)
   const openInspector = useInspectorStore((s) => s.openInspector)
   const [tab, setTab] = useState<'spells' | 'features'>('spells')
 
@@ -387,8 +387,8 @@ function BentoLibraryColumn() {
 
   if (!char || !session) return null
 
-  const castingKey = getCastingAbilityKey(char.class)
-  const castingMod = abilityMod(char.abilities[castingKey])
+  const availability = getSpellAvailability(char, session)
+  const castingMod = availability.castingMod
   const concentration = calcConcentrationBonus(char.level, castingMod)
   const hasCombatCasting = char.feats.some((feat) => /combat casting/i.test(feat.name))
 
@@ -401,9 +401,13 @@ function BentoLibraryColumn() {
       if (match) toggleBuff(char.id, match.id)
       return
     }
-    const slotMax = char.spellSlots.find((slot) => slot.level === spell.level)?.total ?? 0
-    const spent = session.spentSpellSlots[spell.level] ?? 0
-    if (spell.level > 0 && spent < slotMax) spendSpellSlot(char.id, spell.level, slotMax)
+    if (!availability.isCastable(spell)) return
+    if (availability.slotCost(spell) > 0) {
+      const level = availability.getLevel(spell.level)
+      if (level) spendSpellSlot(char.id, spell.level, level.total)
+    }
+    const resource = availability.resourceFor(spell)
+    if (resource && spell.source === 'sla') spendResource(char.id, resource.id, resource.total)
     if (match) toggleBuff(char.id, match.id)
     else addCustomBuff(char.id, deriveBuffFromSpell(spell))
   }
@@ -435,48 +439,44 @@ function BentoLibraryColumn() {
           ))}
         </div>
         <span className="font-label text-[9px] text-tertiary tabular-nums">
-          {tab === 'spells' ? char.spells.length : categorized.length}
+          {tab === 'spells' ? availability.castableSpells.length : categorized.length}
         </span>
       </header>
 
-      {char.spellSlots.length > 0 && (
+      {availability.levels.some((level) => level.total > 0) && (
         <div className="flex flex-wrap gap-x-3 gap-y-1.5 px-2.5 py-2 border-b border-white/10 bg-[#0f1118]">
-          {char.spellSlots.map((slot) => {
-            const spent = session.spentSpellSlots[slot.level] ?? 0
-            const available = Math.max(0, slot.total - spent)
-            return (
-              <div key={slot.level} className="flex items-center gap-1">
-                <span className="font-label text-[8px] uppercase tracking-widest text-tertiary tabular-nums">
-                  L{slot.level}
-                </span>
-                <div className="flex gap-0.5">
-                  {Array.from({ length: slot.total }).map((_, index) => {
-                    const isSpent = index >= available
-                    return (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() =>
-                          isSpent
-                            ? recoverSpellSlot(char.id, slot.level)
-                            : spendSpellSlot(char.id, slot.level, slot.total)
-                        }
-                        aria-label={`Spell slot level ${slot.level} ${index + 1}`}
-                        className={`w-2.5 h-4 rounded-sm border transition-colors cursor-pointer ${
-                          isSpent
-                            ? 'border-white/15 bg-white/5'
-                            : 'border-primary/50 bg-primary shadow-[0_0_5px_rgba(0,240,255,0.45)]'
-                        }`}
-                      />
-                    )
-                  })}
-                </div>
-                <span className="font-label text-[8px] text-tertiary tabular-nums">
-                  {available}/{slot.total}
-                </span>
+          {availability.levels.filter((level) => level.total > 0).map((level) => (
+            <div key={level.level} className="flex items-center gap-1">
+              <span className="font-label text-[8px] uppercase tracking-widest text-tertiary tabular-nums">
+                L{level.level}
+              </span>
+              <div className="flex gap-0.5">
+                {Array.from({ length: level.total }).map((_, index) => {
+                  const isSpent = index >= level.remaining
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() =>
+                        isSpent
+                          ? recoverSpellSlot(char.id, level.level)
+                          : spendSpellSlot(char.id, level.level, level.total)
+                      }
+                      aria-label={`Spell slot level ${level.level} ${index + 1}`}
+                      className={`w-2.5 h-4 rounded-sm border transition-colors cursor-pointer ${
+                        isSpent
+                          ? 'border-white/15 bg-white/5'
+                          : 'border-primary/50 bg-primary shadow-[0_0_5px_rgba(0,240,255,0.45)]'
+                      }`}
+                    />
+                  )
+                })}
               </div>
-            )
-          })}
+              <span className="font-label text-[8px] text-tertiary tabular-nums">
+                {level.remaining}/{level.total}
+              </span>
+            </div>
+          ))}
         </div>
       )}
 
@@ -503,7 +503,7 @@ function BentoLibraryColumn() {
                         tags: [`Lv ${spell.level}`, spell.school, spell.spellResistance ? 'SR: Yes' : 'SR: No'],
                         notes: [
                           `Duration: ${spell.duration}`,
-                          `Save DC: ${calcSpellDc(spell.level, castingMod)}`,
+                          `Save DC: ${availability.spellDc(spell)}`,
                         ],
                       })
                     }
@@ -514,7 +514,7 @@ function BentoLibraryColumn() {
                         {spell.name}
                       </span>
                       <span className="font-label text-[9px] text-tertiary tabular-nums flex-shrink-0">
-                        {calcSpellDc(spell.level, castingMod)}
+                        {availability.spellDc(spell)}
                       </span>
                     </div>
                     <p className="font-label text-[8px] uppercase tracking-widest text-tertiary truncate">

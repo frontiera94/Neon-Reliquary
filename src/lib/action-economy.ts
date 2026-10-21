@@ -113,7 +113,10 @@ export function getDefensiveBadges(character: FullCharacter): DefensiveBadge[] {
     })
   }
 
-  return badges
+  // Racial defenses can duplicate a class ability with the same name.
+  return badges.filter(
+    (badge, index, list) => list.findIndex((entry) => entry.name === badge.name) === index
+  )
 }
 
 function findLinkedResource(

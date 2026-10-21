@@ -5,6 +5,7 @@ import { useDiceStore } from '../store/useDiceStore'
 import { useInspectorStore } from '../store/useInspectorStore'
 import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
 import { deriveBuffFromSpell, findMatchingBuffForSpell, isSpellBuffCandidate } from '../lib/stat-calc'
+import { getSpellAvailability } from '../lib/spell-availability'
 import { spellInspectorItem } from '../lib/inspector-items'
 import type { Spell, SpellAttackType } from '../types/resources'
 import type { AbilityScore } from '../types/character'
@@ -25,7 +26,7 @@ function concentrationMod(charClass: string, level: number, abilities: AbilitySc
 export function SpellsPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => char ? s.getSession(char.id) : null)
-  const { toggleSpellPrepared, prepareSpell, unprepareSpell, spendSpellSlot, recoverSpellSlot, toggleBuff, addCustomBuff } = useSessionStore()
+  const { toggleSpellPrepared, prepareSpell, unprepareSpell, spendSpellSlot, recoverSpellSlot, toggleBuff, addCustomBuff, spendResource } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
   const openInspector = useInspectorStore((s) => s.openInspector)
   const [search, setSearch] = useState('')
@@ -51,13 +52,14 @@ export function SpellsPage() {
     return true
   })
 
-  const preparedIds = session?.preparedSpellIds ?? []
-  const spentSlots = session?.spentSpellSlots ?? {}
-  const isSpontaneous = /sorcerer|bard|oracle|inquisitor|summoner|bloodrager|skald|hunter/i.test(char.class)
+  const availability = getSpellAvailability(char, session ?? {})
+  const isSpontaneous = availability.profile.mode === 'spontaneous'
+  const isPreparedCaster = availability.profile.mode === 'prepared'
 
   const arcaneFailure = char.armorClass.spellFailureChance ?? 0
   const concMod = concentrationMod(char.class, char.level, char.abilities)
   const hasCombatCasting = char.feats.some((f) => /combat casting/i.test(f.name))
+  const defensiveConcMod = concMod + (hasCombatCasting ? 4 : 0)
 
   const bab = char.baseAttackBonus[0] ?? 0
   const dexMod = abilityMod(char.abilities.dex)
@@ -66,10 +68,26 @@ export function SpellsPage() {
     t === 'meleeTouch' ? bab + strMod : bab + dexMod
 
   const allBuffs = [...char.buffs, ...(session?.customBuffs ?? [])]
+  const isAlwaysPrepared = (spell: Spell) =>
+    Boolean(spell.alwaysPrepared || spell.source === 'domain' || spell.source === 'bloodline')
 
   const isSpellBuffActive = (spell: Spell) => {
     const match = findMatchingBuffForSpell(spell, allBuffs)
     return session?.activeBuffIds.includes(match?.id ?? `spell-buff-${spell.id}`) ?? false
+  }
+
+  const consumeCastCost = (spell: Spell): boolean => {
+    if (!availability.isCastable(spell)) return false
+    if (availability.slotCost(spell) > 0) {
+      const level = availability.getLevel(spell.level)
+      if (!level) return false
+      spendSpellSlot(char.id, level.level, level.total)
+    }
+    const resource = availability.resourceFor(spell)
+    if (resource && spell.source === 'sla') {
+      spendResource(char.id, resource.id, resource.total)
+    }
+    return true
   }
 
   const activateSpellBuff = (spell: Spell) => {
@@ -80,17 +98,25 @@ export function SpellsPage() {
       if (match) toggleBuff(char.id, match.id)
       return
     }
-    const slotMax = char.spellSlots.find((slot) => slot.level === spell.level)?.total ?? 0
-    const spent = session.spentSpellSlots[spell.level] ?? 0
-    if (spell.level > 0 && spent < slotMax) spendSpellSlot(char.id, spell.level, slotMax)
+    if (!consumeCastCost(spell)) return
     if (match) toggleBuff(char.id, match.id)
     else addCustomBuff(char.id, deriveBuffFromSpell(spell))
+  }
+
+  const castAndRoll = (spell: Spell, roll: () => void) => {
+    if (!consumeCastCost(spell)) return
+    roll()
   }
 
   const inspectSpell = (spell: Spell) => {
     openInspector(
       spellInspectorItem(spell, {
-        tags: isSpellBuffActive(spell) ? ['Buff Active'] : [],
+        dc: availability.spellDc(spell),
+        tags: [
+          ...(isSpellBuffActive(spell) ? ['Buff Active'] : []),
+          ...(isAlwaysPrepared(spell) ? ['Always Prepared'] : []),
+          ...(spell.source === 'sla' ? ['SLA'] : []),
+        ],
         actions: isSpellBuffCandidate(spell)
           ? [
               {
@@ -118,7 +144,11 @@ export function SpellsPage() {
           The Repository
         </h1>
         <p className="text-tertiary font-label uppercase text-sm tracking-[0.2em]">
-          {isSpontaneous ? 'Spontaneous Spells Known & Slot Management' : 'Arcane Knowledge & Prepared Invocations'}
+          {isSpontaneous
+            ? `Spontaneous caster · ${availability.knownCount} known · ${availability.remainingSlots} slots remaining`
+            : isPreparedCaster
+            ? `Prepared caster · ${availability.preparedCount}/${availability.preparedCapacity} prepared · ${availability.remainingSlots} slots remaining`
+            : `Spell-like abilities · ${availability.remainingSlots} spell slots`}
         </p>
 
         {arcaneFailure > 0 && (
@@ -145,55 +175,56 @@ export function SpellsPage() {
               className="px-4 py-2 bg-surface-container/90 border border-white/10 rounded-xl text-tertiary font-label text-xs uppercase tracking-widest hover:text-secondary hover:border-secondary/50 hover:shadow-[0_0_12px_rgba(217,70,239,0.3)] transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
             >
               <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>electric_bolt</span>
-              Defensive ({concMod + 4 >= 0 ? `+${concMod}` : concMod + 4})
+              Defensive ({defensiveConcMod >= 0 ? `+${defensiveConcMod}` : defensiveConcMod})
             </button>
           )}
         </div>
       </header>
 
       {/* Spell slot tracker */}
-      {char.spellSlots.length > 0 && (
+      {availability.levels.some((level) => level.total > 0) && (
         <section className="mb-8 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.06)]">
-          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent font-bold">
-            Spell Slots
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
+              Spell Slots
+            </h2>
+            <span className="font-label text-[10px] text-tertiary uppercase tracking-wider tabular-nums">
+              {availability.remainingSlots}/{availability.totalSlots} remaining
+            </span>
+          </div>
           <div className="flex flex-wrap gap-6">
-            {char.spellSlots.map((slot) => {
-              const spent = spentSlots[slot.level] ?? 0
-              const available = slot.total - spent
-              return (
-                <div key={slot.level}>
-                  <p className="font-label text-[10px] text-primary uppercase tracking-widest mb-2 font-bold">
-                    Level {slot.level}: {available}/{slot.total}
-                  </p>
-                  <div className="flex gap-1.5">
-                    {Array.from({ length: slot.total }).map((_, i) => {
-                      const isSpent = i >= available
-                      return (
-                        <button
-                          key={i}
-                          onClick={() =>
-                            !isSpent
-                              ? spendSpellSlot(char.id, slot.level, slot.total)
-                              : recoverSpellSlot(char.id, slot.level)
-                          }
-                          className={`w-7 h-7 rounded-md transition-all flex items-center justify-center cursor-pointer ${
-                            isSpent
-                              ? 'bg-surface-container-highest border border-white/10'
-                              : 'bg-primary/20 border border-primary shadow-[0_0_8px_rgba(0,240,255,0.35)] hover:bg-primary/40'
-                          }`}
-                          aria-label={`Spell slot level ${slot.level} ${i + 1}`}
-                        >
-                          {isSpent && (
-                            <span className="material-symbols-outlined text-primary/40 leading-none" style={{ fontSize: '14px' }}>close</span>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
+            {availability.levels.filter((slot) => slot.total > 0).map((slot) => (
+              <div key={slot.level}>
+                <p className="font-label text-[10px] text-primary uppercase tracking-widest mb-2 font-bold tabular-nums">
+                  Level {slot.level}: {slot.remaining}/{slot.total}
+                </p>
+                <div className="flex gap-1.5">
+                  {Array.from({ length: slot.total }).map((_, i) => {
+                    const isSpent = i >= slot.remaining
+                    return (
+                      <button
+                        key={i}
+                        onClick={() =>
+                          !isSpent
+                            ? spendSpellSlot(char.id, slot.level, slot.total)
+                            : recoverSpellSlot(char.id, slot.level)
+                        }
+                        className={`w-7 h-7 rounded-md transition-all flex items-center justify-center cursor-pointer ${
+                          isSpent
+                            ? 'bg-surface-container-highest border border-white/10'
+                            : 'bg-primary/20 border border-primary shadow-[0_0_8px_rgba(0,240,255,0.35)] hover:bg-primary/40'
+                        }`}
+                        aria-label={`Spell slot level ${slot.level} ${i + 1}`}
+                      >
+                        {isSpent && (
+                          <span className="material-symbols-outlined text-primary/40 leading-none" style={{ fontSize: '14px' }}>close</span>
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
-              )
-            })}
+              </div>
+            ))}
           </div>
         </section>
       )}
@@ -234,26 +265,36 @@ export function SpellsPage() {
         .map((lvl) => {
           const levelSpells = filteredSpells.filter((s) => s.level === lvl)
           if (levelSpells.length === 0) return null
-          const slotMax = char.spellSlots.find((sl) => sl.level === lvl)?.total ?? 0
-          const levelPreparedCount = preparedIds.filter((id) =>
-            char.spells.some((s) => s.id === id && s.level === lvl)
-          ).length
-          const isLevelFull = slotMax > 0 && levelPreparedCount >= slotMax
+          const levelInfo = availability.getLevel(lvl)
+          const slotMax = levelInfo?.total ?? 0
+          const levelPreparedCount = levelInfo?.preparedCount ?? 0
+          const preparedCapacity = levelInfo?.preparedCapacity ?? 0
 
           return (
             <div key={lvl} className="mb-8">
               <div className="flex items-center gap-4 mb-3">
-                <h3 className="font-label text-xs uppercase tracking-[0.2em] text-primary font-bold">
-                  Level {lvl} {!isSpontaneous && slotMax > 0 ? `· Prepared: ${levelPreparedCount}/${slotMax}` : ''}
+                <h3 className="font-label text-xs uppercase tracking-[0.2em] text-primary font-bold tabular-nums">
+                  Level {lvl}
+                  {isPreparedCaster && slotMax > 0
+                    ? ` · Prepared: ${levelPreparedCount}/${preparedCapacity}`
+                    : slotMax > 0
+                    ? ` · Slots: ${levelInfo?.remaining ?? 0}/${slotMax}`
+                    : ''}
                 </h3>
                 <div className="flex-1 h-px bg-white/10" />
               </div>
               <div className="space-y-2">
                 {levelSpells.map((spell) => {
                   const atkBonus = spell.attackType ? attackBonusFor(spell.attackType) : 0
-                  const count = preparedIds.filter((id) => id === spell.id).length
-                  const isPrepared = isSpontaneous || count > 0
-                  const canPrepareMore = !isLevelFull
+                  const count = availability.preparedCopies(spell.id)
+                  const alwaysPrepared = isAlwaysPrepared(spell)
+                  const atWill = availability.isAtWill(spell)
+                  const isSla = spell.source === 'sla'
+                  const castable = availability.isCastable(spell)
+                  const unavailableReason = availability.reasonUnavailable(spell)
+                  const isPrepared = isSpontaneous || alwaysPrepared || count > 0
+                  const canPrepareMore = isPreparedCaster && levelPreparedCount < preparedCapacity
+                  const resource = availability.resourceFor(spell)
 
                   return (
                     <SpellRow
@@ -263,29 +304,47 @@ export function SpellsPage() {
                       isPrepared={isPrepared}
                       preparedCount={count}
                       canPrepareMore={canPrepareMore}
+                      isAlwaysPrepared={alwaysPrepared}
+                      isSla={isSla}
+                      isAtWill={atWill}
+                      isCastable={castable}
+                      unavailableReason={unavailableReason}
+                      slotRemaining={levelInfo?.remaining ?? 0}
+                      slotTotal={slotMax}
+                      resourceRemaining={resource ? Math.max(0, resource.total - (session?.spentResources[resource.id] ?? 0)) : undefined}
                       attackLabel={spell.attackType ? `${attackLabel[spell.attackType]} (${atkBonus >= 0 ? `+${atkBonus}` : atkBonus})` : undefined}
                       isBuffActive={isSpellBuffActive(spell)}
                       onActivateBuff={isSpellBuffCandidate(spell) ? () => activateSpellBuff(spell) : undefined}
                       onInspect={() => inspectSpell(spell)}
                       onTogglePrepare={() => {
+                        if (isSpontaneous || alwaysPrepared || isSla || atWill) return
                         if (!isPrepared && !canPrepareMore) return
-                        toggleSpellPrepared(char.id, spell.id, spell.level, slotMax)
+                        toggleSpellPrepared(char.id, spell.id, spell.level, preparedCapacity)
                       }}
-                      onAddPrepare={canPrepareMore ? () => prepareSpell(char.id, spell.id) : undefined}
-                      onRemovePrepare={() => unprepareSpell(char.id, spell.id)}
+                      onAddPrepare={
+                        canPrepareMore
+                          ? () => prepareSpell(char.id, spell.id, preparedCapacity)
+                          : undefined
+                      }
+                      onRemovePrepare={
+                        count > 0 && !alwaysPrepared && !isSla && !atWill
+                          ? () => unprepareSpell(char.id, spell.id)
+                          : undefined
+                      }
                       onAttack={
                         spell.attackType
-                          ? () => openRoll({ diceType: 20, count: 1, modifier: atkBonus, label: `${spell.name} (Attack)` })
+                          ? () => castAndRoll(spell, () => openRoll({ diceType: 20, count: 1, modifier: atkBonus, label: `${spell.name} (Attack)` }))
                           : undefined
                       }
                       onDamage={
                         spell.damageDice
-                          ? () => {
+                          ? () => castAndRoll(spell, () => {
                               const { count: dCount, sides, bonus } = parseDiceFormula(spell.damageDice!)
                               openRoll({ diceType: sides, count: dCount, modifier: (spell.damageBonus ?? 0) + bonus, label: `${spell.name} (Damage)` })
-                            }
+                            })
                           : undefined
                       }
+                      onCast={() => consumeCastCost(spell)}
                     />
                   )
                 })}
@@ -309,9 +368,18 @@ function SpellRow({
   onRemovePrepare,
   onAttack,
   onDamage,
+  onCast,
   onActivateBuff,
   onInspect,
   isBuffActive = false,
+  isAlwaysPrepared = false,
+  isSla = false,
+  isAtWill = false,
+  isCastable = true,
+  unavailableReason = null,
+  slotRemaining = 0,
+  slotTotal = 0,
+  resourceRemaining,
 }: {
   spell: Spell
   isPrepared: boolean
@@ -324,17 +392,43 @@ function SpellRow({
   onRemovePrepare?: () => void
   onAttack?: () => void
   onDamage?: () => void
+  onCast?: () => void
   onActivateBuff?: () => void
   onInspect?: () => void
   isBuffActive?: boolean
+  isAlwaysPrepared?: boolean
+  isSla?: boolean
+  isAtWill?: boolean
+  isCastable?: boolean
+  unavailableReason?: string | null
+  slotRemaining?: number
+  slotTotal?: number
+  resourceRemaining?: number
 }) {
+  const preparationLocked = isSpontaneous || isAlwaysPrepared || isSla || isAtWill || spell.level === 0
   return (
     <details className={`w-full group rounded-xl overflow-hidden border transition-all ${isPrepared ? 'border-primary/50 shadow-[0_0_12px_rgba(0,240,255,0.15)]' : 'border-white/[0.08]'}`}>
       <summary className={`transition-all flex items-center gap-4 p-4 cursor-pointer list-none ${isPrepared ? 'bg-primary/10 hover:bg-primary/15' : 'bg-surface-container/90 hover:bg-surface-container-high'}`}>
-        {/* Prepared toggle or Spontaneous badge */}
+        {/* Preparation state */}
         {isSpontaneous ? (
           <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/40 px-2 py-0.5 rounded-md uppercase font-bold flex-shrink-0">
             Known
+          </span>
+        ) : preparationLocked ? (
+          <span className={`font-label text-[10px] px-2 py-0.5 rounded-md uppercase font-bold flex-shrink-0 border ${
+            isSla
+              ? 'text-secondary bg-secondary/15 border-secondary/40'
+              : isAtWill
+              ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
+              : 'text-primary bg-primary/15 border-primary/40'
+          }`}>
+            {isSla
+              ? `SLA${resourceRemaining !== undefined ? ` ${resourceRemaining}` : ''}`
+              : spell.level === 0
+              ? 'Cantrip'
+              : isAtWill
+              ? 'At-will'
+              : 'Domain'}
           </span>
         ) : (
           <button
@@ -348,7 +442,7 @@ function SpellRow({
                 : 'border-white/20 hover:border-primary cursor-pointer'
             }`}
             aria-label={`${isPrepared ? 'Unprepare' : 'Prepare'} ${spell.name}`}
-            title={!isPrepared && !canPrepareMore ? 'All slots prepared for this level' : undefined}
+            title={!isPrepared && !canPrepareMore ? 'All preparation capacity used for this level' : undefined}
           >
             {isPrepared && (
               <span className="material-symbols-outlined text-black leading-none font-bold" style={{ fontSize: '14px' }}>check</span>
@@ -373,7 +467,7 @@ function SpellRow({
                 Buff Active
               </span>
             )}
-            {!isSpontaneous && isPrepared && (
+            {!isSpontaneous && !preparationLocked && isPrepared && (
               <div
                 className="flex items-center gap-1.5 bg-primary/20 border border-primary/40 rounded-full px-2 py-0.5"
                 onClick={(e) => e.stopPropagation()}
@@ -407,6 +501,20 @@ function SpellRow({
                   </button>
                 )}
               </div>
+            )}
+            {spell.level > 0 && !isSla && slotTotal > 0 && (
+              <span className={`font-label text-[10px] border px-2 py-0.5 rounded-md uppercase tabular-nums ${
+                slotRemaining > 0
+                  ? 'text-primary bg-primary/10 border-primary/30'
+                  : 'text-error bg-error/10 border-error/30'
+              }`}>
+                Slots {slotRemaining}/{slotTotal}
+              </span>
+            )}
+            {isAlwaysPrepared && (
+              <span className="font-label text-[10px] text-secondary bg-secondary/10 border border-secondary/30 px-2 py-0.5 rounded-md uppercase">
+                Always Prepared
+              </span>
             )}
             <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-md uppercase">
               {spell.school}{spell.subschool ? ` (${spell.subschool})` : ''}
@@ -456,7 +564,11 @@ function SpellRow({
           {onAttack && attackLabel && (
             <button
               onClick={onAttack}
-              className="px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-black font-bold font-label text-xs uppercase tracking-widest rounded-xl hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] transition-all active:scale-95 cursor-pointer"
+              disabled={!isCastable}
+              title={unavailableReason ?? undefined}
+              className={`px-5 py-2.5 bg-gradient-to-r from-primary to-primary-container text-black font-bold font-label text-xs uppercase tracking-widest rounded-xl transition-all active:scale-95 ${
+                isCastable ? 'hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] cursor-pointer' : 'opacity-40 cursor-not-allowed'
+              }`}
             >
               {attackLabel}
             </button>
@@ -464,19 +576,42 @@ function SpellRow({
           {onDamage && (
             <button
               onClick={onDamage}
-              className="px-5 py-2.5 bg-surface-container-highest border border-error/40 text-error font-label text-xs uppercase tracking-widest rounded-xl hover:shadow-[0_0_15px_rgba(255,75,96,0.3)] hover:bg-error/10 transition-all active:scale-95 cursor-pointer"
+              disabled={!isCastable}
+              title={unavailableReason ?? undefined}
+              className={`px-5 py-2.5 bg-surface-container-highest border border-error/40 text-error font-label text-xs uppercase tracking-widest rounded-xl transition-all active:scale-95 ${
+                isCastable ? 'hover:shadow-[0_0_15px_rgba(255,75,96,0.3)] hover:bg-error/10 cursor-pointer' : 'opacity-40 cursor-not-allowed'
+              }`}
             >
               Roll Damage ({spell.damageDice}{spell.damageBonus ? `+${spell.damageBonus}` : ''})
+            </button>
+          )}
+          {onCast && !onAttack && !onDamage && !onActivateBuff && (
+            <button
+              type="button"
+              onClick={onCast}
+              disabled={!isCastable}
+              title={unavailableReason ?? undefined}
+              className={`px-5 py-2.5 border font-label text-xs uppercase tracking-widest rounded-xl transition-all active:scale-95 ${
+                isCastable
+                  ? 'bg-primary/15 border-primary/40 text-primary hover:bg-primary/25 cursor-pointer'
+                  : 'bg-white/5 border-white/10 text-tertiary opacity-40 cursor-not-allowed'
+              }`}
+            >
+              {isSla ? 'Use SLA' : 'Cast'}
             </button>
           )}
           {onActivateBuff && (
             <button
               type="button"
               onClick={onActivateBuff}
-              className={`px-5 py-2.5 border font-label text-xs uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer ${
+              disabled={!isBuffActive && !isCastable}
+              title={!isBuffActive ? unavailableReason ?? undefined : undefined}
+              className={`px-5 py-2.5 border font-label text-xs uppercase tracking-widest rounded-xl transition-all active:scale-95 ${
                 isBuffActive
-                  ? 'bg-secondary/20 border-secondary/60 text-secondary hover:bg-secondary/30'
-                  : 'bg-secondary/10 border-secondary/40 text-secondary hover:bg-secondary/20'
+                  ? 'bg-secondary/20 border-secondary/60 text-secondary hover:bg-secondary/30 cursor-pointer'
+                  : isCastable
+                  ? 'bg-secondary/10 border-secondary/40 text-secondary hover:bg-secondary/20 cursor-pointer'
+                  : 'bg-secondary/5 border-white/10 text-tertiary opacity-40 cursor-not-allowed'
               }`}
             >
               {isBuffActive ? 'Deactivate Buff' : 'Activate as Buff'}
@@ -492,6 +627,9 @@ function SpellRow({
             </button>
           )}
         </div>
+        {!isCastable && unavailableReason && (
+          <p className="mt-2 font-label text-[10px] uppercase tracking-wider text-error">{unavailableReason}</p>
+        )}
       </div>
     </details>
   )

@@ -245,16 +245,6 @@
       "id": "wild-shape",
       "name": "Wild Shape (4 hrs)",
       "total": 1
-    },
-    {
-      "id": "spells-1",
-      "name": "Lvl 1 Spells (+1 domain)",
-      "total": 6
-    },
-    {
-      "id": "spells-2",
-      "name": "Lvl 2 Spells (+1 domain)",
-      "total": 4
     }
   ],
   "feats": [
@@ -433,7 +423,9 @@
       "components": "V, S",
       "description": "A cone of searing flame deals 4d4 fire damage to all creatures in the area. Domain spell — always prepared in the bonus domain slot.",
       "isAttackSpell": true,
-      "damageDice": "4d4"
+      "damageDice": "4d4",
+      "source": "domain",
+      "alwaysPrepared": true
     },
     {
       "id": "entangle",
@@ -575,7 +567,9 @@
       "description": "Domain slot version of Produce Flame — always prepared in the Ash Subdomain bonus level-2 slot. Deals 1d6+4 fire damage as melee or ranged touch attack.",
       "attackType": "rangedTouch",
       "damageDice": "1d6",
-      "damageBonus": 4
+      "damageBonus": 4,
+      "source": "domain",
+      "alwaysPrepared": true
     },
     {
       "id": "flaming-sphere-n",
@@ -881,10 +875,27 @@
         }
       ],
       "skills": [
-        { "name": "Perception", "bonus": 8, "ability": "wis" },
-        { "name": "Stealth", "bonus": 7, "ability": "dex" },
-        { "name": "Survival", "bonus": 2, "ability": "wis", "notes": "+6 when tracking by scent" },
-        { "name": "Acrobatics", "bonus": 3, "ability": "dex" }
+        {
+          "name": "Perception",
+          "bonus": 8,
+          "ability": "wis"
+        },
+        {
+          "name": "Stealth",
+          "bonus": 7,
+          "ability": "dex"
+        },
+        {
+          "name": "Survival",
+          "bonus": 2,
+          "ability": "wis",
+          "notes": "+6 when tracking by scent"
+        },
+        {
+          "name": "Acrobatics",
+          "bonus": 3,
+          "ability": "dex"
+        }
       ],
       "tricks": [
         "Attack (all creatures)",
@@ -929,5 +940,9 @@
         "notes": "Free action to handle, +4 circumstance bonus."
       }
     }
-  ]
+  ],
+  "spellcasting": {
+    "mode": "prepared",
+    "ability": "wis"
+  }
 }

@@ -60,25 +60,24 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-headline text-sm uppercase tracking-widest text-white font-bold">
+              <h3 className="font-headline text-base font-bold text-white">
                 Maneuvers & Tactics (CMB / CMD)
               </h3>
               <span
-                className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-lg bg-secondary/15 text-secondary border border-secondary/30 shadow-[0_0_8px_rgba(217,70,239,0.2)]"
+                className="rounded-md border border-secondary/30 bg-secondary/10 px-2 py-0.5 font-label text-[10px] font-bold text-secondary"
                 data-testid="header-cmb-value"
               >
                 CMB {maneuversCalc.cmb >= 0 ? `+${maneuversCalc.cmb}` : maneuversCalc.cmb}
               </span>
-              <span className="text-tertiary text-xs">•</span>
               <span
-                className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-lg bg-primary/15 text-primary border border-primary/30 shadow-[0_0_8px_rgba(0,240,255,0.2)]"
+                className="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 font-label text-[10px] font-bold text-primary"
                 data-testid="header-cmd-value"
               >
                 CMD {maneuversCalc.cmd}
               </span>
             </div>
-            <p className="font-label text-[10px] text-tertiary tracking-wider mt-0.5">
-              Trip, Disarm, Grapple, Bull Rush & defensive counters
+            <p className="mt-0.5 font-label text-[10px] text-tertiary">
+              Trip, disarm, grapple, bull rush & defensive counters
             </p>
           </div>
         </div>

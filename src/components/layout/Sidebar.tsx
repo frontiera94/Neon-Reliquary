@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useCharacterStore } from '../../store/useCharacterStore'
+import { useSessionStore } from '../../store/useSessionStore'
 
 const navItems = [
   { to: '/status', icon: 'analytics', label: 'Status' },
@@ -13,10 +14,15 @@ const navItems = [
 
 export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
   const char = useCharacterStore((s) => s.activeCharacter())
+  const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
+  // The top bar grows a secondary strip when buffs or conditions are active;
+  // push the sidebar down so its character card is never covered.
+  const hasActiveEffects =
+    (session?.conditions.length ?? 0) + (session?.activeBuffIds.length ?? 0) > 0
 
   return (
     <aside
-      className={`hidden md:flex flex-col h-screen w-64 bg-surface-container/90 backdrop-blur-md fixed left-0 top-0 pt-20 pb-8 z-40 border-r border-white/[0.08] ${forceHidden ? 'lg:hidden' : ''}`}
+      className={`hidden md:flex flex-col h-screen w-64 bg-surface-container/90 backdrop-blur-md fixed left-0 top-0 pb-8 z-40 border-r border-white/[0.08] ${hasActiveEffects ? 'pt-[7rem]' : 'pt-20'} ${forceHidden ? 'lg:hidden' : ''}`}
       style={{ boxShadow: '4px 0 24px -8px rgba(0,240,255,0.08)' }}
     >
       {char && (

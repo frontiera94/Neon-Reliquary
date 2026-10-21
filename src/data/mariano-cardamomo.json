@@ -493,12 +493,7 @@
       "isSignature": false
     }
   ],
-  "spellSlots": [
-    {
-      "level": 1,
-      "total": 2
-    }
-  ],
+  "spellSlots": [],
   "spells": [
     {
       "id": "acid-splash",
@@ -515,7 +510,8 @@
       "description": "You fire a small orb of acid as a ranged touch attack. The orb deals 1d3 acid damage on a hit. As a cantrip it can be cast unlimited times per day.",
       "isAttackSpell": true,
       "attackType": "rangedTouch",
-      "damageDice": "1d3"
+      "damageDice": "1d3",
+      "atWill": true
     },
     {
       "id": "vanish",
@@ -529,7 +525,9 @@
       "savingThrow": "Will negates (harmless)",
       "spellResistance": true,
       "components": "V, S",
-      "description": "One creature vanishes, becoming invisible as per invisibility for 1 round per caster level (up to 5 rounds). The spell instantly ends if the target attacks any creature."
+      "description": "One creature vanishes, becoming invisible as per invisibility for 1 round per caster level (up to 5 rounds). The spell instantly ends if the target attacks any creature.",
+      "source": "sla",
+      "resourceId": "major-magic-vanish"
     }
   ],
   "inventory": [
@@ -683,5 +681,9 @@
     "gp": 1734,
     "sp": 0,
     "cp": 0
+  },
+  "spellcasting": {
+    "mode": "none",
+    "ability": "int"
   }
 }

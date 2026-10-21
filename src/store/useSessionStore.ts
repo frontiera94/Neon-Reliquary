@@ -5,6 +5,7 @@ import type { ConditionType, BuffToggle, ActionEconomyState } from '../types/com
 import type { CoinPurse } from '../types/inventory'
 import type { Spell } from '../types/resources'
 import { spellToBuff } from '../lib/spell-buffs'
+import { expandPreparedSpells, normalizePreparedSpells } from '../lib/spell-availability'
 
 interface SessionStore {
   sessions: Record<string, SessionState>
@@ -26,7 +27,7 @@ interface SessionStore {
   toggleSpellBuff: (characterId: string, spell: Spell) => void
   toggleCondition: (characterId: string, condition: ConditionType) => void
   toggleSpellPrepared: (characterId: string, spellId: string, level: number, slotMax: number) => void
-  prepareSpell: (characterId: string, spellId: string) => void
+  prepareSpell: (characterId: string, spellId: string, maxCopies?: number) => void
   unprepareSpell: (characterId: string, spellId: string) => void
   toggleItemEquipped: (characterId: string, itemId: string) => void
   spendSpellSlot: (characterId: string, level: number, max: number) => void
@@ -96,6 +97,7 @@ const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurs
   activeBuffIds: [],
   conditions: [],
   customBuffs: [],
+  preparedSpells: {},
   preparedSpellIds: [],
   spentSpellSlots: {},
   ammo: {},
@@ -109,6 +111,36 @@ const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurs
   actionEconomy: defaultActionEconomy(),
   currentRound: 1,
 })
+
+
+function normalizePersistedSession(sess: SessionState): SessionState {
+  const preparedSpells = normalizePreparedSpells(sess.preparedSpells, sess.preparedSpellIds)
+  const spentResources = Object.fromEntries(
+    Object.entries(sess.spentResources ?? {}).filter(([resourceId]) => !/^spells-\d+$/.test(resourceId))
+  )
+  return {
+    ...sess,
+    spentResources,
+    preparedSpells,
+    preparedSpellIds: expandPreparedSpells(preparedSpells),
+    itemQuantities: sess.itemQuantities ?? {},
+    ammo: sess.ammo ?? {},
+    equippedItemIds: sess.equippedItemIds ?? [],
+    actionEconomy: sess.actionEconomy ?? defaultActionEconomy(),
+    currentRound: sess.currentRound ?? 1,
+  }
+}
+
+function migratePersistedSessions(persisted: unknown): unknown {
+  const state = persisted as { sessions?: Record<string, SessionState> } | undefined
+  if (!state?.sessions) return persisted
+  return {
+    ...state,
+    sessions: Object.fromEntries(
+      Object.entries(state.sessions).map(([id, sess]) => [id, normalizePersistedSession(sess)])
+    ),
+  }
+}
 
 export const useSessionStore = create<SessionStore>()(
   persist(
@@ -377,32 +409,42 @@ export const useSessionStore = create<SessionStore>()(
           }
         }),
 
-      toggleSpellPrepared: (id, spellId) =>
+      toggleSpellPrepared: (id, spellId, _level, slotMax) =>
         set((s) => {
           const sess = s.sessions[id] ?? defaultSession(id)
-          const isPrepared = sess.preparedSpellIds.includes(spellId)
+          const prepared = normalizePreparedSpells(sess.preparedSpells, sess.preparedSpellIds)
+          const current = prepared[spellId] ?? 0
+          if (current > 0) {
+            delete prepared[spellId]
+          } else if (slotMax > 0) {
+            prepared[spellId] = 1
+          }
           return {
             sessions: {
               ...s.sessions,
               [id]: {
                 ...sess,
-                preparedSpellIds: isPrepared
-                  ? sess.preparedSpellIds.filter((x) => x !== spellId)
-                  : [...sess.preparedSpellIds, spellId],
+                preparedSpells: prepared,
+                preparedSpellIds: expandPreparedSpells(prepared),
               },
             },
           }
         }),
 
-      prepareSpell: (id, spellId) =>
+      prepareSpell: (id, spellId, maxCopies = Number.MAX_SAFE_INTEGER) =>
         set((s) => {
           const sess = s.sessions[id] ?? defaultSession(id)
+          const prepared = normalizePreparedSpells(sess.preparedSpells, sess.preparedSpellIds)
+          const current = prepared[spellId] ?? 0
+          if (current >= Math.max(0, maxCopies)) return s
+          prepared[spellId] = current + 1
           return {
             sessions: {
               ...s.sessions,
               [id]: {
                 ...sess,
-                preparedSpellIds: [...sess.preparedSpellIds, spellId],
+                preparedSpells: prepared,
+                preparedSpellIds: expandPreparedSpells(prepared),
               },
             },
           }
@@ -411,16 +453,18 @@ export const useSessionStore = create<SessionStore>()(
       unprepareSpell: (id, spellId) =>
         set((s) => {
           const sess = s.sessions[id] ?? defaultSession(id)
-          const idx = sess.preparedSpellIds.indexOf(spellId)
-          if (idx === -1) return s
-          const next = [...sess.preparedSpellIds]
-          next.splice(idx, 1)
+          const prepared = normalizePreparedSpells(sess.preparedSpells, sess.preparedSpellIds)
+          const current = prepared[spellId] ?? 0
+          if (current <= 0) return s
+          if (current === 1) delete prepared[spellId]
+          else prepared[spellId] = current - 1
           return {
             sessions: {
               ...s.sessions,
               [id]: {
                 ...sess,
-                preparedSpellIds: next,
+                preparedSpells: prepared,
+                preparedSpellIds: expandPreparedSpells(prepared),
               },
             },
           }
@@ -446,7 +490,7 @@ export const useSessionStore = create<SessionStore>()(
         set((s) => {
           const sess = s.sessions[id] ?? defaultSession(id)
           const current = sess.spentSpellSlots[level] ?? 0
-          if (current >= max) return s
+          if (max <= 0 || current >= max) return s
           return {
             sessions: {
               ...s.sessions,
@@ -741,6 +785,7 @@ export const useSessionStore = create<SessionStore>()(
               nonlethalDamage: 0,
               spentResources: {},
               spentSpellSlots: {},
+              preparedSpells: {},
               preparedSpellIds: [],
               activeBuffIds: [],
               conditions: [],
@@ -754,6 +799,10 @@ export const useSessionStore = create<SessionStore>()(
           },
         })),
     }),
-    { name: 'neon-sessions' }
+    {
+      name: 'neon-sessions',
+      version: 2,
+      migrate: migratePersistedSessions,
+    }
   )
 )

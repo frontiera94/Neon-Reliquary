@@ -5,12 +5,12 @@ import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import {
   calcEffectiveAbilities,
-  calcEffectiveArmorClass,
   calcEffectiveWeaponStats,
   calcCombatManeuvers,
   getActiveActionRestrictions,
 } from '../lib/stat-calc'
-import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
+import { parseDiceFormula } from '../lib/dice-engine'
+import { getSpellAvailability } from '../lib/spell-availability'
 import { formatDamage } from '../lib/combat-calc'
 import { SummonSection } from '../components/combat/SummonSection'
 import { SummonedCreaturePanel } from '../components/combat/SummonedCreaturePanel'
@@ -20,7 +20,6 @@ import { BuffManagerModal } from '../components/combat/BuffManagerModal'
 import { CombatManeuversPanel } from '../components/combat/CombatManeuversPanel'
 import { FullAttackModal } from '../components/combat/FullAttackModal'
 import { CombatSpellsSection } from '../components/combat/CombatSpellsSection'
-import { CombatTacticalHUD } from '../components/combat/CombatTacticalHUD'
 import { ActionEconomyTracker } from '../components/combat/ActionEconomyTracker'
 import { ContextualCombatFeatures, DefensiveBadges } from '../components/combat/ContextualCombatFeatures'
 import { DailyResourcePips } from '../components/combat/BuffResourceToggle'
@@ -33,7 +32,6 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
   const {
     toggleBuff,
-    adjustHp,
     initSession,
     setAmmo,
     setSummon,
@@ -42,6 +40,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     adjustCompanionHp,
     spendSpellSlot,
     recoverSpellSlot,
+    spendResource,
     toggleRoundAction,
     resetRoundActions,
     nextRound,
@@ -54,7 +53,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
 
   if (!char) {
     return (
-      <div className="flex items-center justify-center h-64 text-tertiary font-label text-sm uppercase tracking-widest">
+      <div className="flex h-64 items-center justify-center font-label text-sm uppercase tracking-widest text-tertiary">
         No character selected
       </div>
     )
@@ -74,15 +73,8 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     allBuffs.filter((b) => activeBuffIds.includes(b.id))
   )
 
-  const effectiveAc = calcEffectiveArmorClass(
-    char.armorClass,
-    abilityMod(char.abilities.dex),
-    effectiveAbilities.mods.dex,
-    session.conditions,
-    allBuffs.filter((b) => activeBuffIds.includes(b.id))
-  )
-
   const restrictions = getActiveActionRestrictions(session.conditions)
+  const spellAvailability = getSpellAvailability(char, session)
 
   const activeBuffsList = allBuffs.filter((b) => activeBuffIds.includes(b.id))
 
@@ -117,58 +109,40 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
       )
     : null
 
+  const companion = char.companions?.[0]
+  const companionHp = companion ? session.companionHp?.[companion.id] ?? companion.maxHp : 0
+  const companionHpPct = companion ? Math.max(0, Math.min(100, (companionHp / companion.maxHp) * 100)) : 0
+
   return (
-    <div className="space-y-6">
-      {/* Sticky Tactical Cockpit HUD (global HUD already covers embedded mode) */}
-      {!embedded && (
-        <div className="sticky top-[65px] md:top-[69px] z-30 bg-surface/95 backdrop-blur-xl border-b border-white/10 px-4 md:px-8 py-3 shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
-          <CombatTacticalHUD
-            hp={session.currentHp}
-            maxHp={char.maxHp}
-            ac={effectiveAc.total}
-            conScore={effectiveAbilities.scores.con}
-            cmb={maneuversCalc.cmb}
-            cmd={maneuversCalc.cmd}
-            onAdjustHp={(d) => adjustHp(char.id, d, char.maxHp)}
-          />
-          <DefensiveBadges compact />
-        </div>
-      )}
+    <div className={embedded ? 'space-y-4' : 'space-y-4 px-4 py-4 md:px-8 md:py-6'}>
+      {/* Restrictions only appear when a condition actually limits actions. */}
+      <ActionAlertBanner restrictions={restrictions} />
 
-      <div className={embedded ? 'p-0 space-y-4' : 'p-4 md:p-8 pt-0 space-y-6'}>
-        {/* Tactical Restrictions Banner */}
-        <ActionAlertBanner restrictions={restrictions} />
+      {/* Turn strip: round, five action slots, turn controls. */}
+      <ActionEconomyTracker
+        compact
+        actionEconomy={session.actionEconomy}
+        currentRound={session.currentRound}
+        onToggleAction={(action) => toggleRoundAction(char.id, action)}
+        onResetActions={() => resetRoundActions(char.id)}
+        onNewTurn={() => nextRound(char.id)}
+        onResetRound={() => resetCombatRound(char.id)}
+      />
 
-        {/* Action Economy Tracker */}
-        <ActionEconomyTracker
-          actionEconomy={session.actionEconomy}
-          currentRound={session.currentRound}
-          onToggleAction={(action) => toggleRoundAction(char.id, action)}
-          onResetActions={() => resetRoundActions(char.id)}
-          onNewTurn={() => nextRound(char.id)}
-          onResetRound={() => resetCombatRound(char.id)}
-        />
-
-        <ContextualCombatFeatures compact={embedded} limit={embedded ? 8 : undefined} />
-
-        {/* 2-Column Tactical Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column (7 cols): Equipped Arsenal & Attacks, Summoned Ally, Companion */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-lg">swords</span>
-                <h3 className="font-headline text-sm uppercase tracking-widest text-primary font-bold">
-                  Equipped Arsenal & Attacks
-                </h3>
-              </div>
-              <span className="font-label text-xs text-tertiary">
-                ({char.weapons.length} Ready)
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12 xl:items-start">
+        {/* Primary column — what you do on your turn. */}
+        <div className="space-y-4 xl:col-span-7">
+          <section aria-labelledby="attacks-heading">
+            <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <h2 id="attacks-heading" className="font-headline text-lg font-bold text-white">
+                Attacks
+              </h2>
+              <span className="font-label text-[10px] uppercase tracking-wider text-tertiary">
+                {char.weapons.length} equipped
               </span>
             </div>
 
-            {/* Weapon Cards */}
-            <div className="space-y-6">
+            <div className="space-y-2.5">
               {char.weapons.map((weapon) => {
                 const effective = calcEffectiveWeaponStats(
                   weapon,
@@ -290,340 +264,338 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                 )
               })}
             </div>
+          </section>
 
-            {/* Combat Spells Section (positioned under weapons in primary action column) */}
-            {char.spells && char.spells.length > 0 && (
-              <CombatSpellsSection
-                spells={char.spells}
-                spellSlots={char.spellSlots}
-                preparedSpellIds={session.preparedSpellIds}
-                spentSpellSlots={session.spentSpellSlots}
-                charClass={char.class}
-                charLevel={char.level}
-                abilities={effectiveAbilities.scores}
-                baseAttackBonus={char.baseAttackBonus}
-                spellFailureChance={char.armorClass.spellFailureChance}
-                feats={char.feats}
+          {/* Spellbook stays folded: the page is about resolving the turn. */}
+          {char.spells && char.spells.length > 0 && (
+            <CombatSpellsSection
+              spells={char.spells}
+              spellSlots={char.spellSlots}
+              preparedSpellIds={session.preparedSpellIds}
+              preparedSpells={session.preparedSpells}
+              spentSpellSlots={session.spentSpellSlots}
+              spentResources={session.spentResources}
+              dailyResources={char.dailyResources}
+              charClass={char.class}
+              charLevel={char.level}
+              abilities={effectiveAbilities.scores}
+              baseAttackBonus={char.baseAttackBonus}
+              spellFailureChance={char.armorClass.spellFailureChance}
+              feats={char.feats}
+              spellAvailability={spellAvailability}
+              defaultExpanded={false}
+              openRoll={openRoll}
+              onSpendSlot={(lvl, max) => spendSpellSlot(char.id, lvl, max)}
+              onRecoverSlot={(lvl) => recoverSpellSlot(char.id, lvl)}
+              onSpendResource={(resourceId, max) => spendResource(char.id, resourceId, max)}
+            />
+          )}
+
+          {/* Summoned ally */}
+          {activeSummonOption && activeSummon && (
+            <section aria-labelledby="summon-heading" className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-baseline gap-2">
+                  <h2 id="summon-heading" className="font-headline text-base font-bold text-white">
+                    Summoned ally
+                  </h2>
+                  <span className="font-label text-[10px] uppercase tracking-wider text-primary">
+                    active
+                  </span>
+                </div>
+              </div>
+              <SummonedCreaturePanel
+                option={activeSummonOption}
+                currentHp={activeSummon.currentHp}
+                onAdjustHp={(d) => adjustSummonHp(char.id, d)}
+                onDismiss={() => clearSummon(char.id)}
                 openRoll={openRoll}
-                onSpendSlot={(lvl, max) => spendSpellSlot(char.id, lvl, max)}
-                onRecoverSlot={(lvl) => recoverSpellSlot(char.id, lvl)}
               />
-            )}
+            </section>
+          )}
 
-            {/* Summoned Creature Panel */}
-            {activeSummonOption && activeSummon && (
-              <div className="space-y-4">
-                <div className="relative flex items-center gap-4">
-                  <div className="flex-1 h-px bg-primary/40" />
-                  <span className="font-label text-[10px] text-primary uppercase tracking-[0.25em] flex-shrink-0">
-                    Summoned Ally
-                  </span>
-                  <div className="flex-1 h-px bg-primary/40" />
+          {/* Companion — one compact row plus its attacks. */}
+          {companion && (
+            <section aria-labelledby="companion-heading">
+              <div className="mb-2 flex items-end justify-between gap-3">
+                <div className="flex items-baseline gap-2">
+                  <h2 id="companion-heading" className="font-headline text-base font-bold text-white">
+                    Companion
+                  </h2>
+                  <span className="font-label text-[10px] text-tertiary">{companion.name}</span>
                 </div>
-
-                <SummonedCreaturePanel
-                  option={activeSummonOption}
-                  currentHp={activeSummon.currentHp}
-                  onAdjustHp={(d) => adjustSummonHp(char.id, d)}
-                  onDismiss={() => clearSummon(char.id)}
-                  openRoll={openRoll}
-                />
-              </div>
-            )}
-
-            {/* Bonded Companion Combat Section */}
-            {char.companions && char.companions.length > 0 && (
-              (() => {
-                const comp = char.companions[0]
-                const compHp = session.companionHp?.[comp.id] ?? comp.maxHp
-                const hpPct = Math.max(0, Math.min(100, (compHp / comp.maxHp) * 100))
-
-                return (
-                  <div className="space-y-3">
-                    <div className="relative flex items-center gap-4">
-                      <div className="flex-1 h-px bg-primary/30" />
-                      <span className="font-label text-[10px] text-primary uppercase tracking-[0.25em] flex-shrink-0 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-sm">pets</span>
-                        Bonded Companion — {comp.name}
-                      </span>
-                      <div className="flex-1 h-px bg-primary/30" />
-                    </div>
-
-                    <div className="bg-surface-container/90 backdrop-blur-sm border border-white/10 rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-surface-container-high border border-primary/30 rounded-xl overflow-hidden flex-shrink-0">
-                            {comp.portrait ? (
-                              <img src={comp.portrait} alt={comp.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="material-symbols-outlined text-primary flex items-center justify-center h-full w-full">
-                                pets
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <h4 className="font-headline text-lg font-bold text-white">{comp.name}</h4>
-                            <p className="font-label text-[10px] text-tertiary uppercase tracking-wider">
-                              {comp.type.replace('_', ' ')} • {comp.species} • AC {comp.armorClass.total}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* HP bar and adjusters */}
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => adjustCompanionHp(char.id, comp.id, -1, comp.maxHp)}
-                            className="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-error-container text-primary hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer border border-white/5 transition-colors"
-                            title="-1 HP"
-                          >
-                            -
-                          </button>
-                          <div className="text-center min-w-[70px]">
-                            <span className="font-label text-base font-bold text-primary">{compHp}</span>
-                            <span className="font-label text-xs text-tertiary"> / {comp.maxHp} HP</span>
-                            <div className="w-full h-1.5 bg-surface-container-lowest rounded-full overflow-hidden mt-1 border border-white/5">
-                              <div
-                                className="h-full bg-primary rounded-full transition-all duration-200"
-                                style={{ width: `${hpPct}%` }}
-                              />
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => adjustCompanionHp(char.id, comp.id, 1, comp.maxHp)}
-                            className="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-primary-container text-primary hover:text-black flex items-center justify-center font-bold text-sm cursor-pointer border border-white/5 transition-colors"
-                            title="+1 HP"
-                          >
-                            +
-                          </button>
-
-                          <Link
-                            to="/companion"
-                            className="ml-2 px-3 py-1.5 bg-primary/10 border border-primary text-primary font-label text-[10px] uppercase tracking-widest hover:bg-primary/20 transition-all flex items-center gap-1"
-                          >
-                            Sheet
-                            <span className="material-symbols-outlined text-xs">arrow_forward</span>
-                          </Link>
-                        </div>
-                      </div>
-
-                      {/* Natural Attacks quick roll */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-2 border-t border-outline-variant/10">
-                        {comp.attacks.map((atk) => {
-                          const parsed = parseDiceFormula(atk.damageDice)
-                          const isTouch = atk.damageDice.toLowerCase().includes('spell')
-                          const baseDmgBonus = atk.damageBonus !== undefined && atk.damageBonus !== parsed.bonus
-                            ? atk.damageBonus + parsed.bonus
-                            : (atk.damageBonus ?? parsed.bonus)
-
-                          return (
-                            <div
-                              key={atk.name}
-                              className="bg-surface-container-high p-3 flex items-center justify-between gap-2"
-                            >
-                              <div>
-                                <p className="font-headline text-xs font-bold text-on-surface">{atk.name}</p>
-                                <p className="font-label text-[10px] text-tertiary">
-                                  {isTouch
-                                    ? atk.damageDice
-                                    : formatDamage(`${parsed.count}d${parsed.sides}`, baseDmgBonus)}
-                                </p>
-                              </div>
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() =>
-                                    openRoll({
-                                      diceType: 20,
-                                      count: 1,
-                                      modifier: atk.bonus,
-                                      label: `${comp.name} — ${atk.name} Atk`,
-                                      critRange: atk.critRange ?? 20,
-                                    })
-                                  }
-                                  className="px-2.5 py-1 bg-primary text-on-primary font-label text-xs font-bold uppercase hover:shadow-[0_0_10px_rgba(0,218,243,0.3)] transition-all cursor-pointer"
-                                >
-                                  +{atk.bonus}
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    if (isTouch) {
-                                      openRoll({
-                                        diceType: 20,
-                                        count: 1,
-                                        modifier: atk.bonus,
-                                        label: `${comp.name} — Touch Attack`,
-                                      })
-                                    } else {
-                                      openRoll({
-                                        diceType: parsed.sides,
-                                        count: parsed.count,
-                                        modifier: baseDmgBonus,
-                                        label: `${comp.name} — ${atk.name} Dmg`,
-                                      })
-                                    }
-                                  }}
-                                  className="px-2.5 py-1 bg-surface-container-lowest border border-outline-variant/30 text-secondary hover:bg-surface-container-highest font-label text-xs font-bold transition-all cursor-pointer"
-                                >
-                                  Dmg
-                                </button>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })()
-            )}
-          </div>
-
-          {/* Right Column (5 cols): Combat Buff Protocols, Combat Spells & Invocations, Combat Maneuvers & Tactics, Summon Ally Picker */}
-          <div className="lg:col-span-5 space-y-6">
-            {/* Global Buff Bar */}
-            <section className="w-full">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-secondary text-lg">bolt</span>
-                  <h3 className="font-headline text-sm uppercase tracking-widest text-secondary font-bold">
-                    Combat Buff Protocols
-                  </h3>
-                  <span className="font-label text-xs text-tertiary">
-                    ({activeBuffIds.length} Active)
-                  </span>
-                </div>
-                <button
-                  onClick={() => setShowBuffModal(true)}
-                  className="px-3 py-1.5 bg-primary/10 border border-primary/40 text-primary font-label text-xs uppercase tracking-wider rounded-xl hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all flex items-center gap-1.5 cursor-pointer"
+                <Link
+                  to="/companion"
+                  className="flex items-center gap-1 font-label text-[10px] uppercase tracking-wider text-tertiary transition-colors hover:text-primary"
                 >
-                  <span className="material-symbols-outlined text-sm">tune</span>
-                  Manage Buffs & Presets
-                </button>
+                  Sheet
+                  <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                </Link>
               </div>
 
-              {char.dailyResources.length > 0 && (
-                <div className="mb-3 rounded-xl border border-white/10 bg-[#181b26] px-3 py-2 space-y-1">
-                  <p className="font-label text-[9px] uppercase tracking-[0.18em] text-tertiary">Linked Daily Resources</p>
-                  {char.dailyResources.map((resource) => (
-                    <DailyResourcePips
-                      key={resource.id}
-                      characterId={char.id}
-                      resource={resource}
-                      spent={session.spentResources[resource.id] ?? 0}
-                      compact
-                    />
-                  ))}
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
-                {allBuffs.map((buff) => {
-                  const isActive = activeBuffIds.includes(buff.id)
-                  const hex =
-                    { primary: '#00f0ff', secondary: '#d946ef', error: '#ff4b60' }[buff.color ?? 'primary'] ??
-                    '#00f0ff'
-                  return (
-                    <button
-                      key={buff.id}
-                      onClick={() => toggleBuff(char.id, buff.id)}
-                      className="flex items-center justify-between p-3 border rounded-xl transition-all cursor-pointer text-left bg-surface-container/90 backdrop-blur-sm hover:bg-surface-container-high active:scale-[0.99]"
-                      style={
-                        isActive
-                          ? {
-                              borderColor: hex,
-                              backgroundColor: `${hex}1a`,
-                              boxShadow: `0 0 16px ${hex}35`,
-                            }
-                          : { borderColor: 'rgba(255,255,255,0.08)' }
-                      }
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div
-                          className="w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all"
-                          style={
-                            isActive
-                              ? { backgroundColor: hex, boxShadow: `0 0 8px ${hex}` }
-                              : { backgroundColor: 'rgba(255,255,255,0.2)' }
-                          }
-                        />
-                        <div className="min-w-0">
-                          <p
-                            className="font-headline text-xs md:text-sm font-bold uppercase tracking-wider truncate"
-                            style={{ color: isActive ? hex : undefined }}
-                          >
-                            {buff.name}
-                          </p>
-                          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1">
-                            {buffModifierTokens(buff).length > 0 ? (
-                              buffModifierTokens(buff).map((token, index) => (
-                                <span key={`${token.label}-${index}`} className="contents">
-                                  {index > 0 && <span className="font-label text-[9px] text-tertiary/40">|</span>}
-                                  <span className={`font-label text-[10px] font-bold tabular-nums ${modifierColor(token.value)}`}>
-                                    {token.value !== null ? `${token.value > 0 ? '+' : ''}${token.value} ${token.label}` : `+${token.label}`}
-                                  </span>
-                                </span>
-                              ))
-                            ) : (
-                              <span className="font-label text-[10px] text-tertiary">No numeric modifiers</span>
-                            )}
-                          </div>
-                          <span className="sr-only">
-                            {[
-                              buff.attackMod !== 0 ? `${buff.attackMod > 0 ? '+' : ''}${buff.attackMod} Att` : '',
-                              buff.damageMod !== 0 ? `${buff.damageMod > 0 ? '+' : ''}${buff.damageMod} Dmg` : '',
-                              buff.acMod !== 0 ? `${buff.acMod > 0 ? '+' : ''}${buff.acMod} AC` : '',
-                              buff.extraDamageDice ? `+${buff.extraDamageDice}` : '',
-                              ...(typeof buff.saveMod === 'number' && buff.saveMod !== 0
-                                ? [`${buff.saveMod > 0 ? '+' : ''}${buff.saveMod} Saves`]
-                                : typeof buff.saveMod === 'object' && buff.saveMod !== null
-                                  ? Object.entries(buff.saveMod)
-                                      .filter(([, v]) => v !== undefined && v !== 0)
-                                      .map(([k, v]) => `${(v as number) > 0 ? '+' : ''}${v} ${k === 'fort' ? 'Fort' : k === 'ref' ? 'Ref' : k === 'will' ? 'Will' : k}`)
-                                  : []),
-                              buff.meleeOnly ? 'Melee only' : '',
-                            ]
-                              .filter(Boolean)
-                              .join(' / ')}
-                          </span>
-                        </div>
-                      </div>
-                      <span
-                        className="font-label text-[10px] uppercase tracking-widest px-2.5 py-0.5 flex-shrink-0 border rounded-full transition-all ml-2 font-bold"
-                        style={
-                          isActive
-                            ? { color: hex, borderColor: hex, boxShadow: `0 0 8px ${hex}` }
-                            : { color: 'rgba(255,255,255,0.4)', borderColor: 'rgba(255,255,255,0.1)' }
-                        }
-                      >
-                        {isActive ? 'ON' : 'OFF'}
+              <div className="rounded-2xl border border-white/[0.08] bg-surface-container/70 p-3.5 backdrop-blur-sm">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl border border-primary/25 bg-surface-container-high">
+                    {companion.portrait ? (
+                      <img src={companion.portrait} alt={companion.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="material-symbols-outlined flex h-full w-full items-center justify-center text-primary">
+                        pets
                       </span>
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-headline text-sm font-bold text-white">{companion.name}</p>
+                    <p className="font-label text-[10px] uppercase tracking-wider text-tertiary">
+                      {companion.type.replace('_', ' ')} · {companion.species} · AC {companion.armorClass.total}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => adjustCompanionHp(char.id, companion.id, -1, companion.maxHp)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/5 bg-surface-container-high text-sm font-bold text-primary transition-colors hover:bg-error/20 hover:text-white cursor-pointer"
+                      title="-1 HP"
+                    >
+                      -
                     </button>
-                  )
-                })}
+                    <div className="min-w-[64px] text-center">
+                      <span className="font-label text-sm font-bold tabular-nums text-primary">{companionHp}</span>
+                      <span className="font-label text-[10px] text-tertiary"> / {companion.maxHp}</span>
+                      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-surface-container-lowest">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all duration-200"
+                          style={{ width: `${companionHpPct}%` }}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => adjustCompanionHp(char.id, companion.id, 1, companion.maxHp)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/5 bg-surface-container-high text-sm font-bold text-primary transition-colors hover:bg-primary/20 hover:text-white cursor-pointer"
+                      title="+1 HP"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {companion.attacks.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5 border-t border-white/5 pt-3">
+                    {companion.attacks.map((atk) => {
+                      const parsed = parseDiceFormula(atk.damageDice)
+                      const isTouch = atk.damageDice.toLowerCase().includes('spell')
+                      const baseDmgBonus = atk.damageBonus !== undefined && atk.damageBonus !== parsed.bonus
+                        ? atk.damageBonus + parsed.bonus
+                        : (atk.damageBonus ?? parsed.bonus)
+                      const dmgLabel = isTouch
+                        ? atk.damageDice
+                        : formatDamage(`${parsed.count}d${parsed.sides}`, baseDmgBonus)
+
+                      return (
+                        <div
+                          key={atk.name}
+                          className="flex items-center gap-1 rounded-xl border border-white/[0.06] bg-surface-container-high/60 p-1 pl-2.5"
+                        >
+                          <span className="font-label text-[10px] font-bold text-on-surface">{atk.name}</span>
+                          <button
+                            onClick={() =>
+                              openRoll({
+                                diceType: 20,
+                                count: 1,
+                                modifier: atk.bonus,
+                                label: `${companion.name} — ${atk.name} Atk`,
+                                critRange: atk.critRange ?? 20,
+                              })
+                            }
+                            className="min-h-[32px] rounded-lg bg-primary/10 px-2 font-label text-[11px] font-bold text-primary transition-colors hover:bg-primary/20 cursor-pointer"
+                            title={`Roll ${atk.name} attack`}
+                          >
+                            {atk.bonus >= 0 ? `+${atk.bonus}` : atk.bonus}
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (isTouch) {
+                                openRoll({
+                                  diceType: 20,
+                                  count: 1,
+                                  modifier: atk.bonus,
+                                  label: `${companion.name} — Touch Attack`,
+                                })
+                              } else {
+                                openRoll({
+                                  diceType: parsed.sides,
+                                  count: parsed.count,
+                                  modifier: baseDmgBonus,
+                                  label: `${companion.name} — ${atk.name} Dmg`,
+                                })
+                              }
+                            }}
+                            className="min-h-[32px] rounded-lg bg-secondary/10 px-2 font-label text-[11px] font-bold text-secondary transition-colors hover:bg-secondary/20 cursor-pointer"
+                            title={`Roll ${atk.name} damage`}
+                          >
+                            {dmgLabel}
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             </section>
-
-            {/* Combat Maneuvers & Tactics Panel */}
-            <CombatManeuversPanel
-              maneuversCalc={maneuversCalc}
-              openRoll={openRoll}
-            />
-
-            {/* Summon Ally Picker */}
-            {summonableSpells.length > 0 && (
-              <SummonSection
-                spells={summonableSpells}
-                activeSummonId={activeSummon?.optionId ?? null}
-                onSelect={(spellId, opt) => {
-                  if (activeSummon?.optionId === opt.id) {
-                    clearSummon(char.id)
-                  } else {
-                    setSummon(char.id, { spellId, optionId: opt.id, currentHp: opt.hp })
-                  }
-                }}
-              />
-            )}
-          </div>
+          )}
         </div>
+
+        {/* Support column — state you need to read, not act on constantly. */}
+        <aside className="space-y-4 xl:col-span-5">
+          <section
+            aria-labelledby="buffs-heading"
+            className="rounded-2xl border border-white/10 bg-surface-container/70 p-4 backdrop-blur-sm"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                <h2 id="buffs-heading" className="font-headline text-base font-bold text-white">
+                  Buffs & Effects
+                </h2>
+                <span className="font-label text-[10px] text-tertiary">
+                  {activeBuffIds.length} active
+                </span>
+              </div>
+              <button
+                onClick={() => setShowBuffModal(true)}
+                className="flex min-h-[32px] items-center gap-1.5 rounded-lg border border-primary/25 px-2.5 font-label text-[10px] uppercase tracking-wider text-primary transition-colors hover:border-primary/60 hover:bg-primary/10 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-sm">tune</span>
+                Manage
+              </button>
+            </div>
+
+            <div className="mt-3 space-y-1.5">
+              {[...allBuffs]
+                .sort(
+                  (a, b) =>
+                    Number(activeBuffIds.includes(b.id)) - Number(activeBuffIds.includes(a.id))
+                )
+                .map((buff) => {
+                const isActive = activeBuffIds.includes(buff.id)
+                const hex =
+                  { primary: '#00f0ff', secondary: '#d946ef', error: '#ff4b60' }[buff.color ?? 'primary'] ??
+                  '#00f0ff'
+                const tokens = buffModifierTokens(buff)
+
+                return (
+                  <button
+                    key={buff.id}
+                    onClick={() => toggleBuff(char.id, buff.id)}
+                    aria-pressed={isActive}
+                    title={isActive ? `Disable ${buff.name}` : `Enable ${buff.name}`}
+                    className="flex w-full items-center gap-2.5 rounded-xl border bg-surface-container/80 px-2.5 py-2 text-left backdrop-blur-sm transition-all hover:bg-surface-container-high active:scale-[0.99] cursor-pointer"
+                    style={
+                      isActive
+                        ? {
+                            borderColor: hex,
+                            backgroundColor: `${hex}14`,
+                            boxShadow: `0 0 16px ${hex}35`,
+                          }
+                        : { borderColor: 'rgba(255,255,255,0.07)' }
+                    }
+                  >
+                    <span
+                      className="h-1.5 w-1.5 flex-shrink-0 rounded-full transition-all"
+                      style={
+                        isActive
+                          ? { backgroundColor: hex, boxShadow: `0 0 8px ${hex}` }
+                          : { backgroundColor: 'rgba(255,255,255,0.18)' }
+                      }
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className="block truncate font-label text-[11px] font-bold tracking-wide"
+                        style={{ color: isActive ? hex : 'rgba(241,245,249,0.72)' }}
+                      >
+                        {buff.name}
+                      </span>
+                      {isActive && (
+                        <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                          {tokens.length > 0 ? (
+                            tokens.map((token, index) => (
+                              <span key={`${token.label}-${index}`} className="contents">
+                                {index > 0 && <span className="font-label text-[8px] text-tertiary/40">|</span>}
+                                <span className={`font-label text-[9px] font-bold tabular-nums ${modifierColor(token.value)}`}>
+                                  {token.value !== null ? `${token.value > 0 ? '+' : ''}${token.value} ${token.label}` : `+${token.label}`}
+                                </span>
+                              </span>
+                            ))
+                          ) : (
+                            <span className="font-label text-[9px] text-tertiary">No numeric modifiers</span>
+                          )}
+                        </span>
+                      )}
+                      <span className="sr-only">
+                        {[
+                          buff.attackMod !== 0 ? `${buff.attackMod > 0 ? '+' : ''}${buff.attackMod} Att` : '',
+                          buff.damageMod !== 0 ? `${buff.damageMod > 0 ? '+' : ''}${buff.damageMod} Dmg` : '',
+                          buff.acMod !== 0 ? `${buff.acMod > 0 ? '+' : ''}${buff.acMod} AC` : '',
+                          buff.extraDamageDice ? `+${buff.extraDamageDice}` : '',
+                          ...(typeof buff.saveMod === 'number' && buff.saveMod !== 0
+                            ? [`${buff.saveMod > 0 ? '+' : ''}${buff.saveMod} Saves`]
+                            : typeof buff.saveMod === 'object' && buff.saveMod !== null
+                              ? Object.entries(buff.saveMod)
+                                  .filter(([, v]) => v !== undefined && v !== 0)
+                                  .map(([k, v]) => `${(v as number) > 0 ? '+' : ''}${v} ${k === 'fort' ? 'Fort' : k === 'ref' ? 'Ref' : k === 'will' ? 'Will' : k}`)
+                              : []),
+                          buff.meleeOnly ? 'Melee only' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' / ')}
+                      </span>
+                    </span>
+                    <span
+                      className="flex-shrink-0 font-label text-[9px] font-bold uppercase tracking-wider"
+                      style={{ color: isActive ? hex : 'rgba(255,255,255,0.32)' }}
+                    >
+                      {isActive ? 'On' : 'Off'}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {char.dailyResources.length > 0 && (
+              <div className="mt-3 space-y-1 border-t border-white/5 pt-2">
+                {char.dailyResources.map((resource) => (
+                  <DailyResourcePips
+                    key={resource.id}
+                    characterId={char.id}
+                    resource={resource}
+                    spent={session.spentResources[resource.id] ?? 0}
+                    compact
+                  />
+                ))}
+              </div>
+            )}
+
+            <DefensiveBadges compact />
+          </section>
+
+          <ContextualCombatFeatures collapsible defaultCollapsed compact />
+
+          <CombatManeuversPanel maneuversCalc={maneuversCalc} openRoll={openRoll} />
+
+          {summonableSpells.length > 0 && (
+            <SummonSection
+              spells={summonableSpells}
+              activeSummonId={activeSummon?.optionId ?? null}
+              onSelect={(spellId, opt) => {
+                if (activeSummon?.optionId === opt.id) {
+                  clearSummon(char.id)
+                } else {
+                  setSummon(char.id, { spellId, optionId: opt.id, currentHp: opt.hp })
+                }
+              }}
+            />
+          )}
+        </aside>
       </div>
 
       {/* Full Attack Routine Modal */}

@@ -41,317 +41,223 @@ export function WeaponCard({
   const showOffhand = twfActive && isMelee
   const offhandBonus = effective.attackBonus[0] + offhandPenalty
   const hasMultipleAttacks = effective.attackBonus.length > 1 || showOffhand || isHaste
+  const damageText = formatDamage(weapon.damageDice, effective.damageBonus)
+  const critText = `${weapon.critRange < 20 ? `${weapon.critRange}-20` : '20'} / x${weapon.critMultiplier}`
+
+  const actionClass =
+    'group/action flex min-h-[52px] flex-col items-center justify-center rounded-xl border px-3 py-2 transition-all active:scale-95 cursor-pointer'
+  const attackClass = `${actionClass} border-primary/35 bg-primary/10 text-white hover:border-primary/70 hover:bg-primary/20`
+  const damageClass = `${actionClass} border-secondary/35 bg-secondary/10 text-white hover:border-secondary/70 hover:bg-secondary/20`
 
   return (
-    <div className="bg-surface-container/90 backdrop-blur-sm p-5 md:p-6 relative group transition-all hover:bg-surface-container-high rounded-2xl border border-white/[0.08] shadow-[0_4px_24px_rgba(0,0,0,0.35)] hover:border-primary/30">
-      {/* Header & Specs Cluster */}
-      <div className="flex justify-between items-start gap-3 mb-5">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 flex-wrap mb-1">
-            <span
-              className={`text-[10px] font-label uppercase tracking-[0.2em] inline-block px-2.5 py-0.5 rounded-full ${
-                isMelee
-                  ? 'bg-primary/15 text-primary border border-primary/30'
-                  : 'bg-secondary/15 text-secondary border border-secondary/30'
-              }`}
-            >
-              {isMelee ? 'Melee' : 'Ranged'}
-            </span>
-          </div>
-          <h3 className="text-xl md:text-2xl font-headline font-bold text-white tracking-wide truncate">
-            {weapon.name}
-          </h3>
-          <div className="flex gap-1.5 mt-2 flex-wrap">
-            {weapon.tags.map((tag) => (
-              <span
-                key={tag}
-                className="bg-surface-container-highest px-2 py-0.5 text-[10px] font-label text-secondary border border-secondary/20 rounded-md uppercase tracking-wider"
-              >
-                {tag}
+    <article className="overflow-hidden rounded-2xl border border-white/[0.08] bg-surface-container/70 backdrop-blur-sm transition-colors hover:border-white/15">
+      <div className="p-3.5 md:p-4">
+        {/* Identity line */}
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="material-symbols-outlined text-lg text-primary/70">
+                {isMelee ? 'swords' : 'my_location'}
               </span>
-            ))}
-          </div>
-        </div>
+              <h3 className="truncate font-headline text-lg font-bold text-white md:text-xl">
+                {weapon.name}
+              </h3>
+              <span
+                className={`rounded-full border px-2 py-0.5 font-label text-[9px] font-bold uppercase tracking-[0.14em] ${
+                  isMelee
+                    ? 'border-primary/30 bg-primary/10 text-primary'
+                    : 'border-secondary/30 bg-secondary/10 text-secondary'
+                }`}
+              >
+                {isMelee ? 'Melee' : 'Ranged'}
+              </span>
+            </div>
 
-        {/* Specs Cluster: Critical & Ammo Tracker */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Critical Badge */}
-          <div className="bg-surface-container-high border border-white/10 px-3 py-2 text-center rounded-xl min-w-[70px]">
-            <p className="font-label text-[9px] text-tertiary uppercase tracking-widest leading-none mb-1">
-              Critical
-            </p>
-            <p className="font-label text-sm md:text-base font-bold text-secondary leading-tight">
-              {weapon.critRange < 20 ? `${weapon.critRange}-20` : '20'} / x{weapon.critMultiplier}
+            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-label text-[10px] text-tertiary">
+              {weapon.tags.map((tag) => (
+                <span key={tag} className="after:ml-2 after:text-white/15 after:content-['·'] last:after:content-['']">
+                  {tag}
+                </span>
+              ))}
+              <span>
+                Critical <strong className="font-semibold text-secondary">{critText}</strong>
+              </span>
             </p>
           </div>
 
-          {/* Ammo Tracker for Ranged Weapons */}
+          {/* Ranged ammo, inline */}
           {weapon.type === 'ranged' && maxAmmo !== undefined && (
-            <div className="bg-surface-container-high border border-white/10 px-3 py-2 text-center rounded-xl min-w-[76px]">
-              <div className="flex items-center justify-between gap-1 mb-1">
-                <p className="font-label text-[9px] text-tertiary uppercase tracking-widest leading-none">
-                  Ammo
-                </p>
-                <p className="font-label text-xs text-secondary font-bold leading-none">
-                  {ammo ?? 0}/{maxAmmo}
-                </p>
-              </div>
-              {onAmmoChange && (
-                maxAmmo <= 10 ? (
-                  <div className="flex items-center gap-1 justify-center mt-1">
+            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-surface-container-lowest/60 px-2.5 py-1.5">
+              <span className="font-label text-[9px] uppercase tracking-wider text-tertiary">Ammo</span>
+              <span className="font-label text-[11px] font-bold tabular-nums text-secondary">
+                {ammo ?? 0}/{maxAmmo}
+              </span>
+              {onAmmoChange &&
+                (maxAmmo <= 10 ? (
+                  <div className="flex items-center gap-1">
                     {Array.from({ length: maxAmmo }).map((_, i) => (
                       <button
                         key={i}
                         type="button"
                         onClick={() => onAmmoChange(i < (ammo ?? 0) ? (ammo ?? 0) - 1 : (ammo ?? 0) + 1)}
-                        className={`w-2 h-4 rounded-xs transition-all cursor-pointer ${
+                        className={`h-4 w-1.5 rounded-full transition-all cursor-pointer ${
                           i < (ammo ?? 0)
                             ? 'bg-secondary shadow-[0_0_6px_#d946ef]'
-                            : 'bg-surface-container-lowest border border-white/10 hover:border-secondary/40'
+                            : 'bg-surface-container-highest hover:bg-secondary/40'
                         }`}
                         aria-label={`Ammo ${i + 1}`}
                       />
                     ))}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1.5 justify-center mt-1">
+                  <div className="flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => onAmmoChange(Math.max(0, (ammo ?? 0) - 1))}
                       disabled={(ammo ?? 0) <= 0}
-                      className="w-5 h-5 rounded bg-surface-container-lowest hover:bg-surface-container text-tertiary hover:text-white flex items-center justify-center text-xs cursor-pointer border border-white/5 disabled:opacity-40"
+                      className="flex h-5 w-5 items-center justify-center rounded-md border border-white/5 bg-surface-container text-xs text-tertiary hover:text-white disabled:opacity-40 cursor-pointer"
                       aria-label="Decrease ammo"
                     >
                       -
                     </button>
-                    <div className="w-10 h-1.5 bg-surface-container-lowest rounded-full overflow-hidden border border-white/5">
-                      <div
-                        className="h-full bg-secondary shadow-[0_0_6px_#d946ef] rounded-full transition-all"
-                        style={{ width: `${Math.min(100, ((ammo ?? 0) / maxAmmo) * 100)}%` }}
-                      />
-                    </div>
                     <button
                       type="button"
                       onClick={() => onAmmoChange(Math.min(maxAmmo, (ammo ?? 0) + 1))}
                       disabled={(ammo ?? 0) >= maxAmmo}
-                      className="w-5 h-5 rounded bg-surface-container-lowest hover:bg-surface-container text-tertiary hover:text-white flex items-center justify-center text-xs cursor-pointer border border-white/5 disabled:opacity-40"
+                      className="flex h-5 w-5 items-center justify-center rounded-md border border-white/5 bg-surface-container text-xs text-tertiary hover:text-white disabled:opacity-40 cursor-pointer"
                       aria-label="Increase ammo"
                     >
                       +
                     </button>
                   </div>
-                )
-              )}
+                ))}
             </div>
           )}
         </div>
-      </div>
 
-      {/* Full Attack Routine Banner (if multiple attacks available) */}
-      {hasMultipleAttacks && onFullAttackRoll && (
-        <button
-          type="button"
-          onClick={onFullAttackRoll}
-          className="w-full py-2 px-3 mb-3 bg-gradient-to-r from-primary/15 via-primary/25 to-secondary/15 hover:from-primary/25 hover:to-secondary/25 border border-primary/40 hover:border-primary/70 text-white font-label text-xs uppercase tracking-wider font-bold rounded-xl transition-all hover:shadow-[0_0_20px_rgba(0,240,255,0.25)] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
-        >
-          <span className="material-symbols-outlined text-base text-primary">fast_forward</span>
-          <span>
-            Full Attack Routine ({formatAttackBonus(effective.attackBonus)}
-            {isHaste ? ` + Haste (${effective.attackBonus[0] >= 0 ? `+${effective.attackBonus[0]}` : effective.attackBonus[0]})` : ''}
-            {showOffhand ? ` / Off ${offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus}` : ''})
-          </span>
-        </button>
-      )}
-
-      {/* Balanced 2-Column Action Pod: [ ATTACK ] [ DAMAGE ] */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch">
-        {/* Left Column: Attack Actions */}
-        <div className="flex flex-col justify-center">
+        {/* Actions */}
+        <div className="mt-3 flex flex-wrap items-stretch gap-2">
+          {/* Attack roll(s) */}
           {effective.attackBonus.length > 1 ? (
-            /* Multiple Iterative Attacks */
-            <div className={`grid gap-2 h-full ${effective.attackBonus.length + (showOffhand ? 1 : 0) > 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-              {effective.attackBonus.map((bonus, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => onAttackRoll(idx)}
-                  className="py-2.5 px-3 bg-gradient-to-b from-primary/20 to-primary/10 hover:from-primary/30 hover:to-primary/20 text-white border border-primary/40 hover:border-primary shadow-[0_0_12px_rgba(0,240,255,0.12)] hover:shadow-[0_0_20px_rgba(0,240,255,0.25)] rounded-xl transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center min-h-[58px]"
-                >
-                  <span className="text-[9px] font-label uppercase tracking-widest text-primary mb-0.5 font-semibold">
-                    {idx + 1}° Attack
-                  </span>
-                  <span className="text-xl font-black font-label text-white">
-                    {bonus >= 0 ? `+${bonus}` : bonus}
-                  </span>
-                </button>
-              ))}
-
-              {showOffhand && (
-                <button
-                  type="button"
-                  onClick={onOffhandRoll}
-                  className="py-2.5 px-3 bg-gradient-to-b from-secondary/20 to-secondary/10 hover:from-secondary/30 hover:to-secondary/20 text-white border border-secondary/40 hover:border-secondary shadow-[0_0_12px_rgba(217,70,239,0.15)] hover:shadow-[0_0_20px_rgba(217,70,239,0.3)] rounded-xl transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center min-h-[58px]"
-                >
-                  <span className="text-[9px] font-label uppercase tracking-widest text-secondary mb-0.5 font-semibold">
-                    Off-hand
-                  </span>
-                  <StatBreakdownTooltip
-                    title={`${weapon.name} — Off-hand`}
-                    total={offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus}
-                    breakdown={[...effective.attackBreakdown, { label: 'Off-hand Penalty', value: offhandPenalty }]}
-                    trigger="click"
-                  >
-                    <span className="text-xl font-black font-label text-white tabular-nums underline decoration-secondary/20 decoration-dotted underline-offset-4">
-                      {offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus}
-                    </span>
-                  </StatBreakdownTooltip>
-                </button>
-              )}
-            </div>
-          ) : showOffhand ? (
-            /* Single Attack + Off-hand */
-            <div className="grid grid-cols-2 gap-2 h-full">
+            effective.attackBonus.map((bonus, idx) => (
               <button
+                key={idx}
                 type="button"
-                onClick={() => onAttackRoll(0)}
-                className="p-3 bg-gradient-to-b from-primary/25 to-primary/10 hover:from-primary/35 hover:to-primary/20 text-white border border-primary/40 hover:border-primary shadow-[0_0_12px_rgba(0,240,255,0.15)] hover:shadow-[0_0_20px_rgba(0,240,255,0.3)] rounded-xl transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center min-h-[58px]"
+                onClick={() => onAttackRoll(idx)}
+                title={`Roll attack ${idx + 1}`}
+                className={`${attackClass} min-w-[78px]`}
               >
-                <span className="text-[9px] font-label uppercase tracking-widest text-primary mb-0.5 font-semibold">
-                  Primary Attack
+                <span className="font-label text-[9px] uppercase tracking-wider text-primary/80">
+                  {idx + 1}° Attack
                 </span>
-                <StatBreakdownTooltip
-                  title={`${weapon.name} — Attack`}
-                  total={formatAttackBonus(effective.attackBonus)}
-                  breakdown={effective.attackBreakdown}
-                  trigger="click"
-                >
-                  <span className="text-xl font-black font-label text-white tabular-nums underline decoration-primary/20 decoration-dotted underline-offset-4">
-                    {formatAttackBonus(effective.attackBonus)}
-                  </span>
-                </StatBreakdownTooltip>
-              </button>
-
-              <button
-                type="button"
-                onClick={onOffhandRoll}
-                className="p-3 bg-gradient-to-b from-secondary/25 to-secondary/10 hover:from-secondary/35 hover:to-secondary/20 text-white border border-secondary/40 hover:border-secondary shadow-[0_0_12px_rgba(217,70,239,0.15)] hover:shadow-[0_0_20px_rgba(217,70,239,0.3)] rounded-xl transition-all active:scale-95 cursor-pointer flex flex-col items-center justify-center min-h-[58px]"
-              >
-                <span className="text-[9px] font-label uppercase tracking-widest text-secondary mb-0.5 font-semibold">
-                  Off-hand
-                </span>
-                <span className="text-xl font-black font-label text-white">
-                  {formatAttackBonus([offhandBonus])}
+                <span className="font-label text-lg font-black tabular-nums text-white">
+                  {bonus >= 0 ? `+${bonus}` : bonus}
                 </span>
               </button>
-            </div>
+            ))
           ) : (
-            /* Standard Single Attack */
             <button
               type="button"
               onClick={() => onAttackRoll(0)}
-              className="group/atk relative flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary/20 via-primary/10 to-surface-container-high hover:from-primary/30 hover:to-surface-container-highest border border-primary/40 hover:border-primary text-white rounded-xl shadow-[0_0_15px_rgba(0,240,255,0.15)] hover:shadow-[0_0_25px_rgba(0,240,255,0.3)] transition-all cursor-pointer active:scale-[0.98] w-full min-h-[58px]"
+              title={`Roll attack (${formatAttackBonus(effective.attackBonus)})`}
+              className={`${attackClass} min-w-[108px]`}
             >
-              <div className="text-left">
-                <div className="flex items-center gap-1 mb-1">
-                  <span className="text-[9px] font-label font-bold text-primary/70 bg-primary/10 px-1 rounded">1</span>
-                  <span className="text-[10px] font-label uppercase tracking-widest text-primary block font-bold leading-none">
-                    Attack
-                  </span>
-                </div>
-                <span className="text-[11px] font-label text-tertiary uppercase tracking-wider block leading-none">
-                  To-Hit Roll
+              <span className="font-label text-[9px] uppercase tracking-wider text-primary/80">
+                {showOffhand ? 'Primary Attack' : 'Attack'}
+              </span>
+              <StatBreakdownTooltip
+                title={`${weapon.name} — Attack`}
+                total={formatAttackBonus(effective.attackBonus)}
+                breakdown={effective.attackBreakdown}
+                trigger="click"
+              >
+                <span className="font-label text-lg font-black tabular-nums text-white underline decoration-primary/20 decoration-dotted underline-offset-4">
+                  {formatAttackBonus(effective.attackBonus)}
                 </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <StatBreakdownTooltip
-                  title={`${weapon.name} — Attack`}
-                  total={formatAttackBonus(effective.attackBonus)}
-                  breakdown={effective.attackBreakdown}
-                  trigger="click"
-                  align="right"
-                >
-                  <span className="text-2xl font-black font-label text-white group-hover/atk:text-primary transition-colors tabular-nums underline decoration-primary/20 decoration-dotted underline-offset-4">
-                    {formatAttackBonus(effective.attackBonus)}
-                  </span>
-                </StatBreakdownTooltip>
-                <span className="material-symbols-outlined text-primary/60 group-hover/atk:text-primary text-lg transition-colors">
-                  casino
-                </span>
-              </div>
+              </StatBreakdownTooltip>
             </button>
           )}
-        </div>
 
-        {/* Right Column: Damage Actions (and Sneak Attack) */}
-        <div className="flex flex-col justify-center">
-          {sneakAttackDice && onSneakAttackRoll ? (
-            <div className="grid grid-cols-2 gap-2 h-full">
-              <button
-                type="button"
-                onClick={onDamageRoll}
-                className="group/dmg p-3 bg-gradient-to-b from-secondary/25 to-secondary/10 hover:from-secondary/35 hover:to-secondary/20 border border-secondary/40 hover:border-secondary text-white rounded-xl shadow-[0_0_12px_rgba(217,70,239,0.15)] hover:shadow-[0_0_20px_rgba(217,70,239,0.3)] transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-center min-h-[58px]"
-              >
-                <div className="flex items-center gap-1 mb-0.5">
-                  <span className="text-[9px] font-label font-bold text-secondary/70 bg-secondary/10 px-1 rounded">2</span>
-                  <span className="text-[9px] font-label uppercase tracking-widest text-secondary font-bold">
-                    Damage
-                  </span>
-                </div>
-                <span className="text-lg font-black font-label text-white group-hover/dmg:text-secondary transition-colors truncate">
-                  {formatDamage(weapon.damageDice, effective.damageBonus)}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={onSneakAttackRoll}
-                className="group/sneak p-3 bg-gradient-to-b from-error/25 to-error/10 hover:from-error/35 hover:to-error/20 border border-error/40 hover:border-error text-error rounded-xl shadow-[0_0_12px_rgba(255,75,96,0.15)] hover:shadow-[0_0_20px_rgba(255,75,96,0.3)] transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-center min-h-[58px]"
-              >
-                <span className="text-[9px] font-label uppercase tracking-widest text-error mb-0.5 font-bold truncate max-w-full">
-                  {extraDiceLabel ?? 'Extra Dmg'}
-                </span>
-                <span className="text-lg font-black font-label text-white group-hover/sneak:text-error transition-colors">
-                  {sneakAttackDice}
-                </span>
-              </button>
-            </div>
-          ) : (
+          {showOffhand && (
             <button
               type="button"
-              onClick={onDamageRoll}
-              className="group/dmg relative flex items-center justify-between px-4 py-3 bg-gradient-to-r from-secondary/20 via-secondary/10 to-surface-container-high hover:from-secondary/30 hover:to-surface-container-highest border border-secondary/40 hover:border-secondary text-white rounded-xl shadow-[0_0_15px_rgba(217,70,239,0.15)] hover:shadow-[0_0_25px_rgba(217,70,239,0.3)] transition-all cursor-pointer active:scale-[0.98] w-full min-h-[58px]"
+              onClick={onOffhandRoll}
+              title={`Roll off-hand attack (${offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus})`}
+              className={`${actionClass} min-w-[84px] border-secondary/35 bg-secondary/10 text-white hover:border-secondary/70 hover:bg-secondary/20`}
             >
-              <div className="text-left">
-                <div className="flex items-center gap-1 mb-1">
-                  <span className="text-[9px] font-label font-bold text-secondary/70 bg-secondary/10 px-1 rounded">2</span>
-                  <span className="text-[10px] font-label uppercase tracking-widest text-secondary block font-bold leading-none">
-                    Damage
-                  </span>
-                </div>
-                <span className="text-[11px] font-label text-tertiary uppercase tracking-wider block leading-none">
-                  Formula Roll
+              <span className="font-label text-[9px] uppercase tracking-wider text-secondary/80">
+                Off-hand
+              </span>
+              <StatBreakdownTooltip
+                title={`${weapon.name} — Off-hand`}
+                total={offhandBonus >= 0 ? `+${offhandBonus}` : `${offhandBonus}`}
+                breakdown={[...effective.attackBreakdown, { label: 'Off-hand Penalty', value: offhandPenalty }]}
+                trigger="click"
+              >
+                <span className="font-label text-lg font-black tabular-nums text-white underline decoration-secondary/20 decoration-dotted underline-offset-4">
+                  {offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus}
                 </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <StatBreakdownTooltip
-                  title={`${weapon.name} — Damage`}
-                  total={formatDamage(weapon.damageDice, effective.damageBonus)}
-                  breakdown={effective.damageBreakdown}
-                  trigger="click"
-                  align="right"
-                >
-                  <span className="text-xl md:text-2xl font-black font-label text-white group-hover/dmg:text-secondary transition-colors tabular-nums underline decoration-secondary/20 decoration-dotted underline-offset-4">
-                    {formatDamage(weapon.damageDice, effective.damageBonus)}
-                  </span>
-                </StatBreakdownTooltip>
-                <span className="material-symbols-outlined text-secondary/60 group-hover/dmg:text-secondary text-lg transition-colors">
-                  colorize
-                </span>
-              </div>
+              </StatBreakdownTooltip>
+            </button>
+          )}
+
+          {/* Damage roll */}
+          <button
+            type="button"
+            onClick={onDamageRoll}
+            title={`Roll damage (${damageText})`}
+            className={`${damageClass} min-w-[104px]`}
+          >
+            <span className="font-label text-[9px] uppercase tracking-wider text-secondary/80">Damage</span>
+            <StatBreakdownTooltip
+              title={`${weapon.name} — Damage`}
+              total={damageText}
+              breakdown={effective.damageBreakdown}
+              trigger="click"
+            >
+              <span className="font-label text-base font-black tabular-nums text-white underline decoration-secondary/20 decoration-dotted underline-offset-4 md:text-lg">
+                {damageText}
+              </span>
+            </StatBreakdownTooltip>
+          </button>
+
+          {/* Extra damage dice (sneak attack, style bonuses, …) */}
+          {sneakAttackDice && onSneakAttackRoll && (
+            <button
+              type="button"
+              onClick={onSneakAttackRoll}
+              title={`Roll ${extraDiceLabel ?? 'extra damage'}`}
+              className={`${actionClass} min-w-[84px] border-error/35 bg-error/10 text-white hover:border-error/70 hover:bg-error/20`}
+            >
+              <span className="font-label text-[9px] uppercase tracking-wider text-error/90">
+                {extraDiceLabel ?? 'Extra Dmg'}
+              </span>
+              <span className="font-label text-lg font-black tabular-nums text-white">
+                {sneakAttackDice}
+              </span>
             </button>
           )}
         </div>
+
+        {/* Full attack routine */}
+        {hasMultipleAttacks && onFullAttackRoll && (
+          <button
+            type="button"
+            onClick={onFullAttackRoll}
+            className="mt-2 flex w-full items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2 font-label text-[10px] text-tertiary transition-colors hover:border-primary/30 hover:text-white cursor-pointer"
+          >
+            <span className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-sm text-primary/80">fast_forward</span>
+              <span>
+                Full Attack Routine ({formatAttackBonus(effective.attackBonus)}
+                {isHaste ? ` + Haste (${effective.attackBonus[0] >= 0 ? `+${effective.attackBonus[0]}` : effective.attackBonus[0]})` : ''}
+                {showOffhand ? ` / Off ${offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus}` : ''})
+              </span>
+            </span>
+            <span className="material-symbols-outlined text-sm text-tertiary">chevron_right</span>
+          </button>
+        )}
       </div>
-    </div>
+    </article>
   )
 }

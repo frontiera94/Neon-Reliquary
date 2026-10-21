@@ -10,6 +10,8 @@ export interface ActionEconomyTrackerProps {
   onResetActions?: () => void
   onNewTurn?: () => void
   onResetRound?: () => void
+  /** Single-line turn strip for the combat cockpit. */
+  compact?: boolean
 }
 
 export function ActionEconomyTracker({
@@ -20,6 +22,7 @@ export function ActionEconomyTracker({
   onResetActions,
   onNewTurn,
   onResetRound,
+  compact = false,
 }: ActionEconomyTrackerProps) {
   const [internalEconomy, setInternalEconomy] = useState<ActionEconomyState>(defaultActionEconomy())
   const [internalRound, setInternalRound] = useState<number>(initialRound)
@@ -110,6 +113,83 @@ export function ActionEconomyTracker({
   ]
 
   const spentCount = Object.values(economy).filter(Boolean).length
+
+  if (compact) {
+    return (
+      <section
+        aria-label="Round action economy"
+        className="rounded-2xl border border-white/10 bg-surface-container/80 px-3 py-2.5 backdrop-blur-sm"
+      >
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Round + remaining actions */}
+          <div className="order-1 flex items-center gap-2.5 pr-3 md:border-r md:border-white/10">
+            <span
+              data-testid="round-counter"
+              className="font-label text-xs font-bold uppercase tracking-wider text-white"
+            >
+              Round <span className="text-primary">{currentRound}</span>
+            </span>
+            <span className="font-label text-[10px] text-tertiary">
+              {spentCount === 0 ? 'All actions ready' : `${5 - spentCount}/5 ready`}
+            </span>
+          </div>
+
+          {/* Turn controls: same row as the round on small screens */}
+          <div className="order-2 ml-auto flex items-center gap-1.5 md:order-3 md:ml-0">
+            <button
+              type="button"
+              onClick={handleResetRound}
+              aria-label="Reset Round"
+              title="Reset combat to Round 1"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-surface-container-high text-tertiary transition-colors hover:border-amber-400/40 hover:text-amber-300 active:scale-95 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">restart_alt</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleNewTurn}
+              title="Reset actions and advance to the next round"
+              className="flex min-h-[40px] items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/15 px-3 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider text-primary transition-all hover:bg-primary/25 hover:text-white active:scale-95 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">refresh</span>
+              <span>New Turn</span>
+            </button>
+          </div>
+
+          {/* Action slots: 3-up grid on phones, inline row on desktop */}
+          <div className="order-3 grid w-full grid-cols-3 gap-1.5 md:order-2 md:flex md:min-w-0 md:flex-1 md:flex-wrap md:items-center">
+            {actions.map((act) => {
+              const isSpent = Boolean(economy[act.key])
+              return (
+                <button
+                  key={act.key}
+                  type="button"
+                  onClick={() => handleToggle(act.key)}
+                  aria-pressed={isSpent}
+                  title={`${act.label}: ${act.sublabel}`}
+                  className={`group flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.97] md:justify-start md:px-2.5 ${
+                    isSpent
+                      ? 'border-white/5 bg-surface-container-lowest/50 text-tertiary/50 line-through'
+                      : 'border-white/10 bg-surface-container-high text-on-surface hover:border-primary/40 hover:text-primary'
+                  }`}
+                >
+                  <span
+                    className={`material-symbols-outlined text-base ${
+                      isSpent ? 'text-tertiary/40' : 'text-primary'
+                    }`}
+                  >
+                    {isSpent ? 'check' : act.icon}
+                  </span>
+                  <span>{act.label}</span>
+                  <span className="sr-only">{isSpent ? 'Spent' : 'Ready'}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <div className="bg-surface-container/90 backdrop-blur-sm p-5 rounded-2xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.35)] space-y-4">

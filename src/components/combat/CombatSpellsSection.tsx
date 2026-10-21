@@ -1,14 +1,18 @@
 import { useState } from 'react'
-import type { Spell, SpellSlot } from '../../types/resources'
+import type { DailyResource, Spell, SpellSlot } from '../../types/resources'
 import type { AbilityScore } from '../../types/character'
 import type { DiceRoll } from '../../types/dice'
 import { abilityMod, parseDiceFormula } from '../../lib/dice-engine'
+import { getSpellAvailability, type SpellAvailability } from '../../lib/spell-availability'
 
 export interface CombatSpellsSectionProps {
   spells: Spell[]
   spellSlots: SpellSlot[]
   preparedSpellIds: string[]
+  preparedSpells?: Record<string, number>
   spentSpellSlots: Record<number, number>
+  spentResources?: Record<string, number>
+  dailyResources?: DailyResource[]
   charClass: string
   charLevel: number
   abilities: AbilityScore
@@ -16,25 +20,13 @@ export interface CombatSpellsSectionProps {
   spellFailureChance?: number
   feats?: { id?: string; name: string }[]
   casterLevel?: number
+  spellAvailability?: SpellAvailability
+  /** Combat cockpit keeps the spellbook folded until it is needed. */
+  defaultExpanded?: boolean
   openRoll: (roll: DiceRoll) => void
   onSpendSlot: (level: number, max: number) => void
   onRecoverSlot: (level: number) => void
-}
-
-function getSpellcastingAbility(charClass: string): 'int' | 'wis' | 'cha' {
-  const cls = charClass.toLowerCase()
-  if (/wizard|magus|witch|alchemist|investigator|arcanist|rogue/.test(cls)) {
-    return 'int'
-  }
-  if (/sorcerer|bard|oracle|summoner|skald|bloodrager|paladin/.test(cls)) {
-    return 'cha'
-  }
-  return 'wis'
-}
-
-function isSpontaneousCaster(charClass: string): boolean {
-  const cls = charClass.toLowerCase()
-  return /sorcerer|bard|oracle|inquisitor|summoner|bloodrager|skald|hunter/.test(cls)
+  onSpendResource?: (resourceId: string, max: number) => void
 }
 
 function getSpellFocusBonus(school: string, feats: { id?: string; name: string }[]): number {
@@ -58,7 +50,10 @@ export function CombatSpellsSection({
   spells,
   spellSlots,
   preparedSpellIds,
+  preparedSpells,
   spentSpellSlots,
+  spentResources,
+  dailyResources,
   charClass,
   charLevel,
   abilities,
@@ -66,11 +61,14 @@ export function CombatSpellsSection({
   spellFailureChance = 0,
   feats = [],
   casterLevel,
+  spellAvailability,
+  defaultExpanded = true,
   openRoll,
   onSpendSlot,
   onRecoverSlot,
+  onSpendResource,
 }: CombatSpellsSectionProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const [activeLevelFilter, setActiveLevelFilter] = useState<number | 'all'>('all')
   const [sortBy, setSortBy] = useState<'level' | 'offensive' | 'name'>('level')
   const [searchQuery, setSearchQuery] = useState('')
@@ -83,19 +81,33 @@ export function CombatSpellsSection({
   }
 
   const cl = casterLevel ?? charLevel
-  const castAbil = getSpellcastingAbility(charClass)
-  const castingMod = abilityMod(abilities[castAbil])
+  const availability =
+    spellAvailability ??
+    getSpellAvailability(
+      {
+        class: charClass,
+        level: charLevel,
+        abilities,
+        spells,
+        spellSlots,
+        dailyResources,
+      },
+      {
+        preparedSpellIds,
+        preparedSpells,
+        spentSpellSlots,
+        spentResources,
+      }
+    )
+  const castAbil = availability.castingAbility
+  const castingMod = availability.castingMod
   const concentrationMod = cl + castingMod
   const hasCombatCasting = feats.some((f) => /combat casting/i.test(f.name))
   const bab = baseAttackBonus[0] ?? 0
   const dexMod = abilityMod(abilities.dex)
   const strMod = abilityMod(abilities.str)
 
-  // Spells that are prepared, cantrips (level 0), or known spells for spontaneous casters
-  const isSpontaneous = isSpontaneousCaster(charClass)
-  const combatSpells = spells.filter(
-    (s) => s.level === 0 || isSpontaneous || preparedSpellIds.includes(s.id)
-  )
+  const combatSpells = availability.combatSpells
 
   const filteredSpells = combatSpells.filter((s) => {
     if (activeLevelFilter !== 'all' && s.level !== activeLevelFilter) return false
@@ -134,7 +146,10 @@ export function CombatSpellsSection({
     return a.name.localeCompare(b.name)
   })
 
-  const availableLevels = [...new Set(combatSpells.map((s) => s.level))].sort((a, b) => a - b)
+  const availableLevels = [
+    ...(availability.cantrips.length > 0 ? [0] : []),
+    ...availability.levels.filter((level) => level.total > 0).map((level) => level.level),
+  ]
 
   function handleConcentrationCheck(defensive = false) {
     const bonus = defensive ? concentrationMod + 4 : concentrationMod
@@ -192,13 +207,16 @@ export function CombatSpellsSection({
   }
 
   function handleCast(spell: Spell) {
-    const slotInfo = spellSlots.find((s) => s.level === spell.level)
-    const maxSlots = slotInfo?.total ?? 0
-    const spent = spentSpellSlots[spell.level] ?? 0
+    if (!availability.isCastable(spell)) return
 
-    // Deduct spell slot if level > 0 and slots exist
-    if (spell.level > 0 && maxSlots > 0 && spent < maxSlots) {
-      onSpendSlot(spell.level, maxSlots)
+    if (availability.slotCost(spell) > 0) {
+      const level = availability.getLevel(spell.level)
+      if (level) onSpendSlot(level.level, level.total)
+    }
+
+    const resource = availability.resourceFor(spell)
+    if (resource && spell.source === 'sla') {
+      onSpendResource?.(resource.id, resource.total)
     }
 
     // Trigger attack roll if touch/ray, else direct damage roll if specified
@@ -217,40 +235,55 @@ export function CombatSpellsSection({
     <div className="bg-surface-container/90 backdrop-blur-sm rounded-2xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.35)] overflow-hidden space-y-0">
       {/* Header */}
       <div
+        role="button"
+        tabIndex={0}
         onClick={() => setIsExpanded(!isExpanded)}
-        className="p-5 flex items-center justify-between cursor-pointer hover:bg-surface-container-high transition-colors"
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            setIsExpanded(!isExpanded)
+          }
+        }}
+        aria-expanded={isExpanded}
+        className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-surface-container-high/60"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-secondary/15 border border-secondary/30 flex items-center justify-center text-secondary">
-            <span className="material-symbols-outlined text-lg">auto_fix_high</span>
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-headline text-sm uppercase tracking-widest text-white font-bold">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="material-symbols-outlined text-lg text-secondary">auto_fix_high</span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <h3 className="font-headline text-base font-bold text-white">
                 Combat Spells & Invocations
               </h3>
-              <span className="font-label text-xs text-secondary font-bold">
-                ({combatSpells.length} Prepared/Cantrips)
+              <span className="font-label text-[10px] text-secondary">
+                {availability.castableSpells.length} castable
               </span>
               {spellFailureChance > 0 && (
                 <span
-                  className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/40 text-amber-300 font-label text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-[0_0_8px_rgba(245,158,11,0.2)] cursor-help"
+                  className="flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 font-label text-[9px] font-bold uppercase tracking-wider text-amber-300"
                   title={`Arcane Spell Failure: ${spellFailureChance}% chance of failure when casting spells with somatic components while wearing armor or shields.`}
                 >
-                  <span className="material-symbols-outlined text-xs text-amber-400 leading-none">warning</span>
+                  <span className="material-symbols-outlined text-[11px] leading-none text-amber-400">warning</span>
                   ASF {spellFailureChance}%
                 </span>
               )}
             </div>
-            <p className="font-label text-[10px] text-tertiary tracking-wider mt-0.5">
-              Instant spellcasting, touch attack rolls & automatic slot tracking
+            <p className="mt-0.5 truncate font-label text-[10px] text-tertiary">
+              Slots: {availableLevels.length === 0
+                ? 'none'
+                : availableLevels
+                    .filter((level) => level > 0)
+                    .map((level) => {
+                      const info = availability.getLevel(level)
+                      return `L${level} ${info?.remaining ?? 0}/${info?.total ?? 0}`
+                    })
+                    .join(' · ') || 'cantrips only'}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="font-label text-xs text-tertiary uppercase tracking-wider hidden sm:inline">
-            {isExpanded ? 'Hide' : 'Expand'}
+        <div className="flex flex-shrink-0 items-center gap-2">
+          <span className="hidden font-label text-[10px] uppercase tracking-wider text-tertiary sm:inline">
+            {isExpanded ? 'Close' : 'Open'}
           </span>
           <span
             className={`material-symbols-outlined text-tertiary transition-transform duration-200 ${
@@ -294,10 +327,10 @@ export function CombatSpellsSection({
 
             {/* Level Pills with Remaining Slots and Quick +1 Recover */}
             {availableLevels.map((lvl) => {
-              const slot = spellSlots.find((s) => s.level === lvl)
-              const max = slot?.total ?? 0
-              const spent = spentSpellSlots[lvl] ?? 0
-              const remaining = Math.max(0, max - spent)
+              const levelInfo = availability.getLevel(lvl)
+              const max = levelInfo?.total ?? 0
+              const spent = levelInfo?.spent ?? 0
+              const remaining = levelInfo?.remaining ?? 0
               const isSelected = activeLevelFilter === lvl
 
               return (
@@ -443,16 +476,23 @@ export function CombatSpellsSection({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {displayedSpells.map((spell) => {
-                const slot = spellSlots.find((s) => s.level === spell.level)
-                const max = slot?.total ?? 0
-                const spent = spentSpellSlots[spell.level] ?? 0
-                const hasSlots = spell.level === 0 || max === 0 || spent < max
-                const remaining = Math.max(0, max - spent)
+                const levelInfo = availability.getLevel(spell.level)
+                const max = levelInfo?.total ?? 0
+                const spent = levelInfo?.spent ?? 0
+                const hasSlots = availability.isCastable(spell)
+                const remaining = levelInfo?.remaining ?? 0
                 const spellFocusBonus = getSpellFocusBonus(spell.school, feats)
-                const dc = 10 + spell.level + castingMod + spellFocusBonus
+                const dc = availability.spellDc(spell, spellFocusBonus)
                 const hasSomatic = spell.components?.includes('S')
                 const showsAsf = spellFailureChance > 0 && hasSomatic
                 const isPinned = pinnedSpellIds.includes(spell.id)
+                const isAtWill = availability.isAtWill(spell)
+                const isSla = spell.source === 'sla'
+                const unavailableReason = availability.reasonUnavailable(spell)
+                const resource = availability.resourceFor(spell)
+                const resourceRemaining = resource
+                  ? Math.max(0, resource.total - (spentResources?.[resource.id] ?? 0))
+                  : undefined
 
                 return (
                   <div
@@ -551,11 +591,11 @@ export function CombatSpellsSection({
                   {/* Actions Row */}
                   <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5 flex-wrap">
                     {/* Slot quick indicator & manual refund */}
-                    {spell.level > 0 && max > 0 ? (
+                    {!isAtWill && spell.level > 0 && max > 0 ? (
                       <div className="flex items-center gap-2 text-xs font-label">
                         <div className="flex items-center gap-1">
                           <span className="text-tertiary text-[10px] uppercase tracking-wider">Slots:</span>
-                          <span className={`font-mono text-xs font-bold ${hasSlots ? 'text-primary' : 'text-error'}`}>
+                          <span className={`font-mono text-xs font-bold tabular-nums ${hasSlots ? 'text-primary' : 'text-error'}`}>
                             {remaining}/{max}
                           </span>
                         </div>
@@ -570,6 +610,13 @@ export function CombatSpellsSection({
                             <span>+1 Slot</span>
                           </button>
                         )}
+                      </div>
+                    ) : isSla ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="px-2 py-0.5 rounded-md bg-secondary/10 border border-secondary/30 text-secondary font-label text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 tabular-nums">
+                          <span className="material-symbols-outlined text-xs">bolt</span>
+                          <span>SLA {resourceRemaining ?? 0}/{resource?.total ?? 0}</span>
+                        </span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-1.5">
@@ -586,8 +633,11 @@ export function CombatSpellsSection({
                       {spell.attackType && (
                         <button
                           onClick={() => handleAttackRoll(spell)}
-                          className="px-2.5 py-1 rounded-lg bg-surface-container border border-primary/30 hover:border-primary text-primary font-label text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95 flex items-center gap-1 hover:shadow-[0_0_8px_rgba(0,240,255,0.25)]"
-                          title={`Roll ${spell.attackType === 'meleeTouch' ? 'Melee Touch' : spell.attackType === 'rangedTouch' ? 'Ranged Touch' : 'Ray'} Attack`}
+                          disabled={!hasSlots}
+                          className={`px-2.5 py-1 rounded-lg bg-surface-container border border-primary/30 text-primary font-label text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-1 ${
+                            hasSlots ? 'hover:border-primary cursor-pointer hover:shadow-[0_0_8px_rgba(0,240,255,0.25)]' : 'opacity-40 cursor-not-allowed'
+                          }`}
+                          title={unavailableReason ?? `Roll ${spell.attackType === 'meleeTouch' ? 'Melee Touch' : spell.attackType === 'rangedTouch' ? 'Ranged Touch' : 'Ray'} Attack`}
                         >
                           <span className="material-symbols-outlined text-xs">adjust</span>
                           <span>
@@ -601,8 +651,11 @@ export function CombatSpellsSection({
                       {spell.damageDice && (
                         <button
                           onClick={() => handleDamageRoll(spell)}
-                          className="px-2.5 py-1 rounded-lg bg-surface-container border border-secondary/30 hover:border-secondary text-secondary font-label text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer active:scale-95 flex items-center gap-1 hover:shadow-[0_0_8px_rgba(217,70,239,0.25)]"
-                          title={`Roll Damage (${spell.damageDice})`}
+                          disabled={!hasSlots}
+                          className={`px-2.5 py-1 rounded-lg bg-surface-container border border-secondary/30 text-secondary font-label text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95 flex items-center gap-1 ${
+                            hasSlots ? 'hover:border-secondary cursor-pointer hover:shadow-[0_0_8px_rgba(217,70,239,0.25)]' : 'opacity-40 cursor-not-allowed'
+                          }`}
+                          title={unavailableReason ?? `Roll Damage (${spell.damageDice})`}
                         >
                           <span className="material-symbols-outlined text-xs">swords</span>
                           <span>{spell.damageDice}{spell.damageBonus ? `+${spell.damageBonus}` : ''}</span>
@@ -621,10 +674,13 @@ export function CombatSpellsSection({
                         aria-label={`Cast ${spell.name}`}
                       >
                         <span className="material-symbols-outlined text-xs">bolt</span>
-                        <span>{spell.level === 0 ? 'Cast' : hasSlots ? 'Cast' : 'No Slots'}</span>
+                        <span>{isSla ? 'Use' : spell.level === 0 ? 'Cast' : hasSlots ? 'Cast' : 'No Slots'}</span>
                       </button>
                     </div>
                   </div>
+                  {!hasSlots && unavailableReason && (
+                    <p className="font-label text-[10px] uppercase tracking-wider text-error mt-1">{unavailableReason}</p>
+                  )}
                 </div>
               )
             })}

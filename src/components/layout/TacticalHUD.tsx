@@ -212,9 +212,9 @@ export function TacticalHUD() {
         style={{ boxShadow: '0 4px 24px -6px rgba(0,240,255,0.1)' }}
       >
         {/* Main Cockpit Bar */}
-        <div className="flex items-center justify-between gap-2 md:gap-4 px-4 md:px-6 py-2.5">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-2.5 md:flex md:flex-nowrap md:justify-between md:gap-4 md:px-6">
           {/* Left Cockpit: App Branding & Character Identity */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="col-start-1 row-start-1 flex flex-shrink-0 items-center gap-3">
             <span
               className="text-xl md:text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft select-none"
               onClick={() => navigate('/characters')}
@@ -222,7 +222,7 @@ export function TacticalHUD() {
               NEON RELIQUARY
             </span>
             <div className="hidden md:block h-8 w-px bg-white/10 mx-1" />
-            <div className="hidden md:block">
+            <div className="hidden xl:block">
               <h1 className="font-headline text-base leading-none text-white font-bold">{char.name}</h1>
               <p className="font-label text-xs tracking-widest text-tertiary uppercase mt-0.5">
                 Level {char.level} {char.class}
@@ -231,7 +231,7 @@ export function TacticalHUD() {
           </div>
 
           {/* Center Cockpit: Tactical Vitals (HP Bar, AC, Saves) */}
-          <div className="flex-1 flex flex-wrap items-center justify-center gap-2 md:gap-3 max-w-2xl mx-1 md:mx-2">
+          <div className="col-span-2 row-start-2 flex w-full flex-wrap items-center justify-center gap-2 md:col-span-1 md:row-start-auto md:mx-2 md:max-w-2xl md:flex-1 md:gap-3">
             {/* Multi-Track HP Bar Container with Popover Trigger */}
             <div className="relative flex-1 min-w-[140px] max-w-sm">
               <div
@@ -390,6 +390,7 @@ export function TacticalHUD() {
                   total={effectiveAc.touch}
                   breakdown={detailedAc.touchBreakdown}
                   notes={effectiveAc.notes}
+                  className="hidden xl:inline-flex"
                 >
                   <div
                     data-testid="ac-touch"
@@ -418,6 +419,7 @@ export function TacticalHUD() {
                   total={effectiveAc.flatFooted}
                   breakdown={detailedAc.flatFootedBreakdown}
                   notes={effectiveAc.notes}
+                  className="hidden xl:inline-flex"
                 >
                   <div
                     data-testid="ac-flat-footed"
@@ -444,7 +446,7 @@ export function TacticalHUD() {
 
             {/* Interactive Saving Throws (Fort, Ref, Will) */}
             {effectiveSaves && (
-              <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Saving Throws">
+              <div className="hidden flex-wrap items-center gap-1.5 xl:flex" role="group" aria-label="Saving Throws">
                 {(
                   [
                     {
@@ -521,7 +523,7 @@ export function TacticalHUD() {
           </div>
 
           {/* Right Cockpit: Cycler & Switcher & Settings */}
-          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+          <div className="col-start-2 row-start-1 flex flex-shrink-0 items-center gap-2 justify-self-end md:gap-3">
             {characters.length >= 2 && (
               <div className="flex items-center gap-1">
                 <button
@@ -546,7 +548,7 @@ export function TacticalHUD() {
               className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-xs rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_20px_rgba(0,240,255,0.25)] transition-all duration-300 cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm text-primary">account_circle</span>
-              <span className="hidden lg:inline">Character Switcher</span>
+              <span className="hidden xl:inline">Character Switcher</span>
             </button>
 
             <button

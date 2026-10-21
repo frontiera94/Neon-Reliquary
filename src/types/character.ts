@@ -7,6 +7,13 @@ export interface AbilityScore {
   cha: number
 }
 
+export type SpellcastingMode = 'prepared' | 'spontaneous' | 'none'
+
+export interface SpellcastingProfile {
+  mode: SpellcastingMode
+  ability: keyof AbilityScore
+}
+
 export interface Character {
   id: string
   name: string
@@ -22,4 +29,6 @@ export interface Character {
   speed: number
   spellResistance?: number
   damageReduction?: string
+  /** Explicit casting model. When omitted it is inferred from `class`. */
+  spellcasting?: SpellcastingProfile
 }

@@ -251,16 +251,6 @@
       "id": "arcane-pool",
       "name": "Arcane Pool",
       "total": 6
-    },
-    {
-      "id": "spells-1",
-      "name": "Lvl 1 Spells",
-      "total": 4
-    },
-    {
-      "id": "spells-2",
-      "name": "Lvl 2 Spells",
-      "total": 2
     }
   ],
   "feats": [
@@ -633,5 +623,9 @@
     "gp": 95,
     "sp": 60,
     "cp": 10
+  },
+  "spellcasting": {
+    "mode": "prepared",
+    "ability": "int"
   }
 }

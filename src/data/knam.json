@@ -220,11 +220,6 @@
       "id": "staggering-strike",
       "name": "Staggering Strike (on crit)",
       "total": 5
-    },
-    {
-      "id": "spells-1",
-      "name": "Lvl 1 Spells",
-      "total": 2
     }
   ],
   "feats": [
@@ -450,5 +445,9 @@
     "gp": 78,
     "sp": 4,
     "cp": 0
+  },
+  "spellcasting": {
+    "mode": "spontaneous",
+    "ability": "cha"
   }
 }
