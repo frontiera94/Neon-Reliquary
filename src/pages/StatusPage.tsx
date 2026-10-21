@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
+import { useInspectorStore } from '../store/useInspectorStore'
 import { abilityMod } from '../lib/dice-engine'
 import { CONDITION_INFO } from '../lib/conditions'
+import { conditionInspectorItem } from '../lib/inspector-items'
 import {
   calcEffectiveAbilities,
   calcEffectiveArmorClass,
@@ -44,6 +46,7 @@ export function StatusPage() {
     longRest,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
+  const openInspector = useInspectorStore((s) => s.openInspector)
 
   const [hpDelta, setHpDelta] = useState(1)
   const [nlEdit, setNlEdit] = useState<string | null>(null)
@@ -445,7 +448,7 @@ export function StatusPage() {
               const active = session.conditions.includes(condition)
               const info = CONDITION_INFO[condition]
               return (
-                <div key={condition} className="relative group">
+                <div key={condition} className="relative group flex items-center gap-1">
                   <button
                     onClick={() => toggleCondition(char.id, condition)}
                     className={`px-3.5 py-1.5 font-label text-xs uppercase tracking-widest rounded-lg transition-all cursor-pointer ${
@@ -455,6 +458,18 @@ export function StatusPage() {
                     }`}
                   >
                     {condition}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      openInspector(
+                        conditionInspectorItem(condition, () => toggleCondition(char.id, condition))
+                      )
+                    }
+                    aria-label={`Inspect condition ${condition}`}
+                    className="min-h-[36px] min-w-[36px] rounded-lg border border-white/10 text-tertiary hover:text-primary hover:border-primary/40 transition-colors cursor-pointer flex items-center justify-center"
+                  >
+                    <span className="material-symbols-outlined text-sm">info</span>
                   </button>
                   {/* Hover tooltip */}
                   <div className="pointer-events-none absolute bottom-full left-0 mb-2 w-64 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-150">

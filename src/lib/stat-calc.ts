@@ -1,6 +1,7 @@
 import type { ArmorClass, SavingThrow } from '../types/defense'
 import type { Skill } from '../types/skills'
 import type { Weapon, BuffToggle, ConditionType } from '../types/combat'
+import type { DailyResource, Spell } from '../types/resources'
 import { abilityMod } from './dice-engine'
 
 export type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
@@ -474,4 +475,193 @@ export function getActiveActionRestrictions(conditions: ConditionType[]): Action
   }
 
   return restrictions
+}
+
+/* -------------------------------------------------------------------------- */
+/* Spell casting helpers                                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Pathfinder 1e spell save DC: 10 + spell level + casting ability modifier.
+ */
+export function calcSpellDc(
+  spellLevel: number,
+  castingAbilityMod: number,
+  schoolBonus = 0
+): number {
+  return 10 + spellLevel + castingAbilityMod + schoolBonus
+}
+
+/**
+ * Resolves the casting ability key from a (possibly multi-class) class string.
+ */
+export function getCastingAbilityKey(characterClass: string): AbilityKey {
+  const cls = characterClass.toLowerCase()
+  if (/wizard|magus|witch|alchemist|investigator|arcanist|psychic/.test(cls)) return 'int'
+  if (/sorcerer|bard|oracle|summoner|skald|bloodrager|paladin/.test(cls)) return 'cha'
+  return 'wis'
+}
+
+/**
+ * Concentration check bonus: caster level + casting ability modifier + feats.
+ * `featBonus` should contain +4 when Combat Casting is used defensively.
+ */
+export function calcConcentrationBonus(
+  casterLevel: number,
+  castingAbilityMod: number,
+  featBonus = 0
+): number {
+  return casterLevel + castingAbilityMod + featBonus
+}
+
+/* -------------------------------------------------------------------------- */
+/* Buff <-> resource and buff <-> spell linkage                               */
+/* -------------------------------------------------------------------------- */
+
+const RESOURCE_KEYWORDS: { resource: RegExp; buff: RegExp }[] = [
+  { resource: /ki/i, buff: /\bki\b|ki[- ]/i },
+  { resource: /rage|bloodrage|ira/i, buff: /rage|bloodrage|ira/i },
+  { resource: /arcane[- ]?pool/i, buff: /arcane[- ]?pool/i },
+  { resource: /stunning/i, buff: /stunning/i },
+  { resource: /judg/i, buff: /judg/i },
+  { resource: /smite/i, buff: /smite/i },
+  { resource: /wild[- ]?shape/i, buff: /wild[- ]?shape/i },
+  { resource: /darkness/i, buff: /darkness/i },
+  { resource: /bane/i, buff: /bane/i },
+  { resource: /spells?[- ]?1|lvl 1/i, buff: /spell combat|spellstrike/i },
+]
+
+/**
+ * Resolves the daily resource that powers a buff, either from an explicit
+ * `resourceId` or from a conservative keyword match (Ki, Rage, Arcane Pool...).
+ */
+export function resolveBuffResource(
+  buff: BuffToggle,
+  dailyResources: DailyResource[]
+): DailyResource | null {
+  if (buff.resourceId) {
+    const explicit = dailyResources.find((r) => r.id === buff.resourceId)
+    if (explicit) return explicit
+  }
+
+  for (const rule of RESOURCE_KEYWORDS) {
+    const resource = dailyResources.find((r) => rule.resource.test(`${r.id} ${r.name}`))
+    if (resource && rule.buff.test(`${buff.id} ${buff.name}`)) return resource
+  }
+  return null
+}
+
+/**
+ * Finds the buff that represents a spell (by normalized name / id). This is
+ * intentionally tolerant because character JSON files name spell buffs in a
+ * variety of ways (e.g. "Shield", "Shield Spell", "shield-spell").
+ */
+export function findMatchingBuffForSpell(
+  spell: Spell,
+  availableBuffs: BuffToggle[]
+): BuffToggle | null {
+  const clean = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const spellKey = clean(spell.name)
+  const spellId = clean(spell.id)
+  if (!spellKey && !spellId) return null
+
+  const exact = availableBuffs.find((buff) => {
+    if (buff.spellId === spell.id) return true
+    const buffId = clean(buff.id)
+    const buffName = clean(buff.name)
+    return (
+      (buffId && (buffId.includes(spellId) || spellId.includes(buffId))) ||
+      (buffName && (buffName.includes(spellKey) || spellKey.includes(buffName)))
+    )
+  })
+  if (exact) return exact
+
+  // Common PF1e aliases whose buff name differs from the spell name.
+  const aliases: { spell: RegExp; buff: RegExp }[] = [
+    { spell: /magearmor/i, buff: /magearmor/i },
+    { spell: /shield/i, buff: /shield/i },
+    { spell: /barkskin/i, buff: /barkskin/i },
+    { spell: /bless/i, buff: /bless/i },
+    { spell: /haste/i, buff: /haste/i },
+    { spell: /heroism/i, buff: /heroism/i },
+    { spell: /divinefavor/i, buff: /divinefavor/i },
+    { spell: /resistenergy/i, buff: /resistenergy/i },
+    { spell: /truestrike/i, buff: /truestrike/i },
+  ]
+  for (const alias of aliases) {
+    if (!alias.spell.test(spellKey)) continue
+    const match = availableBuffs.find((buff) => alias.buff.test(clean(buff.name)) || alias.buff.test(clean(buff.id)))
+    if (match) return match
+  }
+  return null
+}
+
+/**
+ * Derives a tactical BuffToggle for a buff-style spell when no matching buff
+ * exists on the character sheet. Keeps the common PF1e staples useful.
+ */
+export function deriveBuffFromSpell(spell: Spell): BuffToggle {
+  const key = spell.name.toLowerCase()
+  const buff: BuffToggle = {
+    id: `spell-buff-${spell.id}`,
+    name: spell.name,
+    active: true,
+    attackMod: 0,
+    damageMod: 0,
+    acMod: 0,
+    color: 'secondary',
+    description: spell.description,
+    duration: spell.duration,
+    isCustom: true,
+    spellId: spell.id,
+  }
+
+  if (/shield|mage armor/.test(key)) buff.acMod = 4
+  else if (/barkskin/.test(key)) buff.acMod = 2
+  else if (/haste/.test(key)) {
+    buff.attackMod = 1
+    buff.acMod = 1
+  } else if (/bless/.test(key)) {
+    buff.attackMod = 1
+    buff.saveMod = 1
+  } else if (/heroism/.test(key)) {
+    buff.attackMod = 2
+    buff.saveMod = 2
+  } else if (/divine favor/.test(key)) {
+    const mod = Math.min(3, Math.max(1, Math.floor(spell.level || 1)))
+    buff.attackMod = mod
+    buff.damageMod = mod
+  } else if (/resist energy/.test(key)) {
+    buff.description = `${spell.description} (resistance active)`
+  } else if (/true strike/.test(key)) {
+    buff.attackMod = 20
+  } else if (/bull'?s strength/.test(key)) {
+    buff.abilityMods = { str: 4 }
+  } else if (/cat'?s grace/.test(key)) {
+    buff.abilityMods = { dex: 4 }
+  } else if (/bear'?s endurance/.test(key)) {
+    buff.abilityMods = { con: 4 }
+  } else if (/fox'?s cunning/.test(key)) {
+    buff.abilityMods = { int: 4 }
+  } else if (/owl'?s wisdom/.test(key)) {
+    buff.abilityMods = { wis: 4 }
+  } else if (/eagle'?s splendor/.test(key)) {
+    buff.abilityMods = { cha: 4 }
+  } else if (/resistance/.test(key)) {
+    buff.saveMod = 1
+  }
+
+  return buff
+}
+
+/**
+ * True when a spell is a plausible tactical buff (has a non-instantaneous
+ * duration or clearly targets the caster / allies). Damage-only spells are
+ * intentionally excluded.
+ */
+export function isSpellBuffCandidate(spell: Spell): boolean {
+  if (spell.damageDice && /instantaneous/i.test(spell.duration)) return false
+  if (/instantaneous/i.test(spell.duration)) return false
+  if (/permanent/i.test(spell.duration)) return true
+  return Boolean(spell.duration)
 }

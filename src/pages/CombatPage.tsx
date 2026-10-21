@@ -6,8 +6,10 @@ import { useDiceStore } from '../store/useDiceStore'
 import {
   calcEffectiveAbilities,
   calcEffectiveArmorClass,
+  calcEffectiveSaves,
   calcEffectiveWeaponStats,
   getActiveActionRestrictions,
+  resolveBuffResource,
 } from '../lib/stat-calc'
 import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
 import { CombatHPWidget } from '../components/combat/CombatHPWidget'
@@ -16,12 +18,46 @@ import { SummonedCreaturePanel } from '../components/combat/SummonedCreaturePane
 import { WeaponCard } from '../components/combat/WeaponCard'
 import { ActionAlertBanner } from '../components/combat/ActionAlertBanner'
 import { BuffManagerModal } from '../components/combat/BuffManagerModal'
+import { ContextualCombatFeatures, DefensiveBadges } from '../components/combat/ContextualCombatFeatures'
+import { CombatSpellsSection } from '../components/combat/CombatSpellsSection'
+import { StatBreakdownTooltip } from '../components/ui/StatBreakdownTooltip'
+import type { BuffToggle } from '../types/combat'
 
-export function CombatPage() {
+function buffModifierParts(buff: BuffToggle) {
+  const parts: { label: string; value: number }[] = []
+  if (buff.attackMod !== 0) parts.push({ label: `${buff.attackMod > 0 ? '+' : ''}${buff.attackMod} ATK`, value: buff.attackMod })
+  if (buff.damageMod !== 0) parts.push({ label: `${buff.damageMod > 0 ? '+' : ''}${buff.damageMod} DMG`, value: buff.damageMod })
+  if (buff.acMod !== 0) parts.push({ label: `${buff.acMod > 0 ? '+' : ''}${buff.acMod} AC`, value: buff.acMod })
+  if (typeof buff.saveMod === 'number' && buff.saveMod !== 0) {
+    parts.push({ label: `${buff.saveMod > 0 ? '+' : ''}${buff.saveMod} SAVES`, value: buff.saveMod })
+  } else if (typeof buff.saveMod === 'object' && buff.saveMod) {
+    const total = (buff.saveMod.fort ?? 0) + (buff.saveMod.ref ?? 0) + (buff.saveMod.will ?? 0)
+    if (total !== 0) parts.push({ label: `${total > 0 ? '+' : ''}${total} SAVES`, value: total })
+  }
+  if (buff.abilityMods) {
+    for (const [key, value] of Object.entries(buff.abilityMods) as [string, number][]) {
+      if (value) parts.push({ label: `${value > 0 ? '+' : ''}${value} ${key.toUpperCase()}`, value })
+    }
+  }
+  if (buff.extraDamageDice) parts.push({ label: `+${buff.extraDamageDice}`, value: 1 })
+  return parts
+}
+
+export function CombatPage({ embedded = false }: { embedded?: boolean }) {
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
-  const { toggleBuff, adjustHp, initSession, setAmmo, setSummon, adjustSummonHp, clearSummon, adjustCompanionHp } =
-    useSessionStore()
+  const {
+    toggleBuff,
+    adjustHp,
+    initSession,
+    setAmmo,
+    setSummon,
+    adjustSummonHp,
+    clearSummon,
+    adjustCompanionHp,
+    spendResource,
+    recoverResource,
+  } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
 
   const [showBuffModal, setShowBuffModal] = useState(false)
@@ -41,11 +77,12 @@ export function CombatPage() {
   const activeBuffIds = session.activeBuffIds
   const customBuffs = session.customBuffs ?? []
   const allBuffs = [...char.buffs, ...customBuffs]
+  const activeBuffs = allBuffs.filter((b) => activeBuffIds.includes(b.id))
 
   const effectiveAbilities = calcEffectiveAbilities(
     char.abilities,
     session.conditions,
-    allBuffs.filter((b) => activeBuffIds.includes(b.id))
+    activeBuffs
   )
 
   const effectiveAc = calcEffectiveArmorClass(
@@ -53,7 +90,15 @@ export function CombatPage() {
     abilityMod(char.abilities.dex),
     effectiveAbilities.mods.dex,
     session.conditions,
-    allBuffs.filter((b) => activeBuffIds.includes(b.id))
+    activeBuffs
+  )
+
+  const effectiveSaves = calcEffectiveSaves(
+    char.savingThrows,
+    char.abilities,
+    effectiveAbilities,
+    session.conditions,
+    activeBuffs
   )
 
   const restrictions = getActiveActionRestrictions(session.conditions)
@@ -74,41 +119,123 @@ export function CombatPage() {
     : null
 
   return (
-    <div className="p-4 md:p-8 space-y-6">
+    <div className={embedded ? 'space-y-4' : 'p-4 md:p-8 space-y-6'}>
       {/* Tactical Restrictions Banner */}
       <ActionAlertBanner restrictions={restrictions} />
 
+      {/* Defensive cockpit: AC / Saves with inspectable breakdowns + badges */}
+      <section className="rounded-2xl border border-white/10 bg-[#11131c] p-3 md:p-4">
+        <div className="flex flex-wrap items-stretch gap-2">
+          {(
+            [
+              { id: 'ac-total', label: 'AC', value: effectiveAc.total, base: char.armorClass.total },
+              { id: 'ac-touch', label: 'TOUCH', value: effectiveAc.touch, base: char.armorClass.touch },
+              { id: 'ac-flat', label: 'FLAT', value: effectiveAc.flatFooted, base: char.armorClass.flatFooted },
+            ] as const
+          ).map((entry) => (
+            <StatBreakdownTooltip
+              key={entry.id}
+              title={entry.label === 'AC' ? 'Armor Class (Total)' : entry.label === 'TOUCH' ? 'Touch Armor Class' : 'Flat-Footed Armor Class'}
+              total={entry.value}
+              breakdown={effectiveAc.breakdown}
+              notes={effectiveAc.notes}
+              trigger="click"
+            >
+              <div
+                data-testid={`combat-${entry.id}`}
+                className="min-h-[44px] min-w-[64px] px-3 py-1.5 rounded-xl border border-white/10 bg-[#181b26] hover:border-primary/40 transition-colors flex flex-col justify-center cursor-pointer tabular-nums"
+              >
+                <span className="font-label text-[9px] uppercase tracking-[0.2em] text-tertiary">{entry.label}</span>
+                <span
+                  className="font-label text-lg leading-none font-black tabular-nums"
+                  style={{ color: entry.value > entry.base ? '#00daf3' : entry.value < entry.base ? '#ffb4ab' : '#f1f5f9' }}
+                >
+                  {entry.value}
+                </span>
+              </div>
+            </StatBreakdownTooltip>
+          ))}
+
+          <div className="hidden sm:block w-px self-stretch bg-white/10 mx-1" />
+
+          {(
+            [
+              { key: 'fort', label: 'FORT', full: 'Fortitude Save', value: effectiveSaves.fort, base: char.savingThrows.fort, breakdown: effectiveSaves.breakdowns.fortitude },
+              { key: 'ref', label: 'REF', full: 'Reflex Save', value: effectiveSaves.ref, base: char.savingThrows.ref, breakdown: effectiveSaves.breakdowns.reflex },
+              { key: 'will', label: 'WILL', full: 'Will Save', value: effectiveSaves.will, base: char.savingThrows.will, breakdown: effectiveSaves.breakdowns.will },
+            ] as const
+          ).map((save) => (
+            <button
+              key={save.key}
+              type="button"
+              onClick={() =>
+                openRoll({
+                  diceType: 20,
+                  count: 1,
+                  modifier: save.value,
+                  label: save.full,
+                  breakdown: save.breakdown,
+                })
+              }
+              aria-label={`Roll ${save.full}`}
+              className="min-h-[44px] min-w-[64px] px-3 py-1.5 rounded-xl border border-white/10 bg-[#181b26] hover:border-secondary/50 hover:bg-secondary/10 transition-colors flex flex-col justify-center cursor-pointer active:scale-95 tabular-nums"
+            >
+              <span className="font-label text-[9px] uppercase tracking-[0.2em] text-secondary">{save.label}</span>
+              <StatBreakdownTooltip
+                title={save.full}
+                total={save.value >= 0 ? `+${save.value}` : `${save.value}`}
+                breakdown={save.breakdown}
+                trigger="click"
+              >
+                <span
+                  className="font-label text-lg leading-none font-black tabular-nums text-left"
+                  style={{ color: save.value > save.base ? '#00daf3' : save.value < save.base ? '#ffb4ab' : '#f1f5f9' }}
+                >
+                  {save.value >= 0 ? `+${save.value}` : save.value}
+                </span>
+              </StatBreakdownTooltip>
+            </button>
+          ))}
+        </div>
+        <DefensiveBadges compact />
+      </section>
+
       {/* Global Buff Bar */}
       <section className="w-full">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 gap-2">
           <div className="flex items-center gap-2">
             <h3 className="font-headline text-sm uppercase tracking-widest text-secondary font-bold">
               Combat Buff Protocols
             </h3>
-            <span className="font-label text-xs text-tertiary">
+            <span className="font-label text-xs text-tertiary tabular-nums">
               ({activeBuffIds.length} Active)
             </span>
           </div>
           <button
             onClick={() => setShowBuffModal(true)}
-            className="px-3 py-1.5 bg-primary/10 border border-primary/40 text-primary font-label text-xs uppercase tracking-wider rounded-xl hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-2 bg-primary/10 border border-primary/40 text-primary font-label text-xs uppercase tracking-wider rounded-xl hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm">tune</span>
-            Manage Buffs & Presets
+            <span className="hidden sm:inline">Manage Buffs & Presets</span>
+            <span className="sm:hidden">Buffs</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className={`grid grid-cols-1 ${embedded ? 'xl:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'} gap-3`}>
           {allBuffs.map((buff) => {
             const isActive = activeBuffIds.includes(buff.id)
             const hex =
               { primary: '#00f0ff', secondary: '#d946ef', error: '#ff4b60' }[buff.color ?? 'primary'] ??
               '#00f0ff'
+            const modifiers = buffModifierParts(buff)
+            const resource = resolveBuffResource(buff, char.dailyResources)
+            const spent = resource ? session.spentResources[resource.id] ?? 0 : 0
+            const remaining = resource ? Math.max(0, resource.total - spent) : 0
+
             return (
-              <button
+              <div
                 key={buff.id}
-                onClick={() => toggleBuff(char.id, buff.id)}
-                className="flex items-center justify-between p-4 border rounded-xl transition-all cursor-pointer text-left bg-surface-container/90 backdrop-blur-sm hover:bg-surface-container-high"
+                className="flex flex-col border rounded-xl transition-all bg-[#11131c] hover:bg-[#181b26]"
                 style={
                   isActive
                     ? {
@@ -119,66 +246,117 @@ export function CombatPage() {
                     : { borderColor: 'rgba(255,255,255,0.08)' }
                 }
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all"
+                <button
+                  type="button"
+                  onClick={() => toggleBuff(char.id, buff.id)}
+                  className="flex items-center justify-between p-3.5 rounded-xl backdrop-blur-sm transition-all cursor-pointer text-left"
+                  style={isActive ? { boxShadow: `0 0 18px ${hex}40` } : undefined}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all"
+                      style={
+                        isActive
+                          ? { backgroundColor: hex, boxShadow: `0 0 8px ${hex}` }
+                          : { backgroundColor: 'rgba(255,255,255,0.2)' }
+                      }
+                    />
+                    <div className="min-w-0">
+                      <p
+                        className="font-headline text-sm font-bold uppercase tracking-wider truncate"
+                        style={{ color: isActive ? hex : undefined }}
+                      >
+                        {buff.name}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-1">
+                        {modifiers.length > 0 ? modifiers.map((mod, index) => (
+                          <span key={mod.label} className="contents">
+                            {index > 0 && <span className="font-label text-[10px] text-tertiary/40">|</span>}
+                            <span
+                              className="font-label text-[10px] font-bold tabular-nums"
+                              style={{ color: mod.value > 0 ? '#00daf3' : '#ffb4ab' }}
+                            >
+                              {mod.label}
+                            </span>
+                          </span>
+                        )) : (
+                          <span className="font-label text-[10px] text-tertiary">No numeric modifiers</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <span
+                    className="font-label text-[10px] uppercase tracking-widest px-2.5 py-0.5 flex-shrink-0 border rounded-full transition-all ml-2 font-bold"
                     style={
                       isActive
-                        ? { backgroundColor: hex, boxShadow: `0 0 8px ${hex}` }
-                        : { backgroundColor: 'rgba(255,255,255,0.2)' }
+                        ? { color: hex, borderColor: hex, boxShadow: `0 0 8px ${hex}` }
+                        : { color: 'rgba(255,255,255,0.4)', borderColor: 'rgba(255,255,255,0.1)' }
                     }
-                  />
-                  <div className="min-w-0">
-                    <p
-                      className="font-headline text-sm font-bold uppercase tracking-wider truncate"
-                      style={{ color: isActive ? hex : undefined }}
-                    >
-                      {buff.name}
-                    </p>
-                    <p
-                      className="font-label text-[11px] mt-0.5 truncate"
-                      style={{ color: isActive ? hex : undefined }}
-                    >
-                      {isActive ? (
-                        [
-                          buff.attackMod !== 0
-                            ? `${buff.attackMod > 0 ? '+' : ''}${buff.attackMod} Att`
-                            : '',
-                          buff.damageMod !== 0 ? `+${buff.damageMod} Dmg` : '',
-                          buff.acMod !== 0 ? `${buff.acMod > 0 ? '+' : ''}${buff.acMod} AC` : '',
-                          buff.extraDamageDice ? `+${buff.extraDamageDice}` : '',
-                        ]
-                          .filter(Boolean)
-                          .join(' / ') || 'Active'
-                      ) : (
-                        <span className="text-tertiary">Inactive</span>
-                      )}
-                    </p>
+                  >
+                    {isActive ? 'ON' : 'OFF'}
+                  </span>
+                </button>
+
+                {resource && (
+                  <div className="flex items-center justify-between gap-2 px-3.5 pb-3 pt-0.5 border-t border-white/5">
+                    <div className="min-w-0">
+                      <p className="font-label text-[9px] uppercase tracking-[0.16em] text-tertiary truncate">
+                        {resource.name}
+                      </p>
+                      <div className="flex items-center gap-1 mt-1" aria-label={`${resource.name} pips`}>
+                        {Array.from({ length: resource.total }).map((_, index) => (
+                          <span
+                            key={index}
+                            className={`h-1.5 w-2 rounded-sm tabular-nums ${
+                              index < remaining ? 'bg-primary shadow-[0_0_5px_rgba(0,240,255,0.5)]' : 'bg-white/10'
+                            }`}
+                          />
+                        ))}
+                        <span className="font-label text-[9px] text-tertiary ml-1 tabular-nums">
+                          {remaining}/{resource.total}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        type="button"
+                        disabled={remaining >= resource.total}
+                        onClick={() => recoverResource(char.id, resource.id)}
+                        aria-label={`Recover ${resource.name}`}
+                        className="min-h-[44px] min-w-[36px] rounded-lg border border-white/10 text-tertiary hover:text-primary hover:border-primary/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-sm">add</span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={remaining <= 0}
+                        onClick={() => spendResource(char.id, resource.id, resource.total)}
+                        aria-label={`Spend ${resource.name}`}
+                        className="min-h-[44px] min-w-[36px] rounded-lg border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-sm">remove</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <span
-                  className="font-label text-[10px] uppercase tracking-widest px-2.5 py-0.5 flex-shrink-0 border rounded-full transition-all ml-2 font-bold"
-                  style={
-                    isActive
-                      ? { color: hex, borderColor: hex, boxShadow: `0 0 8px ${hex}` }
-                      : { color: 'rgba(255,255,255,0.4)', borderColor: 'rgba(255,255,255,0.1)' }
-                  }
-                >
-                  {isActive ? 'ON' : 'OFF'}
-                </span>
-              </button>
+                )}
+              </div>
             )
           })}
         </div>
       </section>
 
-      {/* HP Widget */}
-      <CombatHPWidget
-        hp={session.currentHp}
-        maxHp={char.maxHp}
-        ac={effectiveAc.total}
-        onAdjust={(d) => adjustHp(char.id, d, char.maxHp)}
-      />
+      {/* HP Widget (desktop cockpit keeps it; embedded mode relies on HUD) */}
+      {!embedded && (
+        <CombatHPWidget
+          hp={session.currentHp}
+          maxHp={char.maxHp}
+          ac={effectiveAc.total}
+          onAdjust={(d) => adjustHp(char.id, d, char.maxHp)}
+        />
+      )}
+
+      {/* Contextual combat features by action economy */}
+      <ContextualCombatFeatures compact={embedded} limit={embedded ? 8 : undefined} />
 
       {/* Summon Ally Picker */}
       {summonableSpells.length > 0 && (
@@ -196,7 +374,7 @@ export function CombatPage() {
       )}
 
       {/* Weapon Cards */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className={`grid grid-cols-1 ${embedded ? '' : 'xl:grid-cols-2'} gap-6`}>
         {char.weapons.map((weapon) => {
           const effective = calcEffectiveWeaponStats(
             weapon,
@@ -274,6 +452,11 @@ export function CombatPage() {
           )
         })}
       </div>
+
+      {/* Combat spell matrix + spell-to-buff activation */}
+      {char.spells.length > 0 && (
+        <CombatSpellsSection compact={embedded} limit={embedded ? 6 : undefined} />
+      )}
 
       {/* Summoned Creature Panel */}
       {activeSummonOption && activeSummon && (

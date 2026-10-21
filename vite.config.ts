@@ -123,7 +123,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['**/node_modules/**', '**/.worktrees/**', '**/dist/**'],
     setupFiles: ['./src/test/setup.ts'],
   },

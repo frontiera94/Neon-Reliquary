@@ -1,8 +1,13 @@
 import { useCharacterStore } from '../store/useCharacterStore'
+import { useSessionStore } from '../store/useSessionStore'
+import { useInspectorStore } from '../store/useInspectorStore'
+import { ACTION_ECONOMY_LABEL, categorizeFeatures } from '../lib/action-economy'
 import type { Feat } from '../types/features'
 
 export function FeaturesPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
+  const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
+  const openInspector = useInspectorStore((s) => s.openInspector)
 
   if (!char) return (
     <div className="flex items-center justify-center h-64 text-tertiary font-label text-sm uppercase tracking-widest">
@@ -11,6 +16,37 @@ export function FeaturesPage() {
   )
 
   const signatureAbility = char.classAbilities.find((a) => a.isSignature)
+  const categorized = session ? categorizeFeatures(char, session) : []
+
+  const inspectFeat = (feat: Feat) => {
+    const entry = categorized.find((item) => item.id === feat.id)
+    openInspector({
+      type: 'feat',
+      id: feat.id,
+      title: feat.name,
+      subtitle: entry ? `${ACTION_ECONOMY_LABEL[entry.actionType]} Action` : 'Feat',
+      description: feat.fullDesc,
+      tags: [entry ? ACTION_ECONOMY_LABEL[entry.actionType] : 'Passive', 'Feat'],
+      notes: entry?.resourceId
+        ? [`Uses remaining: ${entry.remainingUses ?? 0} / ${entry.maxUses ?? 0}`]
+        : undefined,
+    })
+  }
+
+  const inspectAbility = (id: string, name: string, description: string) => {
+    const entry = categorized.find((item) => item.id === id)
+    openInspector({
+      type: 'classAbility',
+      id,
+      title: name,
+      subtitle: entry ? `${ACTION_ECONOMY_LABEL[entry.actionType]} Action` : 'Class Ability',
+      description,
+      tags: [entry ? ACTION_ECONOMY_LABEL[entry.actionType] : 'Passive', 'Class Ability'],
+      notes: entry?.resourceId
+        ? [`Uses remaining: ${entry.remainingUses ?? 0} / ${entry.maxUses ?? 0}`]
+        : undefined,
+    })
+  }
 
   return (
     <div className="p-6 md:p-12 lg:p-16">
@@ -62,10 +98,47 @@ export function FeaturesPage() {
           </div>
         )}
 
+        {/* Class abilities */}
+        {char.classAbilities.length > 0 && (
+          <div className="md:col-span-12 mt-4">
+            <div className="flex items-center gap-4 mb-3">
+              <h3 className="font-label text-[10px] uppercase tracking-[0.2em] text-secondary font-bold">
+                Class Abilities
+              </h3>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {char.classAbilities.map((ability) => {
+                const entry = categorized.find((item) => item.id === ability.id)
+                return (
+                  <button
+                    key={ability.id}
+                    type="button"
+                    onClick={() => inspectAbility(ability.id, ability.name, ability.description)}
+                    className="min-h-[44px] rounded-xl border border-white/10 bg-[#181b26] p-3.5 text-left hover:border-primary/40 transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-headline text-sm font-bold text-white group-hover:text-primary transition-colors">
+                        {ability.name}
+                      </span>
+                      {entry && (
+                        <span className="font-label text-[9px] uppercase tracking-widest text-tertiary border border-white/10 px-1.5 py-0.5 rounded-md">
+                          {ACTION_ECONOMY_LABEL[entry.actionType]}
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-label text-[10px] text-tertiary mt-1 line-clamp-2">{ability.description}</p>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Feat accordion */}
         <div className="md:col-span-12 space-y-3 mt-4">
           {char.feats.map((feat) => (
-            <FeatAccordionItem key={feat.id} feat={feat} />
+            <FeatAccordionItem key={feat.id} feat={feat} onInspect={() => inspectFeat(feat)} />
           ))}
         </div>
       </div>
@@ -73,19 +146,26 @@ export function FeaturesPage() {
   )
 }
 
-function FeatAccordionItem({ feat }: { feat: Feat }) {
+function FeatAccordionItem({ feat, onInspect }: { feat: Feat; onInspect: () => void }) {
   return (
     <div className="group border border-white/10 rounded-xl overflow-hidden bg-surface-container-low/90 backdrop-blur-sm hover:border-primary/40 transition-colors shadow-[0_2px_12px_rgba(0,0,0,0.2)]">
       <details className="w-full">
         <summary className="flex items-center justify-between p-6 cursor-pointer hover:bg-surface-container transition-colors list-none">
           <div className="flex items-center gap-6">
-            <span className="font-label text-secondary font-bold text-lg w-8 flex-shrink-0">
+            <span className="font-label text-secondary font-bold text-lg w-8 flex-shrink-0 tabular-nums">
               {feat.index.toString().padStart(2, '0')}
             </span>
             <div>
-              <h4 className="font-headline text-xl font-bold text-white group-hover:text-primary uppercase tracking-tight transition-colors">
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault()
+                  onInspect()
+                }}
+                className="font-headline text-xl font-bold text-white group-hover:text-primary uppercase tracking-tight transition-colors text-left cursor-pointer"
+              >
                 {feat.name}
-              </h4>
+              </button>
               <p className="font-body text-tertiary text-sm italic">{feat.shortDesc}</p>
             </div>
           </div>

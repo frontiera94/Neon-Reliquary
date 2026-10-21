@@ -2,28 +2,24 @@ import { useState } from 'react'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
+import { useInspectorStore } from '../store/useInspectorStore'
 import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
+import {
+  calcConcentrationBonus,
+  calcSpellDc,
+  deriveBuffFromSpell,
+  findMatchingBuffForSpell,
+  getCastingAbilityKey,
+  isSpellBuffCandidate,
+} from '../lib/stat-calc'
 import type { Spell, SpellAttackType } from '../types/resources'
-import type { AbilityScore } from '../types/character'
-
-function concentrationMod(charClass: string, level: number, abilities: AbilityScore): number {
-  const cls = charClass.toLowerCase()
-  let abilMod: number
-  if (/wizard|magus|witch|alchemist|investigator|arcanist/.test(cls)) {
-    abilMod = abilityMod(abilities.int)
-  } else if (/sorcerer|bard|oracle|summoner|skald|bloodrager/.test(cls)) {
-    abilMod = abilityMod(abilities.cha)
-  } else {
-    abilMod = abilityMod(abilities.wis)
-  }
-  return level + abilMod
-}
 
 export function SpellsPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => char ? s.getSession(char.id) : null)
-  const { toggleSpellPrepared, spendSpellSlot, recoverSpellSlot } = useSessionStore()
+  const { toggleSpellPrepared, spendSpellSlot, recoverSpellSlot, toggleBuff, addCustomBuff } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
+  const openInspector = useInspectorStore((s) => s.openInspector)
   const [search, setSearch] = useState('')
   const [levelFilter, setLevelFilter] = useState<number | 'all'>('all')
 
@@ -51,9 +47,12 @@ export function SpellsPage() {
   const spentSlots = session?.spentSpellSlots ?? {}
 
   const arcaneFailure = char.armorClass.spellFailureChance ?? 0
-  const concMod = concentrationMod(char.class, char.level, char.abilities)
+  const castingKey = getCastingAbilityKey(char.class)
+  const castingMod = abilityMod(char.abilities[castingKey])
+  const concMod = calcConcentrationBonus(char.level, castingMod)
   const hasCombatCasting = char.feats.some((f) => /combat casting/i.test(f.name))
 
+  const allBuffs = [...char.buffs, ...(session?.customBuffs ?? [])]
   const bab = char.baseAttackBonus[0] ?? 0
   const dexMod = abilityMod(char.abilities.dex)
   const strMod = abilityMod(char.abilities.str)
@@ -64,6 +63,55 @@ export function SpellsPage() {
     rangedTouch: 'Cast (Ranged Touch)',
     meleeTouch: 'Cast (Melee Touch)',
     ray: 'Cast (Ray)',
+  }
+
+  const isSpellBuffActive = (spell: Spell) => {
+    const match = findMatchingBuffForSpell(spell, allBuffs)
+    const id = match?.id ?? `spell-buff-${spell.id}`
+    return session?.activeBuffIds.includes(id) ?? false
+  }
+
+  const activateSpellBuff = (spell: Spell) => {
+    if (!session) return
+    const match = findMatchingBuffForSpell(spell, allBuffs)
+    const buffId = match?.id ?? `spell-buff-${spell.id}`
+    const alreadyActive = session.activeBuffIds.includes(buffId)
+
+    if (alreadyActive) {
+      if (match) toggleBuff(char.id, match.id)
+      return
+    }
+
+    const slotMax = char.spellSlots.find((slot) => slot.level === spell.level)?.total ?? 0
+    const spent = session.spentSpellSlots[spell.level] ?? 0
+    if (spell.level > 0 && spent < slotMax) {
+      spendSpellSlot(char.id, spell.level, slotMax)
+    }
+
+    if (match) toggleBuff(char.id, match.id)
+    else addCustomBuff(char.id, deriveBuffFromSpell(spell))
+  }
+
+  const inspectSpell = (spell: Spell) => {
+    openInspector({
+      type: 'spell',
+      id: spell.id,
+      title: spell.name,
+      subtitle: `${spell.school} · Level ${spell.level}`,
+      description: spell.description,
+      tags: [
+        `Lv ${spell.level}`,
+        spell.school,
+        spell.spellResistance ? 'SR: Yes' : 'SR: No',
+        ...(spell.attackType ? [attackLabel[spell.attackType]] : []),
+      ],
+      notes: [
+        `Casting Time: ${spell.castingTime}`,
+        `Range: ${spell.range}`,
+        `Duration: ${spell.duration}`,
+        `Save DC: ${calcSpellDc(spell.level, castingMod)}${spell.savingThrow ? ` (${spell.savingThrow})` : ''}`,
+      ],
+    })
   }
 
   return (
@@ -208,10 +256,33 @@ export function SpellsPage() {
                       spell={spell}
                       isPrepared={preparedIds.includes(spell.id)}
                       attackLabel={spell.attackType ? `${attackLabel[spell.attackType]} (${atkBonus >= 0 ? `+${atkBonus}` : atkBonus})` : undefined}
+                      spellDc={calcSpellDc(spell.level, castingMod)}
+                      concentration={concMod + (hasCombatCasting ? 4 : 0)}
+                      isBuffCandidate={isSpellBuffCandidate(spell)}
+                      isBuffActive={isSpellBuffActive(spell)}
                       onTogglePrepare={() => toggleSpellPrepared(char.id, spell.id, spell.level, slotMax)}
+                      onActivateBuff={() => activateSpellBuff(spell)}
+                      onInspect={() => inspectSpell(spell)}
+                      onConcentration={() =>
+                        openRoll({
+                          diceType: 20,
+                          count: 1,
+                          modifier: concMod + (hasCombatCasting ? 4 : 0),
+                          label: `${spell.name} (Concentration)`,
+                        })
+                      }
                       onAttack={
                         spell.attackType
-                          ? () => openRoll({ diceType: 20, count: 1, modifier: atkBonus, label: `${spell.name} (Attack)` })
+                          ? () => openRoll({
+                              diceType: 20,
+                              count: 1,
+                              modifier: atkBonus,
+                              label: `${spell.name} (Attack)`,
+                              breakdown: [
+                                { label: 'BAB', value: bab },
+                                { label: spell.attackType === 'meleeTouch' ? 'STR Mod' : 'DEX Mod', value: spell.attackType === 'meleeTouch' ? strMod : dexMod },
+                              ],
+                            })
                           : undefined
                       }
                       onDamage={
@@ -237,24 +308,39 @@ function SpellRow({
   spell,
   isPrepared,
   attackLabel,
+  spellDc,
+  concentration,
+  isBuffCandidate,
+  isBuffActive,
   onTogglePrepare,
+  onActivateBuff,
+  onInspect,
+  onConcentration,
   onAttack,
   onDamage,
 }: {
   spell: Spell
   isPrepared: boolean
   attackLabel?: string
+  spellDc: number
+  concentration: number
+  isBuffCandidate: boolean
+  isBuffActive: boolean
   onTogglePrepare: () => void
+  onActivateBuff: () => void
+  onInspect: () => void
+  onConcentration: () => void
   onAttack?: () => void
   onDamage?: () => void
 }) {
   return (
     <details className={`w-full group rounded-xl overflow-hidden border transition-all ${isPrepared ? 'border-primary/50 shadow-[0_0_12px_rgba(0,240,255,0.15)]' : 'border-white/[0.08]'}`}>
-      <summary className={`transition-all flex items-center gap-4 p-4 cursor-pointer list-none ${isPrepared ? 'bg-primary/10 hover:bg-primary/15' : 'bg-surface-container/90 hover:bg-surface-container-high'}`}>
+      <summary className={`transition-all flex items-center gap-3 p-4 cursor-pointer list-none ${isPrepared ? 'bg-primary/10 hover:bg-primary/15' : 'bg-surface-container/90 hover:bg-surface-container-high'}`}>
         {/* Prepared toggle */}
         <button
+          type="button"
           onClick={(e) => { e.preventDefault(); onTogglePrepare() }}
-          className={`w-5 h-5 rounded-md flex-shrink-0 border transition-all flex items-center justify-center cursor-pointer ${isPrepared ? 'bg-primary border-primary shadow-[0_0_8px_rgba(0,240,255,0.5)]' : 'border-white/20 hover:border-primary'}`}
+          className={`w-8 h-8 rounded-md flex-shrink-0 border transition-all flex items-center justify-center cursor-pointer ${isPrepared ? 'bg-primary border-primary shadow-[0_0_8px_rgba(0,240,255,0.5)]' : 'border-white/20 hover:border-primary'}`}
           aria-label={`${isPrepared ? 'Unprepare' : 'Prepare'} ${spell.name}`}
         >
           {isPrepared && (
@@ -263,14 +349,33 @@ function SpellRow({
         </button>
         {/* Name + meta */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 flex-wrap">
-            <span className={`font-headline font-bold ${isPrepared ? 'text-primary' : 'text-white'}`}>{spell.name}</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); onInspect() }}
+              className={`font-headline font-bold text-left cursor-pointer hover:underline underline-offset-4 ${isPrepared ? 'text-primary' : 'text-white'}`}
+            >
+              {spell.name}
+            </button>
             {isPrepared && (
               <span className="font-label text-[9px] text-black font-bold bg-primary px-2 py-0.5 rounded-full uppercase tracking-widest">Prepared</span>
             )}
             <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-md uppercase">
               {spell.school}{spell.subschool ? ` (${spell.subschool})` : ''}
             </span>
+            {spell.savingThrow && (
+              <span className="font-label text-[10px] text-primary border border-primary/30 bg-primary/10 px-2 py-0.5 rounded-md uppercase tabular-nums">
+                DC {spellDc}
+              </span>
+            )}
+            <span className={`font-label text-[10px] px-2 py-0.5 rounded-md uppercase border ${spell.spellResistance ? 'text-secondary border-secondary/40 bg-secondary/10' : 'text-tertiary border-white/10 bg-white/5'}`}>
+              SR {spell.spellResistance ? 'Yes' : 'No'}
+            </span>
+            {isBuffActive && (
+              <span className="font-label text-[10px] text-[#00daf3] border border-[#00daf3]/40 bg-[#00daf3]/10 px-2 py-0.5 rounded-md uppercase">
+                Buff Active
+              </span>
+            )}
             {spell.attackType && (
               <span className="font-label text-[10px] text-error bg-error/15 border border-error/30 px-2 py-0.5 rounded-md uppercase">
                 {spell.attackType === 'meleeTouch' ? 'Melee Touch' : spell.attackType === 'ray' ? 'Ray' : 'Ranged Touch'}
@@ -292,7 +397,7 @@ function SpellRow({
           {spell.savingThrow && (
             <div>
               <p className="text-primary mb-1 font-bold">Saving Throw</p>
-              <p className="text-on-surface-variant">{spell.savingThrow}</p>
+              <p className="text-on-surface-variant">DC {spellDc} · {spell.savingThrow}</p>
             </div>
           )}
           <div>
@@ -306,13 +411,33 @@ function SpellRow({
           {spell.damageDice && (
             <div>
               <p className="text-primary mb-1 font-bold">Damage</p>
-              <p className="text-on-surface-variant font-bold">
+              <p className="text-on-surface-variant font-bold tabular-nums">
                 {spell.damageDice}{spell.damageBonus ? `+${spell.damageBonus}` : ''}
               </p>
             </div>
           )}
         </div>
         <div className="mt-4 flex gap-2 flex-wrap">
+          {isBuffCandidate && (
+            <button
+              type="button"
+              onClick={onActivateBuff}
+              className={`px-5 py-2.5 border font-bold font-label text-xs uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer ${
+                isBuffActive
+                  ? 'bg-primary/20 border-primary/50 text-primary hover:bg-primary/30'
+                  : 'bg-secondary/15 border-secondary/40 text-secondary hover:bg-secondary/25 hover:shadow-[0_0_20px_rgba(217,70,239,0.3)]'
+              }`}
+            >
+              {isBuffActive ? 'Deactivate Buff' : 'Activate as Buff'}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onConcentration}
+            className="px-5 py-2.5 bg-[#181b26] border border-white/10 text-tertiary font-label text-xs uppercase tracking-widest rounded-xl hover:text-primary hover:border-primary/40 transition-all active:scale-95 cursor-pointer tabular-nums"
+          >
+            Cast Check {concentration >= 0 ? `+${concentration}` : concentration}
+          </button>
           {onAttack && attackLabel && (
             <button
               onClick={onAttack}

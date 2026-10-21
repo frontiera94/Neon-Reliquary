@@ -5,10 +5,15 @@
 
 @theme {
   --color-primary: #00f0ff;
+  --color-primary-soft: #00daf3;
+  --color-warning-soft: #ffb4ab;
+  --color-surface-base: #0a0a0f;
+  --color-surface-group: #11131c;
+  --color-surface-card: #181b26;
   --color-secondary: #d946ef;
   --color-tertiary: #94a3b8;
   --color-error: #ff4b60;
-  --color-surface: #0a0a12;
+  --color-surface: #0a0a0f;
   --color-surface-container: #121424;
   --color-surface-container-low: #0e0f1a;
   --color-surface-container-high: #1a1c32;
@@ -24,7 +29,7 @@
   --color-on-secondary: #ffffff;
   --color-on-tertiary: #0f172a;
   --color-on-error: #ffffff;
-  --color-background: #0a0a12;
+  --color-background: #0a0a0f;
   --color-inverse-surface: #f1f5f9;
   --color-inverse-primary: #008fa3;
   --color-primary-container: #005260;
@@ -45,11 +50,14 @@
 }
 
 body {
-  background-color: #0a0a12;
+  background-color: #0a0a0f;
   font-family: 'Manrope', 'Inter', sans-serif;
   color: #f1f5f9;
   margin: 0;
   overflow-x: hidden;
+  /* Tactical data legibility: every number aligns to the same grid. */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
 }
 
 .material-symbols-outlined {

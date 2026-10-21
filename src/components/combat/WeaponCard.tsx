@@ -1,4 +1,5 @@
 import { formatAttackBonus, formatDamage } from '../../lib/combat-calc'
+import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
 import type { Weapon } from '../../types/combat'
 import type { EffectiveWeaponCalculated } from '../../lib/stat-calc'
 
@@ -71,7 +72,17 @@ export function WeaponCard({
           <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-90">
             {showOffhand ? 'Primary' : 'Attack'}
           </span>
-          <span className="text-3xl font-black font-label">{formatAttackBonus(effective.attackBonus)}</span>
+          <StatBreakdownTooltip
+            title={`${weapon.name} — Attack`}
+            total={formatAttackBonus(effective.attackBonus)}
+            breakdown={effective.attackBreakdown}
+            trigger="click"
+            align="center"
+          >
+            <span className="text-3xl font-black font-label tabular-nums underline decoration-black/20 decoration-dotted underline-offset-4">
+              {formatAttackBonus(effective.attackBonus)}
+            </span>
+          </StatBreakdownTooltip>
         </button>
 
         {showOffhand && (
@@ -80,7 +91,19 @@ export function WeaponCard({
             className="flex flex-col items-center justify-center py-5 bg-surface-container-high border border-primary/40 text-primary shadow-[0_0_15px_rgba(0,240,255,0.15)] hover:shadow-[0_0_28px_rgba(0,240,255,0.35)] rounded-xl transition-all active:scale-95 cursor-pointer"
           >
             <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-80">Off-hand</span>
-            <span className="text-3xl font-black font-label">{formatAttackBonus([offhandBonus])}</span>
+            <StatBreakdownTooltip
+              title={`${weapon.name} — Off-hand`}
+              total={formatAttackBonus([offhandBonus])}
+              breakdown={[
+                ...effective.attackBreakdown,
+                { label: 'Off-hand Penalty', value: offhandPenalty },
+              ]}
+              trigger="click"
+            >
+              <span className="text-3xl font-black font-label tabular-nums underline decoration-primary/20 decoration-dotted underline-offset-4">
+                {formatAttackBonus([offhandBonus])}
+              </span>
+            </StatBreakdownTooltip>
           </button>
         )}
       </div>
@@ -96,9 +119,16 @@ export function WeaponCard({
           className="flex flex-col items-center justify-center py-5 bg-surface-container-lowest border border-white/15 text-white hover:text-secondary shadow-[0_0_15px_rgba(217,70,239,0.12)] hover:shadow-[0_0_25px_rgba(217,70,239,0.3)] hover:bg-surface-container-high rounded-xl transition-all cursor-pointer"
         >
           <span className="text-[10px] font-label uppercase tracking-widest mb-1 opacity-70">Damage</span>
-          <span className="text-2xl font-bold font-label">
-            {formatDamage(weapon.damageDice, effective.damageBonus)}
-          </span>
+          <StatBreakdownTooltip
+            title={`${weapon.name} — Damage`}
+            total={formatDamage(weapon.damageDice, effective.damageBonus)}
+            breakdown={effective.damageBreakdown}
+            trigger="click"
+          >
+            <span className="text-2xl font-bold font-label tabular-nums underline decoration-secondary/20 decoration-dotted underline-offset-4">
+              {formatDamage(weapon.damageDice, effective.damageBonus)}
+            </span>
+          </StatBreakdownTooltip>
         </button>
 
         {sneakAttackDice && onSneakAttackRoll && (

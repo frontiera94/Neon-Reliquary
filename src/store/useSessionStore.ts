@@ -3,12 +3,18 @@ import { persist } from 'zustand/middleware'
 import type { SessionState, ActiveSummon } from '../types/session'
 import type { ConditionType, BuffToggle } from '../types/combat'
 import type { CoinPurse } from '../types/inventory'
+import type { Spell } from '../types/resources'
+import { spellToBuff } from '../lib/spell-buffs'
 
 interface SessionStore {
   sessions: Record<string, SessionState>
   getSession: (characterId: string) => SessionState
   setHp: (characterId: string, hp: number) => void
   adjustHp: (characterId: string, delta: number, maxHp: number) => void
+  /** Atomic PF1e damage: absorbs temp HP first, clamps at -CON. */
+  applyDamage: (characterId: string, damage: number, conScore?: number) => void
+  /** Atomic PF1e healing: clears nonlethal first, then restores HP to max. */
+  applyHealing: (characterId: string, healing: number, maxHp?: number) => void
   setTempHp: (characterId: string, temp: number) => void
   setNonlethal: (characterId: string, nl: number) => void
   spendResource: (characterId: string, resourceId: string, max: number) => void
@@ -17,6 +23,7 @@ interface SessionStore {
   toggleBuff: (characterId: string, buffId: string) => void
   addCustomBuff: (characterId: string, buff: BuffToggle) => void
   removeCustomBuff: (characterId: string, buffId: string) => void
+  toggleSpellBuff: (characterId: string, spell: Spell) => void
   toggleCondition: (characterId: string, condition: ConditionType) => void
   toggleSpellPrepared: (characterId: string, spellId: string, level: number, slotMax: number) => void
   spendSpellSlot: (characterId: string, level: number, max: number) => void
@@ -90,6 +97,43 @@ export const useSessionStore = create<SessionStore>()(
               [id]: {
                 ...sess,
                 currentHp: Math.min(maxHp, sess.currentHp + delta),
+              },
+            },
+          }
+        }),
+
+      applyDamage: (id, damage, conScore = 10) =>
+        set((s) => {
+          const sess = s.sessions[id] ?? defaultSession(id)
+          if (damage <= 0) return s
+          const absorbedByTemp = Math.min(sess.tempHp, damage)
+          const remainingDamage = damage - absorbedByTemp
+          const deathThreshold = -Math.max(1, conScore)
+          return {
+            sessions: {
+              ...s.sessions,
+              [id]: {
+                ...sess,
+                tempHp: sess.tempHp - absorbedByTemp,
+                currentHp: Math.max(deathThreshold, sess.currentHp - remainingDamage),
+              },
+            },
+          }
+        }),
+
+      applyHealing: (id, healing, maxHp = Number.MAX_SAFE_INTEGER) =>
+        set((s) => {
+          const sess = s.sessions[id] ?? defaultSession(id)
+          if (healing <= 0) return s
+          const nonlethalCleared = Math.min(sess.nonlethalDamage, healing)
+          const remainingHealing = healing - nonlethalCleared
+          return {
+            sessions: {
+              ...s.sessions,
+              [id]: {
+                ...sess,
+                nonlethalDamage: sess.nonlethalDamage - nonlethalCleared,
+                currentHp: Math.min(maxHp, sess.currentHp + remainingHealing),
               },
             },
           }
@@ -215,6 +259,39 @@ export const useSessionStore = create<SessionStore>()(
                 ...sess,
                 customBuffs: (sess.customBuffs ?? []).filter((b) => b.id !== buffId),
                 activeBuffIds: sess.activeBuffIds.filter((b) => b !== buffId),
+              },
+            },
+          }
+        }),
+
+      toggleSpellBuff: (id, spell) =>
+        set((s) => {
+          const sess = s.sessions[id] ?? defaultSession(id)
+          const buffId = `spell-buff-${spell.id}`
+          const exists = (sess.customBuffs ?? []).some((b) => b.id === buffId)
+          const isActive = sess.activeBuffIds.includes(buffId)
+
+          if (exists) {
+            return {
+              sessions: {
+                ...s.sessions,
+                [id]: {
+                  ...sess,
+                  activeBuffIds: isActive
+                    ? sess.activeBuffIds.filter((b) => b !== buffId)
+                    : [...sess.activeBuffIds, buffId],
+                },
+              },
+            }
+          }
+
+          return {
+            sessions: {
+              ...s.sessions,
+              [id]: {
+                ...sess,
+                customBuffs: [...(sess.customBuffs ?? []), spellToBuff(spell)],
+                activeBuffIds: [...sess.activeBuffIds, buffId],
               },
             },
           }

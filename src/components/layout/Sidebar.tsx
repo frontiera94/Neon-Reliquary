@@ -11,12 +11,12 @@ const navItems = [
   { to: '/companion', icon: 'pets', label: 'Companion' },
 ]
 
-export function Sidebar() {
+export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
   const char = useCharacterStore((s) => s.activeCharacter())
 
   return (
     <aside
-      className="hidden md:flex flex-col h-screen w-64 bg-surface-container/90 backdrop-blur-md fixed left-0 top-0 pt-20 pb-8 z-40 border-r border-white/[0.08]"
+      className={`hidden md:flex flex-col h-screen w-64 bg-surface-container/90 backdrop-blur-md fixed left-0 top-0 pt-20 pb-8 z-40 border-r border-white/[0.08] ${forceHidden ? 'lg:hidden' : ''}`}
       style={{ boxShadow: '4px 0 24px -8px rgba(0,240,255,0.08)' }}
     >
       {char && (

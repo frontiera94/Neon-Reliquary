@@ -33,6 +33,12 @@ export interface BuffToggle {
   description?: string
   isCustom?: boolean
   duration?: string
+  /** Optional explicit link to a DailyResource id (e.g. arcane-pool, ki-pool). */
+  resourceId?: string
+  /** Optional cost in resource points when the buff is engaged. Defaults to 1. */
+  resourceCost?: number
+  /** For buffs created from a spell, the originating spell id. */
+  spellId?: string
 }
 
 export type ConditionType =
