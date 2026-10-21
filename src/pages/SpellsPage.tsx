@@ -4,20 +4,28 @@ import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { useInspectorStore } from '../store/useInspectorStore'
 import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
-import {
-  calcConcentrationBonus,
-  calcSpellDc,
-  deriveBuffFromSpell,
-  findMatchingBuffForSpell,
-  getCastingAbilityKey,
-  isSpellBuffCandidate,
-} from '../lib/stat-calc'
+import { deriveBuffFromSpell, findMatchingBuffForSpell, isSpellBuffCandidate } from '../lib/stat-calc'
+import { spellInspectorItem } from '../lib/inspector-items'
 import type { Spell, SpellAttackType } from '../types/resources'
+import type { AbilityScore } from '../types/character'
+
+function concentrationMod(charClass: string, level: number, abilities: AbilityScore): number {
+  const cls = charClass.toLowerCase()
+  let abilMod: number
+  if (/wizard|magus|witch|alchemist|investigator|arcanist|rogue/.test(cls)) {
+    abilMod = abilityMod(abilities.int)
+  } else if (/sorcerer|bard|oracle|summoner|skald|bloodrager/.test(cls)) {
+    abilMod = abilityMod(abilities.cha)
+  } else {
+    abilMod = abilityMod(abilities.wis)
+  }
+  return level + abilMod
+}
 
 export function SpellsPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => char ? s.getSession(char.id) : null)
-  const { toggleSpellPrepared, spendSpellSlot, recoverSpellSlot, toggleBuff, addCustomBuff } = useSessionStore()
+  const { toggleSpellPrepared, prepareSpell, unprepareSpell, spendSpellSlot, recoverSpellSlot, toggleBuff, addCustomBuff } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
   const openInspector = useInspectorStore((s) => s.openInspector)
   const [search, setSearch] = useState('')
@@ -45,73 +53,61 @@ export function SpellsPage() {
 
   const preparedIds = session?.preparedSpellIds ?? []
   const spentSlots = session?.spentSpellSlots ?? {}
+  const isSpontaneous = /sorcerer|bard|oracle|inquisitor|summoner|bloodrager|skald|hunter/i.test(char.class)
 
   const arcaneFailure = char.armorClass.spellFailureChance ?? 0
-  const castingKey = getCastingAbilityKey(char.class)
-  const castingMod = abilityMod(char.abilities[castingKey])
-  const concMod = calcConcentrationBonus(char.level, castingMod)
+  const concMod = concentrationMod(char.class, char.level, char.abilities)
   const hasCombatCasting = char.feats.some((f) => /combat casting/i.test(f.name))
 
-  const allBuffs = [...char.buffs, ...(session?.customBuffs ?? [])]
   const bab = char.baseAttackBonus[0] ?? 0
   const dexMod = abilityMod(char.abilities.dex)
   const strMod = abilityMod(char.abilities.str)
   const attackBonusFor = (t: SpellAttackType): number =>
     t === 'meleeTouch' ? bab + strMod : bab + dexMod
 
-  const attackLabel: Record<SpellAttackType, string> = {
-    rangedTouch: 'Cast (Ranged Touch)',
-    meleeTouch: 'Cast (Melee Touch)',
-    ray: 'Cast (Ray)',
-  }
+  const allBuffs = [...char.buffs, ...(session?.customBuffs ?? [])]
 
   const isSpellBuffActive = (spell: Spell) => {
     const match = findMatchingBuffForSpell(spell, allBuffs)
-    const id = match?.id ?? `spell-buff-${spell.id}`
-    return session?.activeBuffIds.includes(id) ?? false
+    return session?.activeBuffIds.includes(match?.id ?? `spell-buff-${spell.id}`) ?? false
   }
 
   const activateSpellBuff = (spell: Spell) => {
     if (!session) return
     const match = findMatchingBuffForSpell(spell, allBuffs)
     const buffId = match?.id ?? `spell-buff-${spell.id}`
-    const alreadyActive = session.activeBuffIds.includes(buffId)
-
-    if (alreadyActive) {
+    if (session.activeBuffIds.includes(buffId)) {
       if (match) toggleBuff(char.id, match.id)
       return
     }
-
     const slotMax = char.spellSlots.find((slot) => slot.level === spell.level)?.total ?? 0
     const spent = session.spentSpellSlots[spell.level] ?? 0
-    if (spell.level > 0 && spent < slotMax) {
-      spendSpellSlot(char.id, spell.level, slotMax)
-    }
-
+    if (spell.level > 0 && spent < slotMax) spendSpellSlot(char.id, spell.level, slotMax)
     if (match) toggleBuff(char.id, match.id)
     else addCustomBuff(char.id, deriveBuffFromSpell(spell))
   }
 
   const inspectSpell = (spell: Spell) => {
-    openInspector({
-      type: 'spell',
-      id: spell.id,
-      title: spell.name,
-      subtitle: `${spell.school} · Level ${spell.level}`,
-      description: spell.description,
-      tags: [
-        `Lv ${spell.level}`,
-        spell.school,
-        spell.spellResistance ? 'SR: Yes' : 'SR: No',
-        ...(spell.attackType ? [attackLabel[spell.attackType]] : []),
-      ],
-      notes: [
-        `Casting Time: ${spell.castingTime}`,
-        `Range: ${spell.range}`,
-        `Duration: ${spell.duration}`,
-        `Save DC: ${calcSpellDc(spell.level, castingMod)}${spell.savingThrow ? ` (${spell.savingThrow})` : ''}`,
-      ],
-    })
+    openInspector(
+      spellInspectorItem(spell, {
+        tags: isSpellBuffActive(spell) ? ['Buff Active'] : [],
+        actions: isSpellBuffCandidate(spell)
+          ? [
+              {
+                label: isSpellBuffActive(spell) ? 'Deactivate Buff' : 'Activate as Buff',
+                onClick: () => activateSpellBuff(spell),
+                variant: isSpellBuffActive(spell) ? 'danger' : 'secondary',
+              },
+            ]
+          : undefined,
+      })
+    )
+  }
+
+  const attackLabel: Record<SpellAttackType, string> = {
+    rangedTouch: 'Cast (Ranged Touch)',
+    meleeTouch: 'Cast (Melee Touch)',
+    ray: 'Cast (Ray)',
   }
 
   return (
@@ -122,7 +118,7 @@ export function SpellsPage() {
           The Repository
         </h1>
         <p className="text-tertiary font-label uppercase text-sm tracking-[0.2em]">
-          Arcane Knowledge & Prepared Invocations
+          {isSpontaneous ? 'Spontaneous Spells Known & Slot Management' : 'Arcane Knowledge & Prepared Invocations'}
         </p>
 
         {arcaneFailure > 0 && (
@@ -238,58 +234,55 @@ export function SpellsPage() {
         .map((lvl) => {
           const levelSpells = filteredSpells.filter((s) => s.level === lvl)
           if (levelSpells.length === 0) return null
+          const slotMax = char.spellSlots.find((sl) => sl.level === lvl)?.total ?? 0
+          const levelPreparedCount = preparedIds.filter((id) =>
+            char.spells.some((s) => s.id === id && s.level === lvl)
+          ).length
+          const isLevelFull = slotMax > 0 && levelPreparedCount >= slotMax
+
           return (
             <div key={lvl} className="mb-8">
               <div className="flex items-center gap-4 mb-3">
                 <h3 className="font-label text-xs uppercase tracking-[0.2em] text-primary font-bold">
-                  Level {lvl}
+                  Level {lvl} {!isSpontaneous && slotMax > 0 ? `· Prepared: ${levelPreparedCount}/${slotMax}` : ''}
                 </h3>
                 <div className="flex-1 h-px bg-white/10" />
               </div>
               <div className="space-y-2">
                 {levelSpells.map((spell) => {
-                  const slotMax = char.spellSlots.find((sl) => sl.level === spell.level)?.total ?? 0
                   const atkBonus = spell.attackType ? attackBonusFor(spell.attackType) : 0
+                  const count = preparedIds.filter((id) => id === spell.id).length
+                  const isPrepared = isSpontaneous || count > 0
+                  const canPrepareMore = !isLevelFull
+
                   return (
                     <SpellRow
                       key={spell.id}
                       spell={spell}
-                      isPrepared={preparedIds.includes(spell.id)}
+                      isSpontaneous={isSpontaneous}
+                      isPrepared={isPrepared}
+                      preparedCount={count}
+                      canPrepareMore={canPrepareMore}
                       attackLabel={spell.attackType ? `${attackLabel[spell.attackType]} (${atkBonus >= 0 ? `+${atkBonus}` : atkBonus})` : undefined}
-                      spellDc={calcSpellDc(spell.level, castingMod)}
-                      concentration={concMod + (hasCombatCasting ? 4 : 0)}
-                      isBuffCandidate={isSpellBuffCandidate(spell)}
                       isBuffActive={isSpellBuffActive(spell)}
-                      onTogglePrepare={() => toggleSpellPrepared(char.id, spell.id, spell.level, slotMax)}
-                      onActivateBuff={() => activateSpellBuff(spell)}
+                      onActivateBuff={isSpellBuffCandidate(spell) ? () => activateSpellBuff(spell) : undefined}
                       onInspect={() => inspectSpell(spell)}
-                      onConcentration={() =>
-                        openRoll({
-                          diceType: 20,
-                          count: 1,
-                          modifier: concMod + (hasCombatCasting ? 4 : 0),
-                          label: `${spell.name} (Concentration)`,
-                        })
-                      }
+                      onTogglePrepare={() => {
+                        if (!isPrepared && !canPrepareMore) return
+                        toggleSpellPrepared(char.id, spell.id, spell.level, slotMax)
+                      }}
+                      onAddPrepare={canPrepareMore ? () => prepareSpell(char.id, spell.id) : undefined}
+                      onRemovePrepare={() => unprepareSpell(char.id, spell.id)}
                       onAttack={
                         spell.attackType
-                          ? () => openRoll({
-                              diceType: 20,
-                              count: 1,
-                              modifier: atkBonus,
-                              label: `${spell.name} (Attack)`,
-                              breakdown: [
-                                { label: 'BAB', value: bab },
-                                { label: spell.attackType === 'meleeTouch' ? 'STR Mod' : 'DEX Mod', value: spell.attackType === 'meleeTouch' ? strMod : dexMod },
-                              ],
-                            })
+                          ? () => openRoll({ diceType: 20, count: 1, modifier: atkBonus, label: `${spell.name} (Attack)` })
                           : undefined
                       }
                       onDamage={
                         spell.damageDice
                           ? () => {
-                              const { count, sides, bonus } = parseDiceFormula(spell.damageDice!)
-                              openRoll({ diceType: sides, count, modifier: (spell.damageBonus ?? 0) + bonus, label: `${spell.name} (Damage)` })
+                              const { count: dCount, sides, bonus } = parseDiceFormula(spell.damageDice!)
+                              openRoll({ diceType: sides, count: dCount, modifier: (spell.damageBonus ?? 0) + bonus, label: `${spell.name} (Damage)` })
                             }
                           : undefined
                       }
@@ -307,75 +300,117 @@ export function SpellsPage() {
 function SpellRow({
   spell,
   isPrepared,
+  isSpontaneous = false,
+  preparedCount = 0,
+  canPrepareMore = true,
   attackLabel,
-  spellDc,
-  concentration,
-  isBuffCandidate,
-  isBuffActive,
   onTogglePrepare,
-  onActivateBuff,
-  onInspect,
-  onConcentration,
+  onAddPrepare,
+  onRemovePrepare,
   onAttack,
   onDamage,
+  onActivateBuff,
+  onInspect,
+  isBuffActive = false,
 }: {
   spell: Spell
   isPrepared: boolean
+  isSpontaneous?: boolean
+  preparedCount?: number
+  canPrepareMore?: boolean
   attackLabel?: string
-  spellDc: number
-  concentration: number
-  isBuffCandidate: boolean
-  isBuffActive: boolean
   onTogglePrepare: () => void
-  onActivateBuff: () => void
-  onInspect: () => void
-  onConcentration: () => void
+  onAddPrepare?: () => void
+  onRemovePrepare?: () => void
   onAttack?: () => void
   onDamage?: () => void
+  onActivateBuff?: () => void
+  onInspect?: () => void
+  isBuffActive?: boolean
 }) {
   return (
     <details className={`w-full group rounded-xl overflow-hidden border transition-all ${isPrepared ? 'border-primary/50 shadow-[0_0_12px_rgba(0,240,255,0.15)]' : 'border-white/[0.08]'}`}>
-      <summary className={`transition-all flex items-center gap-3 p-4 cursor-pointer list-none ${isPrepared ? 'bg-primary/10 hover:bg-primary/15' : 'bg-surface-container/90 hover:bg-surface-container-high'}`}>
-        {/* Prepared toggle */}
-        <button
-          type="button"
-          onClick={(e) => { e.preventDefault(); onTogglePrepare() }}
-          className={`w-8 h-8 rounded-md flex-shrink-0 border transition-all flex items-center justify-center cursor-pointer ${isPrepared ? 'bg-primary border-primary shadow-[0_0_8px_rgba(0,240,255,0.5)]' : 'border-white/20 hover:border-primary'}`}
-          aria-label={`${isPrepared ? 'Unprepare' : 'Prepare'} ${spell.name}`}
-        >
-          {isPrepared && (
-            <span className="material-symbols-outlined text-black leading-none font-bold" style={{ fontSize: '14px' }}>check</span>
-          )}
-        </button>
+      <summary className={`transition-all flex items-center gap-4 p-4 cursor-pointer list-none ${isPrepared ? 'bg-primary/10 hover:bg-primary/15' : 'bg-surface-container/90 hover:bg-surface-container-high'}`}>
+        {/* Prepared toggle or Spontaneous badge */}
+        {isSpontaneous ? (
+          <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/40 px-2 py-0.5 rounded-md uppercase font-bold flex-shrink-0">
+            Known
+          </span>
+        ) : (
+          <button
+            onClick={(e) => { e.preventDefault(); onTogglePrepare() }}
+            disabled={!isPrepared && !canPrepareMore}
+            className={`w-5 h-5 rounded-md flex-shrink-0 border transition-all flex items-center justify-center ${
+              isPrepared
+                ? 'bg-primary border-primary shadow-[0_0_8px_rgba(0,240,255,0.5)] cursor-pointer'
+                : !canPrepareMore
+                ? 'border-white/10 opacity-30 cursor-not-allowed'
+                : 'border-white/20 hover:border-primary cursor-pointer'
+            }`}
+            aria-label={`${isPrepared ? 'Unprepare' : 'Prepare'} ${spell.name}`}
+            title={!isPrepared && !canPrepareMore ? 'All slots prepared for this level' : undefined}
+          >
+            {isPrepared && (
+              <span className="material-symbols-outlined text-black leading-none font-bold" style={{ fontSize: '14px' }}>check</span>
+            )}
+          </button>
+        )}
         {/* Name + meta */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               type="button"
-              onClick={(e) => { e.preventDefault(); onInspect() }}
-              className={`font-headline font-bold text-left cursor-pointer hover:underline underline-offset-4 ${isPrepared ? 'text-primary' : 'text-white'}`}
+              onClick={(event) => {
+                event.preventDefault()
+                onInspect?.()
+              }}
+              className={`font-headline font-bold text-left cursor-pointer hover:underline underline-offset-4 ${isPrepared ? 'text-primary' : isBuffActive ? 'text-secondary' : 'text-white'}`}
             >
               {spell.name}
             </button>
-            {isPrepared && (
-              <span className="font-label text-[9px] text-black font-bold bg-primary px-2 py-0.5 rounded-full uppercase tracking-widest">Prepared</span>
+            {isBuffActive && (
+              <span className="font-label text-[9px] text-white font-bold bg-secondary px-2 py-0.5 rounded-full uppercase tracking-widest">
+                Buff Active
+              </span>
+            )}
+            {!isSpontaneous && isPrepared && (
+              <div
+                className="flex items-center gap-1.5 bg-primary/20 border border-primary/40 rounded-full px-2 py-0.5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="font-label text-[9px] text-primary font-bold uppercase tracking-widest">
+                  Prepared {preparedCount > 1 ? `x${preparedCount}` : ''}
+                </span>
+                {onRemovePrepare && (
+                  <button
+                    onClick={(e) => { e.preventDefault(); onRemovePrepare() }}
+                    className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-primary hover:text-white hover:bg-primary/40 text-[10px] font-bold cursor-pointer"
+                    title="Remove one prepared copy"
+                    aria-label={`Remove one prepared ${spell.name}`}
+                  >
+                    -
+                  </button>
+                )}
+                {onAddPrepare && (
+                  <button
+                    onClick={(e) => { e.preventDefault(); onAddPrepare() }}
+                    disabled={!canPrepareMore}
+                    className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-primary text-[10px] font-bold ${
+                      canPrepareMore
+                        ? 'hover:text-white hover:bg-primary/40 cursor-pointer'
+                        : 'opacity-30 cursor-not-allowed'
+                    }`}
+                    title={canPrepareMore ? 'Prepare an additional copy' : 'No more slots available for this level'}
+                    aria-label={`Prepare another copy of ${spell.name}`}
+                  >
+                    +
+                  </button>
+                )}
+              </div>
             )}
             <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-md uppercase">
               {spell.school}{spell.subschool ? ` (${spell.subschool})` : ''}
             </span>
-            {spell.savingThrow && (
-              <span className="font-label text-[10px] text-primary border border-primary/30 bg-primary/10 px-2 py-0.5 rounded-md uppercase tabular-nums">
-                DC {spellDc}
-              </span>
-            )}
-            <span className={`font-label text-[10px] px-2 py-0.5 rounded-md uppercase border ${spell.spellResistance ? 'text-secondary border-secondary/40 bg-secondary/10' : 'text-tertiary border-white/10 bg-white/5'}`}>
-              SR {spell.spellResistance ? 'Yes' : 'No'}
-            </span>
-            {isBuffActive && (
-              <span className="font-label text-[10px] text-[#00daf3] border border-[#00daf3]/40 bg-[#00daf3]/10 px-2 py-0.5 rounded-md uppercase">
-                Buff Active
-              </span>
-            )}
             {spell.attackType && (
               <span className="font-label text-[10px] text-error bg-error/15 border border-error/30 px-2 py-0.5 rounded-md uppercase">
                 {spell.attackType === 'meleeTouch' ? 'Melee Touch' : spell.attackType === 'ray' ? 'Ray' : 'Ranged Touch'}
@@ -397,7 +432,7 @@ function SpellRow({
           {spell.savingThrow && (
             <div>
               <p className="text-primary mb-1 font-bold">Saving Throw</p>
-              <p className="text-on-surface-variant">DC {spellDc} · {spell.savingThrow}</p>
+              <p className="text-on-surface-variant">{spell.savingThrow}</p>
             </div>
           )}
           <div>
@@ -411,33 +446,13 @@ function SpellRow({
           {spell.damageDice && (
             <div>
               <p className="text-primary mb-1 font-bold">Damage</p>
-              <p className="text-on-surface-variant font-bold tabular-nums">
+              <p className="text-on-surface-variant font-bold">
                 {spell.damageDice}{spell.damageBonus ? `+${spell.damageBonus}` : ''}
               </p>
             </div>
           )}
         </div>
         <div className="mt-4 flex gap-2 flex-wrap">
-          {isBuffCandidate && (
-            <button
-              type="button"
-              onClick={onActivateBuff}
-              className={`px-5 py-2.5 border font-bold font-label text-xs uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer ${
-                isBuffActive
-                  ? 'bg-primary/20 border-primary/50 text-primary hover:bg-primary/30'
-                  : 'bg-secondary/15 border-secondary/40 text-secondary hover:bg-secondary/25 hover:shadow-[0_0_20px_rgba(217,70,239,0.3)]'
-              }`}
-            >
-              {isBuffActive ? 'Deactivate Buff' : 'Activate as Buff'}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={onConcentration}
-            className="px-5 py-2.5 bg-[#181b26] border border-white/10 text-tertiary font-label text-xs uppercase tracking-widest rounded-xl hover:text-primary hover:border-primary/40 transition-all active:scale-95 cursor-pointer tabular-nums"
-          >
-            Cast Check {concentration >= 0 ? `+${concentration}` : concentration}
-          </button>
           {onAttack && attackLabel && (
             <button
               onClick={onAttack}
@@ -452,6 +467,28 @@ function SpellRow({
               className="px-5 py-2.5 bg-surface-container-highest border border-error/40 text-error font-label text-xs uppercase tracking-widest rounded-xl hover:shadow-[0_0_15px_rgba(255,75,96,0.3)] hover:bg-error/10 transition-all active:scale-95 cursor-pointer"
             >
               Roll Damage ({spell.damageDice}{spell.damageBonus ? `+${spell.damageBonus}` : ''})
+            </button>
+          )}
+          {onActivateBuff && (
+            <button
+              type="button"
+              onClick={onActivateBuff}
+              className={`px-5 py-2.5 border font-label text-xs uppercase tracking-widest rounded-xl transition-all active:scale-95 cursor-pointer ${
+                isBuffActive
+                  ? 'bg-secondary/20 border-secondary/60 text-secondary hover:bg-secondary/30'
+                  : 'bg-secondary/10 border-secondary/40 text-secondary hover:bg-secondary/20'
+              }`}
+            >
+              {isBuffActive ? 'Deactivate Buff' : 'Activate as Buff'}
+            </button>
+          )}
+          {onInspect && (
+            <button
+              type="button"
+              onClick={onInspect}
+              className="px-5 py-2.5 bg-white/5 border border-white/10 text-tertiary font-label text-xs uppercase tracking-widest rounded-xl hover:text-primary hover:border-primary/40 transition-all cursor-pointer"
+            >
+              Inspect
             </button>
           )}
         </div>

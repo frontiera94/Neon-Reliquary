@@ -4,6 +4,7 @@ import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
 import { CONDITION_INFO } from '../lib/conditions'
+import { COMPANION_PRESETS } from '../data/companion-presets'
 import type { ConditionType } from '../types/combat'
 import type { Companion } from '../types/companion'
 
@@ -25,6 +26,7 @@ const ALL_CONDITIONS: ConditionType[] = [
 
 export function CompanionPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
+  const addCompanion = useCharacterStore((s) => s.addCompanion)
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
   const {
     adjustCompanionHp,
@@ -38,6 +40,7 @@ export function CompanionPage() {
   const [hpDelta, setHpDelta] = useState(1)
   const [tempEdit, setTempEdit] = useState<string | null>(null)
   const [selectedCompanionId, setSelectedCompanionId] = useState<string | null>(null)
+  const [showManifestModal, setShowManifestModal] = useState(false)
 
   if (!char) {
     return (
@@ -56,17 +59,70 @@ export function CompanionPage() {
 
   if (companions.length === 0) {
     return (
-      <div className="p-8 max-w-2xl mx-auto text-center space-y-4">
-        <div className="w-16 h-16 mx-auto bg-surface-container-high border border-primary/30 flex items-center justify-center text-primary">
-          <span className="material-symbols-outlined text-3xl">pets</span>
+      <div className="p-6 md:p-12 max-w-5xl mx-auto space-y-8">
+        <div className="text-center space-y-3">
+          <div className="w-16 h-16 mx-auto bg-surface-container-high rounded-2xl border border-primary/30 flex items-center justify-center text-primary shadow-[0_0_20px_rgba(0,240,255,0.15)]">
+            <span className="material-symbols-outlined text-3xl">pets</span>
+          </div>
+          <h2 className="font-headline text-3xl text-white font-bold tracking-tight">
+            Manifest a Companion
+          </h2>
+          <p className="font-body text-sm text-tertiary max-w-lg mx-auto leading-relaxed">
+            {char.name} does not currently have an active companion. Select a preset below to bond a familiar or companion to their neural weave.
+          </p>
         </div>
-        <h2 className="font-headline text-2xl text-on-surface font-bold">
-          No Companion Manifested
-        </h2>
-        <p className="font-body text-sm text-tertiary leading-relaxed">
-          {char.name} does not currently have an active animal companion, familiar, or eidolon
-          bound to their neural weave.
-        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {COMPANION_PRESETS.map((preset) => (
+            <div
+              key={preset.id}
+              className="bg-surface-container/70 backdrop-blur-md border border-white/10 hover:border-primary/50 rounded-2xl p-6 transition-all duration-300 hover:shadow-[0_0_25px_rgba(0,240,255,0.15)] flex flex-col justify-between gap-4 group"
+            >
+              <div className="flex items-start gap-4">
+                {preset.portrait ? (
+                  <img
+                    src={preset.portrait}
+                    alt={preset.name}
+                    className="w-16 h-16 object-cover rounded-xl border border-primary/40 flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-surface-container-high rounded-xl border border-primary/30 flex items-center justify-center text-primary flex-shrink-0">
+                    <span className="material-symbols-outlined text-2xl">pets</span>
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-label text-[10px] uppercase px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/40 font-semibold">
+                      {preset.type.replace('_', ' ')}
+                    </span>
+                    <span className="font-label text-[10px] uppercase text-tertiary">
+                      {preset.size} {preset.species}
+                    </span>
+                  </div>
+                  <h3 className="font-headline text-xl font-bold text-white group-hover:text-primary transition-colors">
+                    {preset.name}
+                  </h3>
+                  <p className="font-body text-xs text-tertiary mt-1">
+                    HP: {preset.maxHp} • AC: {preset.armorClass.total} • Speed: {preset.speed}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-white/5 pt-3 flex items-center justify-between">
+                <span className="font-label text-xs text-tertiary">
+                  Attacks: {preset.attacks.map((a) => a.name).join(', ')}
+                </span>
+                <button
+                  onClick={() => addCompanion(char.id, preset)}
+                  className="px-4 py-2 bg-gradient-to-r from-primary to-cyan-400 text-surface-lowest font-label text-xs uppercase tracking-wider font-bold rounded-xl hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-sm">add</span>
+                  Manifest
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -116,8 +172,8 @@ export function CompanionPage() {
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
       {/* Multi-companion Switcher Tabs */}
-      {companions.length > 1 && (
-        <div className="flex border-b border-white/10 gap-2 pb-2">
+      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <div className="flex gap-2 flex-wrap">
           {companions.map((comp) => {
             const isSelected = comp.id === activeCompanion.id
             return (
@@ -136,7 +192,14 @@ export function CompanionPage() {
             )
           })}
         </div>
-      )}
+        <button
+          onClick={() => setShowManifestModal(true)}
+          className="px-3 py-1.5 rounded-xl border border-primary/30 text-primary hover:bg-primary/10 font-label text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer flex-shrink-0"
+        >
+          <span className="material-symbols-outlined text-sm">add</span>
+          Manifest Preset
+        </button>
+      </div>
 
       {/* Companion Profile Header */}
       <header className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_25px_rgba(0,240,255,0.08)] flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
@@ -467,14 +530,17 @@ export function CompanionPage() {
                   <button
                     onClick={() => {
                       const { count, sides, bonus } = parseDiceFormula(atk.damageDice)
-                      const totalDmgBonus = (atk.damageBonus ?? bonus) + conditionDamageMod
+                      const baseBonus = atk.damageBonus !== undefined && atk.damageBonus !== bonus
+                        ? atk.damageBonus + bonus
+                        : (atk.damageBonus ?? bonus)
+                      const totalDmgBonus = baseBonus + conditionDamageMod
                       openRoll({
                         diceType: sides,
                         count,
                         modifier: totalDmgBonus,
                         label: `${activeCompanion.name} ${atk.name} Damage`,
                         breakdown: [
-                          { label: 'Damage Dice', value: totalDmgBonus },
+                          { label: 'Base Damage', value: baseBonus },
                           ...(conditionDamageMod !== 0
                             ? [{ label: 'Conditions', value: conditionDamageMod }]
                             : []),
@@ -620,6 +686,53 @@ export function CompanionPage() {
           })}
         </div>
       </section>
+
+      {/* Preset Manifest Modal */}
+      {showManifestModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-surface-container border border-white/10 rounded-2xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto space-y-4 shadow-[0_0_50px_rgba(0,240,255,0.2)]">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <h3 className="font-headline text-xl font-bold text-white uppercase tracking-tight flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">pets</span>
+                Manifest Companion Preset
+              </h3>
+              <button
+                onClick={() => setShowManifestModal(false)}
+                className="text-tertiary hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+                aria-label="Close modal"
+              >
+                <span className="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {COMPANION_PRESETS.map((preset) => (
+                <div
+                  key={preset.id}
+                  className="bg-surface-container-high/80 border border-white/10 rounded-xl p-4 flex flex-col justify-between gap-3 hover:border-primary/40 transition-colors"
+                >
+                  <div>
+                    <span className="font-label text-[10px] uppercase text-primary font-bold">
+                      {preset.type.replace('_', ' ')} • {preset.species}
+                    </span>
+                    <h4 className="font-headline text-base font-bold text-white mt-0.5">{preset.name}</h4>
+                    <p className="font-body text-xs text-tertiary mt-1">HP: {preset.maxHp} • AC: {preset.armorClass.total} • Speed: {preset.speed}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      addCompanion(char.id, preset)
+                      setShowManifestModal(false)
+                    }}
+                    className="w-full py-2 bg-primary/20 hover:bg-primary text-primary hover:text-surface font-label text-xs uppercase tracking-wider font-bold rounded-lg border border-primary/40 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-sm">add</span>
+                    Manifest
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

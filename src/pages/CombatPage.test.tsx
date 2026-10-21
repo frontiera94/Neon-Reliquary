@@ -165,4 +165,242 @@ describe('CombatPage component', () => {
     // Off-hand button should now be rendered
     expect(screen.getByText('Off-hand')).toBeInTheDocument()
   })
+
+  it('renders Combat Maneuvers panel with CMB and CMD', () => {
+    render(
+      <MemoryRouter>
+        <CombatPage />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByText('Maneuvers & Tactics (CMB / CMD)')).toBeInTheDocument()
+    // Click header to expand
+    const header = screen.getByText('Maneuvers & Tactics (CMB / CMD)')
+    fireEvent.click(header)
+
+    // Check maneuvers are listed
+    expect(screen.getByText('Sbilanciare (Trip)')).toBeInTheDocument()
+    expect(screen.getByText('Disarmare (Disarm)')).toBeInTheDocument()
+    expect(screen.getByText('Lotta (Grapple)')).toBeInTheDocument()
+  })
+
+  it('renders iterative attack buttons and triggers full attack modal', () => {
+    const multiAttackChar: FullCharacter = {
+      ...combatChar,
+      weapons: [
+        {
+          ...combatChar.weapons[0],
+          attackBonus: [11, 6, 1],
+        },
+      ],
+    }
+    useCharacterStore.setState({
+      characters: [multiAttackChar],
+      activeCharacterId: 'combat-test-char',
+    })
+
+    render(
+      <MemoryRouter>
+        <CombatPage />
+      </MemoryRouter>
+    )
+
+    // Should show iterative buttons
+    expect(screen.getByText('1° Attack')).toBeInTheDocument()
+    expect(screen.getByText('2° Attack')).toBeInTheDocument()
+    expect(screen.getByText('3° Attack')).toBeInTheDocument()
+
+    // Should show Full Attack routine button
+    const fullAtkBtn = screen.getByText(/Full Attack Routine/)
+    expect(fullAtkBtn).toBeInTheDocument()
+
+    // Click Full Attack routine button -> opens modal
+    fireEvent.click(fullAtkBtn)
+    expect(screen.getByText('Full Attack Sequence')).toBeInTheDocument()
+  })
+
+  it('correctly formats negative damage modifier without plus-minus and displays abilityMods / saveMod', () => {
+    const buffTestChar: FullCharacter = {
+      ...combatChar,
+      buffs: [
+        {
+          id: 'buff-negative-dmg',
+          name: 'Feeble Strike',
+          active: false,
+          attackMod: 0,
+          damageMod: -3,
+          acMod: 0,
+          abilityMods: { str: 4 },
+          saveMod: { ref: 1, will: 2 },
+        },
+      ],
+    }
+    useCharacterStore.setState({
+      characters: [buffTestChar],
+      activeCharacterId: 'combat-test-char',
+    })
+    useSessionStore.setState({
+      sessions: {
+        'combat-test-char': {
+          characterId: 'combat-test-char',
+          currentHp: 38,
+          tempHp: 0,
+          nonlethalDamage: 0,
+          conditions: [],
+          spentResources: {},
+          preparedSpellIds: [],
+          spentSpellSlots: {},
+          activeBuffIds: ['buff-negative-dmg'],
+          customBuffs: [],
+          ammo: {},
+          activeSummon: null,
+          itemQuantities: {},
+          coins: { gp: 0, sp: 0, cp: 0 },
+        },
+      },
+    })
+
+    render(
+      <MemoryRouter>
+        <CombatPage />
+      </MemoryRouter>
+    )
+
+    // Should display "-3 Dmg", NOT "+-3 Dmg"
+    expect(screen.queryByText(/\+-3/)).not.toBeInTheDocument()
+    expect(screen.getByText(/-3 Dmg/)).toBeInTheDocument()
+    // Should display abilityMods and saveMod
+    expect(screen.getByText(/\+4 STR/)).toBeInTheDocument()
+    expect(screen.getByText(/\+1 Ref/)).toBeInTheDocument()
+    expect(screen.getByText(/\+2 Will/)).toBeInTheDocument()
+  })
+
+  it('does not display extra dice roll button on ranged weapons when buff is meleeOnly', () => {
+    const mixedWeaponChar: FullCharacter = {
+      ...combatChar,
+      weapons: [
+        {
+          id: 'weap-scimitar',
+          name: '+1 Scimitar',
+          type: 'melee',
+          attackBonus: [8, 3],
+          damageDice: '1d6',
+          damageBonus: 5,
+          critRange: 18,
+          critMultiplier: 2,
+          tags: ['Light'],
+        },
+        {
+          id: 'weap-shortbow',
+          name: 'Shortbow',
+          type: 'ranged',
+          attackBonus: [7, 2],
+          damageDice: '1d6',
+          damageBonus: 0,
+          critRange: 20,
+          critMultiplier: 3,
+          tags: [],
+        },
+      ],
+      buffs: [
+        {
+          id: 'buff-jabbing',
+          name: 'Jabbing Style',
+          active: false,
+          attackMod: 0,
+          damageMod: 0,
+          acMod: 0,
+          extraDamageDice: '2d6',
+          meleeOnly: true,
+        },
+      ],
+    }
+    useCharacterStore.setState({
+      characters: [mixedWeaponChar],
+      activeCharacterId: 'combat-test-char',
+    })
+    useSessionStore.setState({
+      sessions: {
+        'combat-test-char': {
+          characterId: 'combat-test-char',
+          currentHp: 38,
+          tempHp: 0,
+          nonlethalDamage: 0,
+          conditions: [],
+          spentResources: {},
+          preparedSpellIds: [],
+          spentSpellSlots: {},
+          activeBuffIds: ['buff-jabbing'],
+          customBuffs: [],
+          ammo: {},
+          activeSummon: null,
+          itemQuantities: {},
+          coins: { gp: 0, sp: 0, cp: 0 },
+        },
+      },
+    })
+
+    render(
+      <MemoryRouter>
+        <CombatPage />
+      </MemoryRouter>
+    )
+
+    // Jabbing Style (+2d6) should appear exactly once in a button on the melee card (+1 Scimitar), not on Shortbow
+    const extraDiceButtons = screen.getAllByRole('button').filter((b) => b.textContent?.includes('2d6'))
+    // There is the buff toggle button itself (showing "+2d6") and exactly one weapon card damage button for melee
+    // If ranged also had it, there would be 3 buttons with 2d6. Here there should be 2.
+    expect(extraDiceButtons.length).toBe(2)
+
+    // Also verify FullAttackModal does NOT show extra dice button for Shortbow (ranged)
+    const fullAttackButtons = screen.getAllByText(/Full Attack Routine/)
+    // Shortbow is second weapon (index 1)
+    fireEvent.click(fullAttackButtons[1])
+    // In FullAttackModal for Shortbow, there should not be any extra dice button
+    expect(screen.queryByText(/\+ 2d6/)).not.toBeInTheDocument()
+
+    // Close Shortbow Full Attack modal
+    const closeBtn = screen.getByLabelText(/close modal/i)
+    fireEvent.click(closeBtn)
+
+    // Open Full Attack modal for Scimitar (melee)
+    fireEvent.click(fullAttackButtons[0])
+    expect(screen.getByText(/Roll Jabbing Style \(2d6\)/)).toBeInTheDocument()
+  })
+
+  it('displays Melee only indicator on buff pill when buff is meleeOnly', () => {
+    useCharacterStore.setState({
+      characters: [combatChar],
+      activeCharacterId: 'combat-test-char',
+    })
+    useSessionStore.setState({
+      sessions: {
+        'combat-test-char': {
+          characterId: 'combat-test-char',
+          currentHp: 38,
+          tempHp: 0,
+          nonlethalDamage: 0,
+          conditions: [],
+          spentResources: {},
+          preparedSpellIds: [],
+          spentSpellSlots: {},
+          activeBuffIds: ['buff-power-attack'],
+          customBuffs: [],
+          ammo: {},
+          activeSummon: null,
+          itemQuantities: {},
+          coins: { gp: 0, sp: 0, cp: 0 },
+        },
+      },
+    })
+
+    render(
+      <MemoryRouter>
+        <CombatPage />
+      </MemoryRouter>
+    )
+
+    // Power Attack has meleeOnly: true, should display Melee only
+    expect(screen.getByText(/Melee only/)).toBeInTheDocument()
+  })
 })

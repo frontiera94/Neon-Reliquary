@@ -41,6 +41,12 @@ describe('parseDiceFormula', () => {
     expect(parseDiceFormula('10d6+15')).toEqual({ count: 10, sides: 6, bonus: 15 })
   })
 
+  it('parses formulas containing whitespace e.g. "1d8 + 2" and " 2d6 - 1 "', () => {
+    expect(parseDiceFormula('1d8 + 2')).toEqual({ count: 1, sides: 8, bonus: 2 })
+    expect(parseDiceFormula(' 2d6 - 1 ')).toEqual({ count: 2, sides: 6, bonus: -1 })
+    expect(parseDiceFormula('1d12 + 5')).toEqual({ count: 1, sides: 12, bonus: 5 })
+  })
+
   it('returns default {count:1, sides:20, bonus:0} for invalid input', () => {
     expect(parseDiceFormula('invalid')).toEqual({ count: 1, sides: 20, bonus: 0 })
     expect(parseDiceFormula('')).toEqual({ count: 1, sides: 20, bonus: 0 })

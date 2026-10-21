@@ -1,6 +1,13 @@
 import type { ArmorClass, SavingThrow } from '../types/defense'
 import type { Skill } from '../types/skills'
-import type { Weapon, BuffToggle, ConditionType } from '../types/combat'
+import type {
+  Weapon,
+  BuffToggle,
+  ConditionType,
+  CombatManeuversCalculated,
+  CombatManeuverType,
+  ManeuverDetail,
+} from '../types/combat'
 import type { DailyResource, Spell } from '../types/resources'
 import { abilityMod } from './dice-engine'
 
@@ -40,8 +47,10 @@ export interface EffectiveWeaponCalculated {
   acMod: number
   activeBuffNames: string[]
   extraDamageDice?: string
+  extraDiceLabel?: string
   attackBreakdown: { label: string; value: number }[]
   damageBreakdown: { label: string; value: number }[]
+  hasteActive?: boolean
 }
 
 export interface EffectiveSkill extends Skill {
@@ -313,12 +322,30 @@ export function calcEffectiveWeaponStats(
 
   // Ability modifier shifts
   if (weapon.type === 'melee') {
-    const strDelta = effectiveAbilities.mods.str - abilityMod(baseAbilities.str)
-    if (strDelta !== 0) {
-      totalAttMod += strDelta
-      totalDmgMod += strDelta
-      attackBreakdown.push({ label: 'STR Mod', value: strDelta })
-      damageBreakdown.push({ label: 'STR Mod', value: strDelta })
+    const isTwoHanded = weapon.tags?.some((t) => /2-handed|two-handed/i.test(t)) ?? false
+    const baseStrMod = abilityMod(baseAbilities.str)
+    const effStrMod = effectiveAbilities.mods.str
+
+    const strAttDelta = effStrMod - baseStrMod
+    if (strAttDelta !== 0) {
+      totalAttMod += strAttDelta
+      attackBreakdown.push({ label: 'STR Mod', value: strAttDelta })
+    }
+
+    const baseStrDmg = isTwoHanded
+      ? (baseStrMod > 0 ? Math.floor(baseStrMod * 1.5) : baseStrMod)
+      : baseStrMod
+    const effStrDmg = isTwoHanded
+      ? (effStrMod > 0 ? Math.floor(effStrMod * 1.5) : effStrMod)
+      : effStrMod
+    const strDmgDelta = effStrDmg - baseStrDmg
+
+    if (strDmgDelta !== 0) {
+      totalDmgMod += strDmgDelta
+      damageBreakdown.push({
+        label: isTwoHanded ? 'STR Mod (1.5x)' : 'STR Mod',
+        value: strDmgDelta,
+      })
     }
   } else {
     const dexDelta = effectiveAbilities.mods.dex - abilityMod(baseAbilities.dex)
@@ -358,8 +385,11 @@ export function calcEffectiveWeaponStats(
   }
 
   // Find extra damage dice from active buffs (e.g. Sneak Attack, Flaming, etc.)
-  const extraDiceBuff = activeBuffs.find((b) => b.extraDamageDice)
+  const extraDiceBuff = applicableBuffs.find((b) => b.extraDamageDice)
   const totalAcMod = activeBuffs.reduce((sum, b) => sum + (b.acMod || 0), 0)
+  const isHaste = applicableBuffs.some(
+    (b) => b.id === 'haste' || b.id === 'preset-haste' || /haste/i.test(b.name)
+  )
 
   return {
     attackBonus: weapon.attackBonus.map((a) => a + totalAttMod),
@@ -367,23 +397,46 @@ export function calcEffectiveWeaponStats(
     acMod: totalAcMod,
     activeBuffNames: applicableBuffs.map((b) => b.name),
     extraDamageDice: extraDiceBuff?.extraDamageDice,
+    extraDiceLabel: extraDiceBuff
+      ? extraDiceBuff.name.split(' ').slice(0, 2).join(' ')
+      : undefined,
     attackBreakdown,
     damageBreakdown,
+    hasteActive: isHaste,
   }
 }
 
+export type VitalStatus = 'conscious' | 'disabled' | 'dying' | 'dead'
+
 /**
- * Calculates effective skill totals with ability shifts, Shaken, Sickened, and Blinded penalties.
+ * Categorizes a character's vital state according to Pathfinder 1e rules.
+ * - > 0 HP: conscious
+ * - == 0 HP: disabled
+ * - < 0 and > -Con: dying
+ * - <= -Con: dead
+ */
+export function evaluateVitalStatus(currentHp: number, conScore: number): VitalStatus {
+  if (currentHp > 0) return 'conscious'
+  if (currentHp === 0) return 'disabled'
+  if (currentHp > -conScore) return 'dying'
+  return 'dead'
+}
+
+/**
+ * Calculates effective skill totals with ability shifts, Shaken, Sickened, Blinded penalties,
+ * and armor check penalties on applicable skills.
  */
 export function calcEffectiveSkills(
   skills: Skill[],
   _baseAbilities: Record<AbilityKey, number>,
   effectiveAbilities: EffectiveAbilities,
-  conditions: ConditionType[]
+  conditions: ConditionType[],
+  armorCheckPenalty = 0
 ): EffectiveSkill[] {
+  const absAcp = Math.abs(armorCheckPenalty)
   return skills.map((s) => {
     const effMod = effectiveAbilities.mods[s.ability]
-    const baseTotal = s.ranks + (s.classSkill && s.ranks > 0 ? 3 : 0) + effMod + s.miscBonus
+    let baseTotal = s.ranks + (s.classSkill && s.ranks > 0 ? 3 : 0) + effMod + s.miscBonus
 
     const breakdown: { label: string; value: number }[] = [
       { label: 'Ranks', value: s.ranks },
@@ -394,6 +447,11 @@ export function calcEffectiveSkills(
     breakdown.push({ label: `${s.ability.toUpperCase()} Mod`, value: effMod })
     if (s.miscBonus !== 0) {
       breakdown.push({ label: 'Misc', value: s.miscBonus })
+    }
+
+    if (s.armorCheckPenalty && absAcp > 0) {
+      baseTotal -= absAcp
+      breakdown.push({ label: 'Armor Check Penalty', value: -absAcp })
     }
 
     let penalty = 0
@@ -477,13 +535,277 @@ export function getActiveActionRestrictions(conditions: ConditionType[]): Action
   return restrictions
 }
 
+/**
+ * Calculates dynamic Pathfinder 1e Combat Maneuver Bonus (CMB) and Defense (CMD).
+ * Takes into account Monk BAB substitution rule, Agile Maneuvers, conditions, buffs, and improved maneuver feats.
+ */
+export function calcCombatManeuvers(
+  char: {
+    class: string
+    level: number
+    race: string
+    baseAttackBonus: number[]
+    armorClass: ArmorClass
+    feats?: { name: string }[]
+    size?: string
+  },
+  effectiveAbilities: EffectiveAbilities,
+  conditions: ConditionType[],
+  activeBuffs: BuffToggle[]
+): CombatManeuversCalculated {
+  const breakdownCmb: { label: string; value: number }[] = []
+  const breakdownCmd: { label: string; value: number }[] = [{ label: 'Base', value: 10 }]
+
+  const isMonk = /monk/i.test(char.class)
+  const baseBab = char.baseAttackBonus[0] ?? 0
+
+  // BAB for CMB (Monk uses level for CMB)
+  const cmbBab = isMonk ? char.level : baseBab
+  breakdownCmb.push({
+    label: isMonk ? `Monk Level (+${char.level})` : `Base BAB (+${baseBab})`,
+    value: cmbBab,
+  })
+
+  // BAB for CMD (PF1e rules: CMD uses standard BAB, not monk level)
+  breakdownCmd.push({ label: `Base BAB (+${baseBab})`, value: baseBab })
+
+  // Agile Maneuvers feat check
+  const featNames = (char.feats ?? []).map((f) => f.name)
+  const hasAgileManeuvers = featNames.some((f) => /agile maneuvers/i.test(f))
+
+  const cmbAbilityMod = hasAgileManeuvers
+    ? effectiveAbilities.mods.dex
+    : effectiveAbilities.mods.str
+  breakdownCmb.push({
+    label: hasAgileManeuvers ? 'DEX Mod (Agile Maneuvers)' : 'STR Mod',
+    value: cmbAbilityMod,
+  })
+
+  // CMD adds both STR and DEX
+  breakdownCmd.push({ label: 'STR Mod', value: effectiveAbilities.mods.str })
+
+  // Loss of DEX to AC/CMD
+  const losesDex =
+    conditions.includes('blinded') ||
+    conditions.includes('stunned') ||
+    conditions.includes('paralyzed')
+  const effectiveDexForCmd = losesDex
+    ? Math.min(0, effectiveAbilities.mods.dex)
+    : effectiveAbilities.mods.dex
+  breakdownCmd.push({
+    label: losesDex ? 'Lost DEX bonus' : 'DEX Mod',
+    value: effectiveDexForCmd,
+  })
+
+  // Size modifier (PF1e: Fine -8, Diminutive -4, Tiny -2, Small -1, Medium 0, Large +1, Huge +2, Gargantuan +4, Colossal +8)
+  const charSize = (char.size || '').toLowerCase()
+  const raceLower = (char.race || '').toLowerCase()
+  let sizeMod = 0
+  let sizeLabel = ''
+
+  if (charSize.includes('colossal')) {
+    sizeMod = 8
+    sizeLabel = 'Colossal Size'
+  } else if (charSize.includes('gargantuan')) {
+    sizeMod = 4
+    sizeLabel = 'Gargantuan Size'
+  } else if (charSize.includes('huge')) {
+    sizeMod = 2
+    sizeLabel = 'Huge Size'
+  } else if (charSize.includes('large')) {
+    sizeMod = 1
+    sizeLabel = 'Large Size'
+  } else if (charSize.includes('small') || /halfling|gnome|goblin|kobold/i.test(raceLower)) {
+    sizeMod = -1
+    sizeLabel = 'Small Size'
+  } else if (charSize.includes('tiny')) {
+    sizeMod = -2
+    sizeLabel = 'Tiny Size'
+  } else if (charSize.includes('diminutive')) {
+    sizeMod = -4
+    sizeLabel = 'Diminutive Size'
+  } else if (charSize.includes('fine')) {
+    sizeMod = -8
+    sizeLabel = 'Fine Size'
+  }
+
+  if (sizeMod !== 0) {
+    breakdownCmb.push({ label: sizeLabel, value: sizeMod })
+    breakdownCmd.push({ label: sizeLabel, value: sizeMod })
+  }
+
+  // Deflection bonus to CMD
+  if (char.armorClass.deflection && char.armorClass.deflection > 0) {
+    breakdownCmd.push({ label: 'Deflection', value: char.armorClass.deflection })
+  }
+
+  // Monk AC bonus to CMD (Wisdom modifier)
+  if (isMonk && effectiveAbilities.mods.wis > 0) {
+    breakdownCmd.push({ label: 'Monk WIS to CMD', value: effectiveAbilities.mods.wis })
+  }
+
+  // Dodge feat to CMD
+  if (featNames.some((f) => /\bdodge\b/i.test(f))) {
+    breakdownCmd.push({ label: 'Dodge Feat', value: 1 })
+  }
+
+  // Conditions on CMB
+  if (conditions.includes('shaken') || conditions.includes('frightened')) {
+    breakdownCmb.push({
+      label: conditions.includes('frightened') ? 'Frightened' : 'Shaken',
+      value: -2,
+    })
+  }
+  if (conditions.includes('sickened')) {
+    breakdownCmb.push({ label: 'Sickened', value: -2 })
+  }
+  if (conditions.includes('prone')) {
+    breakdownCmb.push({ label: 'Prone', value: -4 })
+  }
+
+  // Conditions on CMD
+  if (conditions.includes('prone')) {
+    breakdownCmd.push({ label: 'Prone vs Melee', value: -4 })
+  }
+  if (conditions.includes('blinded')) {
+    breakdownCmd.push({ label: 'Blinded', value: -2 })
+  }
+  if (conditions.includes('stunned')) {
+    breakdownCmd.push({ label: 'Stunned', value: -2 })
+  }
+
+  // Active buffs that modify attacks
+  for (const b of activeBuffs) {
+    if (b.attackMod !== 0) {
+      breakdownCmb.push({ label: b.name, value: b.attackMod })
+    }
+  }
+
+  const baseCmb = breakdownCmb.reduce((acc, item) => acc + item.value, 0)
+  const baseCmd = breakdownCmd.reduce((acc, item) => acc + item.value, 0)
+
+  // Specific maneuvers
+  const maneuverDefs: {
+    type: CombatManeuverType
+    name: string
+    featRegex: RegExp
+    greaterRegex: RegExp
+    description: string
+  }[] = [
+    {
+      type: 'grapple',
+      name: 'Lotta (Grapple)',
+      featRegex: /improved grapple/i,
+      greaterRegex: /greater grapple/i,
+      description: 'Trattiene o blocca un avversario nello stesso spazio.',
+    },
+    {
+      type: 'trip',
+      name: 'Sbilanciare (Trip)',
+      featRegex: /improved trip/i,
+      greaterRegex: /greater trip/i,
+      description: 'Fa cadere a terra prono il bersaglio.',
+    },
+    {
+      type: 'disarm',
+      name: 'Disarmare (Disarm)',
+      featRegex: /improved disarm/i,
+      greaterRegex: /greater disarm/i,
+      description: "Fa cadere l'arma o l'oggetto impugnato dal bersaglio.",
+    },
+    {
+      type: 'bullRush',
+      name: 'Spingere (Bull Rush)',
+      featRegex: /improved bull rush/i,
+      greaterRegex: /greater bull rush/i,
+      description: 'Spinge indietro il bersaglio di 1,5m o più.',
+    },
+    {
+      type: 'sunder',
+      name: 'Spezzare (Sunder)',
+      featRegex: /improved sunder/i,
+      greaterRegex: /greater sunder/i,
+      description: "Danneggia un'arma o un oggetto portato dall'avversario.",
+    },
+    {
+      type: 'overrun',
+      name: 'Oltrepassare (Overrun)',
+      featRegex: /improved overrun/i,
+      greaterRegex: /greater overrun/i,
+      description: "Travolge l'avversario durante il movimento superando il suo spazio.",
+    },
+    {
+      type: 'dirtyTrick',
+      name: 'Sporco Trucco (Dirty Trick)',
+      featRegex: /improved dirty trick/i,
+      greaterRegex: /greater dirty trick/i,
+      description: 'Acceca, scuote o rende infermo temporaneamente il bersaglio.',
+    },
+    {
+      type: 'reposition',
+      name: 'Riposizionare (Reposition)',
+      featRegex: /improved reposition/i,
+      greaterRegex: /greater reposition/i,
+      description: "Sposta l'avversario in un altro quadretto vicino entro portata.",
+    },
+    {
+      type: 'steal',
+      name: 'Rubare (Steal)',
+      featRegex: /improved steal/i,
+      greaterRegex: /greater steal/i,
+      description: "Sottrae rapidamente un oggetto non impugnato all'avversario.",
+    },
+  ]
+
+  const maneuvers = {} as Record<CombatManeuverType, ManeuverDetail>
+
+  for (const def of maneuverDefs) {
+    const hasImproved = featNames.some((f) => def.featRegex.test(f))
+    const hasGreater = featNames.some((f) => def.greaterRegex.test(f))
+
+    let featBonus = 0
+    let featApplied: string | undefined
+    if (hasGreater) {
+      featBonus = 4
+      featApplied = `Greater ${def.type}`
+    } else if (hasImproved) {
+      featBonus = 2
+      featApplied = `Improved ${def.type}`
+    }
+
+    const maneuverBreakdown = [...breakdownCmb]
+    if (featBonus > 0 && featApplied) {
+      maneuverBreakdown.push({ label: featApplied, value: featBonus })
+    }
+
+    const cmdBonus = hasGreater ? 4 : hasImproved ? 2 : 0
+
+    maneuvers[def.type] = {
+      type: def.type,
+      name: def.name,
+      bonus: baseCmb + featBonus,
+      provokesAoO: !hasImproved && !hasGreater,
+      breakdown: maneuverBreakdown,
+      featApplied,
+      description: def.description,
+      cmdBonus: cmdBonus > 0 ? cmdBonus : undefined,
+    }
+  }
+
+  return {
+    cmb: baseCmb,
+    cmd: baseCmd,
+    maneuvers,
+    breakdownCmb,
+    breakdownCmd,
+  }
+}
+
 /* -------------------------------------------------------------------------- */
 /* Spell casting helpers                                                      */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Pathfinder 1e spell save DC: 10 + spell level + casting ability modifier.
- */
+/** Pathfinder 1e spell save DC: 10 + spell level + casting ability modifier. */
 export function calcSpellDc(
   spellLevel: number,
   castingAbilityMod: number,
@@ -492,9 +814,7 @@ export function calcSpellDc(
   return 10 + spellLevel + castingAbilityMod + schoolBonus
 }
 
-/**
- * Resolves the casting ability key from a (possibly multi-class) class string.
- */
+/** Resolves the spellcasting ability key from a (possibly multi-class) class string. */
 export function getCastingAbilityKey(characterClass: string): AbilityKey {
   const cls = characterClass.toLowerCase()
   if (/wizard|magus|witch|alchemist|investigator|arcanist|psychic/.test(cls)) return 'int'
@@ -502,10 +822,7 @@ export function getCastingAbilityKey(characterClass: string): AbilityKey {
   return 'wis'
 }
 
-/**
- * Concentration check bonus: caster level + casting ability modifier + feats.
- * `featBonus` should contain +4 when Combat Casting is used defensively.
- */
+/** Concentration check bonus: caster level + casting ability modifier + feats. */
 export function calcConcentrationBonus(
   casterLevel: number,
   castingAbilityMod: number,
@@ -531,10 +848,7 @@ const RESOURCE_KEYWORDS: { resource: RegExp; buff: RegExp }[] = [
   { resource: /spells?[- ]?1|lvl 1/i, buff: /spell combat|spellstrike/i },
 ]
 
-/**
- * Resolves the daily resource that powers a buff, either from an explicit
- * `resourceId` or from a conservative keyword match (Ki, Rage, Arcane Pool...).
- */
+/** Resolves the daily resource that powers a buff, explicitly or by keyword. */
 export function resolveBuffResource(
   buff: BuffToggle,
   dailyResources: DailyResource[]
@@ -543,7 +857,6 @@ export function resolveBuffResource(
     const explicit = dailyResources.find((r) => r.id === buff.resourceId)
     if (explicit) return explicit
   }
-
   for (const rule of RESOURCE_KEYWORDS) {
     const resource = dailyResources.find((r) => rule.resource.test(`${r.id} ${r.name}`))
     if (resource && rule.buff.test(`${buff.id} ${buff.name}`)) return resource
@@ -551,11 +864,7 @@ export function resolveBuffResource(
   return null
 }
 
-/**
- * Finds the buff that represents a spell (by normalized name / id). This is
- * intentionally tolerant because character JSON files name spell buffs in a
- * variety of ways (e.g. "Shield", "Shield Spell", "shield-spell").
- */
+/** Finds the character buff that represents a spell, tolerant to naming variations. */
 export function findMatchingBuffForSpell(
   spell: Spell,
   availableBuffs: BuffToggle[]
@@ -576,7 +885,6 @@ export function findMatchingBuffForSpell(
   })
   if (exact) return exact
 
-  // Common PF1e aliases whose buff name differs from the spell name.
   const aliases: { spell: RegExp; buff: RegExp }[] = [
     { spell: /magearmor/i, buff: /magearmor/i },
     { spell: /shield/i, buff: /shield/i },
@@ -596,10 +904,7 @@ export function findMatchingBuffForSpell(
   return null
 }
 
-/**
- * Derives a tactical BuffToggle for a buff-style spell when no matching buff
- * exists on the character sheet. Keeps the common PF1e staples useful.
- */
+/** Derives a tactical buff for a buff-style spell when no character buff exists. */
 export function deriveBuffFromSpell(spell: Spell): BuffToggle {
   const key = spell.name.toLowerCase()
   const buff: BuffToggle = {
@@ -654,11 +959,7 @@ export function deriveBuffFromSpell(spell: Spell): BuffToggle {
   return buff
 }
 
-/**
- * True when a spell is a plausible tactical buff (has a non-instantaneous
- * duration or clearly targets the caster / allies). Damage-only spells are
- * intentionally excluded.
- */
+/** True when a spell can be represented as a persistent tactical buff. */
 export function isSpellBuffCandidate(spell: Spell): boolean {
   if (spell.damageDice && /instantaneous/i.test(spell.duration)) return false
   if (/instantaneous/i.test(spell.duration)) return false

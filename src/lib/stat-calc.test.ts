@@ -309,7 +309,27 @@ describe('stat-calc engine', () => {
         ['bull']
       )
       expect(res.attackBonus).toEqual([10, 5])
-      expect(res.damageBonus).toBe(8)
+      // Two-handed weapon gets 1.5x STR damage: base 6 (4*1.5) + delta 3 (6*1.5 - 4*1.5) = 9
+      expect(res.damageBonus).toBe(9)
+
+      // Verify one-handed weapon gets standard 1x STR damage
+      const oneHandedSword: Weapon = {
+        ...sword,
+        id: 'longsword',
+        name: 'Longsword',
+        damageBonus: 4,
+        tags: [],
+      }
+      const oneHandedRes = calcEffectiveWeaponStats(
+        oneHandedSword,
+        baseAbilities,
+        effAbilities,
+        [],
+        [bull],
+        ['bull']
+      )
+      // 4 base + 2 shift = 6
+      expect(oneHandedRes.damageBonus).toBe(6)
     })
 
     it('extracts extraDamageDice from active buffs like Sneak Attack', () => {
@@ -332,6 +352,52 @@ describe('stat-calc engine', () => {
         ['sneak']
       )
       expect(res.extraDamageDice).toBe('+2d6')
+    })
+
+    it('does not leak meleeOnly extraDamageDice to ranged weapons', () => {
+      const jabbingBuff: BuffToggle = {
+        id: 'jabbing-style',
+        name: 'Jabbing Style',
+        active: true,
+        attackMod: 0,
+        damageMod: 0,
+        acMod: 0,
+        extraDamageDice: '1d6',
+        meleeOnly: true,
+      }
+      const bow: Weapon = {
+        id: 'bow',
+        name: 'Shortbow',
+        type: 'ranged',
+        attackBonus: [6],
+        damageDice: '1d6',
+        damageBonus: 0,
+        critRange: 20,
+        critMultiplier: 3,
+        tags: [],
+      }
+      const effAbilities = calcEffectiveAbilities(baseAbilities, [], [jabbingBuff])
+      const meleeRes = calcEffectiveWeaponStats(
+        sword,
+        baseAbilities,
+        effAbilities,
+        [],
+        [jabbingBuff],
+        ['jabbing-style']
+      )
+      expect(meleeRes.extraDamageDice).toBe('1d6')
+      expect(meleeRes.extraDiceLabel).toBe('Jabbing Style')
+
+      const rangedRes = calcEffectiveWeaponStats(
+        bow,
+        baseAbilities,
+        effAbilities,
+        [],
+        [jabbingBuff],
+        ['jabbing-style']
+      )
+      expect(rangedRes.extraDamageDice).toBeUndefined()
+      expect(rangedRes.extraDiceLabel).toBeUndefined()
     })
 
     it('applies Prone penalty to melee weapon (-4) but not to ranged weapon', () => {
@@ -382,6 +448,28 @@ describe('stat-calc engine', () => {
       expect(res.attackBreakdown).toContainEqual({ label: 'Shaken', value: -2 })
       expect(res.damageBreakdown).toContainEqual({ label: 'Base Dmg', value: 6 })
     })
+
+    it('sets hasteActive to true when Haste buff is active', () => {
+      const hasteBuff: BuffToggle = {
+        id: 'haste',
+        name: 'Haste',
+        active: true,
+        attackMod: 1,
+        damageMod: 0,
+        acMod: 1,
+      }
+      const effAbilities = calcEffectiveAbilities(baseAbilities, [], [hasteBuff])
+      const res = calcEffectiveWeaponStats(
+        sword,
+        baseAbilities,
+        effAbilities,
+        [],
+        [hasteBuff],
+        ['haste']
+      )
+      expect(res.hasteActive).toBe(true)
+      expect(res.attackBonus).toEqual([9, 4]) // 8+1, 3+1
+    })
   })
 
   describe('calcEffectiveSkills', () => {
@@ -416,6 +504,18 @@ describe('stat-calc engine', () => {
       const res = calcEffectiveSkills(skills, baseAbilities, effAbilities, ['sickened', 'frightened'])
       // Athletics: 9 - 2 - 2 = 5
       expect(res[0].effectiveTotal).toBe(5)
+    })
+
+    it('applies armor check penalty only to skills with armorCheckPenalty: true', () => {
+      const effAbilities = calcEffectiveAbilities(baseAbilities, [], [])
+      const res = calcEffectiveSkills(skills, baseAbilities, effAbilities, [], 3)
+      // Athletics (ACP true): 9 - 3 = 6
+      expect(res[0].effectiveTotal).toBe(6)
+      expect(res[0].breakdown).toContainEqual({ label: 'Armor Check Penalty', value: -3 })
+      // Perception (ACP false): 8 (unaffected)
+      expect(res[1].effectiveTotal).toBe(8)
+      // Knowledge (ACP false): 6 (unaffected)
+      expect(res[2].effectiveTotal).toBe(6)
     })
   })
 

@@ -88,4 +88,71 @@ describe('Character JSON integrity', () => {
       })
     })
   }
+
+  describe('Mariano Cardamomo Level 5 specific checks', () => {
+    const raw = fs.readFileSync(path.join(dataDir, 'mariano-cardamomo.json'), 'utf8')
+    const mariano = JSON.parse(raw) as FullCharacter
+
+    it('has level 5 and 47 HP', () => {
+      expect(mariano.level).toBe(5)
+      expect(mariano.maxHp).toBe(47)
+    })
+
+    it('has sneak attack +3d6 in buffs', () => {
+      const sa = mariano.buffs.find((b) => b.id === 'sneak-attack')
+      expect(sa).toBeDefined()
+      expect(sa?.extraDamageDice).toBe('3d6')
+      expect(sa?.name).toContain('3d6')
+    })
+
+    it('has 60 total skill ranks allocated across skills', () => {
+      const totalRanks = mariano.skills.reduce((sum, s) => sum + s.ranks, 0)
+      expect(totalRanks).toBe(60)
+    })
+
+    it('has Vanish and Acid Splash with 1st-level spell slot', () => {
+      expect(mariano.spells.some((s) => s.id === 'vanish')).toBe(true)
+      expect(mariano.spells.some((s) => s.id === 'acid-splash')).toBe(true)
+      expect(mariano.spellSlots.find((s) => s.level === 1)?.total).toBe(2)
+    })
+
+    it('has Major Magic and Rogue\'s Edge features', () => {
+      expect(mariano.feats.some((f) => f.id === 'major-magic')).toBe(true)
+      expect(mariano.feats.some((f) => f.id === 'rogues-edge')).toBe(true)
+      expect(mariano.classAbilities.some((ca) => ca.id === 'rogues-edge-ca')).toBe(true)
+      expect(mariano.classAbilities.some((ca) => ca.id === 'major-magic-ca')).toBe(true)
+    })
+
+    it('has flanking buff configured with meleeOnly', () => {
+      const flanking = mariano.buffs.find((b) => b.id === 'flanking')
+      expect(flanking).toBeDefined()
+      expect(flanking?.meleeOnly).toBe(true)
+    })
+  })
+
+  describe('Combat buff meleeOnly restrictions for ranged weapon characters', () => {
+    it('sample-kaelen has power-attack configured as meleeOnly', () => {
+      const raw = fs.readFileSync(path.join(dataDir, 'sample-kaelen.json'), 'utf8')
+      const kaelen = JSON.parse(raw) as FullCharacter
+      const pa = kaelen.buffs.find((b) => b.id === 'power-attack')
+      expect(pa).toBeDefined()
+      expect(pa?.meleeOnly).toBe(true)
+    })
+
+    it('sample-valerius has power-attack configured as meleeOnly', () => {
+      const raw = fs.readFileSync(path.join(dataDir, 'sample-valerius.json'), 'utf8')
+      const valerius = JSON.parse(raw) as FullCharacter
+      const pa = valerius.buffs.find((b) => b.id === 'power-attack')
+      expect(pa).toBeDefined()
+      expect(pa?.meleeOnly).toBe(true)
+    })
+
+    it('knam has power-attack configured as meleeOnly', () => {
+      const raw = fs.readFileSync(path.join(dataDir, 'knam.json'), 'utf8')
+      const knam = JSON.parse(raw) as FullCharacter
+      const pa = knam.buffs.find((b) => b.id === 'power-attack')
+      expect(pa).toBeDefined()
+      expect(pa?.meleeOnly).toBe(true)
+    })
+  })
 })

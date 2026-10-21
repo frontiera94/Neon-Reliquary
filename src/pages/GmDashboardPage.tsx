@@ -40,29 +40,28 @@ export function GmDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col items-center justify-center">
-      <div className="bg-surface-container p-8 w-full max-w-md">
-        <div className="font-headline text-3xl text-primary">Neon Reliquary</div>
+    <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-4">
+      <div className="bg-surface-container/90 backdrop-blur-md p-8 w-full max-w-md rounded-2xl border border-white/10 shadow-[0_0_35px_rgba(0,240,255,0.1)]">
+        <div className="font-headline text-3xl font-bold text-primary">Neon Reliquary</div>
         <div className="font-label text-tertiary text-sm uppercase tracking-wider mt-1">Modalità GM</div>
         <div className="bg-surface-container-high h-px w-full my-6" />
 
         {error && (
-          <div className="bg-error/10 border-l-2 border-error px-3 py-2 mb-4 font-label text-xs text-error">
+          <div className="bg-error/10 border-l-2 border-error px-3 py-2 mb-4 font-label text-xs text-error rounded-r-lg">
             {error}
           </div>
         )}
 
         {activeMapId ? (
           <>
-            <div className="bg-surface-container-high p-3 mb-4">
+            <div className="bg-surface-container-high/80 rounded-xl p-4 mb-4 border border-white/5">
               <div className="font-label text-tertiary text-xs">Mappa attiva:</div>
               <div className="font-label text-white text-sm mt-1">{activeMapId}</div>
               <div className="flex items-center gap-2 mt-2">
                 <div className="font-label text-primary text-xs truncate flex-1">{playerUrl}</div>
                 <button
                   onClick={handleCopyLink}
-                  className="font-label text-xs text-tertiary hover:text-primary transition-colors shrink-0"
-                  style={{ borderRadius: 0 }}
+                  className="font-label text-xs text-primary hover:text-white bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors shrink-0 cursor-pointer"
                 >
                   {copied ? 'Copiato!' : 'Copia link'}
                 </button>
@@ -71,16 +70,14 @@ export function GmDashboardPage() {
 
             <button
               onClick={() => navigate('/gm/map/' + activeMapId)}
-              className="w-full py-3 bg-primary/20 text-primary font-label hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all"
-              style={{ borderRadius: 0 }}
+              className="w-full py-3 bg-primary/20 text-primary font-label font-bold rounded-xl hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] hover:bg-primary/30 transition-all cursor-pointer"
             >
               Apri editor mappa
             </button>
 
             <button
               onClick={() => setShowCreateModal(true)}
-              className="w-full py-2 mt-2 font-label text-sm text-tertiary hover:text-primary transition-colors"
-              style={{ borderRadius: 0 }}
+              className="w-full py-2.5 mt-2 font-label text-sm text-tertiary hover:text-white hover:bg-white/5 rounded-xl transition-colors cursor-pointer"
             >
               Nuova mappa
             </button>
@@ -88,8 +85,7 @@ export function GmDashboardPage() {
         ) : (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="w-full py-3 bg-primary text-black font-label hover:shadow-[0_0_20px_rgba(0,218,243,0.3)] transition-all"
-            style={{ borderRadius: 0 }}
+            className="w-full py-3.5 bg-gradient-to-r from-primary to-cyan-400 text-black font-label font-bold rounded-xl hover:shadow-[0_0_20px_rgba(0,218,243,0.4)] transition-all cursor-pointer"
           >
             Crea nuova mappa
           </button>
@@ -98,8 +94,7 @@ export function GmDashboardPage() {
 
       <button
         onClick={() => navigate('/characters')}
-        className="font-label text-tertiary text-xs mt-6 hover:text-primary transition-colors"
-        style={{ borderRadius: 0 }}
+        className="font-label text-tertiary text-xs mt-6 hover:text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer"
       >
         ← Seleziona personaggio
       </button>

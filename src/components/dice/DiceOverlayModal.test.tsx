@@ -147,4 +147,54 @@ describe('DiceOverlayModal component', () => {
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(useDiceStore.getState().isOpen).toBe(false)
   })
+
+  it('renders direct Roll Damage button when followUpRoll is provided', () => {
+    const mockResult: RollResult = {
+      id: 'attack-res-id',
+      timestamp: Date.now(),
+      label: 'Dagger Attack',
+      diceType: 20,
+      modifier: 10,
+      naturalRolls: [15],
+      total: 25,
+      formula: '1d20 [15] + 10 = 25',
+      isCriticalThreat: false,
+      isCriticalConfirmed: false,
+    }
+
+    render(<DiceOverlayModal />)
+
+    act(() => {
+      useDiceStore.setState({
+        isOpen: true,
+        isRolling: false,
+        lastResult: mockResult,
+        pendingRoll: {
+          diceType: 20,
+          count: 1,
+          modifier: 10,
+          label: 'Dagger Attack',
+          followUpRoll: {
+            diceType: 6,
+            count: 1,
+            modifier: 5,
+            label: 'Dagger Damage',
+          },
+          followUpLabel: '1d3 + 5',
+        },
+      })
+    })
+
+    expect(screen.getByText(/Roll Damage \(1d3 \+ 5\)/i)).toBeInTheDocument()
+
+    const rollDamageBtn = screen.getByText(/Roll Damage \(1d3 \+ 5\)/i).closest('button')
+    fireEvent.click(rollDamageBtn!)
+
+    // It initiates the damage roll in the store
+    const state = useDiceStore.getState()
+    expect(state.pendingRoll?.label).toBe('Dagger Damage')
+    expect(state.pendingRoll?.diceType).toBe(6)
+    expect(state.isRolling).toBe(true)
+  })
 })
+

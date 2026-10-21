@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Markdown from 'react-markdown'
 import { useChatStore } from '../../store/useChatStore'
@@ -26,7 +26,7 @@ export function ChatModal() {
   const getSession = useSessionStore((s) => s.getSession)
 
   const characterId = character?.id ?? ''
-  const messages = chats[characterId] ?? []
+  const messages = useMemo(() => chats[characterId] ?? [], [chats, characterId])
 
   const [text, setText] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)

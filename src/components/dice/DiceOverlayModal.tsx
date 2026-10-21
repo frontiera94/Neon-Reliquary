@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDiceStore } from '../../store/useDiceStore'
+import type { DiceRoll } from '../../types/dice'
 import { rollDice } from '../../lib/dice-engine'
 import { DiceRollingAnimation } from './DiceRollingAnimation'
 
@@ -8,23 +9,25 @@ export function DiceOverlayModal() {
   const { isOpen, isRolling, pendingRoll, lastResult, openRoll, setResult, close } = useDiceStore()
   const isConfirmingRef = useRef(false)
   const [critConfirmed, setCritConfirmed] = useState<boolean | null>(null)
+  const [confirmationResult, setConfirmationResult] = useState<number | null>(null)
 
   useEffect(() => {
     if (!isOpen || !pendingRoll) return
     const timer = setTimeout(() => {
       const result = rollDice(pendingRoll)
       if (isConfirmingRef.current) {
-        setCritConfirmed(result.naturalRolls[0] !== 1)
+        setCritConfirmed(result.naturalRolls[0] === 1 ? false : null)
+        setConfirmationResult(result.total)
         isConfirmingRef.current = false
       }
       setResult(result)
     }, 1200)
     return () => clearTimeout(timer)
-  }, [isOpen, pendingRoll])
+  }, [isOpen, pendingRoll, setResult])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { close(); setCritConfirmed(null) }
+      if (e.key === 'Escape') { close(); setCritConfirmed(null); setConfirmationResult(null) }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -163,32 +166,174 @@ export function DiceOverlayModal() {
 
             {/* Actions */}
             {!isRolling && lastResult && (
-              <div className="p-8 pt-0 flex gap-4">
-                {critConfirmed === null && lastResult.isCriticalThreat ? (
-                  <button
-                    className="flex-1 py-4 bg-gradient-to-r from-secondary to-secondary-container text-white font-label font-bold text-sm uppercase tracking-widest rounded-xl hover:shadow-[0_0_25px_rgba(217,70,239,0.45)] transition-all active:scale-95 cursor-pointer"
-                    onClick={() => {
-                      if (!pendingRoll) return
-                      isConfirmingRef.current = true
-                      openRoll({ ...pendingRoll, label: `Confirm: ${pendingRoll.label}` })
-                    }}
-                  >
-                    Confirm Critical
-                  </button>
+              <div className="p-6 md:p-8 pt-0 flex flex-col gap-2.5">
+                {pendingRoll?.followUpRoll ? (
+                  <>
+                    {confirmationResult !== null ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-center gap-2 py-1 px-3 rounded-lg bg-secondary/15 border border-secondary/30 text-secondary font-label text-xs font-bold">
+                          <span className="material-symbols-outlined text-sm">verified</span>
+                          <span>Confirmation Roll: {confirmationResult}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            className="flex-1 py-3.5 bg-gradient-to-r from-secondary to-secondary-container text-white font-label font-bold text-xs uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(217,70,239,0.35)] hover:shadow-[0_0_30px_rgba(217,70,239,0.55)] transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                            onClick={() => {
+                              const followUp = pendingRoll.followUpRoll
+                              if (!followUp) return
+                              const mult = pendingRoll.critMultiplier ?? 2
+                              const finalRoll: DiceRoll = {
+                                ...followUp,
+                                count: followUp.count * mult,
+                                modifier: followUp.modifier * mult,
+                                label: `${followUp.label} [CRIT x${mult}]`,
+                              }
+                              setCritConfirmed(null)
+                              setConfirmationResult(null)
+                              openRoll(finalRoll)
+                            }}
+                          >
+                            <span className="material-symbols-outlined text-base">colorize</span>
+                            <span>Roll Crit Dmg (x{pendingRoll.critMultiplier ?? 2})</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="flex-1 py-3.5 bg-surface-container-high hover:bg-surface-container-highest border border-white/10 hover:border-primary/40 text-white font-label font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                            onClick={() => {
+                              const followUp = pendingRoll.followUpRoll
+                              if (!followUp) return
+                              const finalRoll: DiceRoll = {
+                                ...followUp,
+                                count: followUp.count,
+                                modifier: followUp.modifier,
+                                label: followUp.label,
+                              }
+                              setCritConfirmed(null)
+                              setConfirmationResult(null)
+                              openRoll(finalRoll)
+                            }}
+                          >
+                            <span className="material-symbols-outlined text-base text-primary">colorize</span>
+                            <span>Roll Normal Dmg</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : critConfirmed === null && lastResult.isCriticalThreat ? (
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          className="flex-1 py-3.5 bg-gradient-to-r from-secondary to-secondary-container text-white font-label font-bold text-xs md:text-sm uppercase tracking-wider rounded-xl hover:shadow-[0_0_25px_rgba(217,70,239,0.45)] transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                          onClick={() => {
+                            if (!pendingRoll) return
+                            isConfirmingRef.current = true
+                            openRoll({ ...pendingRoll, label: `Confirm: ${pendingRoll.label}` })
+                          }}
+                        >
+                          <span className="material-symbols-outlined text-base">verified</span>
+                          Confirm Critical
+                        </button>
+                        <button
+                          type="button"
+                          className="flex-1 py-3.5 bg-surface-container-high hover:bg-surface-container-highest border border-white/10 hover:border-secondary/40 text-white font-label font-bold text-xs md:text-sm uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                          onClick={() => {
+                            const followUp = pendingRoll.followUpRoll
+                            if (!followUp) return
+                            const finalRoll: DiceRoll = {
+                              ...followUp,
+                              count: followUp.count,
+                              modifier: followUp.modifier,
+                              label: followUp.label,
+                            }
+                            setCritConfirmed(null)
+                            setConfirmationResult(null)
+                            openRoll(finalRoll)
+                          }}
+                        >
+                          <span className="material-symbols-outlined text-base text-secondary">colorize</span>
+                          Roll Damage
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="w-full py-3.5 bg-gradient-to-r from-secondary to-secondary-container text-white font-label font-bold text-xs md:text-sm uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(217,70,239,0.35)] hover:shadow-[0_0_30px_rgba(217,70,239,0.55)] transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                        onClick={() => {
+                          const followUp = pendingRoll.followUpRoll
+                          if (!followUp) return
+                          const isCrit = critConfirmed === true
+                          const mult = isCrit ? (pendingRoll.critMultiplier ?? 2) : 1
+                          const finalRoll: DiceRoll = {
+                            ...followUp,
+                            count: followUp.count * mult,
+                            modifier: followUp.modifier * mult,
+                            label: isCrit
+                              ? `${followUp.label} [CRIT x${mult}]`
+                              : followUp.label,
+                          }
+                          setCritConfirmed(null)
+                          setConfirmationResult(null)
+                          openRoll(finalRoll)
+                        }}
+                      >
+                        <span className="material-symbols-outlined text-base">colorize</span>
+                        <span>
+                          {critConfirmed === true
+                            ? `Roll Critical Damage (${pendingRoll.followUpLabel ? `${pendingRoll.followUpLabel} x${pendingRoll.critMultiplier ?? 2}` : 'Crit'})`
+                            : `Roll Damage ${pendingRoll.followUpLabel ? `(${pendingRoll.followUpLabel})` : ''}`}
+                        </span>
+                      </button>
+                    )}
+
+                    {/* Secondary Row: Roll Again and Dismiss */}
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        className="flex-1 py-2.5 bg-surface-container-high hover:bg-surface-container-highest border border-white/10 hover:border-primary/40 text-tertiary hover:text-white font-label text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        onClick={() => { setCritConfirmed(null); if (pendingRoll) openRoll({ ...pendingRoll }) }}
+                      >
+                        <span className="material-symbols-outlined text-sm">refresh</span>
+                        Roll Again
+                      </button>
+                      <button
+                        type="button"
+                        className="flex-1 py-2.5 border border-white/10 text-tertiary font-label text-xs uppercase tracking-wider rounded-xl hover:bg-white/5 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        onClick={() => { close(); setCritConfirmed(null) }}
+                      >
+                        <span className="material-symbols-outlined text-sm">close</span>
+                        Dismiss
+                      </button>
+                    </div>
+                  </>
                 ) : (
-                  <button
-                    className="flex-1 py-4 bg-gradient-to-r from-primary to-primary-container text-black font-label font-bold text-sm uppercase tracking-widest rounded-xl hover:shadow-[0_0_25px_rgba(0,240,255,0.45)] transition-all active:scale-95 cursor-pointer"
-                    onClick={() => { setCritConfirmed(null); if (pendingRoll) openRoll({ ...pendingRoll }) }}
-                  >
-                    Roll Again
-                  </button>
+                  <div className="flex gap-4">
+                    {critConfirmed === null && lastResult.isCriticalThreat ? (
+                      <button
+                        className="flex-1 py-4 bg-gradient-to-r from-secondary to-secondary-container text-white font-label font-bold text-sm uppercase tracking-widest rounded-xl hover:shadow-[0_0_25px_rgba(217,70,239,0.45)] transition-all active:scale-95 cursor-pointer"
+                        onClick={() => {
+                          if (!pendingRoll) return
+                          isConfirmingRef.current = true
+                          openRoll({ ...pendingRoll, label: `Confirm: ${pendingRoll.label}` })
+                        }}
+                      >
+                        Confirm Critical
+                      </button>
+                    ) : (
+                      <button
+                        className="flex-1 py-4 bg-gradient-to-r from-primary to-primary-container text-black font-label font-bold text-sm uppercase tracking-widest rounded-xl hover:shadow-[0_0_25px_rgba(0,240,255,0.45)] transition-all active:scale-95 cursor-pointer"
+                        onClick={() => { setCritConfirmed(null); if (pendingRoll) openRoll({ ...pendingRoll }) }}
+                      >
+                        Roll Again
+                      </button>
+                    )}
+                    <button
+                      className="flex-1 py-4 border border-white/15 text-tertiary font-label text-sm uppercase tracking-widest rounded-xl hover:bg-white/5 hover:text-white transition-all cursor-pointer"
+                      onClick={() => { close(); setCritConfirmed(null) }}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
                 )}
-                <button
-                  className="flex-1 py-4 border border-white/15 text-tertiary font-label text-sm uppercase tracking-widest rounded-xl hover:bg-white/5 hover:text-white transition-all cursor-pointer"
-                  onClick={() => { close(); setCritConfirmed(null) }}
-                >
-                  Dismiss
-                </button>
               </div>
             )}
           </motion.section>
