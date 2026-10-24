@@ -250,7 +250,8 @@
     {
       "id": "arcane-pool",
       "name": "Arcane Pool",
-      "total": 6
+      "total": 6,
+      "label": "Pool: Arcane"
     }
   ],
   "feats": [

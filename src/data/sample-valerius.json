@@ -313,12 +313,14 @@
     {
       "id": "judgement",
       "name": "Judgment",
-      "total": 5
+      "total": 5,
+      "label": "Ability: Judgment"
     },
     {
       "id": "bane",
       "name": "Bane",
-      "total": 12
+      "total": 12,
+      "label": "Ability: Bane"
     }
   ],
   "feats": [

@@ -299,10 +299,21 @@ function BentoStatusColumn() {
             {char.dailyResources.map((resource) => {
               const spent = session.spentResources[resource.id] ?? 0
               const remaining = Math.max(0, resource.total - spent)
+              const labelText = resource.label ?? resource.name
+              const colonIndex = labelText.indexOf(':')
+              const prefix = colonIndex > 0 ? labelText.slice(0, colonIndex).trim() : null
+              const mainLabel = colonIndex > 0 ? labelText.slice(colonIndex + 1).trim() : resource.name
               return (
                 <div key={resource.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-[#181b26] px-2.5 py-1.5">
                   <div className="min-w-0">
-                    <p className="font-label text-[9px] uppercase tracking-widest text-tertiary truncate">{resource.name}</p>
+                    <p className="font-label text-[9px] uppercase tracking-widest text-tertiary truncate flex items-center gap-1.5" title={resource.name}>
+                      {prefix && (
+                        <span className="px-1 py-0.5 rounded bg-white/5 border border-white/10 text-secondary text-[8px] font-bold shrink-0">
+                          {prefix}
+                        </span>
+                      )}
+                      <span className="truncate">{mainLabel}</span>
+                    </p>
                     <div className="flex items-center gap-1 mt-1">
                       {Array.from({ length: Math.min(resource.total, 12) }).map((_, index) => (
                         <span

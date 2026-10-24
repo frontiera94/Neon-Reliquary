@@ -31,6 +31,11 @@ export function DailyResourcePips({ characterId, resource, spent, compact = fals
     }
   }
 
+  const labelText = resource.label ?? resource.name
+  const colonIndex = labelText.indexOf(':')
+  const prefix = colonIndex > 0 ? labelText.slice(0, colonIndex).trim() : null
+  const mainLabel = colonIndex > 0 ? labelText.slice(colonIndex + 1).trim() : labelText
+
   return (
     <div
       className="flex flex-wrap items-center gap-1"
@@ -39,8 +44,17 @@ export function DailyResourcePips({ characterId, resource, spent, compact = fals
       aria-label={`${resource.name}: ${remaining} of ${resource.total} remaining`}
       title={resource.name}
     >
-      <span className="font-label text-[9px] uppercase tracking-wider text-tertiary mr-1">
-        {resource.label ?? resource.name}
+      <span className="inline-flex items-center gap-1 font-label text-[9px] uppercase tracking-wider mr-1">
+        {prefix ? (
+          <>
+            <span className="px-1 py-0.5 rounded bg-white/5 border border-white/10 text-secondary text-[8px] font-bold">
+              {prefix}
+            </span>
+            <span className="text-tertiary font-semibold">{mainLabel}</span>
+          </>
+        ) : (
+          <span className="text-tertiary">{mainLabel}</span>
+        )}
       </span>
       <div className={`flex flex-wrap items-center ${compact ? 'gap-0.5' : 'gap-1'}`}>
         {Array.from({ length: resource.total }).map((_, index) => {

@@ -214,12 +214,14 @@
     {
       "id": "bloodrage-rounds",
       "name": "Bloodrage Rounds",
-      "total": 14
+      "total": 14,
+      "label": "Pool: Bloodrage"
     },
     {
       "id": "staggering-strike",
       "name": "Staggering Strike (on crit)",
-      "total": 5
+      "total": 5,
+      "label": "Ability: Stagg. Strike"
     }
   ],
   "feats": [

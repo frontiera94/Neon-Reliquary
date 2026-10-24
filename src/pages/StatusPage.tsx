@@ -495,10 +495,18 @@ export function StatusPage() {
               {char.dailyResources.map((res) => {
                 const spent = spentByResource(res.id)
                 const squareSize = res.total > 8 ? 'w-4 h-4' : 'w-8 h-8'
+                const labelText = res.label ?? res.name
+                const colonIndex = labelText.indexOf(':')
+                const prefix = colonIndex > 0 ? labelText.slice(0, colonIndex).trim() : null
                 return (
                   <div key={res.id}>
-                    <p className="font-label text-[10px] text-tertiary uppercase tracking-widest mb-2 font-bold">
-                      {res.name}
+                    <p className="font-label text-[10px] text-tertiary uppercase tracking-widest mb-2 font-bold flex items-center gap-1.5" title={res.name}>
+                      {prefix && (
+                        <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-secondary text-[9px] font-bold shrink-0">
+                          {prefix}
+                        </span>
+                      )}
+                      <span>{res.name}</span>
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {Array.from({ length: res.total }).map((_, i) => {

@@ -229,12 +229,14 @@
     {
       "id": "ki-pool",
       "name": "Ki Pool",
-      "total": 6
+      "total": 6,
+      "label": "Pool: Ki"
     },
     {
       "id": "stunning-fist",
       "name": "Stunning Fist",
-      "total": 4
+      "total": 4,
+      "label": "Feat: Stunning Fist"
     }
   ],
   "feats": [
