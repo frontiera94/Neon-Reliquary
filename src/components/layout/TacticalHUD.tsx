@@ -118,7 +118,7 @@ export function TacticalHUD() {
   return (
     <>
       <header
-        className="sticky top-0 z-50 w-full backdrop-blur-md bg-surface/90 border-b border-white/[0.08]"
+        className="sticky top-0 z-50 w-full backdrop-blur-md bg-surface/90 border-b border-white/[0.08] md:h-16 flex flex-col justify-center"
         style={{ boxShadow: '0 4px 24px -6px rgba(0,240,255,0.1)' }}
       >
         {/* Main Cockpit Bar */}
@@ -141,7 +141,7 @@ export function TacticalHUD() {
           </div>
 
           {/* Center Cockpit: Tactical Vitals (HP Bar, AC, Saves) */}
-          <div className="col-span-2 row-start-2 flex w-full flex-wrap items-center justify-center gap-2 md:col-span-1 md:row-start-auto md:mx-2 md:max-w-2xl md:flex-1 md:gap-3">
+          <div className="col-span-2 row-start-2 flex w-full flex-wrap md:flex-nowrap items-center justify-center gap-2 md:col-span-1 md:row-start-auto md:mx-2 md:max-w-2xl md:flex-1 md:gap-3">
             {/* Multi-Track HP Bar Container with Popover Trigger */}
             <div className="relative flex-1 min-w-[140px] max-w-sm">
               <div

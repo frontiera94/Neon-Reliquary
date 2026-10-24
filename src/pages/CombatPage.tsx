@@ -471,12 +471,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
             </div>
 
             <div className="mt-3 space-y-1.5">
-              {[...allBuffs]
-                .sort(
-                  (a, b) =>
-                    Number(activeBuffIds.includes(b.id)) - Number(activeBuffIds.includes(a.id))
-                )
-                .map((buff) => {
+              {allBuffs.map((buff) => {
                 const isActive = activeBuffIds.includes(buff.id)
                 const hex =
                   { primary: '#00f0ff', secondary: '#d946ef', error: '#ff4b60' }[buff.color ?? 'primary'] ??
@@ -515,20 +510,16 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                       >
                         {buff.name}
                       </span>
-                      {isActive && (
+                      {tokens.length > 0 && (
                         <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                          {tokens.length > 0 ? (
-                            tokens.map((token, index) => (
-                              <span key={`${token.label}-${index}`} className="contents">
-                                {index > 0 && <span className="font-label text-[8px] text-tertiary/40">|</span>}
-                                <span className={`font-label text-[9px] font-bold tabular-nums ${modifierColor(token.value)}`}>
-                                  {token.value !== null ? `${token.value > 0 ? '+' : ''}${token.value} ${token.label}` : `+${token.label}`}
-                                </span>
+                          {tokens.map((token, index) => (
+                            <span key={`${token.label}-${index}`} className="contents">
+                              {index > 0 && <span className="font-label text-[8px] text-tertiary/40">|</span>}
+                              <span className={`font-label text-[9px] tabular-nums ${isActive ? `font-bold ${modifierColor(token.value)}` : 'text-tertiary/50'}`}>
+                                {token.value !== null ? `${token.value > 0 ? '+' : ''}${token.value} ${token.label}` : `+${token.label}`}
                               </span>
-                            ))
-                          ) : (
-                            <span className="font-label text-[9px] text-tertiary">No numeric modifiers</span>
-                          )}
+                            </span>
+                          ))}
                         </span>
                       )}
                       <span className="sr-only">
