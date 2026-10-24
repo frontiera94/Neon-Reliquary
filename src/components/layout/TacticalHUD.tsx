@@ -14,6 +14,7 @@ import { CONDITION_INFO } from '../../lib/conditions'
 import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
 import { TacticalHpPopover } from './TacticalHpPopover'
 import { SettingsPanel } from './SettingsPanel'
+import { CloudSyncBadge } from '../sync/CloudSyncBadge'
 import { useInspectorStore } from '../../store/useInspectorStore'
 
 export function TacticalHUD() {
@@ -82,6 +83,7 @@ export function TacticalHUD() {
         </span>
         <span className="font-label text-xs text-tertiary">No Active Character</span>
         <div className="flex items-center gap-4">
+          <CloudSyncBadge />
           <button
             onClick={() => navigate('/characters')}
             className="flex items-center gap-2 px-4 py-2 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-sm rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
@@ -428,10 +430,64 @@ export function TacticalHUD() {
                 })}
               </div>
             )}
+
+            {/* Active Conditions (Integrated in Cockpit — Zero layout shift) */}
+            {conditions.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1 sm:gap-1.5" role="group" aria-label="Active Conditions">
+                {conditions.map((cond) => {
+                  const info = CONDITION_INFO[cond]
+                  return (
+                    <div
+                      key={cond}
+                      className="group inline-flex items-center rounded-xl text-[10px] font-label font-bold uppercase tracking-wider bg-error/15 border border-error/40 text-error shadow-[0_0_8px_rgba(255,75,96,0.25)] hover:bg-error/25 hover:border-error/70 transition-all flex-shrink-0"
+                    >
+                      <StatBreakdownTooltip
+                        title={info?.name ?? cond}
+                        total="CONDITION"
+                        breakdown={[]}
+                        notes={info?.penalties}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            openInspector({
+                              type: 'condition',
+                              id: cond,
+                              title: info?.name ?? cond,
+                              subtitle: 'Active Condition',
+                              description: info?.summary ?? 'Condition details.',
+                              tags: ['Condition'],
+                              notes: info?.penalties,
+                            })
+                          }}
+                          aria-label={`Inspect condition ${cond}`}
+                          className="flex items-center gap-1 pl-2 pr-1 py-1 cursor-pointer hover:text-white transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[11px] sm:text-[12px]">warning</span>
+                          <span className="text-[9px] sm:text-[10px] leading-none">{cond}</span>
+                        </button>
+                      </StatBreakdownTooltip>
+                      <button
+                        type="button"
+                        onClick={() => toggleCondition(char.id, cond)}
+                        aria-label={`Remove condition ${cond}`}
+                        className="pr-2 pl-0.5 py-1 text-error/60 hover:text-white cursor-pointer transition-colors"
+                        title="Remove condition"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* Right Cockpit: Cycler & Switcher & Settings */}
           <div className="col-start-2 row-start-1 flex flex-shrink-0 items-center gap-2 justify-self-end md:gap-3">
+            <CloudSyncBadge />
             {characters.length >= 2 && (
               <div className="flex items-center gap-1">
                 <button
@@ -468,60 +524,6 @@ export function TacticalHUD() {
             </button>
           </div>
         </div>
-
-        {/* Secondary Pill Row (Active Conditions only - Buffs are managed in combat/status pages) */}
-        {conditions.length > 0 && (
-          <div className="px-4 md:px-6 py-1 border-t border-white/5 bg-black/40 flex items-center gap-2 overflow-x-auto scrollbar-none">
-            {/* Active Conditions */}
-            {conditions.map((cond) => {
-              const info = CONDITION_INFO[cond]
-              return (
-                <div
-                  key={cond}
-                  className="group inline-flex items-center rounded-full text-[10px] font-label font-bold uppercase tracking-wider bg-error/15 border border-error/40 text-error shadow-[0_0_8px_rgba(255,75,96,0.25)] hover:bg-error/25 hover:border-error/70 transition-all flex-shrink-0"
-                >
-                  <StatBreakdownTooltip
-                    title={info?.name ?? cond}
-                    total="CONDITION"
-                    breakdown={[]}
-                    notes={info?.penalties}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        openInspector({
-                          type: 'condition',
-                          id: cond,
-                          title: info?.name ?? cond,
-                          subtitle: 'Active Condition',
-                          description: info?.summary ?? 'Condition details.',
-                          tags: ['Condition'],
-                          notes: info?.penalties,
-                        })
-                      }}
-                      aria-label={`Inspect condition ${cond}`}
-                      className="flex items-center gap-1 pl-2.5 pr-1 py-0.5 cursor-pointer hover:text-white transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[11px]">warning</span>
-                      <span>{cond}</span>
-                    </button>
-                  </StatBreakdownTooltip>
-                  <button
-                    type="button"
-                    onClick={() => toggleCondition(char.id, cond)}
-                    aria-label={`Remove condition ${cond}`}
-                    className="pr-2 pl-0.5 py-0.5 text-error/60 hover:text-white cursor-pointer transition-colors"
-                    title="Remove condition"
-                  >
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        )}
       </header>
       <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </>
