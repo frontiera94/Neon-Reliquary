@@ -731,7 +731,7 @@ describe('TacticalHUD Component', () => {
       expect(session.conditions).not.toContain('shaken')
     })
 
-    it('renders cyan pills for active buffs', () => {
+    it('does not render pills for active buffs in the top bar TacticalHUD', () => {
       useSessionStore.setState({
         sessions: {
           'char-1': {
@@ -747,30 +747,7 @@ describe('TacticalHUD Component', () => {
         </MemoryRouter>
       )
 
-      expect(screen.getByText('Shield Spell')).toBeInTheDocument()
-    })
-
-    it('clicking an active buff pill deactivates it via useSessionStore', () => {
-      useSessionStore.setState({
-        sessions: {
-          'char-1': {
-            ...useSessionStore.getState().getSession('char-1'),
-            activeBuffIds: ['buff-shield'],
-          },
-        },
-      })
-
-      render(
-        <MemoryRouter>
-          <TacticalHUD />
-        </MemoryRouter>
-      )
-
-      const buffBtn = screen.getByRole('button', { name: /Deactivate buff Shield Spell/i })
-      fireEvent.click(buffBtn)
-
-      const session = useSessionStore.getState().getSession('char-1')
-      expect(session.activeBuffIds).not.toContain('buff-shield')
+      expect(screen.queryByText('Shield Spell')).not.toBeInTheDocument()
     })
   })
 })

@@ -15,29 +15,6 @@ import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
 import { TacticalHpPopover } from './TacticalHpPopover'
 import { SettingsPanel } from './SettingsPanel'
 import { useInspectorStore } from '../../store/useInspectorStore'
-import type { BuffToggle } from '../../types/combat'
-
-
-
-function formatBuffTooltip(buff: BuffToggle): { label: string; value: number }[] {
-  const breakdown: { label: string; value: number }[] = []
-  if (buff.attackMod) breakdown.push({ label: 'Attack', value: buff.attackMod })
-  if (buff.damageMod) breakdown.push({ label: 'Damage', value: buff.damageMod })
-  if (buff.acMod) breakdown.push({ label: 'Armor Class', value: buff.acMod })
-  if (typeof buff.saveMod === 'number' && buff.saveMod !== 0) {
-    breakdown.push({ label: 'Saves', value: buff.saveMod })
-  } else if (typeof buff.saveMod === 'object' && buff.saveMod) {
-    if (buff.saveMod.fort) breakdown.push({ label: 'Fort Save', value: buff.saveMod.fort })
-    if (buff.saveMod.ref) breakdown.push({ label: 'Ref Save', value: buff.saveMod.ref })
-    if (buff.saveMod.will) breakdown.push({ label: 'Will Save', value: buff.saveMod.will })
-  }
-  if (buff.abilityMods) {
-    for (const [k, v] of Object.entries(buff.abilityMods)) {
-      if (v) breakdown.push({ label: k.toUpperCase(), value: v })
-    }
-  }
-  return breakdown
-}
 
 export function TacticalHUD() {
   const navigate = useNavigate()
@@ -46,7 +23,6 @@ export function TacticalHUD() {
   const setActiveCharacter = useCharacterStore((s) => s.setActiveCharacter)
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
   const initSession = useSessionStore((s) => s.initSession)
-  const toggleBuff = useSessionStore((s) => s.toggleBuff)
   const toggleCondition = useSessionStore((s) => s.toggleCondition)
   const openInspector = useInspectorStore((s) => s.openInspector)
 
@@ -493,8 +469,8 @@ export function TacticalHUD() {
           </div>
         </div>
 
-        {/* Secondary Pill Row (Active Conditions & Active Buffs) */}
-        {(conditions.length > 0 || activeBuffs.length > 0) && (
+        {/* Secondary Pill Row (Active Conditions only - Buffs are managed in combat/status pages) */}
+        {conditions.length > 0 && (
           <div className="px-4 md:px-6 py-1 border-t border-white/5 bg-black/40 flex items-center gap-2 overflow-x-auto scrollbar-none">
             {/* Active Conditions */}
             {conditions.map((cond) => {
@@ -536,62 +512,6 @@ export function TacticalHUD() {
                     aria-label={`Remove condition ${cond}`}
                     className="pr-2 pl-0.5 py-0.5 text-error/60 hover:text-white cursor-pointer transition-colors"
                     title="Remove condition"
-                  >
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              )
-            })}
-
-            {/* Active Buffs */}
-            {activeBuffs.map((buff) => {
-              const isSecondary = buff.color === 'secondary'
-              const buffBkd = formatBuffTooltip(buff)
-              return (
-                <div
-                  key={buff.id}
-                  className={`group inline-flex items-center rounded-full text-[10px] font-label font-bold uppercase tracking-wider transition-all flex-shrink-0 ${
-                    isSecondary
-                      ? 'bg-secondary/15 border border-secondary/40 text-secondary shadow-[0_0_8px_rgba(217,70,239,0.25)] hover:bg-secondary/25 hover:border-secondary/70'
-                      : 'bg-primary/15 border border-primary/40 text-primary shadow-[0_0_8px_rgba(0,240,255,0.25)] hover:bg-primary/25 hover:border-primary/70'
-                  }`}
-                >
-                  <StatBreakdownTooltip
-                    title={buff.name}
-                    total="ACTIVE BUFF"
-                    breakdown={buffBkd}
-                    notes={buff.description ? [buff.description] : undefined}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        openInspector({
-                          type: 'buff',
-                          id: buff.id,
-                          title: buff.name,
-                          subtitle: 'Active Buff',
-                          description: buff.description ?? 'Active tactical modifier.',
-                          breakdown: buffBkd,
-                          tags: ['Buff', ...(buff.duration ? [buff.duration] : [])],
-                        })
-                      }}
-                      aria-label={`Inspect buff ${buff.name}`}
-                      className="flex items-center gap-1 pl-2.5 pr-1 py-0.5 cursor-pointer hover:text-white transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[11px]">auto_awesome</span>
-                      <span>{buff.name}</span>
-                    </button>
-                  </StatBreakdownTooltip>
-                  <button
-                    type="button"
-                    onClick={() => toggleBuff(char.id, buff.id)}
-                    aria-label={`Deactivate buff ${buff.name}`}
-                    className={`pr-2 pl-0.5 py-0.5 cursor-pointer transition-colors ${
-                      isSecondary ? 'text-secondary/60 hover:text-white' : 'text-primary/60 hover:text-white'
-                    }`}
-                    title="Deactivate buff"
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
