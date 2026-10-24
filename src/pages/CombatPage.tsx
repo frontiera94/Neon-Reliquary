@@ -610,6 +610,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
           hasteActive={hasteActive}
           sneakAttackDice={fullAttackEffective.extraDamageDice}
           extraDiceLabel={fullAttackEffective.extraDiceLabel ?? 'Extra Dmg'}
+          animated={true}
           onRollDamage={(dmgLabel, dmgMod, isCritical) => {
             const { count, sides } = parseDiceFormula(fullAttackWeapon.damageDice)
             const finalCount = isCritical ? count * fullAttackWeapon.critMultiplier : count

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { FullAttackModal } from './FullAttackModal'
 import type { Weapon } from '../../types/combat'
 import type { EffectiveWeaponCalculated } from '../../lib/stat-calc'
@@ -357,5 +357,171 @@ describe('FullAttackModal', () => {
     const closeRoutineBtn = screen.getByRole('button', { name: /close routine/i })
     fireEvent.click(closeRoutineBtn)
     expect(onClose).toHaveBeenCalledTimes(2)
+  })
+
+  describe('Sequential dice rolling animation', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('shows the dice rolling showcase and reveals attacks one by one over time', () => {
+      mockRandomRolls([15, 8])
+
+      render(
+        <FullAttackModal
+          isOpen={true}
+          onClose={onClose}
+          weapon={baseWeapon}
+          effective={baseEffective}
+          twfActive={false}
+          offhandPenalty={0}
+          animated={true}
+          rollDuration={500}
+          onRollDamage={onRollDamage}
+        />
+      )
+
+      // Initially, rolling arena is visible and attack 1 is rolling
+      expect(screen.getByText(/Rolling Attack 1 of 2/i)).toBeInTheDocument()
+      expect(screen.getByText('Queued (+5)')).toBeInTheDocument()
+
+      // Advance timers by 550ms -> Attack 1 resolves (15 + 10 = 25)
+      act(() => {
+        vi.advanceTimersByTime(550)
+      })
+
+      expect(screen.getByText('25')).toBeInTheDocument()
+      expect(screen.getByText(/Rolling Attack 2 of 2/i)).toBeInTheDocument()
+
+      // Advance timers by another 550ms -> Attack 2 resolves (8 + 5 = 13)
+      act(() => {
+        vi.advanceTimersByTime(550)
+      })
+
+      expect(screen.getByText('13')).toBeInTheDocument()
+      expect(screen.getByText(/Routine Complete/i)).toBeInTheDocument()
+    })
+
+    it('immediately reveals all attacks when Skip button is clicked', () => {
+      mockRandomRolls([14, 11])
+
+      render(
+        <FullAttackModal
+          isOpen={true}
+          onClose={onClose}
+          weapon={baseWeapon}
+          effective={baseEffective}
+          twfActive={false}
+          offhandPenalty={0}
+          animated={true}
+          rollDuration={500}
+          onRollDamage={onRollDamage}
+        />
+      )
+
+      expect(screen.getByText(/Rolling Attack 1 of 2/i)).toBeInTheDocument()
+
+      const skipBtn = screen.getByRole('button', { name: /skip dice animation/i })
+      act(() => {
+        fireEvent.click(skipBtn)
+      })
+
+      // Both attacks should immediately be revealed: 14 + 10 = 24, 11 + 5 = 16
+      expect(screen.getByText('24')).toBeInTheDocument()
+      expect(screen.getByText('16')).toBeInTheDocument()
+      expect(screen.getByText(/Routine Complete/i)).toBeInTheDocument()
+    })
+
+    it('allows pausing the auto-sequence and stepping manually with Next button', () => {
+      mockRandomRolls([12, 9])
+
+      render(
+        <FullAttackModal
+          isOpen={true}
+          onClose={onClose}
+          weapon={baseWeapon}
+          effective={baseEffective}
+          twfActive={false}
+          offhandPenalty={0}
+          animated={true}
+          rollDuration={500}
+          onRollDamage={onRollDamage}
+        />
+      )
+
+      // Click pause
+      const pauseBtn = screen.getByTitle(/pause sequence/i)
+      act(() => {
+        fireEvent.click(pauseBtn)
+      })
+
+      // While paused, advance time by 1000ms -> should NOT advance automatically
+      act(() => {
+        vi.advanceTimersByTime(1000)
+      })
+
+      expect(screen.getByText(/Rolling Attack 1 of 2/i)).toBeInTheDocument()
+      expect(screen.queryByText('22')).not.toBeInTheDocument()
+
+      // Click Next button to step manually
+      const nextBtn = screen.getByRole('button', { name: /next/i })
+      act(() => {
+        fireEvent.click(nextBtn)
+      })
+
+      // Attack 1 is now revealed (12 + 10 = 22)
+      expect(screen.getByText('22')).toBeInTheDocument()
+    })
+
+    it('re-rolls sequence with dice animation when Re-roll is clicked', () => {
+      mockRandomRolls([10, 10, 18, 12])
+
+      render(
+        <FullAttackModal
+          isOpen={true}
+          onClose={onClose}
+          weapon={baseWeapon}
+          effective={baseEffective}
+          twfActive={false}
+          offhandPenalty={0}
+          animated={true}
+          rollDuration={500}
+          onRollDamage={onRollDamage}
+        />
+      )
+
+      // Skip initial roll
+      const skipBtn = screen.getByRole('button', { name: /skip dice animation/i })
+      act(() => {
+        fireEvent.click(skipBtn)
+      })
+      expect(screen.getByText(/Routine Complete/i)).toBeInTheDocument()
+
+      // Click re-roll
+      const rerollBtn = screen.getByRole('button', { name: /re-roll attack sequence/i })
+      act(() => {
+        fireEvent.click(rerollBtn)
+      })
+
+      // Should restart rolling sequence
+      expect(screen.getByText(/Rolling Attack 1 of 2/i)).toBeInTheDocument()
+
+      // Advance time for both attacks
+      act(() => {
+        vi.advanceTimersByTime(600)
+      })
+      act(() => {
+        vi.advanceTimersByTime(600)
+      })
+
+      // Attack 1: 18 + 10 = 28 (Crit threat!), Attack 2: 12 + 5 = 17
+      expect(screen.getByText('28')).toBeInTheDocument()
+      expect(screen.getByText('17')).toBeInTheDocument()
+      expect(screen.getByText('Crit Threat!')).toBeInTheDocument()
+    })
   })
 })
