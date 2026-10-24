@@ -894,9 +894,9 @@ describe('Tier 1: Comprehensive Feature Verification (R1–R5)', () => {
       expect(layoutPanels[2]).toBe('grimoire-features')
     })
 
-    it('16.2 MainLayout mounts core application zones', () => {
+    it('16.2 MainLayout mounts core application zones without breaking sticky header', () => {
       setupTestSession(magusChar.id)
-      render(
+      const { container } = render(
         <MemoryRouter>
           <MainLayout />
         </MemoryRouter>
@@ -904,6 +904,10 @@ describe('Tier 1: Comprehensive Feature Verification (R1–R5)', () => {
       expect(screen.getByText('NEON RELIQUARY')).toBeInTheDocument()
       expect(screen.getAllByText('Status').length).toBeGreaterThan(0)
       expect(screen.getAllByText('Combat').length).toBeGreaterThan(0)
+      // overflow-x-hidden on layout breaks sticky top-0 in browsers; overflow-x-clip preserves it
+      const rootDiv = container.firstElementChild
+      expect(rootDiv).not.toHaveClass('overflow-x-hidden')
+      expect(rootDiv).toHaveClass('overflow-x-clip')
     })
 
     it('16.3 desktop breakpoint is defined at exactly 1024px', () => {

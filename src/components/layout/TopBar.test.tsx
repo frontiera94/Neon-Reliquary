@@ -174,4 +174,18 @@ describe('TopBar component', () => {
     const closeIcon = screen.getByText('close')
     fireEvent.click(closeIcon)
   })
+
+  it('renders header with sticky top-0 and z-50 to persist during scroll', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <TopBar />
+      </MemoryRouter>
+    )
+
+    const header = container.querySelector('header')
+    expect(header).toBeInTheDocument()
+    expect(header).toHaveClass('sticky')
+    expect(header).toHaveClass('top-0')
+    expect(header).toHaveClass('z-50')
+  })
 })
