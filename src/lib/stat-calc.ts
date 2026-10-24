@@ -966,3 +966,73 @@ export function isSpellBuffCandidate(spell: Spell): boolean {
   if (/permanent/i.test(spell.duration)) return true
   return Boolean(spell.duration)
 }
+
+/**
+ * Helper to compute detailed component breakdowns for AC categories.
+ */
+export function calcDetailedAcBreakdowns(
+  baseAc: ArmorClass,
+  effectiveDexMod: number,
+  conditions: ConditionType[],
+  activeBuffs: BuffToggle[]
+) {
+  const losesDex = conditions.includes('blinded') || conditions.includes('stunned') || conditions.includes('paralyzed')
+
+  // Total AC Breakdown
+  const totalBreakdown: { label: string; value: number }[] = [
+    { label: 'Base', value: 10 },
+  ]
+  if (baseAc.armorBonus > 0) totalBreakdown.push({ label: 'Armor', value: baseAc.armorBonus })
+  if (baseAc.shieldBonus > 0) totalBreakdown.push({ label: 'Shield', value: baseAc.shieldBonus })
+  if (losesDex) {
+    if (effectiveDexMod > 0) {
+      totalBreakdown.push({ label: 'DEX (Lost)', value: 0 })
+    } else if (effectiveDexMod < 0) {
+      totalBreakdown.push({ label: 'DEX Mod', value: effectiveDexMod })
+    }
+  } else if (effectiveDexMod !== 0) {
+    totalBreakdown.push({ label: 'DEX Mod', value: effectiveDexMod })
+  }
+  if (baseAc.naturalArmor > 0) totalBreakdown.push({ label: 'Natural Armor', value: baseAc.naturalArmor })
+  if (baseAc.deflection > 0) totalBreakdown.push({ label: 'Deflection', value: baseAc.deflection })
+  if (baseAc.misc !== 0) totalBreakdown.push({ label: 'Misc', value: baseAc.misc })
+  if (conditions.includes('blinded')) totalBreakdown.push({ label: 'Blinded', value: -2 })
+  if (conditions.includes('stunned')) totalBreakdown.push({ label: 'Stunned', value: -2 })
+  for (const buff of activeBuffs) {
+    if (buff.acMod) totalBreakdown.push({ label: buff.name, value: buff.acMod })
+  }
+
+  // Touch AC Breakdown
+  const touchBreakdown: { label: string; value: number }[] = [
+    { label: 'Base', value: 10 },
+  ]
+  if (losesDex) {
+    if (effectiveDexMod < 0) touchBreakdown.push({ label: 'DEX Mod', value: effectiveDexMod })
+  } else if (effectiveDexMod !== 0) {
+    touchBreakdown.push({ label: 'DEX Mod', value: effectiveDexMod })
+  }
+  if (baseAc.deflection > 0) touchBreakdown.push({ label: 'Deflection', value: baseAc.deflection })
+  if (baseAc.misc !== 0) touchBreakdown.push({ label: 'Misc', value: baseAc.misc })
+  if (conditions.includes('blinded')) touchBreakdown.push({ label: 'Blinded', value: -2 })
+  if (conditions.includes('stunned')) touchBreakdown.push({ label: 'Stunned', value: -2 })
+  for (const buff of activeBuffs) {
+    if (buff.acMod) touchBreakdown.push({ label: buff.name, value: buff.acMod })
+  }
+
+  // Flat-Footed AC Breakdown
+  const flatFootedBreakdown: { label: string; value: number }[] = [
+    { label: 'Base', value: 10 },
+  ]
+  if (baseAc.armorBonus > 0) flatFootedBreakdown.push({ label: 'Armor', value: baseAc.armorBonus })
+  if (baseAc.shieldBonus > 0) flatFootedBreakdown.push({ label: 'Shield', value: baseAc.shieldBonus })
+  if (effectiveDexMod < 0) flatFootedBreakdown.push({ label: 'DEX Penalty', value: effectiveDexMod })
+  if (baseAc.naturalArmor > 0) flatFootedBreakdown.push({ label: 'Natural Armor', value: baseAc.naturalArmor })
+  if (baseAc.deflection > 0) flatFootedBreakdown.push({ label: 'Deflection', value: baseAc.deflection })
+  if (conditions.includes('blinded')) flatFootedBreakdown.push({ label: 'Blinded', value: -2 })
+  if (conditions.includes('stunned')) flatFootedBreakdown.push({ label: 'Stunned', value: -2 })
+  for (const buff of activeBuffs) {
+    if (buff.acMod) flatFootedBreakdown.push({ label: buff.name, value: buff.acMod })
+  }
+
+  return { totalBreakdown, touchBreakdown, flatFootedBreakdown }
+}

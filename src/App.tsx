@@ -8,9 +8,6 @@ import { SpellsPage } from './pages/SpellsPage'
 import { FeaturesPage } from './pages/FeaturesPage'
 import { InventoryPage } from './pages/InventoryPage'
 import { CompanionPage } from './pages/CompanionPage'
-import { GmDashboardPage } from './pages/GmDashboardPage'
-import { MapEditorPage } from './pages/MapEditorPage'
-import { MapViewPage } from './pages/MapViewPage'
 
 export default function App() {
   return (
@@ -26,9 +23,6 @@ export default function App() {
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/companion" element={<CompanionPage />} />
         </Route>
-        <Route path="/gm" element={<GmDashboardPage />} />
-        <Route path="/gm/map/:id" element={<MapEditorPage />} />
-        <Route path="/map/:id" element={<MapViewPage />} />
         <Route path="*" element={<Navigate to="/characters" replace />} />
       </Routes>
     </BrowserRouter>

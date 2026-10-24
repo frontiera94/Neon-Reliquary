@@ -50,7 +50,7 @@ export function WeaponCard({
   const damageClass = `${actionClass} border-secondary/35 bg-secondary/10 text-white hover:border-secondary/70 hover:bg-secondary/20`
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-white/[0.08] bg-surface-container/70 backdrop-blur-sm transition-colors hover:border-white/15">
+    <article className="rounded-2xl border border-white/[0.08] bg-surface-container/70 backdrop-blur-sm transition-colors hover:border-white/15 relative">
       <div className="p-3.5 md:p-4">
         {/* Identity line */}
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
@@ -169,7 +169,6 @@ export function WeaponCard({
                 title={`${weapon.name} — Attack`}
                 total={formatAttackBonus(effective.attackBonus)}
                 breakdown={effective.attackBreakdown}
-                trigger="click"
               >
                 <span className="font-label text-lg font-black tabular-nums text-white underline decoration-primary/20 decoration-dotted underline-offset-4">
                   {formatAttackBonus(effective.attackBonus)}
@@ -192,7 +191,6 @@ export function WeaponCard({
                 title={`${weapon.name} — Off-hand`}
                 total={offhandBonus >= 0 ? `+${offhandBonus}` : `${offhandBonus}`}
                 breakdown={[...effective.attackBreakdown, { label: 'Off-hand Penalty', value: offhandPenalty }]}
-                trigger="click"
               >
                 <span className="font-label text-lg font-black tabular-nums text-white underline decoration-secondary/20 decoration-dotted underline-offset-4">
                   {offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus}
@@ -213,7 +211,6 @@ export function WeaponCard({
               title={`${weapon.name} — Damage`}
               total={damageText}
               breakdown={effective.damageBreakdown}
-              trigger="click"
             >
               <span className="font-label text-base font-black tabular-nums text-white underline decoration-secondary/20 decoration-dotted underline-offset-4 md:text-lg">
                 {damageText}

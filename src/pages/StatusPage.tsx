@@ -12,11 +12,13 @@ import {
   calcEffectiveAbilities,
   calcEffectiveArmorClass,
   calcEffectiveSaves,
+  calcDetailedAcBreakdowns,
   getActiveActionRestrictions,
   evaluateVitalStatus,
 } from '../lib/stat-calc'
 import { ActionAlertBanner } from '../components/combat/ActionAlertBanner'
 import { BuffManagerModal } from '../components/combat/BuffManagerModal'
+import { StatBreakdownTooltip } from '../components/ui/StatBreakdownTooltip'
 import type { ConditionType } from '../types/combat'
 
 const COLOR_MAP: Record<string, string> = {
@@ -117,6 +119,18 @@ export function StatusPage() {
   }
 
   const effectiveInit = char.initiativeBonus + effectiveAbilities.deltas.dex
+  const detailedAc = calcDetailedAcBreakdowns(
+    char.armorClass,
+    effectiveAbilities.mods.dex,
+    session.conditions,
+    activeBuffs
+  )
+  const initBreakdown = [
+    { label: 'Base Init', value: char.initiativeBonus },
+    ...(effectiveAbilities.deltas.dex !== 0
+      ? [{ label: 'DEX Shift', value: effectiveAbilities.deltas.dex }]
+      : []),
+  ]
 
   return (
     <div className="p-4 md:p-8">
@@ -286,6 +300,9 @@ export function StatusPage() {
           <DefenseCard
             label="Armor Class"
             value={effectiveAc.total}
+            baseValue={char.armorClass.total}
+            breakdown={detailedAc.totalBreakdown}
+            notes={effectiveAc.notes}
             showSign={false}
             sub={`TOUCH: ${effectiveAc.touch} | FLAT: ${effectiveAc.flatFooted}${
               effectiveAc.notes.length > 0 ? ` (${effectiveAc.notes.join(', ')})` : ''
@@ -294,6 +311,8 @@ export function StatusPage() {
           <DefenseCard
             label="Initiative"
             value={effectiveInit}
+            baseValue={char.initiativeBonus}
+            breakdown={initBreakdown}
             sub={`DEX: ${effectiveAbilities.mods.dex >= 0 ? `+${effectiveAbilities.mods.dex}` : effectiveAbilities.mods.dex} | MISC: +${
               char.initiativeBonus - abilityMod(char.abilities.dex)
             }`}
@@ -304,18 +323,15 @@ export function StatusPage() {
                 count: 1,
                 modifier: effectiveInit,
                 label: 'Initiative',
-                breakdown: [
-                  { label: 'Base Init', value: char.initiativeBonus },
-                  ...(effectiveAbilities.deltas.dex !== 0
-                    ? [{ label: 'DEX Shift', value: effectiveAbilities.deltas.dex }]
-                    : []),
-                ],
+                breakdown: initBreakdown,
               })
             }
           />
           <DefenseCard
             label="Fortitude"
             value={effectiveSaves.fort}
+            baseValue={char.savingThrows.fort}
+            breakdown={effectiveSaves.breakdowns.fortitude}
             sub={`BASE: +${char.savingThrows.fortBase} | CON: ${
               effectiveAbilities.mods.con >= 0 ? `+${effectiveAbilities.mods.con}` : effectiveAbilities.mods.con
             }`}
@@ -333,6 +349,8 @@ export function StatusPage() {
           <DefenseCard
             label="Reflex"
             value={effectiveSaves.ref}
+            baseValue={char.savingThrows.ref}
+            breakdown={effectiveSaves.breakdowns.reflex}
             sub={`BASE: +${char.savingThrows.refBase} | DEX: ${
               effectiveAbilities.mods.dex >= 0 ? `+${effectiveAbilities.mods.dex}` : effectiveAbilities.mods.dex
             }`}
@@ -350,6 +368,8 @@ export function StatusPage() {
           <DefenseCard
             label="Willpower"
             value={effectiveSaves.will}
+            baseValue={char.savingThrows.will}
+            breakdown={effectiveSaves.breakdowns.will}
             sub={`BASE: +${char.savingThrows.willBase} | WIS: ${
               effectiveAbilities.mods.wis >= 0 ? `+${effectiveAbilities.mods.wis}` : effectiveAbilities.mods.wis
             }`}
@@ -595,45 +615,73 @@ export function StatusPage() {
 function DefenseCard({
   label,
   value,
+  baseValue,
   sub,
   color = 'on-surface',
   showSign = true,
+  breakdown,
+  notes,
   onRoll,
 }: {
   label: string
   value: number
+  baseValue?: number
   sub: string
   color?: string
   showSign?: boolean
+  breakdown?: { label: string; value: number }[]
+  notes?: string[]
   onRoll?: () => void
 }) {
   const textColor = COLOR_MAP[color] ?? 'text-on-surface'
   const displayVal = showSign && value >= 0 ? `+${value}` : `${value}`
 
-  if (onRoll) {
-    return (
-      <button
-        onClick={onRoll}
-        className="bg-surface-container hover:bg-surface-container-high rounded-xl border border-white/5 hover:border-primary/40 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)] p-5 transition-all cursor-pointer group relative w-full text-left"
-      >
-        <p className={`font-label text-[10px] uppercase tracking-widest ${textColor} font-bold`}>{label}</p>
-        <p className="font-label text-4xl font-black text-on-surface">
-          {displayVal}
-        </p>
-        <p className="font-label text-[10px] text-on-surface-variant mt-1 font-mono">{sub}</p>
-      </button>
-    )
-  }
+  const isBuffed = baseValue !== undefined && value > baseValue
+  const isPenalized = baseValue !== undefined && value < baseValue
+  const valColor = isBuffed
+    ? 'text-[#00daf3]'
+    : isPenalized
+    ? 'text-[#ffb4ab]'
+    : 'text-on-surface'
 
-  return (
-    <div className="bg-surface-container rounded-xl border border-white/5 p-5 relative w-full">
+  const cardContent = (
+    <>
       <p className={`font-label text-[10px] uppercase tracking-widest ${textColor} font-bold`}>{label}</p>
-      <p className="font-label text-4xl font-black text-on-surface">
+      <p className={`font-label text-4xl font-black ${valColor}`}>
         {displayVal}
       </p>
       <p className="font-label text-[10px] text-on-surface-variant mt-1 font-mono">{sub}</p>
+    </>
+  )
+
+  const card = onRoll ? (
+    <button
+      onClick={onRoll}
+      className="bg-surface-container hover:bg-surface-container-high rounded-xl border border-white/5 hover:border-primary/40 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)] p-5 transition-all cursor-pointer group relative w-full text-left"
+    >
+      {cardContent}
+    </button>
+  ) : (
+    <div className="bg-surface-container rounded-xl border border-white/5 p-5 relative w-full">
+      {cardContent}
     </div>
   )
+
+  if (breakdown && breakdown.length > 0) {
+    return (
+      <StatBreakdownTooltip
+        title={label}
+        total={displayVal}
+        breakdown={breakdown}
+        notes={notes}
+        className="w-full"
+      >
+        {card}
+      </StatBreakdownTooltip>
+    )
+  }
+
+  return card
 }
 
 function EmptyState() {

@@ -30,3 +30,6 @@ Thumbs.db
 
 # Git worktrees
 .worktrees/
+
+# Agent teamwork scratch
+.agents/teamwork/

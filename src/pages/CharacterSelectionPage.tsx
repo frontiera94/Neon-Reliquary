@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
@@ -168,17 +168,23 @@ export function CharacterSelectionPage() {
         </motion.button>
       )}
 
-      {/* GM link */}
-      <div className="absolute bottom-6 z-10">
-        <Link to="/gm" className="font-label text-xs text-tertiary hover:text-white transition-colors cursor-pointer">
-          Modalità GM →
-        </Link>
-      </div>
+
     </div>
   )
 }
 
 function CharacterCard({ char, isActive }: { char: FullCharacter; isActive: boolean }) {
+  const session = useSessionStore((s) => s.sessions[char.id])
+  const currentHp = session?.currentHp ?? char.maxHp
+  const maxHp = char.maxHp
+  const tempHp = session?.tempHp ?? 0
+  const hpPct = Math.max(0, Math.min(100, (currentHp / maxHp) * 100))
+  const isDead = currentHp <= -(char.abilities.con ?? 10)
+  const isDying = !isDead && currentHp < 0
+  const isDisabled = currentHp === 0
+  const activeBuffs = session?.activeBuffIds?.length ?? 0
+  const conditions = session?.conditions?.length ?? 0
+
   return (
     <div className="relative overflow-hidden bg-surface-container rounded-2xl border border-white/10" style={{ aspectRatio: '2/3' }}>
       {/* Portrait */}
@@ -208,18 +214,57 @@ function CharacterCard({ char, isActive }: { char: FullCharacter; isActive: bool
           >
             <div className="flex justify-between font-label text-[10px] text-primary mb-1">
               <span>HP</span>
-              <span>{char.maxHp} max</span>
+              <span className="tabular-nums">
+                {currentHp} / {maxHp}
+                {tempHp > 0 && <span className="text-cyan-300 ml-1">+{tempHp}</span>}
+              </span>
             </div>
-            <div className="h-1.5 w-full bg-surface-container-lowest rounded-full overflow-hidden border border-white/[0.06]">
-              <div className="h-full bg-primary rounded-full" style={{ width: '100%' }} />
+            <div className="h-1.5 w-full bg-surface-container-lowest rounded-full overflow-hidden border border-white/[0.06] relative">
+              <div
+                className="h-full rounded-full transition-all duration-300"
+                style={{
+                  width: `${hpPct}%`,
+                  background:
+                    currentHp <= 0
+                      ? '#ff4b60'
+                      : currentHp < maxHp * 0.5
+                      ? 'linear-gradient(90deg, #ff4b60 0%, #d946ef 100%)'
+                      : 'linear-gradient(90deg, #00f0ff 0%, #00b4d8 100%)',
+                }}
+              />
             </div>
-            <div className="flex gap-2 mt-2.5 flex-wrap">
+            <div className="flex gap-1.5 mt-2.5 flex-wrap items-center">
               <span className="bg-surface-container-highest px-2 py-0.5 font-label text-[9px] text-secondary border border-secondary/30 rounded-md uppercase tracking-widest">
                 {char.race}
               </span>
               <span className="bg-surface-container-highest px-2 py-0.5 font-label text-[9px] text-tertiary border border-white/10 rounded-md uppercase tracking-widest">
                 {char.alignment}
               </span>
+              {isDead && (
+                <span className="bg-error/20 text-error border border-error/50 px-1.5 py-0.5 font-label text-[9px] rounded-md uppercase font-bold">
+                  Dead
+                </span>
+              )}
+              {isDying && (
+                <span className="bg-error/20 text-error border border-error/50 px-1.5 py-0.5 font-label text-[9px] rounded-md uppercase font-bold animate-pulse">
+                  Dying
+                </span>
+              )}
+              {isDisabled && (
+                <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 px-1.5 py-0.5 font-label text-[9px] rounded-md uppercase font-bold">
+                  Disabled
+                </span>
+              )}
+              {activeBuffs > 0 && (
+                <span className="bg-primary/10 text-primary border border-primary/30 px-1.5 py-0.5 font-label text-[9px] rounded-md uppercase">
+                  {activeBuffs} buff{activeBuffs > 1 ? 's' : ''}
+                </span>
+              )}
+              {conditions > 0 && (
+                <span className="bg-error/10 text-error border border-error/30 px-1.5 py-0.5 font-label text-[9px] rounded-md uppercase">
+                  {conditions} cond
+                </span>
+              )}
             </div>
           </motion.div>
         )}

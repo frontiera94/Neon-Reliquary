@@ -7,6 +7,7 @@ import {
   calcEffectiveAbilities,
   calcEffectiveArmorClass,
   calcEffectiveSaves,
+  calcDetailedAcBreakdowns,
 } from '../../lib/stat-calc'
 import { abilityMod } from '../../lib/dice-engine'
 import { CONDITION_INFO } from '../../lib/conditions'
@@ -14,78 +15,9 @@ import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
 import { TacticalHpPopover } from './TacticalHpPopover'
 import { SettingsPanel } from './SettingsPanel'
 import { useInspectorStore } from '../../store/useInspectorStore'
-import type { BuffToggle, ConditionType } from '../../types/combat'
-import type { ArmorClass } from '../../types/defense'
+import type { BuffToggle } from '../../types/combat'
 
-/**
- * Helper to compute detailed component breakdowns for AC categories.
- */
-function calcDetailedAcBreakdowns(
-  baseAc: ArmorClass,
-  effectiveDexMod: number,
-  conditions: ConditionType[],
-  activeBuffs: BuffToggle[]
-) {
-  const losesDex = conditions.includes('blinded') || conditions.includes('stunned') || conditions.includes('paralyzed')
 
-  // Total AC Breakdown
-  const totalBreakdown: { label: string; value: number }[] = [
-    { label: 'Base', value: 10 },
-  ]
-  if (baseAc.armorBonus > 0) totalBreakdown.push({ label: 'Armor', value: baseAc.armorBonus })
-  if (baseAc.shieldBonus > 0) totalBreakdown.push({ label: 'Shield', value: baseAc.shieldBonus })
-  if (losesDex) {
-    if (effectiveDexMod > 0) {
-      totalBreakdown.push({ label: 'DEX (Lost)', value: 0 })
-    } else if (effectiveDexMod < 0) {
-      totalBreakdown.push({ label: 'DEX Mod', value: effectiveDexMod })
-    }
-  } else if (effectiveDexMod !== 0) {
-    totalBreakdown.push({ label: 'DEX Mod', value: effectiveDexMod })
-  }
-  if (baseAc.naturalArmor > 0) totalBreakdown.push({ label: 'Natural Armor', value: baseAc.naturalArmor })
-  if (baseAc.deflection > 0) totalBreakdown.push({ label: 'Deflection', value: baseAc.deflection })
-  if (baseAc.misc !== 0) totalBreakdown.push({ label: 'Misc', value: baseAc.misc })
-  if (conditions.includes('blinded')) totalBreakdown.push({ label: 'Blinded', value: -2 })
-  if (conditions.includes('stunned')) totalBreakdown.push({ label: 'Stunned', value: -2 })
-  for (const buff of activeBuffs) {
-    if (buff.acMod) totalBreakdown.push({ label: buff.name, value: buff.acMod })
-  }
-
-  // Touch AC Breakdown
-  const touchBreakdown: { label: string; value: number }[] = [
-    { label: 'Base', value: 10 },
-  ]
-  if (losesDex) {
-    if (effectiveDexMod < 0) touchBreakdown.push({ label: 'DEX Mod', value: effectiveDexMod })
-  } else if (effectiveDexMod !== 0) {
-    touchBreakdown.push({ label: 'DEX Mod', value: effectiveDexMod })
-  }
-  if (baseAc.deflection > 0) touchBreakdown.push({ label: 'Deflection', value: baseAc.deflection })
-  if (baseAc.misc !== 0) touchBreakdown.push({ label: 'Misc', value: baseAc.misc })
-  if (conditions.includes('blinded')) touchBreakdown.push({ label: 'Blinded', value: -2 })
-  if (conditions.includes('stunned')) touchBreakdown.push({ label: 'Stunned', value: -2 })
-  for (const buff of activeBuffs) {
-    if (buff.acMod) touchBreakdown.push({ label: buff.name, value: buff.acMod })
-  }
-
-  // Flat-Footed AC Breakdown
-  const flatFootedBreakdown: { label: string; value: number }[] = [
-    { label: 'Base', value: 10 },
-  ]
-  if (baseAc.armorBonus > 0) flatFootedBreakdown.push({ label: 'Armor', value: baseAc.armorBonus })
-  if (baseAc.shieldBonus > 0) flatFootedBreakdown.push({ label: 'Shield', value: baseAc.shieldBonus })
-  if (effectiveDexMod < 0) flatFootedBreakdown.push({ label: 'DEX Penalty', value: effectiveDexMod })
-  if (baseAc.naturalArmor > 0) flatFootedBreakdown.push({ label: 'Natural Armor', value: baseAc.naturalArmor })
-  if (baseAc.deflection > 0) flatFootedBreakdown.push({ label: 'Deflection', value: baseAc.deflection })
-  if (conditions.includes('blinded')) flatFootedBreakdown.push({ label: 'Blinded', value: -2 })
-  if (conditions.includes('stunned')) flatFootedBreakdown.push({ label: 'Stunned', value: -2 })
-  for (const buff of activeBuffs) {
-    if (buff.acMod) flatFootedBreakdown.push({ label: buff.name, value: buff.acMod })
-  }
-
-  return { totalBreakdown, touchBreakdown, flatFootedBreakdown }
-}
 
 function formatBuffTooltip(buff: BuffToggle): { label: string; value: number }[] {
   const breakdown: { label: string; value: number }[] = []
@@ -390,17 +322,17 @@ export function TacticalHUD() {
                   total={effectiveAc.touch}
                   breakdown={detailedAc.touchBreakdown}
                   notes={effectiveAc.notes}
-                  className="hidden xl:inline-flex"
+                  className="inline-flex"
                 >
                   <div
                     data-testid="ac-touch"
-                    className="px-2 py-1 rounded-xl bg-surface-container/70 border border-white/10 hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[42px] cursor-pointer"
+                    className="px-1.5 sm:px-2 py-1 rounded-xl bg-surface-container/70 border border-white/10 hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[38px] sm:min-w-[42px] cursor-pointer"
                   >
-                    <span className="font-label text-[9px] uppercase tracking-widest text-tertiary font-semibold">
+                    <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-tertiary font-semibold">
                       TOUCH
                     </span>
                     <span
-                      className={`font-label text-sm leading-none mt-0.5 ${
+                      className={`font-label text-xs sm:text-sm leading-none mt-0.5 ${
                         effectiveAc.touch > char.armorClass.touch
                           ? 'text-[#00daf3] font-black'
                           : effectiveAc.touch < char.armorClass.touch
@@ -419,17 +351,17 @@ export function TacticalHUD() {
                   total={effectiveAc.flatFooted}
                   breakdown={detailedAc.flatFootedBreakdown}
                   notes={effectiveAc.notes}
-                  className="hidden xl:inline-flex"
+                  className="inline-flex"
                 >
                   <div
                     data-testid="ac-flat-footed"
-                    className="px-2 py-1 rounded-xl bg-surface-container/70 border border-white/10 hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[42px] cursor-pointer"
+                    className="px-1.5 sm:px-2 py-1 rounded-xl bg-surface-container/70 border border-white/10 hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[38px] sm:min-w-[42px] cursor-pointer"
                   >
-                    <span className="font-label text-[9px] uppercase tracking-widest text-tertiary font-semibold">
+                    <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-tertiary font-semibold">
                       FLAT
                     </span>
                     <span
-                      className={`font-label text-sm leading-none mt-0.5 ${
+                      className={`font-label text-xs sm:text-sm leading-none mt-0.5 ${
                         effectiveAc.flatFooted > char.armorClass.flatFooted
                           ? 'text-[#00daf3] font-black'
                           : effectiveAc.flatFooted < char.armorClass.flatFooted
@@ -446,7 +378,7 @@ export function TacticalHUD() {
 
             {/* Interactive Saving Throws (Fort, Ref, Will) */}
             {effectiveSaves && (
-              <div className="hidden flex-wrap items-center gap-1.5 xl:flex" role="group" aria-label="Saving Throws">
+              <div className="flex flex-wrap items-center gap-1 sm:gap-1.5" role="group" aria-label="Saving Throws">
                 {(
                   [
                     {
@@ -501,17 +433,17 @@ export function TacticalHUD() {
                           })
                         }}
                         aria-label={`Roll ${save.fullName}`}
-                        className="px-2 py-1 rounded-xl bg-surface-container/70 border border-white/10 hover:border-secondary/60 hover:bg-secondary/10 active:scale-95 transition-all flex flex-col items-center justify-center min-w-[42px] cursor-pointer group"
+                        className="px-1.5 sm:px-2 py-1 rounded-xl bg-surface-container/70 border border-white/10 hover:border-secondary/60 hover:bg-secondary/10 active:scale-95 transition-all flex flex-col items-center justify-center min-w-[38px] sm:min-w-[42px] cursor-pointer group"
                       >
                         <div className="flex items-center gap-0.5">
-                          <span className="font-label text-[9px] uppercase tracking-widest text-secondary group-hover:text-primary transition-colors font-semibold">
+                          <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-secondary group-hover:text-primary transition-colors font-semibold">
                             {save.label}
                           </span>
-                          <span className="material-symbols-outlined text-[10px] text-tertiary/60 group-hover:text-primary transition-colors">
+                          <span className="material-symbols-outlined text-[9px] sm:text-[10px] text-tertiary/60 group-hover:text-primary transition-colors">
                             casino
                           </span>
                         </div>
-                        <span className={`font-label text-sm leading-none mt-0.5 ${valColor}`}>
+                        <span className={`font-label text-xs sm:text-sm leading-none mt-0.5 ${valColor}`}>
                           {save.val >= 0 ? `+${save.val}` : save.val}
                         </span>
                       </button>
@@ -565,79 +497,107 @@ export function TacticalHUD() {
         {(conditions.length > 0 || activeBuffs.length > 0) && (
           <div className="px-4 md:px-6 py-1 border-t border-white/5 bg-black/40 flex items-center gap-2 overflow-x-auto scrollbar-none">
             {/* Active Conditions */}
-            {conditions.map((cond) => (
-              <StatBreakdownTooltip
-                key={cond}
-                title={CONDITION_INFO[cond]?.name ?? cond}
-                total="CONDITION"
-                breakdown={[]}
-                notes={CONDITION_INFO[cond]?.penalties}
-              >
-                <button
-                  onClick={() => {
-                    toggleCondition(char.id, cond)
-                    const info = CONDITION_INFO[cond]
-                    openInspector({
-                      type: 'condition',
-                      id: cond,
-                      title: info?.name ?? cond,
-                      subtitle: 'Active Condition',
-                      description: info?.summary ?? 'Condition removed from the active list.',
-                      tags: ['Condition'],
-                      notes: info?.penalties,
-                    })
-                  }}
-                  aria-label={`Remove condition ${cond}`}
-                  className="group flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-label font-bold uppercase tracking-wider bg-error/15 border border-error/40 text-error shadow-[0_0_8px_rgba(255,75,96,0.25)] hover:bg-error/25 hover:border-error/70 transition-all cursor-pointer"
+            {conditions.map((cond) => {
+              const info = CONDITION_INFO[cond]
+              return (
+                <div
+                  key={cond}
+                  className="group inline-flex items-center rounded-full text-[10px] font-label font-bold uppercase tracking-wider bg-error/15 border border-error/40 text-error shadow-[0_0_8px_rgba(255,75,96,0.25)] hover:bg-error/25 hover:border-error/70 transition-all flex-shrink-0"
                 >
-                  <span className="material-symbols-outlined text-[11px]">warning</span>
-                  <span>{cond}</span>
-                  <svg className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </StatBreakdownTooltip>
-            ))}
+                  <StatBreakdownTooltip
+                    title={info?.name ?? cond}
+                    total="CONDITION"
+                    breakdown={[]}
+                    notes={info?.penalties}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openInspector({
+                          type: 'condition',
+                          id: cond,
+                          title: info?.name ?? cond,
+                          subtitle: 'Active Condition',
+                          description: info?.summary ?? 'Condition details.',
+                          tags: ['Condition'],
+                          notes: info?.penalties,
+                        })
+                      }}
+                      aria-label={`Inspect condition ${cond}`}
+                      className="flex items-center gap-1 pl-2.5 pr-1 py-0.5 cursor-pointer hover:text-white transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[11px]">warning</span>
+                      <span>{cond}</span>
+                    </button>
+                  </StatBreakdownTooltip>
+                  <button
+                    type="button"
+                    onClick={() => toggleCondition(char.id, cond)}
+                    aria-label={`Remove condition ${cond}`}
+                    className="pr-2 pl-0.5 py-0.5 text-error/60 hover:text-white cursor-pointer transition-colors"
+                    title="Remove condition"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )
+            })}
 
             {/* Active Buffs */}
             {activeBuffs.map((buff) => {
               const isSecondary = buff.color === 'secondary'
               const buffBkd = formatBuffTooltip(buff)
               return (
-                <StatBreakdownTooltip
+                <div
                   key={buff.id}
-                  title={buff.name}
-                  total="ACTIVE BUFF"
-                  breakdown={buffBkd}
-                  notes={buff.description ? [buff.description] : undefined}
+                  className={`group inline-flex items-center rounded-full text-[10px] font-label font-bold uppercase tracking-wider transition-all flex-shrink-0 ${
+                    isSecondary
+                      ? 'bg-secondary/15 border border-secondary/40 text-secondary shadow-[0_0_8px_rgba(217,70,239,0.25)] hover:bg-secondary/25 hover:border-secondary/70'
+                      : 'bg-primary/15 border border-primary/40 text-primary shadow-[0_0_8px_rgba(0,240,255,0.25)] hover:bg-primary/25 hover:border-primary/70'
+                  }`}
                 >
-                  <button
-                    onClick={() => {
-                      toggleBuff(char.id, buff.id)
-                      openInspector({
-                        type: 'buff',
-                        id: buff.id,
-                        title: buff.name,
-                        subtitle: 'Active Buff',
-                        description: buff.description ?? 'Active tactical modifier.',
-                        breakdown: buffBkd,
-                        tags: ['Buff', ...(buff.duration ? [buff.duration] : [])],
-                      })
-                    }}
-                    aria-label={`Deactivate buff ${buff.name}`}
-                    className={`group flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-label font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                      isSecondary
-                        ? 'bg-secondary/15 border border-secondary/40 text-secondary shadow-[0_0_8px_rgba(217,70,239,0.25)] hover:bg-secondary/25 hover:border-secondary/70'
-                        : 'bg-primary/15 border border-primary/40 text-primary shadow-[0_0_8px_rgba(0,240,255,0.25)] hover:bg-primary/25 hover:border-primary/70'
-                    }`}
+                  <StatBreakdownTooltip
+                    title={buff.name}
+                    total="ACTIVE BUFF"
+                    breakdown={buffBkd}
+                    notes={buff.description ? [buff.description] : undefined}
                   >
-                    <span className="material-symbols-outlined text-[11px]">auto_awesome</span>
-                    <span>{buff.name}</span>
-                    <svg className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openInspector({
+                          type: 'buff',
+                          id: buff.id,
+                          title: buff.name,
+                          subtitle: 'Active Buff',
+                          description: buff.description ?? 'Active tactical modifier.',
+                          breakdown: buffBkd,
+                          tags: ['Buff', ...(buff.duration ? [buff.duration] : [])],
+                        })
+                      }}
+                      aria-label={`Inspect buff ${buff.name}`}
+                      className="flex items-center gap-1 pl-2.5 pr-1 py-0.5 cursor-pointer hover:text-white transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[11px]">auto_awesome</span>
+                      <span>{buff.name}</span>
+                    </button>
+                  </StatBreakdownTooltip>
+                  <button
+                    type="button"
+                    onClick={() => toggleBuff(char.id, buff.id)}
+                    aria-label={`Deactivate buff ${buff.name}`}
+                    className={`pr-2 pl-0.5 py-0.5 cursor-pointer transition-colors ${
+                      isSecondary ? 'text-secondary/60 hover:text-white' : 'text-primary/60 hover:text-white'
+                    }`}
+                    title="Deactivate buff"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
-                </StatBreakdownTooltip>
+                </div>
               )
             })}
           </div>

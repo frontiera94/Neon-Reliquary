@@ -4,11 +4,28 @@ import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { useInspectorStore } from '../store/useInspectorStore'
 import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
-import { deriveBuffFromSpell, findMatchingBuffForSpell, isSpellBuffCandidate } from '../lib/stat-calc'
+import { deriveBuffFromSpell, findMatchingBuffForSpell, isSpellBuffCandidate, calcEffectiveAbilities } from '../lib/stat-calc'
 import { getSpellAvailability } from '../lib/spell-availability'
 import { spellInspectorItem } from '../lib/inspector-items'
 import type { Spell, SpellAttackType } from '../types/resources'
 import type { AbilityScore } from '../types/character'
+
+function getSpellFocusBonus(school: string, feats: { id?: string; name: string }[]): number {
+  if (!school || !feats.length) return 0
+  const schoolLower = school.toLowerCase()
+  let bonus = 0
+  for (const f of feats) {
+    const nameLower = f.name.toLowerCase()
+    if (nameLower.includes('spell focus') && nameLower.includes(schoolLower)) {
+      if (nameLower.includes('greater')) {
+        bonus = Math.max(bonus, 2)
+      } else {
+        bonus = Math.max(bonus, 1)
+      }
+    }
+  }
+  return bonus
+}
 
 function concentrationMod(charClass: string, level: number, abilities: AbilityScore): number {
   const cls = charClass.toLowerCase()
@@ -52,22 +69,28 @@ export function SpellsPage() {
     return true
   })
 
-  const availability = getSpellAvailability(char, session ?? {})
+  const allBuffs = [...char.buffs, ...(session?.customBuffs ?? [])]
+  const activeBuffs = allBuffs.filter((b) => session?.activeBuffIds.includes(b.id))
+  const effectiveAbilities = calcEffectiveAbilities(char.abilities, session?.conditions ?? [], activeBuffs)
+
+  const availability = getSpellAvailability(
+    { ...char, abilities: effectiveAbilities.scores },
+    session ?? {}
+  )
   const isSpontaneous = availability.profile.mode === 'spontaneous'
   const isPreparedCaster = availability.profile.mode === 'prepared'
 
   const arcaneFailure = char.armorClass.spellFailureChance ?? 0
-  const concMod = concentrationMod(char.class, char.level, char.abilities)
+  const concMod = concentrationMod(char.class, char.level, effectiveAbilities.scores)
   const hasCombatCasting = char.feats.some((f) => /combat casting/i.test(f.name))
   const defensiveConcMod = concMod + (hasCombatCasting ? 4 : 0)
 
   const bab = char.baseAttackBonus[0] ?? 0
-  const dexMod = abilityMod(char.abilities.dex)
-  const strMod = abilityMod(char.abilities.str)
+  const dexMod = effectiveAbilities.mods.dex
+  const strMod = effectiveAbilities.mods.str
   const attackBonusFor = (t: SpellAttackType): number =>
     t === 'meleeTouch' ? bab + strMod : bab + dexMod
 
-  const allBuffs = [...char.buffs, ...(session?.customBuffs ?? [])]
   const isAlwaysPrepared = (spell: Spell) =>
     Boolean(spell.alwaysPrepared || spell.source === 'domain' || spell.source === 'bloodline')
 
@@ -296,10 +319,14 @@ export function SpellsPage() {
                   const canPrepareMore = isPreparedCaster && levelPreparedCount < preparedCapacity
                   const resource = availability.resourceFor(spell)
 
+                  const spellFocusBonus = getSpellFocusBonus(spell.school, char.feats)
+                  const dc = availability.spellDc(spell, spellFocusBonus)
+
                   return (
                     <SpellRow
                       key={spell.id}
                       spell={spell}
+                      dc={dc}
                       isSpontaneous={isSpontaneous}
                       isPrepared={isPrepared}
                       preparedCount={count}
@@ -333,15 +360,46 @@ export function SpellsPage() {
                       }
                       onAttack={
                         spell.attackType
-                          ? () => castAndRoll(spell, () => openRoll({ diceType: 20, count: 1, modifier: atkBonus, label: `${spell.name} (Attack)` }))
+                          ? () => castAndRoll(spell, () => {
+                              const followUpRoll = spell.damageDice
+                                ? (() => {
+                                    const { count: dCount, sides, bonus } = parseDiceFormula(spell.damageDice!)
+                                    return {
+                                      diceType: sides,
+                                      count: dCount,
+                                      modifier: (spell.damageBonus ?? 0) + bonus,
+                                      label: `${spell.name} (Damage)`,
+                                    }
+                                  })()
+                                : undefined
+
+                              openRoll({
+                                diceType: 20,
+                                count: 1,
+                                modifier: atkBonus,
+                                label: `${spell.name} (Attack)`,
+                                followUpRoll,
+                                followUpLabel: spell.damageDice
+                                  ? `${spell.damageDice}${spell.damageBonus ? `+${spell.damageBonus}` : ''}`
+                                  : undefined,
+                              })
+                            })
                           : undefined
                       }
                       onDamage={
                         spell.damageDice
-                          ? () => castAndRoll(spell, () => {
+                          ? () => {
+                              if (!spell.attackType) {
+                                if (!consumeCastCost(spell)) return
+                              }
                               const { count: dCount, sides, bonus } = parseDiceFormula(spell.damageDice!)
-                              openRoll({ diceType: sides, count: dCount, modifier: (spell.damageBonus ?? 0) + bonus, label: `${spell.name} (Damage)` })
-                            })
+                              openRoll({
+                                diceType: sides,
+                                count: dCount,
+                                modifier: (spell.damageBonus ?? 0) + bonus,
+                                label: `${spell.name} (Damage)`,
+                              })
+                            }
                           : undefined
                       }
                       onCast={() => consumeCastCost(spell)}
@@ -358,6 +416,7 @@ export function SpellsPage() {
 
 function SpellRow({
   spell,
+  dc,
   isPrepared,
   isSpontaneous = false,
   preparedCount = 0,
@@ -382,6 +441,7 @@ function SpellRow({
   resourceRemaining,
 }: {
   spell: Spell
+  dc?: number
   isPrepared: boolean
   isSpontaneous?: boolean
   preparedCount?: number
@@ -516,6 +576,11 @@ function SpellRow({
                 Always Prepared
               </span>
             )}
+            {spell.savingThrow && dc !== undefined && (
+              <span className="font-label text-[10px] text-secondary bg-secondary/15 border border-secondary/30 px-2 py-0.5 rounded-md uppercase font-bold">
+                DC {dc}
+              </span>
+            )}
             <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-md uppercase">
               {spell.school}{spell.subschool ? ` (${spell.subschool})` : ''}
             </span>
@@ -540,7 +605,9 @@ function SpellRow({
           {spell.savingThrow && (
             <div>
               <p className="text-primary mb-1 font-bold">Saving Throw</p>
-              <p className="text-on-surface-variant">{spell.savingThrow}</p>
+              <p className="text-on-surface-variant font-bold">
+                {spell.savingThrow} {dc !== undefined && <span className="text-secondary">(DC {dc})</span>}
+              </p>
             </div>
           )}
           <div>
