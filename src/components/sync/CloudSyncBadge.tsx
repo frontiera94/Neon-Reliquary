@@ -9,17 +9,16 @@ export function CloudSyncBadge({ compact = true }: CloudSyncBadgeProps) {
   const status = useSyncStore((s) => s.status)
   const pendingCount = useSyncStore((s) => s.pendingCount)
 
-  if (status === 'idle') return null
-
   const config = (() => {
     switch (status) {
+      case 'idle':
       case 'synced':
         return {
           icon: 'cloud_done',
           label: 'Cloud',
           title: 'Stato salvato su Neon Cloud — clicca per sincronizzare',
           className:
-            'text-primary border-primary/30 bg-primary/10 hover:bg-primary/20 hover:shadow-[0_0_14px_rgba(0,240,255,0.25)]',
+            'text-primary/70 border-primary/20 bg-primary/5 hover:bg-primary/20 hover:text-primary',
           spin: false,
         }
       case 'syncing':
@@ -63,7 +62,7 @@ export function CloudSyncBadge({ compact = true }: CloudSyncBadgeProps) {
       }}
       title={config.title}
       aria-label={config.title}
-      className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 font-label text-[10px] uppercase tracking-widest transition-all duration-300 cursor-pointer ${config.className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-2.5 py-1.5 font-label text-[10px] uppercase tracking-widest cursor-pointer lg:min-w-[84px] ${config.className}`}
     >
       <span
         className={`material-symbols-outlined text-sm leading-none ${
