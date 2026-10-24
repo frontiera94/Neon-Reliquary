@@ -18,6 +18,7 @@ import {
 } from '../lib/stat-calc'
 import { ActionAlertBanner } from '../components/combat/ActionAlertBanner'
 import { BuffManagerModal } from '../components/combat/BuffManagerModal'
+import { DailyResourcePips } from '../components/combat/BuffResourceToggle'
 import { StatBreakdownTooltip } from '../components/ui/StatBreakdownTooltip'
 import type { ConditionType } from '../types/combat'
 
@@ -50,7 +51,6 @@ export function StatusPage() {
     adjustHp,
     initSession,
     setNonlethal,
-    setResourceSpent,
     setTempHp,
     toggleCondition,
     longRest,
@@ -98,11 +98,6 @@ export function StatusPage() {
   const vitalStatus = evaluateVitalStatus(hp, char.abilities.con)
 
   const spentByResource = (id: string) => session.spentResources[id] ?? 0
-
-  function handleSquareClick(resourceId: string, index: number, spent: number) {
-    const newAmount = index < spent ? index : index + 1
-    setResourceSpent(char!.id, resourceId, newAmount)
-  }
 
   function commitNl() {
     if (nlEdit === null) return
@@ -451,36 +446,55 @@ export function StatusPage() {
                 {spellAvailability.remainingSlots}/{spellAvailability.totalSlots} remaining
               </span>
             </div>
-            <div className="flex flex-wrap gap-6">
-              {spellAvailability.levels.filter((level) => level.total > 0).map((level) => (
-                <div key={level.level}>
-                  <p className="font-label text-[10px] text-tertiary uppercase tracking-widest mb-2 font-bold tabular-nums">
-                    Level {level.level}: {level.remaining}/{level.total}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {Array.from({ length: level.total }).map((_, index) => {
-                      const isSpent = index >= level.remaining
-                      return (
-                        <button
-                          key={index}
-                          type="button"
-                          onClick={() =>
-                            isSpent
-                              ? recoverSpellSlot(char.id, level.level)
-                              : spendSpellSlot(char.id, level.level, level.total)
-                          }
-                          aria-label={`Toggle spell slot level ${level.level} ${index + 1}`}
-                          className={`min-h-[32px] min-w-[32px] rounded-md border transition-all cursor-pointer ${
-                            isSpent
-                              ? 'bg-surface-container-highest border-white/10 hover:border-primary/40'
-                              : 'bg-primary border-primary shadow-[0_0_8px_rgba(0,240,255,0.35)] hover:brightness-110'
-                          }`}
-                        />
-                      )
-                    })}
+            <div className="flex flex-wrap gap-3">
+              {spellAvailability.levels.filter((level) => level.total > 0).map((level) => {
+                const spent = level.total - level.remaining
+                return (
+                  <div
+                    key={level.level}
+                    className="rounded-xl border border-white/10 bg-surface-container-high/40 px-3.5 py-2 hover:border-primary/30 transition-all flex flex-wrap items-center gap-1"
+                    role="group"
+                    aria-label={`Level ${level.level} Spells: ${level.remaining} of ${level.total} remaining`}
+                  >
+                    <span className="inline-flex items-center gap-1 font-label text-[9px] uppercase tracking-wider mr-1">
+                      <span className="px-1 py-0.5 rounded bg-white/5 border border-white/10 text-secondary text-[8px] font-bold">
+                        SLOT
+                      </span>
+                      <span className="text-tertiary font-semibold">LEVEL {level.level}</span>
+                    </span>
+                    <div className="flex flex-wrap items-center gap-1">
+                      {Array.from({ length: level.total }).map((_, index) => {
+                        const isSpent = index < spent
+                        return (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() =>
+                              isSpent
+                                ? recoverSpellSlot(char.id, level.level)
+                                : spendSpellSlot(char.id, level.level, level.total)
+                            }
+                            aria-label={`${isSpent ? 'Recover' : 'Spend'} level ${level.level} slot ${index + 1} of ${level.total}`}
+                            aria-pressed={isSpent}
+                            className="min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                          >
+                            <span
+                              className={`block transition-all group-hover:scale-110 ${
+                                isSpent
+                                  ? 'w-2.5 h-2.5 rounded-full border border-white/20 bg-surface-container-highest'
+                                  : 'w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(0,240,255,0.55)]'
+                              }`}
+                            />
+                          </button>
+                        )
+                      })}
+                    </div>
+                    <span className="font-label text-[10px] text-tertiary ml-1 tabular-nums">
+                      {level.remaining}/{level.total}
+                    </span>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </section>
         )}
@@ -488,46 +502,22 @@ export function StatusPage() {
         {/* Daily Resources */}
         {char.dailyResources.length > 0 && (
           <section className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all">
-            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-6 neon-glow-accent font-bold">
+            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent font-bold">
               Daily Resources
             </h2>
-            <div className="flex flex-wrap gap-8">
-              {char.dailyResources.map((res) => {
-                const spent = spentByResource(res.id)
-                const squareSize = res.total > 8 ? 'w-4 h-4' : 'w-8 h-8'
-                const labelText = res.label ?? res.name
-                const colonIndex = labelText.indexOf(':')
-                const prefix = colonIndex > 0 ? labelText.slice(0, colonIndex).trim() : null
-                return (
-                  <div key={res.id}>
-                    <p className="font-label text-[10px] text-tertiary uppercase tracking-widest mb-2 font-bold flex items-center gap-1.5" title={res.name}>
-                      {prefix && (
-                        <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-secondary text-[9px] font-bold shrink-0">
-                          {prefix}
-                        </span>
-                      )}
-                      <span>{res.name}</span>
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {Array.from({ length: res.total }).map((_, i) => {
-                        const isSpent = i < spent
-                        return (
-                          <button
-                            key={i}
-                            onClick={() => handleSquareClick(res.id, i, spent)}
-                            className={`${squareSize} rounded-xs border transition-all cursor-pointer ${
-                              isSpent
-                                ? 'bg-surface-container-highest border-white/10 hover:border-primary/50'
-                                : 'bg-primary border-primary hover:brightness-125 shadow-[0_0_8px_rgba(0,240,255,0.4)]'
-                            }`}
-                            aria-label={`Toggle square ${i + 1} of ${res.name}`}
-                          />
-                        )
-                      })}
-                    </div>
-                  </div>
-                )
-              })}
+            <div className="flex flex-wrap gap-3">
+              {char.dailyResources.map((res) => (
+                <div
+                  key={res.id}
+                  className="rounded-xl border border-white/10 bg-surface-container-high/40 px-3.5 py-2 hover:border-primary/30 transition-all"
+                >
+                  <DailyResourcePips
+                    characterId={char.id}
+                    resource={res}
+                    spent={spentByResource(res.id)}
+                  />
+                </div>
+              ))}
             </div>
           </section>
         )}
