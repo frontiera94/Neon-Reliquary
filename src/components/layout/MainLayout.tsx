@@ -9,7 +9,7 @@ import { ChatModal } from '../chat/ChatModal'
 
 export function MainLayout() {
   return (
-    <div className="min-h-screen bg-surface text-on-surface dark relative overflow-x-hidden">
+    <div className="min-h-screen bg-surface text-on-surface dark relative overflow-x-clip">
       {/* Ambient background glow orbs (Cyber Cyan + Electric Magenta, no yellow) */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div
