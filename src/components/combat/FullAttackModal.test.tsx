@@ -394,7 +394,7 @@ describe('FullAttackModal', () => {
         vi.advanceTimersByTime(550)
       })
 
-      expect(screen.getByText('25')).toBeInTheDocument()
+      expect(screen.getAllByText('25')[0]).toBeInTheDocument()
       expect(screen.getByText(/Rolling Attack 2 of 2/i)).toBeInTheDocument()
 
       // Advance timers by another 550ms -> Attack 2 resolves (8 + 5 = 13)
