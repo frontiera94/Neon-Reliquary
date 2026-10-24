@@ -51,6 +51,7 @@ interface SessionStore {
   resetCombatRound: (characterId: string) => void
   setCombatRound: (characterId: string, round: number) => void
   initSession: (characterId: string, maxHp: number, startingCoins?: CoinPurse, initialEquippedIds?: string[]) => void
+  hydrateSessions: (incoming: Record<string, SessionState>) => void
   longRest: (characterId: string, maxHp: number) => void
 }
 
@@ -113,7 +114,7 @@ const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurs
 })
 
 
-function normalizePersistedSession(sess: SessionState): SessionState {
+export function normalizePersistedSession(sess: SessionState): SessionState {
   const preparedSpells = normalizePreparedSpells(sess.preparedSpells, sess.preparedSpellIds)
   const spentResources = Object.fromEntries(
     Object.entries(sess.spentResources ?? {}).filter(([resourceId]) => !/^spells-\d+$/.test(resourceId))
@@ -770,6 +771,24 @@ export const useSessionStore = create<SessionStore>()(
                 ...sess,
                 currentRound: Math.max(1, round),
               },
+            },
+          }
+        }),
+
+      hydrateSessions: (incoming) =>
+        set((s) => {
+          const entries = Object.entries(incoming)
+          if (entries.length === 0) return s
+          const normalized = Object.fromEntries(
+            entries.map(([id, sess]) => [
+              id,
+              normalizePersistedSession({ ...sess, characterId: sess.characterId || id }),
+            ])
+          )
+          return {
+            sessions: {
+              ...s.sessions,
+              ...normalized,
             },
           }
         }),

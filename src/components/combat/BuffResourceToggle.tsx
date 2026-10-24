@@ -37,6 +37,7 @@ export function DailyResourcePips({ characterId, resource, spent, compact = fals
       onClick={(event) => event.stopPropagation()}
       role="group"
       aria-label={`${resource.name}: ${remaining} of ${resource.total} remaining`}
+      title={resource.name}
     >
       <span className="font-label text-[9px] uppercase tracking-wider text-tertiary mr-1">
         {resource.label ?? resource.name}

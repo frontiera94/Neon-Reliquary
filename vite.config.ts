@@ -1,8 +1,10 @@
 import { defineConfig } from 'vitest/config'
+import { loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import type { Plugin } from 'vite'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { handleSessionsRequest } from './api/sessions'
 
 // ---------------------------------------------------------------------------
 // Local dev mock — replaces Vercel Blob + serverless functions when using
@@ -118,8 +120,51 @@ function localMapApiPlugin(): Plugin {
   }
 }
 
+function localSessionsApiPlugin(): Plugin {
+  return {
+    name: 'local-sessions-api',
+    apply: 'serve',
+    configureServer(server) {
+      const fileEnv = loadEnv(server.config.mode, process.cwd(), '')
+      server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+        const url = (req.url ?? '').split('?')[0]
+        if (url !== '/api/sessions') return next()
+
+        const rawBody =
+          req.method === 'PUT' || req.method === 'POST'
+            ? await readBody(req)
+            : undefined
+
+        await handleSessionsRequest(
+          {
+            method: req.method,
+            body: rawBody,
+            headers: req.headers,
+          },
+          {
+            setHeader: (name, value) => res.setHeader(name, value),
+            status: (code) => ({
+              json: (payload) => sendJson(res, code, payload),
+              end: () => {
+                res.writeHead(code)
+                res.end()
+              },
+            }),
+          },
+          {
+            env: {
+              ...fileEnv,
+              ...process.env,
+            },
+          }
+        )
+      })
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss(), localMapApiPlugin()],
+  plugins: [react(), tailwindcss(), localMapApiPlugin(), localSessionsApiPlugin()],
   test: {
     environment: 'node',
     globals: true,

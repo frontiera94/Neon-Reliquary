@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useDiceStore } from '../../store/useDiceStore'
 import { useChatStore } from '../../store/useChatStore'
 import { useCharacterStore } from '../../store/useCharacterStore'
+import { useSyncStore } from '../../store/useSyncStore'
+import { syncSessionsNow } from '../../lib/session-sync'
 import type { DiceType } from '../../types/dice'
 
 const DICE_TYPES: DiceType[] = [4, 6, 8, 10, 12, 20, 100]
@@ -17,6 +19,8 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const chats = useChatStore((s) => s.chats)
   const activeCharacterId = useCharacterStore((s) => s.activeCharacterId)
   const activeChar = useCharacterStore((s) => s.activeCharacter())
+  const syncStatus = useSyncStore((s) => s.status)
+  const lastSyncedAt = useSyncStore((s) => s.lastSyncedAt)
   const chatCount = activeCharacterId ? (chats[activeCharacterId]?.length ?? 0) : 0
 
   const [diceType, setDiceType] = useState<DiceType>(20)
@@ -123,6 +127,37 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             </button>
           </div>
         </div>
+
+        {/* Cloud Persistence */}
+        {syncStatus !== 'idle' && (
+          <div className="px-6 py-4 flex items-center justify-between border-b border-white/10">
+            <div>
+              <span className="font-label text-xs text-tertiary uppercase tracking-widest block">
+                Neon Cloud Save
+              </span>
+              <span className="font-label text-[10px] text-tertiary/70 mt-0.5 block">
+                {syncStatus === 'synced' && lastSyncedAt
+                  ? `Salvato alle ${new Date(lastSyncedAt).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
+                  : syncStatus === 'syncing' || syncStatus === 'loading'
+                  ? 'Sincronizzazione in corso...'
+                  : syncStatus === 'unconfigured'
+                  ? 'Solo locale (DATABASE_URL assente)'
+                  : 'Offline — salvato in locale'}
+              </span>
+            </div>
+            {syncStatus !== 'unconfigured' && (
+              <button
+                type="button"
+                onClick={() => {
+                  void syncSessionsNow()
+                }}
+                className="font-label text-[10px] uppercase tracking-widest text-primary hover:text-white transition-colors cursor-pointer"
+              >
+                Sincronizza
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Chat AI */}
         <div className="px-6 py-4 flex items-center justify-between border-b border-white/10">

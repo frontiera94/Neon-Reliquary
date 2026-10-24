@@ -10,7 +10,15 @@ A high-performance digital companion for **Pathfinder 1st Edition** with a Neon 
 - **Spells tab** — full spell library grouped by level with preparation tracking and arcane failure display
 - **Features tab** — feats, class features, and special abilities
 - **Dice system** — cryptographically random dice rolls with animated 2D overlay, crit detection, and a persistent roll log
-- **Session persistence** — HP, spent resources, active buffs, conditions, and spell slots survive page reloads via localStorage
+- **Session persistence** — HP, spent resources, active buffs, conditions, and spell slots survive page reloads via localStorage and automatically sync across devices/sessions with **Neon Serverless Postgres** (`/api/sessions`)
+
+## Cloud Database Setup (Neon Postgres on Vercel)
+
+Character session state (`useSessionStore`: current HP, temp HP, nonlethal damage, spell slots, daily resources, buffs, conditions, coins, and inventory) syncs automatically with a **Neon Postgres** database while keeping optimistic 0ms local updates:
+
+1. Open your project on **Vercel** → **Storage** (or **Marketplace**) → **Create Database** → select **Neon Postgres** and connect it to the project (this injects `DATABASE_URL` automatically).
+2. Redeploy on Vercel (the `character_sessions` table is created automatically on first request).
+3. *(Optional, for local dev)* Run `npx vercel env pull .env.local` (or add `DATABASE_URL=...` to `.env.local`) so `npm run dev` syncs with the same cloud database. Without `DATABASE_URL`, the app runs seamlessly in local-only mode.
 
 ## Tech Stack
 

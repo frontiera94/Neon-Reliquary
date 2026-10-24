@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
+import { CloudSyncBadge } from '../components/sync/CloudSyncBadge'
 import type { FullCharacter } from '../store/useCharacterStore'
 import mazeData from '../data/mazikeen-noctis.json'
 import shotrixData from '../data/shotrix-blackburn.json'
@@ -60,6 +61,11 @@ export function CharacterSelectionPage() {
       <div className="absolute top-8 left-8 hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 border border-primary/20 font-mono text-xs text-primary z-20">
         <span className="text-secondary">&gt;</span>
         <span>reliquary:ready</span>
+      </div>
+
+      {/* Cloud Sync Status */}
+      <div className="absolute top-8 right-8 z-20">
+        <CloudSyncBadge compact={false} />
       </div>
 
       {/* Header */}

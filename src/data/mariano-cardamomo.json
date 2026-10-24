@@ -277,19 +277,19 @@
       "id": "underhanded",
       "name": "Underhanded (max sneak dmg surprise)",
       "total": 3,
-      "label": "Uses"
+      "label": "Underhanded"
     },
     {
       "id": "major-magic-vanish",
       "name": "Major Magic: Vanish (2/day)",
       "total": 2,
-      "label": "Uses"
+      "label": "Vanish"
     },
     {
       "id": "cure-light-wounds",
       "name": "Potion of Cure Light Wounds (1d8+1)",
       "total": 1,
-      "label": "Potions"
+      "label": "Potion CLW"
     }
   ],
   "feats": [
