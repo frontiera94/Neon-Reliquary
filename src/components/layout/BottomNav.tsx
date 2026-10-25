@@ -21,14 +21,14 @@ export function BottomNav() {
           key={to}
           to={to}
           className={({ isActive }) =>
-            `flex-1 min-w-[42px] flex flex-col items-center justify-center py-1.5 gap-0.5 font-label text-[8px] leading-tight uppercase tracking-wider transition-all duration-200 ` +
+            `flex-1 min-w-[50px] flex flex-col items-center justify-center py-2.5 gap-0.5 font-label text-[9px] uppercase tracking-wider transition-all duration-200 ` +
             (isActive ? 'text-primary' : 'text-tertiary hover:text-white')
           }
         >
           {({ isActive }) => (
             <>
               <span
-                className="material-symbols-outlined text-[18px]"
+                className="material-symbols-outlined text-xl"
                 style={isActive ? { filter: 'drop-shadow(0 0 8px #00f0ff)' } : undefined}
               >
                 {icon}

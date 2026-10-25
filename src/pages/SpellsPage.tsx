@@ -160,13 +160,13 @@ export function SpellsPage() {
   }
 
   return (
-    <div className="p-2.5 sm:p-4 md:p-8 lg:p-12">
+    <div className="p-4 md:p-8 lg:p-12">
       {/* Header */}
-      <header className="mb-3 sm:mb-6 md:mb-8">
-        <h1 className="font-headline text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-1 tracking-tight">
+      <header className="mb-10">
+        <h1 className="font-headline text-5xl font-bold text-white mb-2 tracking-tight">
           The Repository
         </h1>
-        <p className="text-tertiary font-label uppercase text-[10px] sm:text-xs md:text-sm tracking-[0.18em]">
+        <p className="text-tertiary font-label uppercase text-sm tracking-[0.2em]">
           {isSpontaneous
             ? `Spontaneous caster · ${availability.knownCount} known · ${availability.remainingSlots} slots remaining`
             : isPreparedCaster
@@ -175,30 +175,30 @@ export function SpellsPage() {
         </p>
 
         {arcaneFailure > 0 && (
-          <div className="mt-2.5 px-3 py-2 bg-error-container/20 border border-error/30 rounded-xl flex items-center gap-2">
+          <div className="mt-4 px-4 py-3 bg-error-container/20 border border-error/30 rounded-xl flex items-center gap-3">
             <span className="material-symbols-outlined text-error text-sm">warning</span>
-            <span className="font-label text-[10px] sm:text-xs text-error uppercase tracking-widest font-bold">
+            <span className="font-label text-xs text-error uppercase tracking-widest font-bold">
               Arcane Spell Failure: {arcaneFailure}%
             </span>
           </div>
         )}
 
         {/* Global Concentration Check */}
-        <div className="mt-2.5 sm:mt-3 flex items-center gap-1.5 sm:gap-2 flex-wrap">
+        <div className="mt-4 flex items-center gap-2 flex-wrap">
           <button
             onClick={() => openRoll({ diceType: 20, count: 1, modifier: concMod, label: 'Concentration' })}
-            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-surface-container/90 border border-white/10 rounded-xl text-tertiary font-label text-[10px] sm:text-xs uppercase tracking-wider hover:text-primary hover:border-primary/50 hover:shadow-[0_0_12px_rgba(0,240,255,0.25)] transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 bg-surface-container/90 border border-white/10 rounded-xl text-tertiary font-label text-xs uppercase tracking-widest hover:text-primary hover:border-primary/50 hover:shadow-[0_0_12px_rgba(0,240,255,0.25)] transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>electric_bolt</span>
-            <span>Concentration ({concMod >= 0 ? `+${concMod}` : concMod})</span>
+            Concentration ({concMod >= 0 ? `+${concMod}` : concMod})
           </button>
           {hasCombatCasting && (
             <button
               onClick={() => openRoll({ diceType: 20, count: 1, modifier: concMod + 4, label: 'Concentration (Defensive)' })}
-              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-surface-container/90 border border-white/10 rounded-xl text-tertiary font-label text-[10px] sm:text-xs uppercase tracking-wider hover:text-secondary hover:border-secondary/50 hover:shadow-[0_0_12px_rgba(217,70,239,0.3)] transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 bg-surface-container/90 border border-white/10 rounded-xl text-tertiary font-label text-xs uppercase tracking-widest hover:text-secondary hover:border-secondary/50 hover:shadow-[0_0_12px_rgba(217,70,239,0.3)] transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
             >
               <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>electric_bolt</span>
-              <span>Defensive ({defensiveConcMod >= 0 ? `+${defensiveConcMod}` : defensiveConcMod})</span>
+              Defensive ({defensiveConcMod >= 0 ? `+${defensiveConcMod}` : defensiveConcMod})
             </button>
           )}
         </div>
@@ -206,22 +206,22 @@ export function SpellsPage() {
 
       {/* Spell slot tracker */}
       {availability.levels.some((level) => level.total > 0) && (
-        <section className="mb-4 sm:mb-6 bg-surface-container/90 backdrop-blur-sm p-3.5 sm:p-5 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.06)]">
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
-            <h2 className="font-headline text-secondary text-xs sm:text-sm uppercase tracking-widest neon-glow-accent font-bold">
+        <section className="mb-8 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.06)]">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
               Spell Slots
             </h2>
             <span className="font-label text-[10px] text-tertiary uppercase tracking-wider tabular-nums">
               {availability.remainingSlots}/{availability.totalSlots} remaining
             </span>
           </div>
-          <div className="flex flex-wrap gap-3 sm:gap-6">
+          <div className="flex flex-wrap gap-6">
             {availability.levels.filter((slot) => slot.total > 0).map((slot) => (
               <div key={slot.level}>
-                <p className="font-label text-[9px] sm:text-[10px] text-primary uppercase tracking-wider mb-1 font-bold tabular-nums">
-                  Lv {slot.level}: {slot.remaining}/{slot.total}
+                <p className="font-label text-[10px] text-primary uppercase tracking-widest mb-2 font-bold tabular-nums">
+                  Level {slot.level}: {slot.remaining}/{slot.total}
                 </p>
-                <div className="flex gap-1">
+                <div className="flex gap-1.5">
                   {Array.from({ length: slot.total }).map((_, i) => {
                     const isSpent = i >= slot.remaining
                     return (
@@ -232,7 +232,7 @@ export function SpellsPage() {
                             ? spendSpellSlot(char.id, slot.level, slot.total)
                             : recoverSpellSlot(char.id, slot.level)
                         }
-                        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md transition-all flex items-center justify-center cursor-pointer ${
+                        className={`w-7 h-7 rounded-md transition-all flex items-center justify-center cursor-pointer ${
                           isSpent
                             ? 'bg-surface-container-highest border border-white/10'
                             : 'bg-primary/20 border border-primary shadow-[0_0_8px_rgba(0,240,255,0.35)] hover:bg-primary/40'
@@ -240,7 +240,7 @@ export function SpellsPage() {
                         aria-label={`Spell slot level ${slot.level} ${i + 1}`}
                       >
                         {isSpent && (
-                          <span className="material-symbols-outlined text-primary/40 leading-none" style={{ fontSize: '13px' }}>close</span>
+                          <span className="material-symbols-outlined text-primary/40 leading-none" style={{ fontSize: '14px' }}>close</span>
                         )}
                       </button>
                     )
@@ -253,20 +253,20 @@ export function SpellsPage() {
       )}
 
       {/* Filter bar */}
-      <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-4 mb-4 sm:mb-6">
-        <div className="relative flex-1 sm:flex-initial">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary/50 text-sm">search</span>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search spells..."
-            className="bg-surface-container-high/80 rounded-xl pl-9 pr-3 py-1.5 sm:py-2 font-label text-xs sm:text-sm text-on-surface placeholder:text-tertiary/50 outline-none w-full sm:w-60 border border-white/10 focus:border-primary transition-colors"
+            className="bg-surface-container-high/80 rounded-xl pl-10 pr-4 py-2.5 font-label text-sm text-on-surface placeholder:text-tertiary/50 outline-none w-64 border border-white/10 focus:border-primary transition-colors"
           />
         </div>
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setLevelFilter('all')}
-            className={`px-2.5 py-1.5 font-label text-[10px] sm:text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer ${levelFilter === 'all' ? 'bg-primary text-black font-bold shadow-[0_0_12px_rgba(0,240,255,0.4)]' : 'bg-surface-container text-tertiary hover:text-white border border-white/5'}`}
+            className={`px-3 py-2 font-label text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer ${levelFilter === 'all' ? 'bg-primary text-black font-bold shadow-[0_0_12px_rgba(0,240,255,0.4)]' : 'bg-surface-container text-tertiary hover:text-white border border-white/5'}`}
           >
             All
           </button>
@@ -274,7 +274,7 @@ export function SpellsPage() {
             <button
               key={lvl}
               onClick={() => setLevelFilter(lvl)}
-              className={`px-2.5 py-1.5 font-label text-[10px] sm:text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer ${levelFilter === lvl ? 'bg-primary text-black font-bold shadow-[0_0_12px_rgba(0,240,255,0.4)]' : 'bg-surface-container text-tertiary hover:text-white border border-white/5'}`}
+              className={`px-3 py-2 font-label text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer ${levelFilter === lvl ? 'bg-primary text-black font-bold shadow-[0_0_12px_rgba(0,240,255,0.4)]' : 'bg-surface-container text-tertiary hover:text-white border border-white/5'}`}
             >
               Lv {lvl}
             </button>
@@ -468,14 +468,14 @@ function SpellRow({
   const preparationLocked = isSpontaneous || isAlwaysPrepared || isSla || isAtWill || spell.level === 0
   return (
     <details className={`w-full group rounded-xl overflow-hidden border transition-all ${isPrepared ? 'border-primary/50 shadow-[0_0_12px_rgba(0,240,255,0.15)]' : 'border-white/[0.08]'}`}>
-      <summary className={`transition-all flex items-center gap-2.5 sm:gap-4 p-2.5 sm:p-3.5 md:p-4 cursor-pointer list-none ${isPrepared ? 'bg-primary/10 hover:bg-primary/15' : 'bg-surface-container/90 hover:bg-surface-container-high'}`}>
+      <summary className={`transition-all flex items-center gap-4 p-4 cursor-pointer list-none ${isPrepared ? 'bg-primary/10 hover:bg-primary/15' : 'bg-surface-container/90 hover:bg-surface-container-high'}`}>
         {/* Preparation state */}
         {isSpontaneous ? (
-          <span className="font-label text-[8px] sm:text-[10px] text-primary bg-primary/15 border border-primary/40 px-1.5 sm:px-2 py-0.2 sm:py-0.5 rounded-md uppercase font-bold flex-shrink-0">
+          <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/40 px-2 py-0.5 rounded-md uppercase font-bold flex-shrink-0">
             Known
           </span>
         ) : preparationLocked ? (
-          <span className={`font-label text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.2 sm:py-0.5 rounded-md uppercase font-bold flex-shrink-0 border ${
+          <span className={`font-label text-[10px] px-2 py-0.5 rounded-md uppercase font-bold flex-shrink-0 border ${
             isSla
               ? 'text-secondary bg-secondary/15 border-secondary/40'
               : isAtWill
@@ -511,29 +511,29 @@ function SpellRow({
         )}
         {/* Name + meta */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
             <button
               type="button"
               onClick={(event) => {
                 event.preventDefault()
                 onInspect?.()
               }}
-              className={`font-headline text-xs sm:text-sm md:text-base font-bold text-left cursor-pointer hover:underline underline-offset-4 truncate max-w-full ${isPrepared ? 'text-primary' : isBuffActive ? 'text-secondary' : 'text-white'}`}
+              className={`font-headline font-bold text-left cursor-pointer hover:underline underline-offset-4 ${isPrepared ? 'text-primary' : isBuffActive ? 'text-secondary' : 'text-white'}`}
             >
               {spell.name}
             </button>
             {isBuffActive && (
-              <span className="font-label text-[8px] sm:text-[9px] text-white font-bold bg-secondary px-1.5 py-0.2 sm:px-2 sm:py-0.5 rounded-full uppercase tracking-wider flex-shrink-0">
+              <span className="font-label text-[9px] text-white font-bold bg-secondary px-2 py-0.5 rounded-full uppercase tracking-widest">
                 Buff Active
               </span>
             )}
             {!isSpontaneous && !preparationLocked && isPrepared && (
               <div
-                className="flex items-center gap-1 bg-primary/20 border border-primary/40 rounded-full px-1.5 sm:px-2 py-0.2"
+                className="flex items-center gap-1.5 bg-primary/20 border border-primary/40 rounded-full px-2 py-0.5"
                 onClick={(e) => e.stopPropagation()}
               >
-                <span className="font-label text-[8px] sm:text-[9px] text-primary font-bold uppercase tracking-wider">
-                  Prep {preparedCount > 1 ? `x${preparedCount}` : ''}
+                <span className="font-label text-[9px] text-primary font-bold uppercase tracking-widest">
+                  Prepared {preparedCount > 1 ? `x${preparedCount}` : ''}
                 </span>
                 {onRemovePrepare && (
                   <button
@@ -563,7 +563,7 @@ function SpellRow({
               </div>
             )}
             {spell.level > 0 && !isSla && slotTotal > 0 && (
-              <span className={`font-label text-[8px] sm:text-[9px] border px-1.5 py-0.2 rounded-md uppercase tabular-nums flex-shrink-0 ${
+              <span className={`font-label text-[10px] border px-2 py-0.5 rounded-md uppercase tabular-nums ${
                 slotRemaining > 0
                   ? 'text-primary bg-primary/10 border-primary/30'
                   : 'text-error bg-error/10 border-error/30'
@@ -571,40 +571,35 @@ function SpellRow({
                 Slots {slotRemaining}/{slotTotal}
               </span>
             )}
-            {spell.damageDice && (
-              <span className="font-label text-[8px] sm:text-[9px] text-amber-300 bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.2 rounded-md uppercase font-bold flex-shrink-0">
-                {spell.damageDice}{spell.damageBonus ? `+${spell.damageBonus}` : ''}
+            {isAlwaysPrepared && (
+              <span className="font-label text-[10px] text-secondary bg-secondary/10 border border-secondary/30 px-2 py-0.5 rounded-md uppercase">
+                Always Prepared
               </span>
             )}
             {spell.savingThrow && dc !== undefined && (
-              <span className="font-label text-[8px] sm:text-[9px] text-secondary bg-secondary/15 border border-secondary/30 px-1.5 py-0.2 rounded-md uppercase font-bold flex-shrink-0">
+              <span className="font-label text-[10px] text-secondary bg-secondary/15 border border-secondary/30 px-2 py-0.5 rounded-md uppercase font-bold">
                 DC {dc}
               </span>
             )}
-            {spell.spellResistance && (
-              <span className="font-label text-[8px] sm:text-[9px] text-tertiary bg-white/5 border border-white/10 px-1.5 py-0.2 rounded-md uppercase flex-shrink-0">
-                SR
-              </span>
-            )}
-            <span className="font-label text-[8px] sm:text-[9px] text-primary/80 bg-primary/10 border border-primary/20 px-1.5 py-0.2 rounded-md uppercase flex-shrink-0">
-              {spell.school}
+            <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-md uppercase">
+              {spell.school}{spell.subschool ? ` (${spell.subschool})` : ''}
             </span>
             {spell.attackType && (
-              <span className="font-label text-[8px] sm:text-[9px] text-error bg-error/15 border border-error/30 px-1.5 py-0.2 rounded-md uppercase flex-shrink-0">
-                {spell.attackType === 'meleeTouch' ? 'Touch' : spell.attackType === 'ray' ? 'Ray' : 'Ranged'}
+              <span className="font-label text-[10px] text-error bg-error/15 border border-error/30 px-2 py-0.5 rounded-md uppercase">
+                {spell.attackType === 'meleeTouch' ? 'Melee Touch' : spell.attackType === 'ray' ? 'Ray' : 'Ranged Touch'}
               </span>
             )}
           </div>
-          <p className="font-label text-[9px] sm:text-[10px] text-on-surface-variant mt-0.5 truncate">
+          <p className="font-label text-[10px] text-on-surface-variant mt-0.5">
             {spell.castingTime} · {spell.range} · {spell.duration}
           </p>
         </div>
-        <span className="material-symbols-outlined text-primary/50 group-open:rotate-180 transition-transform flex-shrink-0 text-sm sm:text-base">
+        <span className="material-symbols-outlined text-primary/50 group-open:rotate-180 transition-transform flex-shrink-0">
           expand_more
         </span>
       </summary>
 
-      <div className="bg-surface-container-low/90 px-3.5 pb-3.5 sm:px-6 sm:pb-6 pt-2.5 sm:pt-3 border-t border-white/5">
+      <div className="bg-surface-container-low/90 px-6 pb-6 pt-3 border-t border-white/5">
         <p className="font-body text-tertiary text-sm leading-relaxed mb-4">{spell.description}</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[10px] font-label uppercase tracking-widest">
           {spell.savingThrow && (

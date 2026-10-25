@@ -13,7 +13,6 @@ import {
   calcEffectiveArmorClass,
   calcEffectiveSaves,
   calcDetailedAcBreakdowns,
-  calcCombatManeuvers,
   getActiveActionRestrictions,
   evaluateVitalStatus,
 } from '../lib/stat-calc'
@@ -121,15 +120,6 @@ export function StatusPage() {
     session.conditions,
     activeBuffs
   )
-  const maneuvers = calcCombatManeuvers(
-    char,
-    effectiveAbilities,
-    session.conditions,
-    activeBuffs
-  )
-  const babString = char.baseAttackBonus.map((b) => (b >= 0 ? `+${b}` : `${b}`)).join('/')
-  const speedSub = 'Land speed'
-
   const initBreakdown = [
     { label: 'Base Init', value: char.initiativeBonus },
     ...(effectiveAbilities.deltas.dex !== 0
@@ -138,8 +128,8 @@ export function StatusPage() {
   ]
 
   return (
-    <div className="p-2.5 sm:p-4 md:p-8">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 md:gap-6">
+    <div className="p-4 md:p-8">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Tactical Restrictions Banner */}
         {restrictions.length > 0 && (
           <div className="lg:col-span-12">
@@ -149,7 +139,7 @@ export function StatusPage() {
 
         {/* Bonded Companion Quick Banner */}
         {char.companions && char.companions.length > 0 && (
-          <div className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm border border-primary/30 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm border border-primary/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-primary text-2xl">pets</span>
               <div>
@@ -163,7 +153,7 @@ export function StatusPage() {
             </div>
             <Link
               to="/companion"
-              className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-primary/10 border border-primary text-primary font-label text-xs uppercase tracking-widest rounded-xl hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all flex items-center gap-2 cursor-pointer"
+              className="px-4 py-2 bg-primary/10 border border-primary text-primary font-label text-xs uppercase tracking-widest rounded-xl hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all flex items-center gap-2 cursor-pointer"
             >
               Open Companion Sheet
               <span className="material-symbols-outlined text-xs">arrow_forward</span>
@@ -172,41 +162,22 @@ export function StatusPage() {
         )}
 
         {/* Vitality Core */}
-        <section className="lg:col-span-12 flex flex-col items-center justify-center bg-surface-container/90 backdrop-blur-sm p-4 sm:p-6 md:p-8 relative overflow-hidden group rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] transition-all">
+        <section className="lg:col-span-12 flex flex-col items-center justify-center bg-surface-container/90 backdrop-blur-sm p-8 relative overflow-hidden group rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] transition-all">
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent pointer-events-none" />
-          <div className="w-full flex items-center justify-between mb-2 md:mb-4">
-            <h2 className="font-headline text-secondary text-xs sm:text-sm md:text-lg uppercase tracking-widest neon-glow-accent font-bold">
-              Vitality Core
-            </h2>
-            <div className="flex items-center gap-1.5 md:gap-2">
-              <button
-                onClick={() => longRest(char.id, maxHp)}
-                className="px-2.5 py-1 sm:px-4 sm:py-1.5 bg-surface-container-highest border border-white/10 rounded-lg sm:rounded-xl font-label text-[10px] sm:text-xs text-secondary uppercase tracking-widest hover:bg-primary/10 hover:text-primary hover:border-primary/40 transition-all cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-xs align-middle mr-1">bedtime</span>
-                <span className="hidden sm:inline">Long </span>Rest
-              </button>
-              <button
-                onClick={() => setShowBuffModal(true)}
-                className="px-2.5 py-1 sm:px-4 sm:py-1.5 bg-primary/10 border border-primary/40 text-primary font-label text-[10px] sm:text-xs uppercase tracking-widest rounded-lg sm:rounded-xl hover:bg-primary/20 transition-all flex items-center gap-1 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-xs">tune</span>
-                Buffs
-              </button>
-            </div>
-          </div>
-
-          <div className="text-center my-1 md:my-2">
+          <h2 className="font-headline text-secondary text-lg mb-8 uppercase tracking-widest neon-glow-accent font-bold">
+            Vitality Core
+          </h2>
+          <div className="text-center">
             <div
-              className="font-label font-black text-primary text-5xl sm:text-6xl md:text-7xl leading-none"
-              style={{ textShadow: '0 0 25px rgba(0,240,255,0.35)' }}
+              className="font-label font-black text-primary"
+              style={{ fontSize: '5rem', lineHeight: 1, textShadow: '0 0 30px rgba(0,240,255,0.4)' }}
             >
               {hp}
             </div>
             {vitalStatus !== 'conscious' && (
-              <div className="mt-1.5">
+              <div className="mt-2">
                 <span
-                  className={`px-2.5 py-0.5 rounded-full font-label text-[10px] sm:text-xs uppercase tracking-widest font-black inline-flex items-center gap-1 ${
+                  className={`px-3 py-1 rounded-full font-label text-xs uppercase tracking-widest font-black inline-flex items-center gap-1.5 ${
                     vitalStatus === 'dead'
                       ? 'bg-black text-error border border-error/60 shadow-[0_0_15px_rgba(255,75,96,0.6)]'
                       : vitalStatus === 'dying'
@@ -214,24 +185,22 @@ export function StatusPage() {
                         : 'bg-amber-400 text-surface font-bold shadow-[0_0_10px_rgba(251,191,36,0.4)]'
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[10px] sm:text-xs">
+                  <span className="material-symbols-outlined text-xs">
                     {vitalStatus === 'dead' ? 'skull' : 'warning'}
                   </span>
                   {vitalStatus === 'dead' ? 'Dead' : vitalStatus === 'dying' ? 'Dying' : 'Disabled (0 HP)'}
                 </span>
               </div>
             )}
-            <div className="font-label text-tertiary tracking-widest uppercase mt-1 text-[10px] sm:text-xs flex items-center justify-center gap-1">
-              <span>Hit Points</span>
-              <span className="text-on-surface-variant font-bold">/ {maxHp}</span>
+            <div className="font-label text-tertiary tracking-widest uppercase mt-2 text-xs">
+              Current Hit Points
             </div>
+            <div className="font-label text-on-surface-variant text-sm mt-1">/ {maxHp}</div>
           </div>
-
-          {/* Quick HP Adjustment */}
-          <div className="mt-3 md:mt-6 flex items-center gap-2 sm:gap-3">
+          <div className="mt-8 flex items-center gap-3">
             <button
               onClick={() => adjustHp(char.id, -hpDelta, maxHp)}
-              className="px-3.5 py-2 sm:px-5 sm:py-2.5 bg-error-container text-on-error-container hover:brightness-125 transition-all active:scale-95 font-label text-xs sm:text-sm uppercase tracking-widest rounded-xl cursor-pointer font-bold"
+              className="px-5 py-3 bg-error-container text-on-error-container hover:brightness-125 transition-all active:scale-95 font-label text-sm uppercase tracking-widest rounded-xl cursor-pointer"
               aria-label="Decrease HP"
             >
               Damage
@@ -241,29 +210,27 @@ export function StatusPage() {
               min={1}
               value={hpDelta}
               onChange={(e) => setHpDelta(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-16 sm:w-20 bg-surface-container-high text-on-surface font-label text-lg sm:text-xl font-bold text-center py-1.5 sm:py-2 rounded-xl border border-white/10 focus:border-primary focus:outline-none"
+              className="w-20 bg-surface-container-high text-on-surface font-label text-xl font-bold text-center py-3 rounded-xl border border-white/10 focus:border-primary focus:outline-none"
             />
             <button
               onClick={() => adjustHp(char.id, hpDelta, maxHp)}
-              className="px-3.5 py-2 sm:px-5 sm:py-2.5 bg-primary-container text-on-primary-container hover:brightness-125 transition-all active:scale-95 font-label text-xs sm:text-sm uppercase tracking-widest rounded-xl cursor-pointer font-bold"
+              className="px-5 py-3 bg-primary-container text-on-primary-container hover:brightness-125 transition-all active:scale-95 font-label text-sm uppercase tracking-widest rounded-xl cursor-pointer"
               aria-label="Increase HP"
             >
               Heal
             </button>
           </div>
-
-          {/* Temp & Nonlethal status pills */}
-          <div className="mt-3 md:mt-4 flex flex-wrap justify-center gap-2 sm:gap-3">
+          <div className="mt-8 flex gap-4">
             {tempEdit === null ? (
               <button
                 onClick={() => setTempEdit(String(session.tempHp))}
-                className="px-3 py-1 bg-surface-container-lowest border border-white/10 rounded-lg sm:rounded-xl font-label text-[11px] sm:text-xs text-primary hover:bg-surface-container-high transition-all cursor-pointer"
+                className="px-4 py-2 bg-surface-container-lowest border border-white/10 rounded-xl font-label text-xs text-primary hover:bg-surface-container-high transition-all cursor-pointer"
               >
-                TEMP HP: <span className="font-bold">{session.tempHp}</span>
+                TEMP HP: {session.tempHp}
               </button>
             ) : (
-              <div className="flex items-center gap-1 bg-surface-container-lowest border border-white/10 rounded-lg sm:rounded-xl px-2.5 py-0.5">
-                <span className="font-label text-[11px] sm:text-xs text-primary">TEMP:</span>
+              <div className="flex items-center gap-1 bg-surface-container-lowest border border-white/10 rounded-xl px-3 py-1">
+                <span className="font-label text-xs text-primary">TEMP HP:</span>
                 <input
                   autoFocus
                   type="number"
@@ -275,20 +242,20 @@ export function StatusPage() {
                     if (e.key === 'Enter') commitTemp()
                     if (e.key === 'Escape') setTempEdit(null)
                   }}
-                  className="w-12 bg-transparent text-primary font-label text-xs text-center focus:outline-none border-b border-primary"
+                  className="w-14 bg-transparent text-primary font-label text-xs text-center focus:outline-none border-b border-primary"
                 />
               </div>
             )}
             {nlEdit === null ? (
               <button
                 onClick={() => setNlEdit(String(session.nonlethalDamage))}
-                className="px-3 py-1 bg-surface-container-lowest border border-white/10 rounded-lg sm:rounded-xl font-label text-[11px] sm:text-xs text-error hover:bg-surface-container-high transition-all cursor-pointer"
+                className="px-4 py-2 bg-surface-container-lowest border border-white/10 rounded-xl font-label text-xs text-error hover:bg-surface-container-high transition-all cursor-pointer"
               >
-                NONLETHAL: <span className="font-bold">{session.nonlethalDamage}</span>
+                NONLETHAL: {session.nonlethalDamage}
               </button>
             ) : (
-              <div className="flex items-center gap-1 bg-surface-container-lowest border border-white/10 rounded-lg sm:rounded-xl px-2.5 py-0.5">
-                <span className="font-label text-[11px] sm:text-xs text-error">NL:</span>
+              <div className="flex items-center gap-1 bg-surface-container-lowest border border-white/10 rounded-xl px-3 py-1">
+                <span className="font-label text-xs text-error">NONLETHAL:</span>
                 <input
                   autoFocus
                   type="number"
@@ -300,15 +267,31 @@ export function StatusPage() {
                     if (e.key === 'Enter') commitNl()
                     if (e.key === 'Escape') setNlEdit(null)
                   }}
-                  className="w-12 bg-transparent text-error font-label text-xs text-center focus:outline-none border-b border-error"
+                  className="w-14 bg-transparent text-error font-label text-xs text-center focus:outline-none border-b border-error"
                 />
               </div>
             )}
           </div>
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              onClick={() => longRest(char.id, maxHp)}
+              className="px-6 py-2.5 bg-surface-container-highest border border-white/10 rounded-xl font-label text-xs text-secondary uppercase tracking-widest hover:bg-primary/10 hover:text-primary hover:border-primary/40 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-sm align-middle mr-1">bedtime</span>
+              Long Rest
+            </button>
+            <button
+              onClick={() => setShowBuffModal(true)}
+              className="px-5 py-2.5 bg-primary/10 border border-primary/40 text-primary font-label text-xs uppercase tracking-widest rounded-xl hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-sm">tune</span>
+              Buffs & Presets
+            </button>
+          </div>
         </section>
 
-        {/* Defense Grid: Expanded 3x3 with AC, CMD, CMB, Saves, Init, BAB, Speed */}
-        <section className="lg:col-span-6 bg-surface-container/90 backdrop-blur-sm p-3 sm:p-4 md:p-5 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all grid grid-cols-3 gap-2 sm:gap-2.5 md:gap-3">
+        {/* Defense Grid */}
+        <section className="lg:col-span-6 bg-surface-container/90 backdrop-blur-sm p-5 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all grid grid-cols-2 gap-4">
           <DefenseCard
             label="Armor Class"
             value={effectiveAc.total}
@@ -316,29 +299,26 @@ export function StatusPage() {
             breakdown={detailedAc.totalBreakdown}
             notes={effectiveAc.notes}
             showSign={false}
-            sub={`T: ${effectiveAc.touch} | FF: ${effectiveAc.flatFooted}`}
+            sub={`TOUCH: ${effectiveAc.touch} | FLAT: ${effectiveAc.flatFooted}${
+              effectiveAc.notes.length > 0 ? ` (${effectiveAc.notes.join(', ')})` : ''
+            }`}
           />
           <DefenseCard
-            label="CMD"
-            value={maneuvers.cmd}
-            breakdown={maneuvers.breakdownCmd}
-            showSign={false}
-            sub={`Touch AC: ${effectiveAc.touch}`}
-            color="secondary"
-          />
-          <DefenseCard
-            label="CMB"
-            value={maneuvers.cmb}
-            breakdown={maneuvers.breakdownCmb}
-            sub="BAB+STR+Sz"
+            label="Initiative"
+            value={effectiveInit}
+            baseValue={char.initiativeBonus}
+            breakdown={initBreakdown}
+            sub={`DEX: ${effectiveAbilities.mods.dex >= 0 ? `+${effectiveAbilities.mods.dex}` : effectiveAbilities.mods.dex} | MISC: +${
+              char.initiativeBonus - abilityMod(char.abilities.dex)
+            }`}
             color="primary"
             onRoll={() =>
               openRoll({
                 diceType: 20,
                 count: 1,
-                modifier: maneuvers.cmb,
-                label: 'Combat Maneuver Bonus (CMB)',
-                breakdown: maneuvers.breakdownCmb,
+                modifier: effectiveInit,
+                label: 'Initiative',
+                breakdown: initBreakdown,
               })
             }
           />
@@ -399,41 +379,10 @@ export function StatusPage() {
               })
             }
           />
-          <DefenseCard
-            label="Initiative"
-            value={effectiveInit}
-            baseValue={char.initiativeBonus}
-            breakdown={initBreakdown}
-            sub={`DEX: ${effectiveAbilities.mods.dex >= 0 ? `+${effectiveAbilities.mods.dex}` : effectiveAbilities.mods.dex}`}
-            color="primary"
-            onRoll={() =>
-              openRoll({
-                diceType: 20,
-                count: 1,
-                modifier: effectiveInit,
-                label: 'Initiative',
-                breakdown: initBreakdown,
-              })
-            }
-          />
-          <DefenseCard
-            label="BAB"
-            value={char.baseAttackBonus[0] ?? 0}
-            showSign={true}
-            sub={babString}
-            color="primary"
-          />
-          <DefenseCard
-            label="Speed"
-            value={`${char.speed} ft`}
-            showSign={false}
-            sub={speedSub}
-            color="secondary"
-          />
         </section>
 
-        {/* Ability Score Grid: Compact 3x2 with dense cards */}
-        <section className="lg:col-span-6 bg-surface-container/90 backdrop-blur-sm p-3 sm:p-4 md:p-5 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all grid grid-cols-3 gap-2 sm:gap-2.5 md:gap-3">
+        {/* Ability Score Grid */}
+        <section className="lg:col-span-6 bg-surface-container/90 backdrop-blur-sm p-5 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all grid grid-cols-3 gap-3">
           {ABILITY_KEYS.map((key) => {
             const baseScore = char.abilities[key]
             const effScore = effectiveAbilities.scores[key]
@@ -452,37 +401,33 @@ export function StatusPage() {
                     breakdown: effectiveAbilities.breakdowns[key],
                   })
                 }
-                className="bg-surface-container hover:bg-surface-container-high rounded-xl p-2 sm:p-3 md:p-3.5 transition-all cursor-pointer group relative border border-white/5 hover:border-primary/40 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)] text-left"
+                className="bg-surface-container hover:bg-surface-container-high rounded-xl p-4 transition-all cursor-pointer group relative border border-white/5 hover:border-primary/40 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)] text-left"
               >
-                <div className="flex justify-between items-center mb-0.5">
-                  <p className="font-label text-[9px] sm:text-[10px] text-tertiary uppercase tracking-wider font-bold">
+                <div className="flex justify-between items-center mb-1">
+                  <p className="font-label text-[10px] text-tertiary uppercase tracking-widest font-bold">
                     {key.toUpperCase()}
                   </p>
-                  {delta !== 0 ? (
+                  {delta !== 0 && (
                     <span
-                      className={`font-label text-[9px] sm:text-[10px] font-bold ${
+                      className={`font-label text-[10px] font-bold ${
                         delta > 0 ? 'text-primary' : 'text-error'
                       }`}
                     >
                       {delta > 0 ? `+${delta}` : delta}
                     </span>
-                  ) : (
-                    <span className="material-symbols-outlined text-[10px] text-tertiary group-hover:text-primary transition-colors">
-                      casino
-                    </span>
                   )}
                 </div>
                 <p
-                  className={`font-label text-xl sm:text-2xl md:text-3xl font-black leading-tight ${
+                  className={`font-label text-3xl font-black ${
                     delta < 0 ? 'text-error' : delta > 0 ? 'text-primary' : 'text-on-surface'
                   }`}
                 >
                   {mod >= 0 ? `+${mod}` : mod}
                 </p>
-                <p className="font-label text-on-surface-variant text-[9px] sm:text-xs">
+                <p className="font-label text-on-surface-variant text-xs">
                   {effScore}
                   {effScore !== baseScore && (
-                    <span className="opacity-50 ml-0.5">({baseScore})</span>
+                    <span className="opacity-50 ml-1">({baseScore})</span>
                   )}
                 </p>
               </button>
@@ -492,22 +437,22 @@ export function StatusPage() {
 
         {/* Spell Slots */}
         {spellAvailability.levels.some((level) => level.total > 0) && (
-          <section className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-3.5 sm:p-5 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)]">
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-              <h2 className="font-headline text-secondary text-xs sm:text-sm uppercase tracking-widest neon-glow-accent font-bold">
+          <section className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
                 Spell Slots
               </h2>
               <span className="font-label text-[10px] text-tertiary uppercase tracking-wider tabular-nums">
                 {spellAvailability.remainingSlots}/{spellAvailability.totalSlots} remaining
               </span>
             </div>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
+            <div className="flex flex-wrap gap-3">
               {spellAvailability.levels.filter((level) => level.total > 0).map((level) => {
                 const spent = level.total - level.remaining
                 return (
                   <div
                     key={level.level}
-                    className="rounded-xl border border-white/10 bg-surface-container-high/40 px-2.5 py-1.5 sm:px-3 sm:py-2 hover:border-primary/30 transition-all flex flex-wrap items-center gap-1"
+                    className="rounded-xl border border-white/10 bg-surface-container-high/40 px-3.5 py-2 hover:border-primary/30 transition-all flex flex-wrap items-center gap-1"
                     role="group"
                     aria-label={`Level ${level.level} Spells: ${level.remaining} of ${level.total} remaining`}
                   >
@@ -515,9 +460,9 @@ export function StatusPage() {
                       <span className="px-1 py-0.5 rounded bg-white/5 border border-white/10 text-secondary text-[8px] font-bold">
                         SLOT
                       </span>
-                      <span className="text-tertiary font-semibold">L{level.level}</span>
+                      <span className="text-tertiary font-semibold">LEVEL {level.level}</span>
                     </span>
-                    <div className="flex flex-wrap items-center gap-0.5">
+                    <div className="flex flex-wrap items-center gap-1">
                       {Array.from({ length: level.total }).map((_, index) => {
                         const isSpent = index < spent
                         return (
@@ -531,7 +476,7 @@ export function StatusPage() {
                             }
                             aria-label={`${isSpent ? 'Recover' : 'Spend'} level ${level.level} slot ${index + 1} of ${level.total}`}
                             aria-pressed={isSpent}
-                            className="min-h-[40px] min-w-[36px] sm:min-h-[44px] sm:min-w-[44px] flex items-center justify-center cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                            className="min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
                           >
                             <span
                               className={`block transition-all group-hover:scale-110 ${
@@ -556,15 +501,15 @@ export function StatusPage() {
 
         {/* Daily Resources */}
         {char.dailyResources.length > 0 && (
-          <section className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-3.5 sm:p-5 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all">
-            <h2 className="font-headline text-secondary text-xs sm:text-sm uppercase tracking-widest mb-3 neon-glow-accent font-bold">
+          <section className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all">
+            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent font-bold">
               Daily Resources
             </h2>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
+            <div className="flex flex-wrap gap-3">
               {char.dailyResources.map((res) => (
                 <div
                   key={res.id}
-                  className="rounded-xl border border-white/10 bg-surface-container-high/40 px-3 py-1.5 sm:px-3.5 sm:py-2 hover:border-primary/30 transition-all"
+                  className="rounded-xl border border-white/10 bg-surface-container-high/40 px-3.5 py-2 hover:border-primary/30 transition-all"
                 >
                   <DailyResourcePips
                     characterId={char.id}
@@ -578,21 +523,21 @@ export function StatusPage() {
         )}
 
         {/* Conditions */}
-        <section className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-3.5 sm:p-5 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-headline text-secondary text-xs sm:text-sm uppercase tracking-widest neon-glow-accent font-bold">
+        <section className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
               Conditions
             </h2>
             <button
               onClick={() => setShowBuffModal(true)}
-              className="font-label text-xs uppercase tracking-wider text-primary hover:text-white flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+              className="font-label text-xs uppercase tracking-wider text-primary hover:text-white flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
             >
               <span className="material-symbols-outlined text-sm">tune</span>
-              Full Manager
+              Open Full Manager
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          <div className="flex flex-wrap gap-2">
             {ALL_CONDITIONS.map((condition) => {
               const active = session.conditions.includes(condition)
               const info = CONDITION_INFO[condition]
@@ -600,7 +545,7 @@ export function StatusPage() {
                 <div key={condition} className="relative group flex items-center gap-1">
                   <button
                     onClick={() => toggleCondition(char.id, condition)}
-                    className={`px-2.5 py-1 sm:px-3 sm:py-1.5 font-label text-[10px] sm:text-xs uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 font-label text-xs uppercase tracking-widest rounded-lg transition-all cursor-pointer ${
                       active
                         ? 'bg-error text-white shadow-[0_0_12px_rgba(255,75,96,0.4)] font-bold border border-error'
                         : 'bg-surface-container-high text-tertiary hover:text-error hover:bg-error-container/20 border border-white/5'
@@ -616,9 +561,9 @@ export function StatusPage() {
                       )
                     }
                     aria-label={`Inspect condition ${condition}`}
-                    className="min-h-[32px] min-w-[32px] sm:min-h-[36px] sm:min-w-[36px] rounded-lg border border-white/10 text-tertiary hover:text-primary hover:border-primary/40 transition-colors cursor-pointer flex items-center justify-center"
+                    className="min-h-[36px] min-w-[36px] rounded-lg border border-white/10 text-tertiary hover:text-primary hover:border-primary/40 transition-colors cursor-pointer flex items-center justify-center"
                   >
-                    <span className="material-symbols-outlined text-xs sm:text-sm">info</span>
+                    <span className="material-symbols-outlined text-sm">info</span>
                   </button>
                   {/* Hover tooltip */}
                   <div className="pointer-events-none absolute bottom-full left-0 mb-2 w-64 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
@@ -677,7 +622,7 @@ function DefenseCard({
   onRoll,
 }: {
   label: string
-  value: number | string
+  value: number
   baseValue?: number
   sub: string
   color?: string
@@ -687,15 +632,10 @@ function DefenseCard({
   onRoll?: () => void
 }) {
   const textColor = COLOR_MAP[color] ?? 'text-on-surface'
-  const displayVal =
-    typeof value === 'number'
-      ? showSign && value >= 0
-        ? `+${value}`
-        : `${value}`
-      : value
+  const displayVal = showSign && value >= 0 ? `+${value}` : `${value}`
 
-  const isBuffed = typeof value === 'number' && baseValue !== undefined && value > baseValue
-  const isPenalized = typeof value === 'number' && baseValue !== undefined && value < baseValue
+  const isBuffed = baseValue !== undefined && value > baseValue
+  const isPenalized = baseValue !== undefined && value < baseValue
   const valColor = isBuffed
     ? 'text-[#00daf3]'
     : isPenalized
@@ -704,34 +644,23 @@ function DefenseCard({
 
   const cardContent = (
     <>
-      <div className="flex items-center justify-between gap-1 mb-0.5">
-        <p className={`font-label text-[9px] sm:text-[10px] uppercase tracking-wider ${textColor} font-bold truncate`}>
-          {label}
-        </p>
-        {onRoll && (
-          <span className="material-symbols-outlined text-[10px] sm:text-xs text-tertiary group-hover:text-primary transition-colors flex-shrink-0">
-            casino
-          </span>
-        )}
-      </div>
-      <p className={`font-label text-xl sm:text-2xl md:text-3xl font-black ${valColor} leading-tight`}>
+      <p className={`font-label text-[10px] uppercase tracking-widest ${textColor} font-bold`}>{label}</p>
+      <p className={`font-label text-4xl font-black ${valColor}`}>
         {displayVal}
       </p>
-      <p className="font-label text-[8px] sm:text-[9px] text-on-surface-variant mt-0.5 font-mono truncate" title={sub}>
-        {sub}
-      </p>
+      <p className="font-label text-[10px] text-on-surface-variant mt-1 font-mono">{sub}</p>
     </>
   )
 
   const card = onRoll ? (
     <button
       onClick={onRoll}
-      className="bg-surface-container hover:bg-surface-container-high rounded-xl border border-white/5 hover:border-primary/40 hover:shadow-[0_0_15px_rgba(0,240,255,0.2)] p-2.5 sm:p-3 md:p-3.5 transition-all cursor-pointer group relative w-full text-left"
+      className="bg-surface-container hover:bg-surface-container-high rounded-xl border border-white/5 hover:border-primary/40 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)] p-5 transition-all cursor-pointer group relative w-full text-left"
     >
       {cardContent}
     </button>
   ) : (
-    <div className="bg-surface-container rounded-xl border border-white/5 p-2.5 sm:p-3 md:p-3.5 relative w-full">
+    <div className="bg-surface-container rounded-xl border border-white/5 p-5 relative w-full">
       {cardContent}
     </div>
   )

@@ -45,23 +45,23 @@ export function InventoryPage() {
     .filter(({ items }) => items.length > 0)
 
   return (
-    <div className="p-2.5 sm:p-4 md:p-8 lg:p-12">
+    <div className="p-6 md:p-12 lg:p-16">
       {/* Header */}
-      <div className="max-w-5xl mx-auto mb-3 sm:mb-6 md:mb-8">
-        <h1 className="font-headline text-xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-on-surface mb-1 sm:mb-2 tracking-tighter uppercase">
+      <div className="max-w-5xl mx-auto mb-12">
+        <h1 className="font-headline text-5xl md:text-7xl font-bold text-on-surface mb-4 tracking-tighter uppercase">
           Inventory & <span className="text-secondary neon-glow-accent">Gear</span>
         </h1>
-        <div className="h-1 w-16 sm:w-24 bg-gradient-to-r from-primary to-secondary rounded-full mb-2 sm:mb-4" />
-        <p className="font-body text-tertiary text-xs sm:text-base max-w-2xl leading-relaxed">
+        <div className="h-1 w-24 bg-gradient-to-r from-primary to-secondary rounded-full mb-8" />
+        <p className="font-body text-tertiary text-lg max-w-2xl leading-relaxed">
           Equipment carried by {char.name}.
         </p>
       </div>
 
-      <div className="max-w-5xl mx-auto space-y-4 sm:space-y-8 md:space-y-10">
+      <div className="max-w-5xl mx-auto space-y-12">
         {/* Equipment slot grid */}
         <section>
-          <div className="flex items-center gap-2.5 sm:gap-4 mb-2.5 sm:mb-4">
-            <h2 className="font-headline text-base sm:text-xl md:text-2xl text-white font-bold uppercase tracking-tight">Equipment</h2>
+          <div className="flex items-center gap-4 mb-6">
+            <h2 className="font-headline text-2xl text-white font-bold uppercase tracking-tight">Equipment</h2>
             <div className="flex-1 h-px bg-white/10" />
           </div>
           <EquipmentSlotGrid
@@ -73,8 +73,8 @@ export function InventoryPage() {
 
         {/* Coin purse */}
         <section>
-          <div className="flex items-center gap-2.5 sm:gap-4 mb-2.5 sm:mb-4">
-            <h2 className="font-headline text-base sm:text-xl md:text-2xl text-white font-bold uppercase tracking-tight">Coin Purse</h2>
+          <div className="flex items-center gap-4 mb-6">
+            <h2 className="font-headline text-2xl text-white font-bold uppercase tracking-tight">Coin Purse</h2>
             <div className="flex-1 h-px bg-white/10" />
           </div>
           <CoinPurseWidget
@@ -85,20 +85,20 @@ export function InventoryPage() {
 
         {/* Item categories */}
         {itemsByCategory.length === 0 ? (
-          <p className="font-body text-tertiary italic text-xs sm:text-sm">No items in inventory.</p>
+          <p className="font-body text-tertiary italic">No items in inventory.</p>
         ) : (
           itemsByCategory.map(({ cat, items }) => (
             <section key={cat}>
-              <div className="flex items-center gap-2 sm:gap-4 mb-2.5 sm:mb-4">
-                <h2 className="font-headline text-base sm:text-xl md:text-2xl text-white font-bold uppercase tracking-tight">
+              <div className="flex items-center gap-4 mb-6">
+                <h2 className="font-headline text-2xl text-white font-bold uppercase tracking-tight">
                   {CATEGORY_LABELS[cat]}
                 </h2>
                 <div className="flex-1 h-px bg-white/10" />
-                <span className="font-label text-[10px] sm:text-xs text-primary/80 bg-primary/10 border border-primary/20 px-2 sm:px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                <span className="font-label text-xs text-primary/80 bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                   {items.length} item{items.length !== 1 ? 's' : ''}
                 </span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {items.map((item) => {
                   const qty = session.itemQuantities?.[item.id] ?? item.quantity
                   const isItemEquipped = session.equippedItemIds

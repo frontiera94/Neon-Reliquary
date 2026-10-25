@@ -25,7 +25,7 @@ export function MainLayout() {
         <TopBar />
         <div className="flex">
           <Sidebar />
-          <main className="flex-1 md:ml-64 pb-14 md:pb-0">
+          <main className="flex-1 md:ml-64 pb-20 md:pb-0">
             <Outlet />
           </main>
         </div>

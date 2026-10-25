@@ -114,7 +114,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
   const companionHpPct = companion ? Math.max(0, Math.min(100, (companionHp / companion.maxHp) * 100)) : 0
 
   return (
-    <div className={embedded ? 'space-y-3' : 'space-y-3 px-2.5 py-3 sm:px-4 sm:py-4 md:px-8 md:py-6'}>
+    <div className={embedded ? 'space-y-4' : 'space-y-4 px-4 py-4 md:px-8 md:py-6'}>
       {/* Restrictions only appear when a condition actually limits actions. */}
       <ActionAlertBanner restrictions={restrictions} />
 
@@ -447,10 +447,10 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
         </div>
 
         {/* Support column — state you need to read, not act on constantly. */}
-        <aside className="space-y-3 sm:space-y-4 xl:col-span-5">
+        <aside className="space-y-4 xl:col-span-5">
           <section
             aria-labelledby="buffs-heading"
-            className="rounded-2xl border border-white/10 bg-surface-container/70 p-3 sm:p-4 backdrop-blur-sm"
+            className="rounded-2xl border border-white/10 bg-surface-container/70 p-4 backdrop-blur-sm"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
@@ -463,14 +463,14 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
               </div>
               <button
                 onClick={() => setShowBuffModal(true)}
-                className="flex min-h-[30px] sm:min-h-[32px] items-center gap-1.5 rounded-lg border border-primary/25 px-2.5 font-label text-[10px] uppercase tracking-wider text-primary transition-colors hover:border-primary/60 hover:bg-primary/10 cursor-pointer"
+                className="flex min-h-[32px] items-center gap-1.5 rounded-lg border border-primary/25 px-2.5 font-label text-[10px] uppercase tracking-wider text-primary transition-colors hover:border-primary/60 hover:bg-primary/10 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">tune</span>
                 Manage
               </button>
             </div>
 
-            <div className="mt-2.5 grid grid-cols-2 xl:grid-cols-1 gap-1.5">
+            <div className="mt-3 space-y-1.5">
               {allBuffs.map((buff) => {
                 const isActive = activeBuffIds.includes(buff.id)
                 const hex =
@@ -484,7 +484,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                     onClick={() => toggleBuff(char.id, buff.id)}
                     aria-pressed={isActive}
                     title={isActive ? `Disable ${buff.name}` : `Enable ${buff.name}`}
-                    className="flex w-full items-center gap-2 rounded-xl border bg-surface-container/80 px-2 py-1.5 sm:px-2.5 sm:py-2 text-left backdrop-blur-sm transition-all hover:bg-surface-container-high active:scale-[0.99] cursor-pointer"
+                    className="flex w-full items-center gap-2.5 rounded-xl border bg-surface-container/80 px-2.5 py-2 text-left backdrop-blur-sm transition-all hover:bg-surface-container-high active:scale-[0.99] cursor-pointer"
                     style={
                       isActive
                         ? {

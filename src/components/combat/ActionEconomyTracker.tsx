@@ -118,11 +118,11 @@ export function ActionEconomyTracker({
     return (
       <section
         aria-label="Round action economy"
-        className="rounded-2xl border border-white/10 bg-surface-container/80 px-2.5 py-2 backdrop-blur-sm"
+        className="rounded-2xl border border-white/10 bg-surface-container/80 px-3 py-2.5 backdrop-blur-sm"
       >
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Round + remaining actions */}
-          <div className="order-1 flex items-center gap-2 pr-2.5 md:border-r md:border-white/10">
+          <div className="order-1 flex items-center gap-2.5 pr-3 md:border-r md:border-white/10">
             <span
               data-testid="round-counter"
               className="font-label text-xs font-bold uppercase tracking-wider text-white"
@@ -130,7 +130,7 @@ export function ActionEconomyTracker({
               Round <span className="text-primary">{currentRound}</span>
             </span>
             <span className="font-label text-[10px] text-tertiary">
-              {spentCount === 0 ? 'All ready' : `${5 - spentCount}/5 ready`}
+              {spentCount === 0 ? 'All actions ready' : `${5 - spentCount}/5 ready`}
             </span>
           </div>
 
@@ -141,23 +141,23 @@ export function ActionEconomyTracker({
               onClick={handleResetRound}
               aria-label="Reset Round"
               title="Reset combat to Round 1"
-              className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl border border-white/10 bg-surface-container-high text-tertiary transition-colors hover:border-amber-400/40 hover:text-amber-300 active:scale-95 cursor-pointer"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-surface-container-high text-tertiary transition-colors hover:border-amber-400/40 hover:text-amber-300 active:scale-95 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm sm:text-base">restart_alt</span>
+              <span className="material-symbols-outlined text-base">restart_alt</span>
             </button>
             <button
               type="button"
               onClick={handleNewTurn}
               title="Reset actions and advance to the next round"
-              className="flex min-h-[32px] sm:min-h-[36px] items-center gap-1 sm:gap-1.5 rounded-xl border border-primary/40 bg-primary/15 px-2.5 py-1 sm:px-3 sm:py-1.5 font-label text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-primary transition-all hover:bg-primary/25 hover:text-white active:scale-95 cursor-pointer"
+              className="flex min-h-[40px] items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/15 px-3 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider text-primary transition-all hover:bg-primary/25 hover:text-white active:scale-95 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm sm:text-base">refresh</span>
+              <span className="material-symbols-outlined text-base">refresh</span>
               <span>New Turn</span>
             </button>
           </div>
 
-          {/* Action slots: 5-column compact grid on phones, inline row on desktop */}
-          <div className="order-3 grid w-full grid-cols-5 gap-1 md:order-2 md:flex md:min-w-0 md:flex-1 md:flex-wrap md:items-center">
+          {/* Action slots: 3-up grid on phones, inline row on desktop */}
+          <div className="order-3 grid w-full grid-cols-3 gap-1.5 md:order-2 md:flex md:min-w-0 md:flex-1 md:flex-wrap md:items-center">
             {actions.map((act) => {
               const isSpent = Boolean(economy[act.key])
               return (
@@ -167,20 +167,20 @@ export function ActionEconomyTracker({
                   onClick={() => handleToggle(act.key)}
                   aria-pressed={isSpent}
                   title={`${act.label}: ${act.sublabel}`}
-                  className={`group flex min-h-[36px] flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1.5 rounded-xl border px-1 py-1 sm:px-2 sm:py-1.5 font-label text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.97] md:justify-start md:px-2.5 ${
+                  className={`group flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.97] md:justify-start md:px-2.5 ${
                     isSpent
                       ? 'border-white/5 bg-surface-container-lowest/50 text-tertiary/50 line-through'
                       : 'border-white/10 bg-surface-container-high text-on-surface hover:border-primary/40 hover:text-primary'
                   }`}
                 >
                   <span
-                    className={`material-symbols-outlined text-sm sm:text-base ${
+                    className={`material-symbols-outlined text-base ${
                       isSpent ? 'text-tertiary/40' : 'text-primary'
                     }`}
                   >
                     {isSpent ? 'check' : act.icon}
                   </span>
-                  <span className="truncate max-w-full text-[9px] sm:text-[11px]">{act.label}</span>
+                  <span>{act.label}</span>
                   <span className="sr-only">{isSpent ? 'Spent' : 'Ready'}</span>
                 </button>
               )
@@ -192,9 +192,9 @@ export function ActionEconomyTracker({
   }
 
   return (
-    <div className="bg-surface-container/90 backdrop-blur-sm p-3.5 sm:p-5 rounded-2xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.35)] space-y-3 sm:space-y-4">
+    <div className="bg-surface-container/90 backdrop-blur-sm p-5 rounded-2xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.35)] space-y-4">
       {/* Header bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-1 border-b border-white/5">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-1 border-b border-white/5">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shadow-[0_0_12px_rgba(0,240,255,0.2)]">
             <span className="material-symbols-outlined text-xl">hourglass_empty</span>
