@@ -20,7 +20,6 @@ import { BuffManagerModal } from '../components/combat/BuffManagerModal'
 import { CombatManeuversPanel } from '../components/combat/CombatManeuversPanel'
 import { FullAttackModal } from '../components/combat/FullAttackModal'
 import { CombatSpellsSection } from '../components/combat/CombatSpellsSection'
-import { ActionEconomyTracker } from '../components/combat/ActionEconomyTracker'
 import { ContextualCombatFeatures, DefensiveBadges } from '../components/combat/ContextualCombatFeatures'
 import { DailyResourcePips } from '../components/combat/BuffResourceToggle'
 import { buffModifierTokens, modifierColor } from '../lib/buff-summary'
@@ -41,10 +40,6 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     spendSpellSlot,
     recoverSpellSlot,
     spendResource,
-    toggleRoundAction,
-    resetRoundActions,
-    nextRound,
-    resetCombatRound,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
 
@@ -117,17 +112,6 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     <div className={embedded ? 'space-y-4' : 'space-y-4 px-4 py-4 md:px-8 md:py-6'}>
       {/* Restrictions only appear when a condition actually limits actions. */}
       <ActionAlertBanner restrictions={restrictions} />
-
-      {/* Turn strip: round, five action slots, turn controls. */}
-      <ActionEconomyTracker
-        compact
-        actionEconomy={session.actionEconomy}
-        currentRound={session.currentRound}
-        onToggleAction={(action) => toggleRoundAction(char.id, action)}
-        onResetActions={() => resetRoundActions(char.id)}
-        onNewTurn={() => nextRound(char.id)}
-        onResetRound={() => resetCombatRound(char.id)}
-      />
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12 xl:items-start">
         {/* Primary column — what you do on your turn. */}
