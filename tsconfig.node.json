@@ -22,5 +22,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["vite.config.ts", "api/sessions.ts"]
+  "include": ["vite.config.ts", "api/sessions.ts", "pwa-assets.config.ts"]
 }
