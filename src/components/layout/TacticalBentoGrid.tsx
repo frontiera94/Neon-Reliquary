@@ -389,6 +389,7 @@ function BentoLibraryColumn() {
   const addCustomBuff = useSessionStore((s) => s.addCustomBuff)
   const spendSpellSlot = useSessionStore((s) => s.spendSpellSlot)
   const recoverSpellSlot = useSessionStore((s) => s.recoverSpellSlot)
+  const spendPreparedSpell = useSessionStore((s) => s.spendPreparedSpell)
   const spendResource = useSessionStore((s) => s.spendResource)
   const openInspector = useInspectorStore((s) => s.openInspector)
   const [tab, setTab] = useState<'spells' | 'features'>('spells')
@@ -413,7 +414,10 @@ function BentoLibraryColumn() {
       return
     }
     if (!availability.isCastable(spell)) return
-    if (availability.slotCost(spell) > 0) {
+    const uses = availability.spellUses(spell)
+    if (uses.kind === 'prepared' || uses.kind === 'domain') {
+      spendPreparedSpell(char.id, spell.id, uses.total)
+    } else if (uses.kind === 'spontaneous') {
       const level = availability.getLevel(spell.level)
       if (level) spendSpellSlot(char.id, spell.level, level.total)
     }
@@ -464,17 +468,22 @@ function BentoLibraryColumn() {
               <div className="flex gap-0.5">
                 {Array.from({ length: level.total }).map((_, index) => {
                   const isSpent = index >= level.remaining
+                  const isSpontaneous = availability.profile.mode === 'spontaneous'
                   return (
                     <button
                       key={index}
                       type="button"
-                      onClick={() =>
-                        isSpent
-                          ? recoverSpellSlot(char.id, level.level)
-                          : spendSpellSlot(char.id, level.level, level.total)
-                      }
+                      disabled={!isSpontaneous}
+                      onClick={() => {
+                        if (!isSpontaneous) return
+                        if (isSpent) recoverSpellSlot(char.id, level.level)
+                        else spendSpellSlot(char.id, level.level, level.total)
+                      }}
+                      title={!isSpontaneous ? 'Prepared spells have dedicated uses' : undefined}
                       aria-label={`Spell slot level ${level.level} ${index + 1}`}
-                      className={`w-2.5 h-4 rounded-sm border transition-colors cursor-pointer ${
+                      className={`w-2.5 h-4 rounded-sm border transition-colors ${
+                        isSpontaneous ? 'cursor-pointer' : 'cursor-default'
+                      } ${
                         isSpent
                           ? 'border-white/15 bg-white/5'
                           : 'border-primary/50 bg-primary shadow-[0_0_5px_rgba(0,240,255,0.45)]'

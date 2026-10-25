@@ -169,8 +169,9 @@ describe('CombatSpellsSection', () => {
     expect(mockOpenRoll).toHaveBeenCalled()
   })
 
-  it('disables the Cast button when all slots for that level are spent', () => {
+  it('disables the Cast button when all slots for that level are spent (spontaneous)', () => {
     renderComponent({
+      charClass: 'Inquisitor',
       spentSpellSlots: { 1: 3 }, // all 3 slots spent
     })
 
@@ -183,8 +184,24 @@ describe('CombatSpellsSection', () => {
     expect(mockOnSpendSlot).not.toHaveBeenCalled()
   })
 
-  it('allows restoring a spent slot (+1 slot) from the spell card', () => {
+  it('disables the Cast button when prepared uses are spent (prepared casters)', () => {
+    const mockOnSpendPreparedSpell = vi.fn()
     renderComponent({
+      spentPreparedSpells: { 'spell-shocking-grasp': 1 },
+      onSpendPreparedSpell: mockOnSpendPreparedSpell,
+    })
+
+    const castBtn = screen.getByRole('button', { name: /cast shocking grasp/i })
+    expect(castBtn).toBeDisabled()
+    expect(castBtn).toHaveTextContent(/no uses/i)
+
+    fireEvent.click(castBtn)
+    expect(mockOnSpendPreparedSpell).not.toHaveBeenCalled()
+  })
+
+  it('allows restoring a spent slot (+1 slot) from the spell card for spontaneous casters', () => {
+    renderComponent({
+      charClass: 'Inquisitor',
       spentSpellSlots: { 1: 1 }, // 1 slot spent
     })
 
@@ -196,8 +213,23 @@ describe('CombatSpellsSection', () => {
     expect(mockOnRecoverSlot).toHaveBeenCalledWith(1)
   })
 
-  it('allows restoring a spent slot (+1) from the level filter bar', () => {
+  it('allows restoring a spent prepared use (+1 use) from the spell card for prepared casters', () => {
+    const mockOnRecoverPrepared = vi.fn()
     renderComponent({
+      spentPreparedSpells: { 'spell-shocking-grasp': 1 },
+      onRecoverPreparedSpell: mockOnRecoverPrepared,
+    })
+
+    const cardRestoreBtn = screen.getByRole('button', { name: /ripristina uso per shocking grasp/i })
+    expect(cardRestoreBtn).toBeInTheDocument()
+
+    fireEvent.click(cardRestoreBtn)
+    expect(mockOnRecoverPrepared).toHaveBeenCalledWith('spell-shocking-grasp')
+  })
+
+  it('allows restoring a spent slot (+1) from the level filter bar for spontaneous casters', () => {
+    renderComponent({
+      charClass: 'Inquisitor',
       spentSpellSlots: { 1: 2 }, // 2 slots spent
     })
 
@@ -208,6 +240,33 @@ describe('CombatSpellsSection', () => {
     // Click the level bar restore button
     fireEvent.click(levelBarRestoreBtn)
     expect(mockOnRecoverSlot).toHaveBeenCalledWith(1)
+  })
+
+  it('activates buff and consumes use when casting a buff candidate spell', () => {
+    const mockOnSpendPrepared = vi.fn()
+    const mockOnToggleBuff = vi.fn()
+    const shieldBuff = {
+      id: 'buff-shield',
+      name: 'Shield',
+      active: false,
+      attackMod: 0,
+      damageMod: 0,
+      acMod: 4,
+    }
+
+    renderComponent({
+      allBuffs: [shieldBuff],
+      activeBuffIds: [],
+      onSpendPreparedSpell: mockOnSpendPrepared,
+      onToggleBuff: mockOnToggleBuff,
+    })
+
+    // Cast Shield
+    const castShieldBtn = screen.getByRole('button', { name: /cast shield/i })
+    fireEvent.click(castShieldBtn)
+
+    expect(mockOnSpendPrepared).toHaveBeenCalledWith('spell-shield', 1)
+    expect(mockOnToggleBuff).toHaveBeenCalledWith('buff-shield')
   })
 
   it('triggers concentration check roll with correct CL + Casting Mod formula', () => {

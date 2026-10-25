@@ -7,7 +7,6 @@ import { useInspectorStore } from '../store/useInspectorStore'
 import { abilityMod } from '../lib/dice-engine'
 import { CONDITION_INFO } from '../lib/conditions'
 import { conditionInspectorItem } from '../lib/inspector-items'
-import { getSpellAvailability } from '../lib/spell-availability'
 import {
   calcEffectiveAbilities,
   calcEffectiveArmorClass,
@@ -54,8 +53,6 @@ export function StatusPage() {
     setTempHp,
     toggleCondition,
     longRest,
-    spendSpellSlot,
-    recoverSpellSlot,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
   const openInspector = useInspectorStore((s) => s.openInspector)
@@ -91,7 +88,6 @@ export function StatusPage() {
     activeBuffs
   )
   const restrictions = getActiveActionRestrictions(session.conditions)
-  const spellAvailability = getSpellAvailability(char, session)
 
   const hp = session.currentHp
   const maxHp = char.maxHp
@@ -434,70 +430,6 @@ export function StatusPage() {
             )
           })}
         </section>
-
-        {/* Spell Slots */}
-        {spellAvailability.levels.some((level) => level.total > 0) && (
-          <section className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)]">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-              <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
-                Spell Slots
-              </h2>
-              <span className="font-label text-[10px] text-tertiary uppercase tracking-wider tabular-nums">
-                {spellAvailability.remainingSlots}/{spellAvailability.totalSlots} remaining
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {spellAvailability.levels.filter((level) => level.total > 0).map((level) => {
-                const spent = level.total - level.remaining
-                return (
-                  <div
-                    key={level.level}
-                    className="rounded-xl border border-white/10 bg-surface-container-high/40 px-3.5 py-2 hover:border-primary/30 transition-all flex flex-wrap items-center gap-1"
-                    role="group"
-                    aria-label={`Level ${level.level} Spells: ${level.remaining} of ${level.total} remaining`}
-                  >
-                    <span className="inline-flex items-center gap-1 font-label text-[9px] uppercase tracking-wider mr-1">
-                      <span className="px-1 py-0.5 rounded bg-white/5 border border-white/10 text-secondary text-[8px] font-bold">
-                        SLOT
-                      </span>
-                      <span className="text-tertiary font-semibold">LEVEL {level.level}</span>
-                    </span>
-                    <div className="flex flex-wrap items-center gap-1">
-                      {Array.from({ length: level.total }).map((_, index) => {
-                        const isSpent = index < spent
-                        return (
-                          <button
-                            key={index}
-                            type="button"
-                            onClick={() =>
-                              isSpent
-                                ? recoverSpellSlot(char.id, level.level)
-                                : spendSpellSlot(char.id, level.level, level.total)
-                            }
-                            aria-label={`${isSpent ? 'Recover' : 'Spend'} level ${level.level} slot ${index + 1} of ${level.total}`}
-                            aria-pressed={isSpent}
-                            className="min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-                          >
-                            <span
-                              className={`block transition-all group-hover:scale-110 ${
-                                isSpent
-                                  ? 'w-2.5 h-2.5 rounded-full border border-white/20 bg-surface-container-highest'
-                                  : 'w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(0,240,255,0.55)]'
-                              }`}
-                            />
-                          </button>
-                        )
-                      })}
-                    </div>
-                    <span className="font-label text-[10px] text-tertiary ml-1 tabular-nums">
-                      {level.remaining}/{level.total}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-        )}
 
         {/* Daily Resources */}
         {char.dailyResources.length > 0 && (

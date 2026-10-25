@@ -22,6 +22,7 @@ export interface SpellAvailabilityCharacter {
 export interface SpellAvailabilitySession {
   preparedSpellIds?: string[]
   preparedSpells?: Record<string, number>
+  spentPreparedSpells?: Record<string, number>
   spentSpellSlots?: Record<number, number>
   spentResources?: Record<string, number>
 }
@@ -36,6 +37,27 @@ export interface SpellLevelAvailability {
   /** Free preparation capacity for this level after reserving domain/always-prepared spells. */
   preparedCapacity: number
   alwaysPreparedCount: number
+  /** Unassigned preparation capacity still available to prepare spells at this level. */
+  unpreparedCount: number
+}
+
+export interface SpellUseSummary {
+  total: number
+  spent: number
+  remaining: number
+  kind: 'atWill' | 'sla' | 'spontaneous' | 'domain' | 'prepared'
+}
+
+export interface ActiveSpellUseItem {
+  id: string
+  name: string
+  level: number
+  total: number
+  spent: number
+  remaining: number
+  prefix: string
+  spell: Spell
+  kind: 'prepared' | 'domain' | 'sla'
 }
 
 export interface SpellAvailability {
@@ -54,8 +76,10 @@ export interface SpellAvailability {
   knownCount: number
   remainingSlots: number
   totalSlots: number
+  activeSpellUses: ActiveSpellUseItem[]
   getLevel: (level: number) => SpellLevelAvailability | undefined
   preparedCopies: (spellId: string) => number
+  spellUses: (spell: Spell) => SpellUseSummary
   isCastable: (spell: Spell) => boolean
   slotCost: (spell: Spell) => number
   isAtWill: (spell: Spell) => boolean
@@ -140,6 +164,7 @@ export function getSpellAvailability(
     session.preparedSpells,
     session.preparedSpellIds
   )
+  const spentPrepared = session.spentPreparedSpells ?? {}
   const spentSlots = session.spentSpellSlots ?? {}
   const spentResources = session.spentResources ?? {}
   const spells = character.spells ?? []
@@ -153,40 +178,6 @@ export function getSpellAvailability(
   for (const spell of spells) {
     if (spell.level > 0) allLevels.add(spell.level)
   }
-
-  const levels: SpellLevelAvailability[] = [...allLevels]
-    .sort((a, b) => a - b)
-    .map((level) => {
-      const total = Math.max(0, slotByLevel.get(level)?.total ?? 0)
-      const spent = Math.min(total, Math.max(0, spentSlots[level] ?? 0))
-      const alwaysPreparedCount = spells.filter(
-        (spell) => spell.level === level && isAlwaysPreparedSpell(spell)
-      ).length
-      const preparedCount = spells
-        .filter(
-          (spell) =>
-            spell.level === level &&
-            !isAlwaysPreparedSpell(spell) &&
-            !isSlaSpell(spell) &&
-            !spell.atWill
-        )
-        .reduce((sum, spell) => sum + (preparedMap[spell.id] ?? 0), 0)
-      const preparedCapacity =
-        profile.mode === 'prepared' ? Math.max(0, total - alwaysPreparedCount) : 0
-
-      return {
-        level,
-        total,
-        spent,
-        remaining: Math.max(0, total - spent),
-        preparedCount,
-        preparedCapacity,
-        alwaysPreparedCount,
-      }
-    })
-
-  const levelMap = new Map(levels.map((level) => [level.level, level]))
-  const getLevel = (level: number) => levelMap.get(level)
 
   const preparedCopies = (spellId: string) => preparedMap[spellId] ?? 0
 
@@ -212,18 +203,111 @@ export function getSpellAvailability(
     return false
   }
 
+  const spellUses = (spell: Spell): SpellUseSummary => {
+    if (isAtWill(spell)) {
+      return { total: 0, spent: 0, remaining: Infinity, kind: 'atWill' }
+    }
+    if (isSlaSpell(spell)) {
+      const res = resourceFor(spell)
+      if (!res) return { total: 0, spent: 0, remaining: Infinity, kind: 'atWill' }
+      const spent = Math.min(res.total, Math.max(0, spentResources[res.id] ?? 0))
+      return { total: res.total, spent, remaining: Math.max(0, res.total - spent), kind: 'sla' }
+    }
+    if (profile.mode === 'spontaneous') {
+      const total = Math.max(0, slotByLevel.get(spell.level)?.total ?? 0)
+      const spent = Math.min(total, Math.max(0, spentSlots[spell.level] ?? 0))
+      return { total, spent, remaining: Math.max(0, total - spent), kind: 'spontaneous' }
+    }
+    if (isAlwaysPreparedSpell(spell)) {
+      const total = 1
+      const spent = Math.min(total, Math.max(0, spentPrepared[spell.id] ?? 0))
+      return { total, spent, remaining: total - spent, kind: 'domain' }
+    }
+    // Class prepared
+    const total = preparedCopies(spell.id)
+    const spent = Math.min(total, Math.max(0, spentPrepared[spell.id] ?? 0))
+    return { total, spent, remaining: Math.max(0, total - spent), kind: 'prepared' }
+  }
+
+  const levels: SpellLevelAvailability[] = [...allLevels]
+    .sort((a, b) => a - b)
+    .map((level) => {
+      const total = Math.max(0, slotByLevel.get(level)?.total ?? 0)
+      const alwaysPreparedCount = spells.filter(
+        (spell) => spell.level === level && isAlwaysPreparedSpell(spell)
+      ).length
+      const preparedCount = spells
+        .filter(
+          (spell) =>
+            spell.level === level &&
+            !isAlwaysPreparedSpell(spell) &&
+            !isSlaSpell(spell) &&
+            !spell.atWill
+        )
+        .reduce((sum, spell) => sum + (preparedMap[spell.id] ?? 0), 0)
+      const preparedCapacity =
+        profile.mode === 'prepared' ? Math.max(0, total - alwaysPreparedCount) : 0
+      const unpreparedCount =
+        profile.mode === 'prepared' ? Math.max(0, preparedCapacity - preparedCount) : 0
+
+      let spent: number
+      let remaining: number
+      if (profile.mode === 'prepared') {
+        const domainSpent = spells
+          .filter((spell) => spell.level === level && isAlwaysPreparedSpell(spell))
+          .reduce((sum, spell) => sum + Math.min(1, Math.max(0, spentPrepared[spell.id] ?? 0)), 0)
+        const prepSpent = spells
+          .filter(
+            (spell) =>
+              spell.level === level &&
+              !isAlwaysPreparedSpell(spell) &&
+              !isSlaSpell(spell) &&
+              !spell.atWill
+          )
+          .reduce(
+            (sum, spell) =>
+              sum + Math.min(preparedCopies(spell.id), Math.max(0, spentPrepared[spell.id] ?? 0)),
+            0
+          )
+        const slotLevelSpent = Math.max(0, spentSlots[level] ?? 0)
+        spent = Math.min(total, domainSpent + prepSpent + slotLevelSpent)
+        remaining = Math.max(0, total - spent)
+      } else {
+        spent = Math.min(total, Math.max(0, spentSlots[level] ?? 0))
+        remaining = Math.max(0, total - spent)
+      }
+
+      return {
+        level,
+        total,
+        spent,
+        remaining,
+        preparedCount,
+        preparedCapacity,
+        alwaysPreparedCount,
+        unpreparedCount,
+      }
+    })
+
+  const levelMap = new Map(levels.map((level) => [level.level, level]))
+  const getLevel = (level: number) => levelMap.get(level)
+
   const isCastable = (spell: Spell): boolean => {
     if (!isIncludedInCombat(spell)) return false
-    if (isAtWill(spell)) return true
-
-    if (isSlaSpell(spell)) {
+    const uses = spellUses(spell)
+    if (uses.kind === 'atWill') return true
+    if (uses.kind === 'sla') {
       const resource = resourceFor(spell)
       if (!resource) return true
-      return (spentResources[resource.id] ?? 0) < resource.total
+      return uses.remaining > 0
     }
-
+    if (uses.kind === 'spontaneous') {
+      const level = getLevel(spell.level)
+      return Boolean(level && level.total > 0 && uses.remaining > 0)
+    }
     const level = getLevel(spell.level)
-    return Boolean(level && level.total > 0 && level.remaining > 0)
+    if (spell.level > 0 && (!level || level.total <= 0)) return false
+    return uses.total > 0 && uses.remaining > 0
   }
 
   const slotCost = (spell: Spell): number => {
@@ -243,18 +327,97 @@ export function getSpellAvailability(
 
   const reasonUnavailable = (spell: Spell): string | null => {
     if (!isIncludedInCombat(spell)) return 'Not prepared'
-    if (isAtWill(spell)) return null
-    if (isSlaSpell(spell)) {
+    const uses = spellUses(spell)
+    if (uses.kind === 'atWill') return null
+    if (uses.kind === 'sla') {
       const resource = resourceFor(spell)
-      if (resource && (spentResources[resource.id] ?? 0) >= resource.total) {
+      if (resource && uses.remaining <= 0) {
         return `${resource.name} exhausted`
       }
       return null
     }
     const level = getLevel(spell.level)
-    if (!level || level.total <= 0) return 'No slots at this level'
-    if (level.remaining <= 0) return 'No slots remaining'
+    if (spell.level > 0 && (!level || level.total <= 0)) return 'No slots at this level'
+    if (uses.kind === 'spontaneous') {
+      if (uses.remaining <= 0) return 'No slots remaining'
+      return null
+    }
+    if (uses.total <= 0) return 'Not prepared'
+    if (uses.remaining <= 0) return 'No uses remaining'
     return null
+  }
+
+  const activeSpellUses: ActiveSpellUseItem[] = []
+  if (profile.mode === 'prepared') {
+    for (const spell of spells) {
+      if (isAlwaysPreparedSpell(spell) && spell.level > 0) {
+        const uses = spellUses(spell)
+        activeSpellUses.push({
+          id: spell.id,
+          name: spell.name,
+          level: spell.level,
+          total: uses.total,
+          spent: uses.spent,
+          remaining: uses.remaining,
+          prefix: `DOM L${spell.level}`,
+          spell,
+          kind: 'domain',
+        })
+      }
+    }
+    for (const spell of spells) {
+      if (!isAlwaysPreparedSpell(spell) && !isSlaSpell(spell) && !spell.atWill && spell.level > 0) {
+        const count = preparedCopies(spell.id)
+        if (count > 0) {
+          const uses = spellUses(spell)
+          activeSpellUses.push({
+            id: spell.id,
+            name: spell.name,
+            level: spell.level,
+            total: uses.total,
+            spent: uses.spent,
+            remaining: uses.remaining,
+            prefix: `LV ${spell.level}`,
+            spell,
+            kind: 'prepared',
+          })
+        }
+      }
+    }
+    for (const spell of spells) {
+      if (isSlaSpell(spell) && spell.resourceId) {
+        const uses = spellUses(spell)
+        activeSpellUses.push({
+          id: spell.id,
+          name: spell.name,
+          level: spell.level,
+          total: uses.total,
+          spent: uses.spent,
+          remaining: uses.remaining,
+          prefix: 'SLA',
+          spell,
+          kind: 'sla',
+        })
+      }
+    }
+    activeSpellUses.sort((a, b) => (a.level !== b.level ? a.level - b.level : a.name.localeCompare(b.name)))
+  } else if (profile.mode === 'none') {
+    for (const spell of spells) {
+      if (isSlaSpell(spell) && spell.resourceId) {
+        const uses = spellUses(spell)
+        activeSpellUses.push({
+          id: spell.id,
+          name: spell.name,
+          level: spell.level,
+          total: uses.total,
+          spent: uses.spent,
+          remaining: uses.remaining,
+          prefix: 'SLA',
+          spell,
+          kind: 'sla',
+        })
+      }
+    }
   }
 
   const combatSpells = spells.filter(isIncludedInCombat)
@@ -282,8 +445,10 @@ export function getSpellAvailability(
         : 0,
     remainingSlots,
     totalSlots,
+    activeSpellUses,
     getLevel,
     preparedCopies,
+    spellUses,
     isCastable,
     slotCost,
     isAtWill,

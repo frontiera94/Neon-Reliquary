@@ -7,6 +7,7 @@ import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
 import { deriveBuffFromSpell, findMatchingBuffForSpell, isSpellBuffCandidate, calcEffectiveAbilities } from '../lib/stat-calc'
 import { getSpellAvailability } from '../lib/spell-availability'
 import { spellInspectorItem } from '../lib/inspector-items'
+import { SpellUsePips } from '../components/spells/SpellUsePips'
 import type { Spell, SpellAttackType } from '../types/resources'
 import type { AbilityScore } from '../types/character'
 
@@ -43,7 +44,20 @@ function concentrationMod(charClass: string, level: number, abilities: AbilitySc
 export function SpellsPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => char ? s.getSession(char.id) : null)
-  const { toggleSpellPrepared, prepareSpell, unprepareSpell, spendSpellSlot, recoverSpellSlot, toggleBuff, addCustomBuff, spendResource } = useSessionStore()
+  const {
+    toggleSpellPrepared,
+    prepareSpell,
+    unprepareSpell,
+    clearPreparedSpells,
+    spendSpellSlot,
+    setSpellSlotSpent,
+    spendPreparedSpell,
+    setPreparedSpellSpent,
+    toggleBuff,
+    addCustomBuff,
+    spendResource,
+    setResourceSpent,
+  } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
   const openInspector = useInspectorStore((s) => s.openInspector)
   const [search, setSearch] = useState('')
@@ -101,14 +115,21 @@ export function SpellsPage() {
 
   const consumeCastCost = (spell: Spell): boolean => {
     if (!availability.isCastable(spell)) return false
-    if (availability.slotCost(spell) > 0) {
+    const uses = availability.spellUses(spell)
+    if (uses.kind === 'prepared' || uses.kind === 'domain') {
+      spendPreparedSpell(char.id, spell.id, uses.total)
+      return true
+    }
+    if (uses.kind === 'spontaneous') {
       const level = availability.getLevel(spell.level)
       if (!level) return false
       spendSpellSlot(char.id, level.level, level.total)
+      return true
     }
     const resource = availability.resourceFor(spell)
     if (resource && spell.source === 'sla') {
       spendResource(char.id, resource.id, resource.total)
+      return true
     }
     return true
   }
@@ -163,16 +184,31 @@ export function SpellsPage() {
     <div className="p-4 md:p-8 lg:p-12">
       {/* Header */}
       <header className="mb-10">
-        <h1 className="font-headline text-5xl font-bold text-white mb-2 tracking-tight">
-          The Repository
-        </h1>
-        <p className="text-tertiary font-label uppercase text-sm tracking-[0.2em]">
-          {isSpontaneous
-            ? `Spontaneous caster · ${availability.knownCount} known · ${availability.remainingSlots} slots remaining`
-            : isPreparedCaster
-            ? `Prepared caster · ${availability.preparedCount}/${availability.preparedCapacity} prepared · ${availability.remainingSlots} slots remaining`
-            : `Spell-like abilities · ${availability.remainingSlots} spell slots`}
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div>
+            <h1 className="font-headline text-5xl font-bold text-white mb-2 tracking-tight">
+              The Repository
+            </h1>
+            <p className="text-tertiary font-label uppercase text-sm tracking-[0.2em]">
+              {isSpontaneous
+                ? `Spontaneous caster · ${availability.knownCount} known · ${availability.remainingSlots} slots remaining`
+                : isPreparedCaster
+                ? `Prepared caster · ${availability.preparedCount}/${availability.preparedCapacity} prepared · ${availability.remainingSlots} active uses remaining`
+                : `Spell-like abilities · ${availability.remainingSlots} spell slots`}
+            </p>
+          </div>
+          {isPreparedCaster && availability.preparedCount > 0 && (
+            <button
+              type="button"
+              onClick={() => clearPreparedSpells(char.id)}
+              className="px-3.5 py-1.5 rounded-xl border border-white/10 text-tertiary hover:text-error hover:border-error/40 hover:bg-error/10 font-label text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center"
+              title="Clear all prepared spells and reset preparation from scratch"
+            >
+              <span className="material-symbols-outlined text-sm">restart_alt</span>
+              Clear Preparation
+            </button>
+          )}
+        </div>
 
         {arcaneFailure > 0 && (
           <div className="mt-4 px-4 py-3 bg-error-container/20 border border-error/30 rounded-xl flex items-center gap-3">
@@ -204,8 +240,66 @@ export function SpellsPage() {
         </div>
       </header>
 
-      {/* Spell slot tracker */}
-      {availability.levels.some((level) => level.total > 0) && (
+      {/* Active Spells & Slots Tracker */}
+      {isPreparedCaster ? (
+        <section className="mb-8 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.06)]">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
+              Active Spell Uses
+            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              {availability.levels
+                .filter((l) => l.total > 0 && l.unpreparedCount > 0)
+                .map((l) => (
+                  <span
+                    key={l.level}
+                    className="font-label text-[10px] text-amber-300/90 bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-md uppercase tracking-wider"
+                  >
+                    Lv {l.level}: {l.unpreparedCount} unprepared
+                  </span>
+                ))}
+              <span className="font-label text-[10px] text-tertiary uppercase tracking-wider tabular-nums">
+                {availability.remainingSlots}/{availability.totalSlots} uses remaining
+              </span>
+            </div>
+          </div>
+          {availability.activeSpellUses.length === 0 ? (
+            <p className="font-label text-xs uppercase tracking-widest text-tertiary/60 py-2">
+              No spells prepared yet. Check spells in the list below to assign daily uses.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {availability.activeSpellUses.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-xl border border-white/10 bg-surface-container-high/40 px-3.5 py-2 hover:border-primary/30 transition-all"
+                >
+                  <SpellUsePips
+                    label={item.name}
+                    prefix={item.prefix}
+                    total={item.total}
+                    spent={item.spent}
+                    onSpend={() => {
+                      if (item.kind === 'sla' && item.spell.resourceId) {
+                        spendResource(char.id, item.spell.resourceId, item.total)
+                      } else {
+                        spendPreparedSpell(char.id, item.id, item.total)
+                      }
+                    }}
+                    onSetSpent={(amt) => {
+                      if (item.kind === 'sla' && item.spell.resourceId) {
+                        setResourceSpent(char.id, item.spell.resourceId, amt)
+                      } else {
+                        setPreparedSpellSpent(char.id, item.id, amt)
+                      }
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : isSpontaneous && availability.levels.some((level) => level.total > 0) ? (
         <section className="mb-8 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.06)]">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
@@ -215,42 +309,60 @@ export function SpellsPage() {
               {availability.remainingSlots}/{availability.totalSlots} remaining
             </span>
           </div>
-          <div className="flex flex-wrap gap-6">
-            {availability.levels.filter((slot) => slot.total > 0).map((slot) => (
-              <div key={slot.level}>
-                <p className="font-label text-[10px] text-primary uppercase tracking-widest mb-2 font-bold tabular-nums">
-                  Level {slot.level}: {slot.remaining}/{slot.total}
-                </p>
-                <div className="flex gap-1.5">
-                  {Array.from({ length: slot.total }).map((_, i) => {
-                    const isSpent = i >= slot.remaining
-                    return (
-                      <button
-                        key={i}
-                        onClick={() =>
-                          !isSpent
-                            ? spendSpellSlot(char.id, slot.level, slot.total)
-                            : recoverSpellSlot(char.id, slot.level)
-                        }
-                        className={`w-7 h-7 rounded-md transition-all flex items-center justify-center cursor-pointer ${
-                          isSpent
-                            ? 'bg-surface-container-highest border border-white/10'
-                            : 'bg-primary/20 border border-primary shadow-[0_0_8px_rgba(0,240,255,0.35)] hover:bg-primary/40'
-                        }`}
-                        aria-label={`Spell slot level ${slot.level} ${i + 1}`}
-                      >
-                        {isSpent && (
-                          <span className="material-symbols-outlined text-primary/40 leading-none" style={{ fontSize: '14px' }}>close</span>
-                        )}
-                      </button>
-                    )
-                  })}
+          <div className="flex flex-wrap gap-3">
+            {availability.levels
+              .filter((slot) => slot.total > 0)
+              .map((slot) => (
+                <div
+                  key={slot.level}
+                  className="rounded-xl border border-white/10 bg-surface-container-high/40 px-3.5 py-2 hover:border-primary/30 transition-all"
+                >
+                  <SpellUsePips
+                    label={`Level ${slot.level}`}
+                    prefix="SLOT"
+                    total={slot.total}
+                    spent={slot.spent}
+                    onSpend={() => spendSpellSlot(char.id, slot.level, slot.total)}
+                    onSetSpent={(amt) => setSpellSlotSpent(char.id, slot.level, amt)}
+                  />
                 </div>
+              ))}
+          </div>
+        </section>
+      ) : availability.activeSpellUses.length > 0 ? (
+        <section className="mb-8 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.06)]">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
+              Active Spell Uses
+            </h2>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {availability.activeSpellUses.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-xl border border-white/10 bg-surface-container-high/40 px-3.5 py-2 hover:border-primary/30 transition-all"
+              >
+                <SpellUsePips
+                  label={item.name}
+                  prefix={item.prefix}
+                  total={item.total}
+                  spent={item.spent}
+                  onSpend={() => {
+                    if (item.kind === 'sla' && item.spell.resourceId) {
+                      spendResource(char.id, item.spell.resourceId, item.total)
+                    }
+                  }}
+                  onSetSpent={(amt) => {
+                    if (item.kind === 'sla' && item.spell.resourceId) {
+                      setResourceSpent(char.id, item.spell.resourceId, amt)
+                    }
+                  }}
+                />
               </div>
             ))}
           </div>
         </section>
-      )}
+      ) : null}
 
       {/* Filter bar */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -321,6 +433,7 @@ export function SpellsPage() {
 
                   const spellFocusBonus = getSpellFocusBonus(spell.school, char.feats)
                   const dc = availability.spellDc(spell, spellFocusBonus)
+                  const uses = availability.spellUses(spell)
 
                   return (
                     <SpellRow
@@ -338,6 +451,8 @@ export function SpellsPage() {
                       unavailableReason={unavailableReason}
                       slotRemaining={levelInfo?.remaining ?? 0}
                       slotTotal={slotMax}
+                      usesTotal={uses.total}
+                      usesRemaining={uses.remaining}
                       resourceRemaining={resource ? Math.max(0, resource.total - (session?.spentResources[resource.id] ?? 0)) : undefined}
                       attackLabel={spell.attackType ? `${attackLabel[spell.attackType]} (${atkBonus >= 0 ? `+${atkBonus}` : atkBonus})` : undefined}
                       isBuffActive={isSpellBuffActive(spell)}
@@ -438,6 +553,8 @@ function SpellRow({
   unavailableReason = null,
   slotRemaining = 0,
   slotTotal = 0,
+  usesTotal = 0,
+  usesRemaining = 0,
   resourceRemaining,
 }: {
   spell: Spell
@@ -463,6 +580,8 @@ function SpellRow({
   unavailableReason?: string | null
   slotRemaining?: number
   slotTotal?: number
+  usesTotal?: number
+  usesRemaining?: number
   resourceRemaining?: number
 }) {
   const preparationLocked = isSpontaneous || isAlwaysPrepared || isSla || isAtWill || spell.level === 0
@@ -562,7 +681,16 @@ function SpellRow({
                 )}
               </div>
             )}
-            {spell.level > 0 && !isSla && slotTotal > 0 && (
+            {!isSpontaneous && (isPrepared || isAlwaysPrepared) && spell.level > 0 && !isSla && usesTotal > 0 && (
+              <span className={`font-label text-[10px] border px-2 py-0.5 rounded-md uppercase tabular-nums ${
+                usesRemaining > 0
+                  ? 'text-primary bg-primary/10 border-primary/30'
+                  : 'text-error bg-error/10 border-error/30'
+              }`}>
+                Uses {usesRemaining}/{usesTotal}
+              </span>
+            )}
+            {isSpontaneous && spell.level > 0 && !isSla && slotTotal > 0 && (
               <span className={`font-label text-[10px] border px-2 py-0.5 rounded-md uppercase tabular-nums ${
                 slotRemaining > 0
                   ? 'text-primary bg-primary/10 border-primary/30'

@@ -465,9 +465,19 @@ describe('longRest', () => {
     expect(useSessionStore.getState().getSession(CHAR).conditions).toEqual([])
   })
 
-  it('clears prepared spells', () => {
+  it('preserves prepared spell loadout across longRest and resets spentPreparedSpells', () => {
     useSessionStore.getState().toggleSpellPrepared(CHAR, 'magic-missile', 1, 4)
+    useSessionStore.getState().spendPreparedSpell(CHAR, 'magic-missile', 1)
+    expect(useSessionStore.getState().getSession(CHAR).spentPreparedSpells?.['magic-missile']).toBe(1)
     useSessionStore.getState().longRest(CHAR, MAX_HP)
+    expect(useSessionStore.getState().getSession(CHAR).preparedSpells?.['magic-missile']).toBe(1)
+    expect(useSessionStore.getState().getSession(CHAR).spentPreparedSpells).toEqual({})
+  })
+
+  it('clears prepared spells when clearPreparedSpells is called', () => {
+    useSessionStore.getState().toggleSpellPrepared(CHAR, 'magic-missile', 1, 4)
+    useSessionStore.getState().clearPreparedSpells(CHAR)
+    expect(useSessionStore.getState().getSession(CHAR).preparedSpells).toEqual({})
     expect(useSessionStore.getState().getSession(CHAR).preparedSpellIds).toEqual([])
   })
 
