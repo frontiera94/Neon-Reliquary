@@ -750,4 +750,34 @@ describe('TacticalHUD Component', () => {
       expect(screen.queryByText('Shield Spell')).not.toBeInTheDocument()
     })
   })
+
+  describe('Suite 7: Mobile Compact HUD & Tray Toggle', () => {
+    it('toggles mobile tactical tray when toggle button is clicked', () => {
+      render(
+        <MemoryRouter>
+          <TacticalHUD />
+        </MemoryRouter>
+      )
+
+      const toggleBtn = screen.getByRole('button', { name: /Espandi dettagli HUD/i })
+      expect(toggleBtn).toBeInTheDocument()
+      expect(toggleBtn).toHaveAttribute('aria-expanded', 'false')
+
+      fireEvent.click(toggleBtn)
+
+      expect(screen.getByRole('button', { name: /Chiudi dettagli HUD/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Chiudi dettagli HUD/i })).toHaveAttribute('aria-expanded', 'true')
+    })
+
+    it('renders the mobile AI chat assistant button', () => {
+      render(
+        <MemoryRouter>
+          <TacticalHUD />
+        </MemoryRouter>
+      )
+
+      const chatBtn = screen.getByRole('button', { name: /Apri assistente PG/i })
+      expect(chatBtn).toBeInTheDocument()
+    })
+  })
 })

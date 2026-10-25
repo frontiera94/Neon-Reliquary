@@ -69,42 +69,42 @@ export function CharacterSelectionPage() {
       </div>
 
       {/* Header */}
-      <div className="absolute top-8 text-center z-20">
+      <div className="absolute top-4 sm:top-8 text-center z-20">
         <span
-          className="text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft"
+          className="text-lg sm:text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft"
           onClick={() => navigate('/status')}
         >
           NEON RELIQUARY
         </span>
       </div>
 
-      <div className="text-center mb-10 mt-20 z-10">
-        <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/30 font-label text-[11px] text-primary uppercase tracking-[0.2em] mb-4">
+      <div className="text-center mb-3 sm:mb-6 md:mb-10 mt-14 sm:mt-18 md:mt-20 z-10">
+        <span className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-0.5 sm:py-1 rounded-full bg-primary/10 border border-primary/30 font-label text-[9px] sm:text-[11px] text-primary uppercase tracking-[0.16em] mb-2 sm:mb-3">
           // Pathfinder 1E Companion
         </span>
-        <h2 className="font-headline text-white text-4xl md:text-6xl font-extrabold tracking-tight mb-3">
+        <h2 className="font-headline text-white text-2xl sm:text-4xl md:text-6xl font-extrabold tracking-tight mb-1 sm:mb-2">
           CHOOSE YOUR <span className="text-primary neon-glow">RELIC</span>
         </h2>
-        <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary mx-auto mb-3 rounded-full" />
-        <p className="font-label text-tertiary uppercase tracking-[0.2em] text-xs">
+        <div className="w-14 sm:w-20 h-0.5 sm:h-1 bg-gradient-to-r from-primary to-secondary mx-auto mb-1.5 sm:mb-3 rounded-full" />
+        <p className="font-label text-tertiary uppercase tracking-[0.18em] text-[10px] sm:text-xs">
           Active Roster
         </p>
       </div>
 
       {/* Carousel */}
-      <div className="relative flex items-center justify-center w-full max-w-5xl gap-4 md:gap-8 z-10">
+      <div className="relative flex items-center justify-center w-full max-w-5xl gap-1.5 sm:gap-4 md:gap-8 z-10">
         {/* Prev */}
         <button
           onClick={prev}
           disabled={activeIndex === 0}
-          className="text-tertiary hover:text-primary disabled:opacity-20 transition-colors p-2 z-10 cursor-pointer rounded-full hover:bg-white/5"
+          className="text-tertiary hover:text-primary disabled:opacity-20 transition-colors p-1 sm:p-2 z-10 cursor-pointer rounded-full hover:bg-white/5"
           aria-label="Previous character"
         >
-          <span className="material-symbols-outlined text-5xl">chevron_left</span>
+          <span className="material-symbols-outlined text-3xl sm:text-5xl">chevron_left</span>
         </button>
 
         {/* Cards */}
-        <div className="flex items-center gap-4 md:gap-8">
+        <div className="flex items-center gap-2 sm:gap-4 md:gap-8">
           <AnimatePresence mode="popLayout">
             {chars
               .map((char, idx) => ({ char, idx }))
@@ -128,7 +128,7 @@ export function CharacterSelectionPage() {
                       isActive ? 'ring-2 ring-primary shadow-[0_0_35px_rgba(0,240,255,0.3)]' : ''
                     }`}
                     onClick={() => isActive ? handleManifest() : setSelectedId(char.id)}
-                    style={{ width: isActive ? 280 : 200 }}
+                    style={{ width: isActive ? 240 : 160 }}
                   >
                     <CharacterCard char={char} isActive={isActive} />
                   </motion.div>
@@ -141,21 +141,21 @@ export function CharacterSelectionPage() {
         <button
           onClick={next}
           disabled={activeIndex === chars.length - 1}
-          className="text-tertiary hover:text-primary disabled:opacity-20 transition-colors p-2 z-10 cursor-pointer rounded-full hover:bg-white/5"
+          className="text-tertiary hover:text-primary disabled:opacity-20 transition-colors p-1 sm:p-2 z-10 cursor-pointer rounded-full hover:bg-white/5"
           aria-label="Next character"
         >
-          <span className="material-symbols-outlined text-5xl">chevron_right</span>
+          <span className="material-symbols-outlined text-3xl sm:text-5xl">chevron_right</span>
         </button>
       </div>
 
       {/* Position indicator */}
-      <div className="flex gap-2 mt-6 z-10">
+      <div className="flex gap-1.5 sm:gap-2 mt-4 sm:mt-6 z-10">
         {chars.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setSelectedId(chars[idx]?.id ?? null)}
             className={`h-1.5 rounded-full transition-all cursor-pointer ${
-              idx === activeIndex ? 'w-8 bg-primary shadow-[0_0_8px_#00f0ff]' : 'w-2 bg-white/20'
+              idx === activeIndex ? 'w-6 sm:w-8 bg-primary shadow-[0_0_8px_#00f0ff]' : 'w-2 bg-white/20'
             }`}
             aria-label={`Go to slide ${idx + 1}`}
           />
@@ -167,7 +167,7 @@ export function CharacterSelectionPage() {
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-10 px-12 py-4 bg-gradient-to-r from-primary to-primary-container text-black font-label font-bold text-sm uppercase tracking-widest rounded-xl hover:shadow-[0_0_35px_rgba(0,240,255,0.45)] transition-all active:scale-95 cursor-pointer z-10"
+          className="mt-4 sm:mt-8 md:mt-10 px-6 sm:px-12 py-2.5 sm:py-4 bg-gradient-to-r from-primary to-primary-container text-black font-label font-bold text-xs sm:text-sm uppercase tracking-widest rounded-xl hover:shadow-[0_0_35px_rgba(0,240,255,0.45)] transition-all active:scale-95 cursor-pointer z-10"
           onClick={handleManifest}
         >
           Manifest Character — {activeChar.name}

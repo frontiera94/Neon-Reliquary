@@ -31,40 +31,52 @@ export function EquipmentSlotCell({
 
   if (item) {
     return (
-      <div className="bg-surface-container/70 backdrop-blur-md border border-white/10 border-l-4 border-l-secondary rounded-xl p-3 min-h-[88px] flex flex-col justify-between gap-1 hover:border-secondary/40 hover:shadow-[0_0_15px_rgba(217,70,239,0.15)] transition-all group">
+      <div className="bg-surface-container/70 backdrop-blur-md border border-white/10 border-l-4 border-l-secondary rounded-xl p-2 sm:p-2.5 md:p-3 min-h-[64px] sm:min-h-[76px] flex flex-col justify-between gap-1 hover:border-secondary/40 hover:shadow-[0_0_15px_rgba(217,70,239,0.15)] transition-all group">
         <div>
-          <div className="flex items-center justify-between gap-1.5">
-            <div className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-secondary text-base">{icon}</span>
-              <span className="font-label text-[10px] uppercase tracking-wider text-secondary font-semibold">{label}</span>
+          <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+              <span className="material-symbols-outlined text-secondary text-sm sm:text-base flex-shrink-0">{icon}</span>
+              <span className="font-label text-[9px] sm:text-[10px] uppercase tracking-wider text-secondary font-semibold truncate">{label}</span>
             </div>
             {onUnequip && (
               <button
                 onClick={() => onUnequip(item.id)}
-                className="opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100 transition-opacity text-tertiary hover:text-error p-0.5 rounded cursor-pointer"
+                className="opacity-70 sm:opacity-0 group-hover:opacity-100 sm:hover:opacity-100 focus:opacity-100 transition-opacity text-tertiary hover:text-error p-0.5 rounded cursor-pointer flex-shrink-0"
                 title={`Unequip ${item.name}`}
                 aria-label={`Unequip ${item.name}`}
               >
-                <span className="material-symbols-outlined text-sm">close</span>
+                <span className="material-symbols-outlined text-xs sm:text-sm">close</span>
               </button>
             )}
           </div>
-          <span className="font-headline text-base text-white font-bold leading-tight block mt-1">{item.name}</span>
+          <span className="font-headline text-xs sm:text-sm md:text-base text-white font-bold leading-tight block mt-0.5 truncate">{item.name}</span>
         </div>
-        {item.description && (
-          <span className="font-body text-xs text-tertiary line-clamp-2 leading-snug">{item.description}</span>
-        )}
+        <div className="flex flex-wrap items-center gap-1 mt-0.5">
+          {item.armorBonus !== undefined && (
+            <span className="font-label text-[8px] sm:text-[9px] text-secondary font-bold bg-secondary/10 px-1 rounded">
+              +{item.armorBonus} AC
+            </span>
+          )}
+          {item.armorCheckPenalty !== undefined && item.armorCheckPenalty < 0 && (
+            <span className="font-label text-[8px] sm:text-[9px] text-amber-400 font-bold bg-amber-400/10 px-1 rounded">
+              {item.armorCheckPenalty} ACP
+            </span>
+          )}
+          {item.description && (
+            <span className="font-body text-[10px] sm:text-xs text-tertiary line-clamp-1 leading-tight">{item.description}</span>
+          )}
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-surface-container/30 border border-white/5 border-l-4 border-l-outline-variant/30 rounded-xl p-3 min-h-[88px] flex flex-col gap-1 opacity-40">
-      <div className="flex items-center gap-1.5">
-        <span className="material-symbols-outlined text-tertiary text-base">{icon}</span>
-        <span className="font-label text-[10px] uppercase tracking-wider text-tertiary">{label}</span>
+    <div className="bg-surface-container/30 border border-white/5 border-l-4 border-l-outline-variant/30 rounded-xl p-2 sm:p-2.5 md:p-3 min-h-[64px] sm:min-h-[76px] flex flex-col justify-between gap-0.5 opacity-40">
+      <div className="flex items-center gap-1 sm:gap-1.5">
+        <span className="material-symbols-outlined text-tertiary text-sm sm:text-base">{icon}</span>
+        <span className="font-label text-[9px] sm:text-[10px] uppercase tracking-wider text-tertiary truncate">{label}</span>
       </div>
-      <span className="font-headline text-base text-tertiary">—</span>
+      <span className="font-headline text-xs sm:text-sm text-tertiary">—</span>
     </div>
   )
 }

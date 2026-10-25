@@ -50,33 +50,33 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
             setIsExpanded(!isExpanded)
           }
         }}
-        className="p-5 flex items-center justify-between cursor-pointer hover:bg-surface-container-high/60 transition-colors select-none group"
+        className="p-3 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-surface-container-high/60 transition-colors select-none group"
         aria-expanded={isExpanded}
         aria-label="Maneuvers & Tactics Panel"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-secondary/15 border border-secondary/30 flex items-center justify-center text-secondary shadow-[0_0_12px_rgba(217,70,239,0.2)] group-hover:border-secondary/50 group-hover:shadow-[0_0_16px_rgba(217,70,239,0.35)] transition-all">
-            <span className="material-symbols-outlined text-lg">sports_kabaddi</span>
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-secondary/15 border border-secondary/30 flex items-center justify-center text-secondary shadow-[0_0_12px_rgba(217,70,239,0.2)] group-hover:border-secondary/50 group-hover:shadow-[0_0_16px_rgba(217,70,239,0.35)] transition-all flex-shrink-0">
+            <span className="material-symbols-outlined text-base sm:text-lg">sports_kabaddi</span>
           </div>
           <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-headline text-base font-bold text-white">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <h3 className="font-headline text-sm sm:text-base font-bold text-white">
                 Maneuvers & Tactics (CMB / CMD)
               </h3>
               <span
-                className="rounded-md border border-secondary/30 bg-secondary/10 px-2 py-0.5 font-label text-[10px] font-bold text-secondary"
+                className="rounded-md border border-secondary/30 bg-secondary/10 px-1.5 py-0.2 sm:px-2 sm:py-0.5 font-label text-[9px] sm:text-[10px] font-bold text-secondary"
                 data-testid="header-cmb-value"
               >
                 CMB {maneuversCalc.cmb >= 0 ? `+${maneuversCalc.cmb}` : maneuversCalc.cmb}
               </span>
               <span
-                className="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 font-label text-[10px] font-bold text-primary"
+                className="rounded-md border border-primary/30 bg-primary/10 px-1.5 py-0.2 sm:px-2 sm:py-0.5 font-label text-[9px] sm:text-[10px] font-bold text-primary"
                 data-testid="header-cmd-value"
               >
                 CMD {maneuversCalc.cmd}
               </span>
             </div>
-            <p className="mt-0.5 font-label text-[10px] text-tertiary">
+            <p className="mt-0.5 font-label text-[9px] sm:text-[10px] text-tertiary">
               Trip, disarm, grapple, bull rush & defensive counters
             </p>
           </div>
@@ -98,7 +98,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="p-5 pt-0 border-t border-white/5 space-y-4">
+        <div className="p-3 sm:p-5 pt-0 border-t border-white/5 space-y-3 sm:space-y-4">
           {/* Quick breakdown toggle buttons */}
           <div className="flex flex-wrap gap-2 pt-3">
             <button
@@ -299,7 +299,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
           )}
 
           {/* Maneuvers Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
             {filteredManeuvers.map((m) => {
               const hasFeat = !m.provokesAoO
               const isCardBreakdownOpen = expandedCardBreakdown === m.type
@@ -308,7 +308,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
               return (
                 <div
                   key={m.type}
-                  className="p-4 rounded-xl bg-surface-container-high/80 backdrop-blur-sm border border-white/10 hover:border-secondary/40 transition-all duration-200 flex flex-col justify-between gap-3 group shadow-sm hover:shadow-[0_0_16px_rgba(217,70,239,0.15)]"
+                  className="p-3 sm:p-4 rounded-xl bg-surface-container-high/80 backdrop-blur-sm border border-white/10 hover:border-secondary/40 transition-all duration-200 flex flex-col justify-between gap-2.5 sm:gap-3 group shadow-sm hover:shadow-[0_0_16px_rgba(217,70,239,0.15)]"
                 >
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">

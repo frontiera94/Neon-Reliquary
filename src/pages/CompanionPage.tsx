@@ -170,23 +170,23 @@ export function CompanionPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-2.5 sm:p-4 md:p-8 max-w-6xl mx-auto space-y-3.5 sm:space-y-6">
       {/* Multi-companion Switcher Tabs */}
-      <div className="flex items-center justify-between border-b border-white/10 pb-2">
-        <div className="flex gap-2 flex-wrap">
+      <div className="flex items-center justify-between border-b border-white/10 pb-2 gap-2">
+        <div className="flex gap-1.5 sm:gap-2 flex-wrap">
           {companions.map((comp) => {
             const isSelected = comp.id === activeCompanion.id
             return (
               <button
                 key={comp.id}
                 onClick={() => handleSelectCompanion(comp)}
-                className={`px-4 py-2 font-label text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-2 border cursor-pointer ${
+                className={`px-3 py-1.5 sm:px-4 sm:py-2 font-label text-[10px] sm:text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 border cursor-pointer ${
                   isSelected
                     ? 'border-primary text-primary bg-primary/10 shadow-[0_0_15px_rgba(0,240,255,0.2)] font-bold'
                     : 'border-white/10 text-tertiary hover:text-white hover:bg-white/5'
                 }`}
               >
-                <span className="material-symbols-outlined text-sm">pets</span>
+                <span className="material-symbols-outlined text-xs sm:text-sm">pets</span>
                 {comp.name}
               </button>
             )
@@ -194,49 +194,50 @@ export function CompanionPage() {
         </div>
         <button
           onClick={() => setShowManifestModal(true)}
-          className="px-3 py-1.5 rounded-xl border border-primary/30 text-primary hover:bg-primary/10 font-label text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer flex-shrink-0"
+          className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border border-primary/30 text-primary hover:bg-primary/10 font-label text-[10px] sm:text-xs uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer flex-shrink-0"
         >
-          <span className="material-symbols-outlined text-sm">add</span>
-          Manifest Preset
+          <span className="material-symbols-outlined text-xs sm:text-sm">add</span>
+          <span className="hidden sm:inline">Manifest Preset</span>
+          <span className="sm:hidden">Manifest</span>
         </button>
       </div>
 
       {/* Companion Profile Header */}
-      <header className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_25px_rgba(0,240,255,0.08)] flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+      <header className="bg-surface-container/70 backdrop-blur-md rounded-xl sm:rounded-2xl p-3.5 sm:p-6 border border-white/10 shadow-[0_0_25px_rgba(0,240,255,0.08)] flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent pointer-events-none" />
 
-        <div className="flex items-center gap-5 relative z-10 w-full md:w-auto">
+        <div className="flex items-center gap-3 sm:gap-5 relative z-10 w-full md:w-auto">
           {activeCompanion.portrait ? (
             <img
               src={activeCompanion.portrait}
               alt={activeCompanion.name}
-              className="w-20 h-20 object-cover rounded-2xl border-2 border-primary/50 flex-shrink-0 shadow-[0_0_15px_rgba(0,240,255,0.2)]"
+              className="w-14 h-14 sm:w-20 sm:h-20 object-cover rounded-xl sm:rounded-2xl border-2 border-primary/50 flex-shrink-0 shadow-[0_0_15px_rgba(0,240,255,0.2)]"
             />
           ) : (
-            <div className="w-20 h-20 bg-surface-container-high rounded-2xl border-2 border-primary/40 flex items-center justify-center text-primary flex-shrink-0 shadow-[0_0_15px_rgba(0,240,255,0.1)]">
-              <span className="material-symbols-outlined text-4xl">pets</span>
+            <div className="w-14 h-14 sm:w-20 sm:h-20 bg-surface-container-high rounded-xl sm:rounded-2xl border-2 border-primary/40 flex items-center justify-center text-primary flex-shrink-0 shadow-[0_0_15px_rgba(0,240,255,0.1)]">
+              <span className="material-symbols-outlined text-2xl sm:text-4xl">pets</span>
             </div>
           )}
 
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-label text-[10px] uppercase px-2.5 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/40 font-semibold tracking-wider">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-label text-[8px] sm:text-[10px] uppercase px-2 py-0.2 rounded-full bg-primary/20 text-primary border border-primary/40 font-semibold tracking-wider">
                 {activeCompanion.type.replace('_', ' ')}
               </span>
-              <span className="font-label text-[10px] uppercase px-2.5 py-0.5 rounded-full bg-secondary/20 text-secondary border border-secondary/40 font-semibold tracking-wider">
+              <span className="font-label text-[8px] sm:text-[10px] uppercase px-2 py-0.2 rounded-full bg-secondary/20 text-secondary border border-secondary/40 font-semibold tracking-wider">
                 {activeCompanion.size} {activeCompanion.species}
               </span>
               {activeCompanion.hitDice && (
-                <span className="font-label text-[10px] uppercase px-2.5 py-0.5 rounded-full bg-surface-container-high text-tertiary border border-white/10">
+                <span className="font-label text-[8px] sm:text-[10px] uppercase px-2 py-0.2 rounded-full bg-surface-container-high text-tertiary border border-white/10">
                   {activeCompanion.hitDice}
                 </span>
               )}
             </div>
 
-            <h1 className="font-headline text-3xl font-bold text-white mt-1.5">
+            <h1 className="font-headline text-lg sm:text-2xl md:text-3xl font-bold text-white mt-1 truncate">
               {activeCompanion.name}
             </h1>
-            <p className="font-label text-xs text-tertiary tracking-wider mt-0.5">
+            <p className="font-label text-[10px] sm:text-xs text-tertiary tracking-wider mt-0.5 truncate">
               Speed: {activeCompanion.speed} • BAB: +{activeCompanion.baseAttackBonus}
               {activeCompanion.senses ? ` • Senses: ${activeCompanion.senses}` : ''}
             </p>
@@ -245,36 +246,36 @@ export function CompanionPage() {
 
         <div className="flex items-center gap-3 relative z-10 w-full md:w-auto justify-end">
           <div className="text-right">
-            <span className="font-label text-[10px] text-tertiary uppercase tracking-widest block">
+            <span className="font-label text-[9px] sm:text-[10px] text-tertiary uppercase tracking-widest block">
               Bound Master
             </span>
-            <span className="font-headline text-primary font-bold text-lg">{char.name}</span>
+            <span className="font-headline text-primary font-bold text-sm sm:text-lg">{char.name}</span>
           </div>
         </div>
       </header>
 
       {/* Main Grid: Vitality & Defenses */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-6">
         {/* Vitality Core */}
-        <section className="lg:col-span-6 bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] flex flex-col items-center justify-center text-center relative overflow-hidden">
-          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
+        <section className="lg:col-span-6 bg-surface-container/70 backdrop-blur-md rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] flex flex-col items-center justify-center text-center relative overflow-hidden">
+          <h2 className="font-headline text-secondary text-xs sm:text-sm uppercase tracking-widest mb-2 sm:mb-4 neon-glow-accent">
             Vitality Core
           </h2>
 
           <div
-            className="font-label font-black text-primary"
-            style={{ fontSize: '4.5rem', lineHeight: 1, textShadow: '0 0 25px rgba(0,240,255,0.3)' }}
+            className="font-label font-black text-primary text-4xl sm:text-5xl md:text-6xl leading-none"
+            style={{ textShadow: '0 0 25px rgba(0,240,255,0.3)' }}
           >
             {currentHp}
           </div>
-          <div className="font-label text-tertiary tracking-widest uppercase mt-2 text-xs">
+          <div className="font-label text-tertiary tracking-widest uppercase mt-1 text-[10px] sm:text-xs">
             Hit Points / {activeCompanion.maxHp}
           </div>
 
-          <div className="mt-6 flex items-center gap-3">
+          <div className="mt-3 sm:mt-6 flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => adjustCompanionHp(char.id, activeCompanion.id, -hpDelta, activeCompanion.maxHp)}
-              className="px-4 py-2 bg-error-container text-on-error-container hover:brightness-125 rounded-xl transition-all font-label text-xs uppercase tracking-widest cursor-pointer active:scale-95"
+              className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-error-container text-on-error-container hover:brightness-125 rounded-xl transition-all font-label text-xs uppercase tracking-widest cursor-pointer active:scale-95 font-bold"
               aria-label="Decrease companion HP"
             >
               Damage
@@ -284,28 +285,28 @@ export function CompanionPage() {
               min={1}
               value={hpDelta}
               onChange={(e) => setHpDelta(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-16 bg-surface-container-high text-on-surface font-label text-lg font-bold text-center py-2 rounded-xl border border-white/10 focus:border-primary focus:outline-none"
+              className="w-14 sm:w-16 bg-surface-container-high text-on-surface font-label text-base sm:text-lg font-bold text-center py-1 sm:py-2 rounded-xl border border-white/10 focus:border-primary focus:outline-none"
             />
             <button
               onClick={() => adjustCompanionHp(char.id, activeCompanion.id, hpDelta, activeCompanion.maxHp)}
-              className="px-4 py-2 bg-primary-container text-on-primary-container hover:brightness-125 rounded-xl transition-all font-label text-xs uppercase tracking-widest cursor-pointer active:scale-95"
+              className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-primary-container text-on-primary-container hover:brightness-125 rounded-xl transition-all font-label text-xs uppercase tracking-widest cursor-pointer active:scale-95 font-bold"
               aria-label="Increase companion HP"
             >
               Heal
             </button>
           </div>
 
-          <div className="mt-4">
+          <div className="mt-2.5 sm:mt-4">
             {tempEdit === null ? (
               <button
                 onClick={() => setTempEdit(String(tempHp))}
-                className="px-3 py-1.5 bg-surface-container-lowest font-label text-xs text-primary hover:bg-surface-container-high rounded-xl transition-all cursor-pointer border border-primary/20"
+                className="px-2.5 py-1 sm:px-3 sm:py-1.5 bg-surface-container-lowest font-label text-[11px] sm:text-xs text-primary hover:bg-surface-container-high rounded-xl transition-all cursor-pointer border border-primary/20"
               >
-                TEMP HP: {tempHp}
+                TEMP HP: <span className="font-bold">{tempHp}</span>
               </button>
             ) : (
-              <div className="flex items-center gap-1 bg-surface-container-lowest px-2 py-1 rounded-xl border border-primary">
-                <span className="font-label text-xs text-primary">TEMP HP:</span>
+              <div className="flex items-center gap-1 bg-surface-container-lowest px-2 py-0.5 sm:py-1 rounded-xl border border-primary">
+                <span className="font-label text-xs text-primary">TEMP:</span>
                 <input
                   autoFocus
                   type="number"
@@ -324,18 +325,17 @@ export function CompanionPage() {
           </div>
         </section>
 
-        {/* Defense Grid */}
-        <section className="lg:col-span-6 bg-surface-container/70 backdrop-blur-md rounded-2xl p-4 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] grid grid-cols-2 gap-3">
-          <div className="bg-surface-container-low/80 rounded-xl p-4 border border-white/5">
-            <p className="font-label text-[10px] uppercase tracking-widest text-tertiary">
+        {/* Defense Grid: 3-column compact */}
+        <section className="lg:col-span-6 bg-surface-container/70 backdrop-blur-md rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] grid grid-cols-3 gap-2 sm:gap-2.5">
+          <div className="bg-surface-container-low/80 rounded-xl p-2 sm:p-3 border border-white/5">
+            <p className="font-label text-[9px] sm:text-[10px] uppercase tracking-wider text-tertiary font-bold truncate">
               Armor Class
             </p>
-            <p className="font-label text-3xl font-bold text-white mt-1">
+            <p className="font-label text-xl sm:text-2xl font-black text-white mt-0.5">
               {activeCompanion.armorClass.total + conditionAcMod}
             </p>
-            <p className="font-label text-[10px] text-tertiary mt-1">
-              TOUCH: {activeCompanion.armorClass.touch + conditionAcMod} | FLAT:{' '}
-              {activeCompanion.armorClass.flatFooted + conditionAcMod}
+            <p className="font-label text-[8px] sm:text-[9px] text-tertiary mt-0.5 font-mono truncate">
+              T: {activeCompanion.armorClass.touch + conditionAcMod} | FF: {activeCompanion.armorClass.flatFooted + conditionAcMod}
             </p>
           </div>
 
@@ -348,15 +348,15 @@ export function CompanionPage() {
                 label: `${activeCompanion.name} Initiative`,
               })
             }
-            className="bg-surface-container-low/80 rounded-xl p-4 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-primary/40 transition-all cursor-pointer group"
+            className="bg-surface-container-low/80 rounded-xl p-2 sm:p-3 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-primary/40 transition-all cursor-pointer group"
           >
-            <p className="font-label text-[10px] uppercase tracking-widest text-primary font-semibold">
+            <p className="font-label text-[9px] sm:text-[10px] uppercase tracking-wider text-primary font-bold truncate">
               Initiative
             </p>
-            <p className="font-label text-3xl font-bold text-primary mt-1">
+            <p className="font-label text-xl sm:text-2xl font-black text-primary mt-0.5">
               +{activeCompanion.initiativeBonus}
             </p>
-            <p className="font-label text-[10px] text-tertiary mt-1">Click to roll d20</p>
+            <p className="font-label text-[8px] sm:text-[9px] text-tertiary mt-0.5 font-mono truncate">Roll d20</p>
           </button>
 
           <button
@@ -372,15 +372,15 @@ export function CompanionPage() {
                 ],
               })
             }
-            className="bg-surface-container-low/80 rounded-xl p-4 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-secondary/40 transition-all cursor-pointer group"
+            className="bg-surface-container-low/80 rounded-xl p-2 sm:p-3 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-secondary/40 transition-all cursor-pointer group"
           >
-            <p className="font-label text-[10px] uppercase tracking-widest text-secondary font-semibold">
+            <p className="font-label text-[9px] sm:text-[10px] uppercase tracking-wider text-secondary font-bold truncate">
               Fortitude
             </p>
-            <p className="font-label text-2xl font-bold text-white mt-1">
+            <p className="font-label text-xl sm:text-2xl font-black text-white mt-0.5">
               +{activeCompanion.savingThrows.fort + conditionSaveMod}
             </p>
-            <p className="font-label text-[10px] text-tertiary mt-0.5">Fort Save</p>
+            <p className="font-label text-[8px] sm:text-[9px] text-tertiary mt-0.5 font-mono truncate">Fort Save</p>
           </button>
 
           <button
@@ -396,15 +396,15 @@ export function CompanionPage() {
                 ],
               })
             }
-            className="bg-surface-container-low/80 rounded-xl p-4 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-secondary/40 transition-all cursor-pointer group"
+            className="bg-surface-container-low/80 rounded-xl p-2 sm:p-3 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-secondary/40 transition-all cursor-pointer group"
           >
-            <p className="font-label text-[10px] uppercase tracking-widest text-secondary font-semibold">
+            <p className="font-label text-[9px] sm:text-[10px] uppercase tracking-wider text-secondary font-bold truncate">
               Reflex
             </p>
-            <p className="font-label text-2xl font-bold text-white mt-1">
+            <p className="font-label text-xl sm:text-2xl font-black text-white mt-0.5">
               +{activeCompanion.savingThrows.ref + conditionSaveMod}
             </p>
-            <p className="font-label text-[10px] text-tertiary mt-0.5">Reflex Save</p>
+            <p className="font-label text-[8px] sm:text-[9px] text-tertiary mt-0.5 font-mono truncate">Reflex Save</p>
           </button>
 
           <button
@@ -420,16 +420,28 @@ export function CompanionPage() {
                 ],
               })
             }
-            className="col-span-2 bg-surface-container-low/80 rounded-xl p-4 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-secondary/40 transition-all cursor-pointer group"
+            className="bg-surface-container-low/80 rounded-xl p-2 sm:p-3 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-secondary/40 transition-all cursor-pointer group"
           >
-            <p className="font-label text-[10px] uppercase tracking-widest text-secondary font-semibold">
+            <p className="font-label text-[9px] sm:text-[10px] uppercase tracking-wider text-secondary font-bold truncate">
               Willpower
             </p>
-            <p className="font-label text-2xl font-bold text-white mt-1">
+            <p className="font-label text-xl sm:text-2xl font-black text-white mt-0.5">
               +{activeCompanion.savingThrows.will + conditionSaveMod}
             </p>
-            <p className="font-label text-[10px] text-tertiary mt-0.5">Will Save</p>
+            <p className="font-label text-[8px] sm:text-[9px] text-tertiary mt-0.5 font-mono truncate">Will Save</p>
           </button>
+
+          <div className="bg-surface-container-low/80 rounded-xl p-2 sm:p-3 border border-white/5">
+            <p className="font-label text-[9px] sm:text-[10px] uppercase tracking-wider text-primary font-bold truncate">
+              Speed
+            </p>
+            <p className="font-label text-base sm:text-xl font-black text-white mt-0.5">
+              {activeCompanion.speed}
+            </p>
+            <p className="font-label text-[8px] sm:text-[9px] text-tertiary mt-0.5 font-mono truncate">
+              BAB: +{activeCompanion.baseAttackBonus}
+            </p>
+          </div>
         </section>
       </div>
 
