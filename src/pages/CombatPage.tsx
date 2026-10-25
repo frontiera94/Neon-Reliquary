@@ -291,6 +291,8 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
             />
           )}
 
+          <CombatManeuversPanel maneuversCalc={maneuversCalc} openRoll={openRoll} />
+
           {/* Summoned ally */}
           {activeSummonOption && activeSummon && (
             <section aria-labelledby="summon-heading" className="space-y-2">
@@ -570,8 +572,6 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
           </section>
 
           <ContextualCombatFeatures collapsible defaultCollapsed compact />
-
-          <CombatManeuversPanel maneuversCalc={maneuversCalc} openRoll={openRoll} />
 
           {summonableSpells.length > 0 && (
             <SummonSection

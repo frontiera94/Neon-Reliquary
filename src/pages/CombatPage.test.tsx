@@ -184,6 +184,21 @@ describe('CombatPage component', () => {
     expect(screen.getByText('Lotta (Grapple)')).toBeInTheDocument()
   })
 
+  it('renders Combat Maneuvers panel in the primary action column under spells, not in aside', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <CombatPage />
+      </MemoryRouter>
+    )
+
+    const maneuversHeader = screen.getByText('Maneuvers & Tactics (CMB / CMD)')
+    const aside = container.querySelector('aside')
+
+    expect(maneuversHeader).toBeInTheDocument()
+    expect(aside).toBeInTheDocument()
+    expect(aside).not.toContainElement(maneuversHeader)
+  })
+
   it('renders iterative attack buttons and triggers full attack modal', () => {
     const multiAttackChar: FullCharacter = {
       ...combatChar,
