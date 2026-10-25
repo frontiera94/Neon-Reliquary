@@ -628,6 +628,18 @@ describe('TacticalHUD Component', () => {
       expect(screen.getByText('Armor Class (Total)')).toBeInTheDocument()
       expect(screen.getByText('DEX Mod')).toBeInTheDocument()
     })
+
+    it('renders AC values in a single-row flex-nowrap capsule to prevent vertical wrapping', () => {
+      render(
+        <MemoryRouter>
+          <TacticalHUD />
+        </MemoryRouter>
+      )
+
+      const acGroup = screen.getByRole('group', { name: /Armor Class/i })
+      expect(acGroup).toHaveClass('flex-nowrap')
+      expect(acGroup).not.toHaveClass('flex-wrap')
+    })
   })
 
   describe('Suite 5: Interactive Saving Throws & Dice Store Dispatch', () => {
@@ -702,6 +714,18 @@ describe('TacticalHUD Component', () => {
         modifier: 3,
         label: 'Will Save',
       })
+    })
+
+    it('renders Saving Throws in a single-row flex-nowrap capsule to prevent vertical wrapping', () => {
+      render(
+        <MemoryRouter>
+          <TacticalHUD />
+        </MemoryRouter>
+      )
+
+      const savesGroup = screen.getByRole('group', { name: /Saving Throws/i })
+      expect(savesGroup).toHaveClass('flex-nowrap')
+      expect(savesGroup).not.toHaveClass('flex-wrap')
     })
   })
 

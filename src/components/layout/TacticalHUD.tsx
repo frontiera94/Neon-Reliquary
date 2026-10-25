@@ -141,9 +141,9 @@ export function TacticalHUD() {
           </div>
 
           {/* Center Cockpit: Tactical Vitals (HP Bar, AC, Saves) */}
-          <div className="col-span-2 row-start-2 flex w-full flex-wrap md:flex-nowrap items-center justify-center gap-2 md:col-span-1 md:row-start-auto md:mx-2 md:max-w-2xl md:flex-1 md:gap-3">
+          <div className="col-span-2 row-start-2 flex w-full flex-nowrap items-center justify-center gap-1.5 sm:gap-2 md:col-span-1 md:row-start-auto md:mx-2 md:max-w-2xl md:flex-1 md:gap-3">
             {/* Multi-Track HP Bar Container with Popover Trigger */}
-            <div className="relative flex-1 min-w-[140px] max-w-sm">
+            <div className="relative flex-1 min-w-[120px] sm:min-w-[140px] max-w-sm">
               <div
                 role="button"
                 tabIndex={0}
@@ -263,9 +263,13 @@ export function TacticalHUD() {
               />
             </div>
 
-            {/* AC Badges (Total, Touch, Flat-Footed) */}
+            {/* AC Capsule (Total, Touch, Flat-Footed) */}
             {effectiveAc && detailedAc && (
-              <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Armor Class">
+              <div
+                className="flex flex-nowrap items-center shrink-0 rounded-xl bg-surface-container/70 border border-white/10 p-0.5"
+                role="group"
+                aria-label="Armor Class"
+              >
                 {/* Total AC */}
                 <StatBreakdownTooltip
                   title="Armor Class (Total)"
@@ -275,13 +279,13 @@ export function TacticalHUD() {
                 >
                   <div
                     data-testid="ac-total"
-                    className="px-2 py-1 rounded-xl bg-surface-container/70 border border-white/10 hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[42px] cursor-pointer"
+                    className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[36px] sm:min-w-[40px] cursor-pointer"
                   >
-                    <span className="font-label text-[9px] uppercase tracking-widest text-tertiary font-semibold">
+                    <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-tertiary font-semibold">
                       AC
                     </span>
                     <span
-                      className={`font-label text-sm leading-none mt-0.5 ${
+                      className={`font-label text-xs sm:text-sm leading-none mt-0.5 ${
                         effectiveAc.total > char.armorClass.total
                           ? 'text-[#00daf3] font-black'
                           : effectiveAc.total < char.armorClass.total
@@ -294,6 +298,8 @@ export function TacticalHUD() {
                   </div>
                 </StatBreakdownTooltip>
 
+                <div className="h-4 w-px bg-white/10 my-auto" />
+
                 {/* Touch AC */}
                 <StatBreakdownTooltip
                   title="Touch Armor Class"
@@ -304,7 +310,7 @@ export function TacticalHUD() {
                 >
                   <div
                     data-testid="ac-touch"
-                    className="px-1.5 sm:px-2 py-1 rounded-xl bg-surface-container/70 border border-white/10 hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[38px] sm:min-w-[42px] cursor-pointer"
+                    className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[34px] sm:min-w-[38px] cursor-pointer"
                   >
                     <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-tertiary font-semibold">
                       TOUCH
@@ -323,6 +329,8 @@ export function TacticalHUD() {
                   </div>
                 </StatBreakdownTooltip>
 
+                <div className="h-4 w-px bg-white/10 my-auto" />
+
                 {/* Flat-Footed AC */}
                 <StatBreakdownTooltip
                   title="Flat-Footed Armor Class"
@@ -333,7 +341,7 @@ export function TacticalHUD() {
                 >
                   <div
                     data-testid="ac-flat-footed"
-                    className="px-1.5 sm:px-2 py-1 rounded-xl bg-surface-container/70 border border-white/10 hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[38px] sm:min-w-[42px] cursor-pointer"
+                    className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[34px] sm:min-w-[38px] cursor-pointer"
                   >
                     <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-tertiary font-semibold">
                       FLAT
@@ -354,9 +362,13 @@ export function TacticalHUD() {
               </div>
             )}
 
-            {/* Interactive Saving Throws (Fort, Ref, Will) */}
+            {/* Interactive Saving Throws Capsule (Fort, Ref, Will) */}
             {effectiveSaves && (
-              <div className="flex flex-wrap items-center gap-1 sm:gap-1.5" role="group" aria-label="Saving Throws">
+              <div
+                className="flex flex-nowrap items-center shrink-0 rounded-xl bg-surface-container/70 border border-white/10 p-0.5"
+                role="group"
+                aria-label="Saving Throws"
+              >
                 {(
                   [
                     {
@@ -384,7 +396,7 @@ export function TacticalHUD() {
                       bkd: effectiveSaves.breakdowns.will,
                     },
                   ] as const
-                ).map((save) => {
+                ).map((save, idx) => {
                   const isBuffed = save.val > save.base
                   const isPenalized = save.val < save.base
                   const valColor = isBuffed
@@ -394,38 +406,40 @@ export function TacticalHUD() {
                     : 'text-on-surface font-bold'
 
                   return (
-                    <StatBreakdownTooltip
-                      key={save.key}
-                      title={save.fullName}
-                      total={save.val >= 0 ? `+${save.val}` : `${save.val}`}
-                      breakdown={save.bkd}
-                    >
-                      <button
-                        onClick={() => {
-                          useDiceStore.getState().openRoll({
-                            diceType: 20,
-                            count: 1,
-                            modifier: save.val,
-                            label: save.fullName,
-                            breakdown: save.bkd,
-                          })
-                        }}
-                        aria-label={`Roll ${save.fullName}`}
-                        className="px-1.5 sm:px-2 py-1 rounded-xl bg-surface-container/70 border border-white/10 hover:border-secondary/60 hover:bg-secondary/10 active:scale-95 transition-all flex flex-col items-center justify-center min-w-[38px] sm:min-w-[42px] cursor-pointer group"
+                    <div key={save.key} className="flex items-center">
+                      {idx > 0 && <div className="h-4 w-px bg-white/10 my-auto" />}
+                      <StatBreakdownTooltip
+                        title={save.fullName}
+                        total={save.val >= 0 ? `+${save.val}` : `${save.val}`}
+                        breakdown={save.bkd}
                       >
-                        <div className="flex items-center gap-0.5">
-                          <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-secondary group-hover:text-primary transition-colors font-semibold">
-                            {save.label}
+                        <button
+                          onClick={() => {
+                            useDiceStore.getState().openRoll({
+                              diceType: 20,
+                              count: 1,
+                              modifier: save.val,
+                              label: save.fullName,
+                              breakdown: save.bkd,
+                            })
+                          }}
+                          aria-label={`Roll ${save.fullName}`}
+                          className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-secondary/60 hover:bg-secondary/10 active:scale-95 transition-all flex flex-col items-center justify-center min-w-[34px] sm:min-w-[38px] cursor-pointer group"
+                        >
+                          <div className="flex items-center gap-0.5">
+                            <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-secondary group-hover:text-primary transition-colors font-semibold">
+                              {save.label}
+                            </span>
+                            <span className="material-symbols-outlined text-[9px] sm:text-[10px] text-tertiary/60 group-hover:text-primary transition-colors">
+                              casino
+                            </span>
+                          </div>
+                          <span className={`font-label text-xs sm:text-sm leading-none mt-0.5 ${valColor}`}>
+                            {save.val >= 0 ? `+${save.val}` : save.val}
                           </span>
-                          <span className="material-symbols-outlined text-[9px] sm:text-[10px] text-tertiary/60 group-hover:text-primary transition-colors">
-                            casino
-                          </span>
-                        </div>
-                        <span className={`font-label text-xs sm:text-sm leading-none mt-0.5 ${valColor}`}>
-                          {save.val >= 0 ? `+${save.val}` : save.val}
-                        </span>
-                      </button>
-                    </StatBreakdownTooltip>
+                        </button>
+                      </StatBreakdownTooltip>
+                    </div>
                   )
                 })}
               </div>
@@ -433,7 +447,7 @@ export function TacticalHUD() {
 
             {/* Active Conditions (Integrated in Cockpit — Zero layout shift) */}
             {conditions.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1 sm:gap-1.5" role="group" aria-label="Active Conditions">
+              <div className="flex flex-nowrap items-center gap-1 sm:gap-1.5 shrink-0" role="group" aria-label="Active Conditions">
                 {conditions.map((cond) => {
                   const info = CONDITION_INFO[cond]
                   return (
