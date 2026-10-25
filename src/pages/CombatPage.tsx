@@ -31,6 +31,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
   const {
     toggleBuff,
+    addCustomBuff,
     initSession,
     setAmmo,
     setSummon,
@@ -40,6 +41,8 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     adjustCompanionHp,
     spendSpellSlot,
     recoverSpellSlot,
+    spendPreparedSpell,
+    recoverPreparedSpell,
     spendResource,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
@@ -267,6 +270,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
               spellSlots={char.spellSlots}
               preparedSpellIds={session.preparedSpellIds}
               preparedSpells={session.preparedSpells}
+              spentPreparedSpells={session.spentPreparedSpells}
               spentSpellSlots={session.spentSpellSlots}
               spentResources={session.spentResources}
               dailyResources={char.dailyResources}
@@ -281,7 +285,13 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
               openRoll={openRoll}
               onSpendSlot={(lvl, max) => spendSpellSlot(char.id, lvl, max)}
               onRecoverSlot={(lvl) => recoverSpellSlot(char.id, lvl)}
+              onSpendPreparedSpell={(spellId, max) => spendPreparedSpell(char.id, spellId, max)}
+              onRecoverPreparedSpell={(spellId) => recoverPreparedSpell(char.id, spellId)}
               onSpendResource={(resourceId, max) => spendResource(char.id, resourceId, max)}
+              allBuffs={allBuffs}
+              activeBuffIds={activeBuffIds}
+              onToggleBuff={(buffId) => toggleBuff(char.id, buffId)}
+              onAddCustomBuff={(buff) => addCustomBuff(char.id, buff)}
             />
           )}
 

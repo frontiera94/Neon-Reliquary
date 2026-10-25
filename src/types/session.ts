@@ -20,6 +20,8 @@ export interface SessionState {
   preparedSpells?: Record<string, number>
   /** Derived flattened list kept for backwards compatibility. */
   preparedSpellIds: string[]
+  /** Consumed prepared/domain spell uses keyed by spell id. */
+  spentPreparedSpells?: Record<string, number>
   spentSpellSlots: Record<number, number>
   ammo: Record<string, number>
   activeSummon: ActiveSummon | null

@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import type { DailyResource, Spell, SpellSlot } from '../../types/resources'
 import type { AbilityScore } from '../../types/character'
+import type { BuffToggle } from '../../types/combat'
 import type { DiceRoll } from '../../types/dice'
 import { abilityMod, parseDiceFormula } from '../../lib/dice-engine'
 import { getSpellAvailability, type SpellAvailability } from '../../lib/spell-availability'
+import { isSpellBuffCandidate, findMatchingBuffForSpell, deriveBuffFromSpell } from '../../lib/stat-calc'
 
 export interface CombatSpellsSectionProps {
   spells: Spell[]
   spellSlots: SpellSlot[]
   preparedSpellIds: string[]
   preparedSpells?: Record<string, number>
+  spentPreparedSpells?: Record<string, number>
   spentSpellSlots: Record<number, number>
   spentResources?: Record<string, number>
   dailyResources?: DailyResource[]
@@ -26,7 +29,13 @@ export interface CombatSpellsSectionProps {
   openRoll: (roll: DiceRoll) => void
   onSpendSlot: (level: number, max: number) => void
   onRecoverSlot: (level: number) => void
+  onSpendPreparedSpell?: (spellId: string, max: number) => void
+  onRecoverPreparedSpell?: (spellId: string) => void
   onSpendResource?: (resourceId: string, max: number) => void
+  allBuffs?: BuffToggle[]
+  activeBuffIds?: string[]
+  onToggleBuff?: (buffId: string) => void
+  onAddCustomBuff?: (buff: BuffToggle) => void
 }
 
 function getSpellFocusBonus(school: string, feats: { id?: string; name: string }[]): number {
@@ -51,6 +60,7 @@ export function CombatSpellsSection({
   spellSlots,
   preparedSpellIds,
   preparedSpells,
+  spentPreparedSpells,
   spentSpellSlots,
   spentResources,
   dailyResources,
@@ -66,7 +76,13 @@ export function CombatSpellsSection({
   openRoll,
   onSpendSlot,
   onRecoverSlot,
+  onSpendPreparedSpell,
+  onRecoverPreparedSpell,
   onSpendResource,
+  allBuffs = [],
+  activeBuffIds = [],
+  onToggleBuff,
+  onAddCustomBuff,
 }: CombatSpellsSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const [activeLevelFilter, setActiveLevelFilter] = useState<number | 'all'>('all')
@@ -95,6 +111,7 @@ export function CombatSpellsSection({
       {
         preparedSpellIds,
         preparedSpells,
+        spentPreparedSpells,
         spentSpellSlots,
         spentResources,
       }
@@ -209,7 +226,15 @@ export function CombatSpellsSection({
   function handleCast(spell: Spell) {
     if (!availability.isCastable(spell)) return
 
-    if (availability.slotCost(spell) > 0) {
+    const uses = availability.spellUses(spell)
+    if (uses.kind === 'prepared' || uses.kind === 'domain') {
+      if (onSpendPreparedSpell) {
+        onSpendPreparedSpell(spell.id, uses.total)
+      } else {
+        const level = availability.getLevel(spell.level)
+        if (level) onSpendSlot(level.level, level.total)
+      }
+    } else if (uses.kind === 'spontaneous') {
       const level = availability.getLevel(spell.level)
       if (level) onSpendSlot(level.level, level.total)
     }
@@ -217,6 +242,19 @@ export function CombatSpellsSection({
     const resource = availability.resourceFor(spell)
     if (resource && spell.source === 'sla') {
       onSpendResource?.(resource.id, resource.total)
+    }
+
+    // Auto-buff candidate handling: if casting a buff spell, auto-activate it in Buffs & Effects
+    if (isSpellBuffCandidate(spell)) {
+      const match = findMatchingBuffForSpell(spell, allBuffs)
+      const buffId = match?.id ?? `spell-buff-${spell.id}`
+      if (!activeBuffIds.includes(buffId)) {
+        if (match) {
+          onToggleBuff?.(match.id)
+        } else if (onAddCustomBuff) {
+          onAddCustomBuff(deriveBuffFromSpell(spell))
+        }
+      }
     }
 
     // Trigger attack roll if touch/ray, else direct damage roll if specified
@@ -268,15 +306,25 @@ export function CombatSpellsSection({
               )}
             </div>
             <p className="mt-0.5 truncate font-label text-[10px] text-tertiary">
-              Slots: {availableLevels.length === 0
-                ? 'none'
-                : availableLevels
-                    .filter((level) => level > 0)
-                    .map((level) => {
-                      const info = availability.getLevel(level)
-                      return `L${level} ${info?.remaining ?? 0}/${info?.total ?? 0}`
-                    })
-                    .join(' · ') || 'cantrips only'}
+              {availability.profile.mode === 'prepared'
+                ? `Active Uses: ${availability.remainingSlots} remaining · ${
+                    availableLevels
+                      .filter((level) => level > 0)
+                      .map((level) => {
+                        const info = availability.getLevel(level)
+                        return `L${level} ${info?.remaining ?? 0}/${info?.total ?? 0}`
+                      })
+                      .join(' · ') || 'cantrips only'
+                  }`
+                : `Slots: ${
+                    availableLevels
+                      .filter((level) => level > 0)
+                      .map((level) => {
+                        const info = availability.getLevel(level)
+                        return `L${level} ${info?.remaining ?? 0}/${info?.total ?? 0}`
+                      })
+                      .join(' · ') || 'cantrips only'
+                  }`}
             </p>
           </div>
         </div>
@@ -357,8 +405,8 @@ export function CombatSpellsSection({
                     )}
                   </button>
 
-                  {/* Level Bar +1 Restore Button */}
-                  {lvl > 0 && spent > 0 && (
+                  {/* Level Bar +1 Restore Button (Spontaneous casters only) */}
+                  {lvl > 0 && spent > 0 && availability.profile.mode === 'spontaneous' && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
@@ -481,6 +529,9 @@ export function CombatSpellsSection({
                 const spent = levelInfo?.spent ?? 0
                 const hasSlots = availability.isCastable(spell)
                 const remaining = levelInfo?.remaining ?? 0
+                const uses = availability.spellUses(spell)
+                const matchBuff = isSpellBuffCandidate(spell) ? findMatchingBuffForSpell(spell, allBuffs) : null
+                const isBuffActive = isSpellBuffCandidate(spell) && activeBuffIds.includes(matchBuff?.id ?? `spell-buff-${spell.id}`)
                 const spellFocusBonus = getSpellFocusBonus(spell.school, feats)
                 const dc = availability.spellDc(spell, spellFocusBonus)
                 const hasSomatic = spell.components?.includes('S')
@@ -515,6 +566,11 @@ export function CombatSpellsSection({
                             <span className="text-tertiary text-[10px] font-label uppercase tracking-wider">
                               {spell.school}
                             </span>
+                            {isBuffActive && (
+                              <span className="px-2 py-0.5 rounded-full bg-secondary text-white font-label text-[9px] uppercase tracking-widest font-bold">
+                                Buff Active
+                              </span>
+                            )}
                             {showsAsf && (
                               <span
                                 className="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 font-mono text-[9px] font-bold uppercase tracking-wider cursor-help flex items-center gap-0.5"
@@ -591,7 +647,27 @@ export function CombatSpellsSection({
                   {/* Actions Row */}
                   <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5 flex-wrap">
                     {/* Slot quick indicator & manual refund */}
-                    {!isAtWill && spell.level > 0 && max > 0 ? (
+                    {!isAtWill && spell.level > 0 && (uses.kind === 'prepared' || uses.kind === 'domain') && uses.total > 0 ? (
+                      <div className="flex items-center gap-2 text-xs font-label">
+                        <div className="flex items-center gap-1">
+                          <span className="text-tertiary text-[10px] uppercase tracking-wider">Uses:</span>
+                          <span className={`font-mono text-xs font-bold tabular-nums ${uses.remaining > 0 ? 'text-primary' : 'text-error'}`}>
+                            {uses.remaining}/{uses.total}
+                          </span>
+                        </div>
+                        {uses.spent > 0 && onRecoverPreparedSpell && (
+                          <button
+                            onClick={() => onRecoverPreparedSpell(spell.id)}
+                            className="px-2 py-0.5 rounded-md bg-primary/10 border border-primary/30 hover:bg-primary/20 hover:border-primary text-primary text-[10px] font-label font-bold uppercase tracking-wider transition-all flex items-center gap-1 cursor-pointer hover:shadow-[0_0_8px_rgba(0,240,255,0.25)] active:scale-95"
+                            title={`Ripristina 1 uso preparato per ${spell.name} (Restore 1 prepared use for ${spell.name})`}
+                            aria-label={`Ripristina uso per ${spell.name}`}
+                          >
+                            <span className="material-symbols-outlined text-[11px] leading-none">undo</span>
+                            <span>+1 Use</span>
+                          </button>
+                        )}
+                      </div>
+                    ) : !isAtWill && spell.level > 0 && max > 0 ? (
                       <div className="flex items-center gap-2 text-xs font-label">
                         <div className="flex items-center gap-1">
                           <span className="text-tertiary text-[10px] uppercase tracking-wider">Slots:</span>
@@ -627,7 +703,7 @@ export function CombatSpellsSection({
                       </div>
                     )}
 
-                    {/* Action Buttons: Touch Attack / Damage / Cast */}
+                    {/* Action Buttons: Touch Attack / Damage / Buff / Cast */}
                     <div className="flex items-center gap-1.5 flex-wrap justify-end">
                       {/* Explicit Touch Attack Button if attackType */}
                       {spell.attackType && (
@@ -662,6 +738,32 @@ export function CombatSpellsSection({
                         </button>
                       )}
 
+                      {/* Explicit Buff Action if candidate */}
+                      {isSpellBuffCandidate(spell) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isBuffActive) {
+                              if (matchBuff) onToggleBuff?.(matchBuff.id)
+                            } else {
+                              handleCast(spell)
+                            }
+                          }}
+                          disabled={!isBuffActive && !hasSlots}
+                          className={`px-2.5 py-1 rounded-lg border font-label text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-1 active:scale-95 ${
+                            isBuffActive
+                              ? 'bg-secondary/20 border-secondary/60 text-secondary hover:bg-secondary/30 cursor-pointer'
+                              : hasSlots
+                              ? 'bg-secondary/10 border-secondary/40 text-secondary hover:bg-secondary/20 cursor-pointer'
+                              : 'bg-secondary/5 border-white/10 text-tertiary opacity-40 cursor-not-allowed'
+                          }`}
+                          title={isBuffActive ? 'Disattiva buff attivo' : 'Attiva come buff (consuma 1 uso)'}
+                        >
+                          <span className="material-symbols-outlined text-xs">{isBuffActive ? 'check_circle' : 'add_circle'}</span>
+                          <span>{isBuffActive ? 'Buff On' : 'Buff'}</span>
+                        </button>
+                      )}
+
                       {/* Cast Button */}
                       <button
                         onClick={() => handleCast(spell)}
@@ -674,7 +776,17 @@ export function CombatSpellsSection({
                         aria-label={`Cast ${spell.name}`}
                       >
                         <span className="material-symbols-outlined text-xs">bolt</span>
-                        <span>{isSla ? 'Use' : spell.level === 0 ? 'Cast' : hasSlots ? 'Cast' : 'No Slots'}</span>
+                        <span>
+                          {isSla
+                            ? 'Use'
+                            : spell.level === 0
+                            ? 'Cast'
+                            : hasSlots
+                            ? 'Cast'
+                            : (uses.kind === 'prepared' || uses.kind === 'domain')
+                            ? 'No Uses'
+                            : 'No Slots'}
+                        </span>
                       </button>
                     </div>
                   </div>
