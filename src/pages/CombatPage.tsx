@@ -22,6 +22,7 @@ import { FullAttackModal } from '../components/combat/FullAttackModal'
 import { CombatSpellsSection } from '../components/combat/CombatSpellsSection'
 import { ContextualCombatFeatures, DefensiveBadges } from '../components/combat/ContextualCombatFeatures'
 import { DailyResourcePips } from '../components/combat/BuffResourceToggle'
+import { SpellUsePips } from '../components/spells/SpellUsePips'
 import { buffModifierTokens, modifierColor } from '../lib/buff-summary'
 import type { Weapon } from '../types/combat'
 import type { DiceType } from '../types/dice'
@@ -41,8 +42,10 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     adjustCompanionHp,
     spendSpellSlot,
     recoverSpellSlot,
+    setSpellSlotSpent,
     spendPreparedSpell,
     recoverPreparedSpell,
+    setPreparedSpellSpent,
     spendResource,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
@@ -608,6 +611,97 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                     compact
                   />
                 ))}
+              </div>
+            )}
+
+            {/* Active Spell Uses / Slots in Buffs & Effects */}
+            {char.spells && char.spells.length > 0 && (
+              <div className="mt-3 space-y-1.5 border-t border-white/5 pt-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-label text-[10px] uppercase tracking-wider text-secondary font-bold">
+                    {spellAvailability.profile.mode === 'prepared' ? 'Prepared Spells' : 'Spell Slots'}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-label text-[9px] text-tertiary tabular-nums">
+                      {spellAvailability.remainingSlots}/{spellAvailability.totalSlots}
+                    </span>
+                    <Link
+                      to="/spells"
+                      className="font-label text-[9px] text-primary hover:underline uppercase tracking-wider flex items-center gap-0.5"
+                      title="Manage prepared spells in Repository"
+                    >
+                      <span>Spells</span>
+                      <span className="material-symbols-outlined text-[11px] leading-none">arrow_forward</span>
+                    </Link>
+                  </div>
+                </div>
+
+                {spellAvailability.profile.mode === 'prepared' ? (
+                  spellAvailability.activeSpellUses.length > 0 ? (
+                    <div className="space-y-1">
+                      {spellAvailability.activeSpellUses.map((item) => (
+                        <SpellUsePips
+                          key={item.id}
+                          label={item.name}
+                          prefix={item.prefix}
+                          total={item.total}
+                          spent={item.spent}
+                          compact
+                          onSpend={() => spendPreparedSpell(char.id, item.id, item.total)}
+                          onSetSpent={(amount) => setPreparedSpellSpent(char.id, item.id, amount)}
+                        />
+                      ))}
+                      {spellAvailability.levels
+                        .filter((lvl) => (lvl.unpreparedCount ?? 0) > 0)
+                        .map((lvl) => (
+                          <div
+                            key={`unprep-${lvl.level}`}
+                            className="flex items-center justify-between text-tertiary/60 font-label text-[9px] uppercase tracking-wider px-1 py-0.5"
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <span className="px-1 py-0.5 rounded bg-white/5 border border-white/5 text-[8px] font-bold">
+                                L{lvl.level}
+                              </span>
+                              <span>{lvl.unpreparedCount} Unprepared Slot{lvl.unpreparedCount > 1 ? 's' : ''}</span>
+                            </span>
+                            <Link
+                              to="/spells"
+                              className="text-primary hover:underline text-[9px] capitalize"
+                            >
+                              prepare +
+                            </Link>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between px-1 py-1 text-tertiary/60 font-label text-[10px]">
+                      <span>{spellAvailability.totalSlots} slots free to prepare</span>
+                      <Link
+                        to="/spells"
+                        className="text-primary hover:underline font-bold uppercase text-[9px]"
+                      >
+                        Prepare Spells →
+                      </Link>
+                    </div>
+                  )
+                ) : (
+                  <div className="space-y-1">
+                    {spellAvailability.levels
+                      .filter((level) => level.total > 0)
+                      .map((level) => (
+                        <SpellUsePips
+                          key={`slot-lvl-${level.level}`}
+                          label={`Level ${level.level}`}
+                          prefix="SLOT"
+                          total={level.total}
+                          spent={level.spent}
+                          compact
+                          onSpend={() => spendSpellSlot(char.id, level.level, level.total)}
+                          onSetSpent={(amount) => setSpellSlotSpent(char.id, level.level, amount)}
+                        />
+                      ))}
+                  </div>
+                )}
               </div>
             )}
 
