@@ -5,7 +5,12 @@ import type { BuffToggle } from '../../types/combat'
 import type { DiceRoll } from '../../types/dice'
 import { abilityMod, parseDiceFormula } from '../../lib/dice-engine'
 import { getSpellAvailability, type SpellAvailability } from '../../lib/spell-availability'
-import { isSpellBuffCandidate, findMatchingBuffForSpell, deriveBuffFromSpell } from '../../lib/stat-calc'
+import {
+  isSpellBuffCandidate,
+  findMatchingBuffForSpell,
+  deriveBuffFromSpell,
+  getSpellFocusBonus,
+} from '../../lib/stat-calc'
 
 export interface CombatSpellsSectionProps {
   spells: Spell[]
@@ -36,23 +41,6 @@ export interface CombatSpellsSectionProps {
   activeBuffIds?: string[]
   onToggleBuff?: (buffId: string) => void
   onAddCustomBuff?: (buff: BuffToggle) => void
-}
-
-function getSpellFocusBonus(school: string, feats: { id?: string; name: string }[]): number {
-  if (!school || !feats.length) return 0
-  const schoolLower = school.toLowerCase()
-  let bonus = 0
-  for (const f of feats) {
-    const nameLower = f.name.toLowerCase()
-    if (nameLower.includes('spell focus') && nameLower.includes(schoolLower)) {
-      if (nameLower.includes('greater')) {
-        bonus = Math.max(bonus, 2)
-      } else {
-        bonus = Math.max(bonus, 1)
-      }
-    }
-  }
-  return bonus
 }
 
 export function CombatSpellsSection({
@@ -744,7 +732,7 @@ export function CombatSpellsSection({
                           type="button"
                           onClick={() => {
                             if (isBuffActive) {
-                              if (matchBuff) onToggleBuff?.(matchBuff.id)
+                              onToggleBuff?.(matchBuff?.id ?? `spell-buff-${spell.id}`)
                             } else {
                               handleCast(spell)
                             }

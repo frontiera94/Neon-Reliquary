@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { rollDice, parseDiceFormula, abilityMod } from './dice-engine'
-import type { DiceRoll } from '../types/dice'
+import { rollDice, rollDie, parseDiceFormula, abilityMod } from './dice-engine'
+import type { DiceRoll, DiceType } from '../types/dice'
 
 // ─── abilityMod ──────────────────────────────────────────────────────────────
 
@@ -166,5 +166,51 @@ describe('rollDice', () => {
     const after = Date.now()
     expect(result.timestamp).toBeGreaterThanOrEqual(before)
     expect(result.timestamp).toBeLessThanOrEqual(after)
+  })
+})
+
+// ─── rollDie & edge cases ────────────────────────────────────────────────────
+
+describe('rollDie', () => {
+  it('rolls integers within [1, sides]', () => {
+    for (let i = 0; i < 50; i++) {
+      const val = rollDie(20)
+      expect(Number.isInteger(val)).toBe(true)
+      expect(val).toBeGreaterThanOrEqual(1)
+      expect(val).toBeLessThanOrEqual(20)
+    }
+  })
+
+  it('throws RangeError for non-positive or non-integer sides', () => {
+    expect(() => rollDie(0)).toThrow(RangeError)
+    expect(() => rollDie(-6)).toThrow(RangeError)
+    expect(() => rollDie(1.5)).toThrow(RangeError)
+    expect(() => rollDie(NaN)).toThrow(RangeError)
+    expect(() => rollDie(Infinity)).toThrow(RangeError)
+    expect(() => rollDie(0x1_0000_0001)).toThrow(RangeError)
+    expect(() => rollDie(Number.MAX_SAFE_INTEGER)).toThrow(RangeError)
+  })
+})
+
+describe('parseDiceFormula & rollDice edge cases', () => {
+  it('rejects 0-sided, 0-count, or oversized dice in parseDiceFormula and falls back to 1d20', () => {
+    expect(parseDiceFormula('1d0')).toEqual({ count: 1, sides: 20, bonus: 0 })
+    expect(parseDiceFormula('0d0')).toEqual({ count: 1, sides: 20, bonus: 0 })
+    expect(parseDiceFormula('0d6')).toEqual({ count: 1, sides: 20, bonus: 0 })
+    expect(parseDiceFormula('1d999999999999')).toEqual({ count: 1, sides: 20, bonus: 0 })
+  })
+
+  it('never triggers isCriticalThreat on a natural 1 even if critRange is 1', () => {
+    const result = rollDice({ diceType: 1 as unknown as DiceType, count: 1, modifier: 0, label: 'Nat1Check', critRange: 1 })
+    expect(result.naturalRolls[0]).toBe(1)
+    expect(result.isCriticalThreat).toBe(false)
+  })
+
+  it('handles 0 dice count gracefully without threatening a crit', () => {
+    const result = rollDice({ diceType: 20, count: 0, modifier: 4, label: 'ZeroDice', critRange: 1 })
+    expect(result.naturalRolls).toEqual([])
+    expect(result.total).toBe(4)
+    expect(result.isCriticalThreat).toBe(false)
+    expect(result.formula).toBe('0d20: 0 + 4 = 4')
   })
 })
