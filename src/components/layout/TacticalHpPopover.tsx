@@ -12,75 +12,12 @@ export interface TacticalHpPopoverProps {
   conScore: number
 }
 
-/**
- * Pure PF1e damage calculation:
- * Absorbs damage into temporary HP first; remaining damage reduces current HP
- * down to the negative Constitution score death threshold.
- */
-function calculateDamageApplication(
-  damage: number,
-  currentHp: number,
-  tempHp: number,
-  conScore: number
-): { newCurrentHp: number; newTempHp: number; absorbedByTemp: number } {
-  if (damage <= 0) return { newCurrentHp: currentHp, newTempHp: tempHp, absorbedByTemp: 0 }
-  const absorbedByTemp = Math.min(tempHp, damage)
-  const newTempHp = tempHp - absorbedByTemp
-  const remainingDamage = damage - absorbedByTemp
-  const deathThreshold = -Math.max(1, conScore)
-  const newCurrentHp = Math.max(deathThreshold, currentHp - remainingDamage)
-  return { newCurrentHp, newTempHp, absorbedByTemp }
-}
-
-/**
- * Pure PF1e healing calculation:
- * Healing clears nonlethal damage first, then restores current HP up to max HP.
- */
-function calculateHealingApplication(
-  healing: number,
-  currentHp: number,
-  nonlethalDamage: number,
-  maxHp: number
-): { newCurrentHp: number; newNonlethal: number; nonlethalCleared: number } {
-  if (healing <= 0) return { newCurrentHp: currentHp, newNonlethal: nonlethalDamage, nonlethalCleared: 0 }
-  const nonlethalCleared = Math.min(nonlethalDamage, healing)
-  const newNonlethal = nonlethalDamage - nonlethalCleared
-  const remainingHealing = healing - nonlethalCleared
-  const newCurrentHp = Math.min(maxHp, currentHp + remainingHealing)
-  return { newCurrentHp, newNonlethal, nonlethalCleared }
-}
-
-/**
- * Store-mutating helpers for damage and healing
- */
 function applyDamage(characterId: string, damage: number, conScore: number) {
-  const sess = useSessionStore.getState().getSession(characterId)
-  const res = calculateDamageApplication(damage, sess.currentHp, sess.tempHp, conScore)
-  useSessionStore.setState((s) => ({
-    sessions: {
-      ...s.sessions,
-      [characterId]: {
-        ...(s.sessions[characterId] ?? sess),
-        currentHp: res.newCurrentHp,
-        tempHp: res.newTempHp,
-      },
-    },
-  }))
+  useSessionStore.getState().applyDamage(characterId, damage, conScore)
 }
 
 function applyHealing(characterId: string, healing: number, maxHp: number) {
-  const sess = useSessionStore.getState().getSession(characterId)
-  const res = calculateHealingApplication(healing, sess.currentHp, sess.nonlethalDamage, maxHp)
-  useSessionStore.setState((s) => ({
-    sessions: {
-      ...s.sessions,
-      [characterId]: {
-        ...(s.sessions[characterId] ?? sess),
-        currentHp: res.newCurrentHp,
-        nonlethalDamage: res.newNonlethal,
-      },
-    },
-  }))
+  useSessionStore.getState().applyHealing(characterId, healing, maxHp)
 }
 
 export function TacticalHpPopover({

@@ -76,13 +76,8 @@ export function computeNextActionEconomy(
   const updated: ActionEconomyState = { ...current, [action]: nextVal }
 
   if (action === 'fullRound') {
-    if (nextVal) {
-      updated.standard = true
-      updated.move = true
-    } else {
-      updated.standard = false
-      updated.move = false
-    }
+    updated.standard = nextVal
+    updated.move = nextVal
   } else if (action === 'standard' || action === 'move') {
     if (!nextVal) {
       updated.fullRound = false
@@ -119,28 +114,42 @@ const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurs
   currentRound: 1,
 })
 
+/** Drops keys whose value is `undefined`/`null` so they cannot shadow defaults when spread. */
+function definedEntries<T extends object>(obj: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, value]) => value !== undefined && value !== null)
+  ) as Partial<T>
+}
 
+/**
+ * Normalizes a session coming from an untrusted/legacy source (old localStorage
+ * versions, Neon DB rows written by older clients) into a complete SessionState.
+ * Any required field that is missing is back-filled from `defaultSession`, so
+ * downstream code can safely call `.includes()` / `.filter()` on arrays.
+ */
 export function normalizePersistedSession(sess: SessionState): SessionState {
+  const base = defaultSession(sess.characterId)
+  // `activeSummon` is legitimately `null`, so restore it explicitly after the merge.
+  const merged: SessionState = {
+    ...base,
+    ...definedEntries(sess),
+    activeSummon: sess.activeSummon ?? null,
+  }
   const preparedSpells = normalizePreparedSpells(sess.preparedSpells, sess.preparedSpellIds)
   const spentResources = Object.fromEntries(
-    Object.entries(sess.spentResources ?? {}).filter(([resourceId]) => !/^spells-\d+$/.test(resourceId))
+    Object.entries(merged.spentResources).filter(([resourceId]) => !/^spells-\d+$/.test(resourceId))
   )
   const spentPreparedSpells = Object.fromEntries(
-    Object.entries(sess.spentPreparedSpells ?? {})
+    Object.entries(merged.spentPreparedSpells ?? {})
       .map(([id, count]) => [id, Math.max(0, Math.floor(Number(count) || 0))] as const)
       .filter(([, count]) => count > 0)
   )
   return {
-    ...sess,
+    ...merged,
     spentResources,
     preparedSpells,
     preparedSpellIds: expandPreparedSpells(preparedSpells),
     spentPreparedSpells,
-    itemQuantities: sess.itemQuantities ?? {},
-    ammo: sess.ammo ?? {},
-    equippedItemIds: sess.equippedItemIds ?? [],
-    actionEconomy: sess.actionEconomy ?? defaultActionEconomy(),
-    currentRound: sess.currentRound ?? 1,
   }
 }
 
@@ -150,799 +159,444 @@ function migratePersistedSessions(persisted: unknown): unknown {
   return {
     ...state,
     sessions: Object.fromEntries(
-      Object.entries(state.sessions).map(([id, sess]) => [id, normalizePersistedSession(sess)])
+      Object.entries(state.sessions).map(([id, sess]) => [
+        id,
+        normalizePersistedSession({ ...sess, characterId: sess.characterId || id }),
+      ])
     ),
   }
 }
 
+type SessionsSlice = Pick<SessionStore, 'sessions'>
+
+/**
+ * Immutably applies a patch to one character's session.
+ * - Missing sessions fall back to `defaultSession(id, fallbackMaxHp)`.
+ * - Returning `null` from `update` signals a no-op: the original state object is
+ *   returned unchanged so Zustand subscribers (incl. cloud sync) are not notified.
+ */
+function patchSession<S extends SessionsSlice>(
+  state: S,
+  id: string,
+  update: (sess: SessionState) => Partial<SessionState> | null,
+  fallbackMaxHp?: number
+): S | SessionsSlice {
+  const sess = state.sessions[id] ?? defaultSession(id, fallbackMaxHp)
+  const patch = update(sess)
+  if (patch === null) return state
+  return {
+    sessions: {
+      ...state.sessions,
+      [id]: { ...sess, ...patch },
+    },
+  }
+}
+
+function toggleInList<T>(list: readonly T[], item: T): T[] {
+  return list.includes(item) ? list.filter((x) => x !== item) : [...list, item]
+}
+
+/** Sets `map[key] = amount`, or deletes the key when `amount <= 0`. */
+function setOrDelete<K extends string | number>(
+  map: Record<K, number>,
+  key: K,
+  amount: number
+): Record<K, number> {
+  const next = { ...map }
+  if (amount <= 0) delete next[key]
+  else next[key] = amount
+  return next
+}
+
 export const useSessionStore = create<SessionStore>()(
   persist(
-    (set, get) => ({
-      sessions: {},
+    (set, get) => {
+      /** Shorthand: patch one character's session inside a Zustand `set`. */
+      const update = (
+        id: string,
+        fn: (sess: SessionState) => Partial<SessionState> | null,
+        fallbackMaxHp?: number
+      ) => set((s) => patchSession(s, id, fn, fallbackMaxHp))
 
-      getSession: (id) =>
-        get().sessions[id] ?? defaultSession(id),
+      return {
+        sessions: {},
 
-      initSession: (id, maxHp, startingCoins, initialEquippedIds) =>
-        set((s) => {
-          const existing = s.sessions[id]
-          if (!existing) {
+        getSession: (id) => get().sessions[id] ?? defaultSession(id),
+
+        initSession: (id, maxHp, startingCoins, initialEquippedIds) =>
+          set((s) => {
+            const existing = s.sessions[id]
+            if (!existing) {
+              return {
+                sessions: {
+                  ...s.sessions,
+                  [id]: defaultSession(id, maxHp, startingCoins, initialEquippedIds),
+                },
+              }
+            }
+            if (existing.equippedItemIds === undefined && initialEquippedIds) {
+              return patchSession(s, id, () => ({ equippedItemIds: initialEquippedIds }))
+            }
+            return s
+          }),
+
+        // ─── HP ────────────────────────────────────────────────────────────────
+
+        setHp: (id, hp) => update(id, () => ({ currentHp: hp })),
+
+        adjustHp: (id, delta, maxHp) =>
+          update(id, (sess) => ({ currentHp: Math.min(maxHp, sess.currentHp + delta) }), maxHp),
+
+        applyDamage: (id, damage, conScore = 10) =>
+          update(id, (sess) => {
+            if (damage <= 0) return null
+            const absorbedByTemp = Math.min(sess.tempHp, damage)
+            const remainingDamage = damage - absorbedByTemp
+            const deathThreshold = -Math.max(1, conScore)
             return {
-              sessions: {
-                ...s.sessions,
-                [id]: defaultSession(id, maxHp, startingCoins, initialEquippedIds),
-              },
+              tempHp: sess.tempHp - absorbedByTemp,
+              currentHp: Math.max(deathThreshold, sess.currentHp - remainingDamage),
             }
-          }
-          if (existing.equippedItemIds === undefined && initialEquippedIds) {
+          }),
+
+        applyHealing: (id, healing, maxHp = Number.MAX_SAFE_INTEGER) =>
+          update(id, (sess) => {
+            if (healing <= 0) return null
+            const nonlethalCleared = Math.min(sess.nonlethalDamage, healing)
+            const remainingHealing = healing - nonlethalCleared
             return {
-              sessions: {
-                ...s.sessions,
-                [id]: {
-                  ...existing,
-                  equippedItemIds: initialEquippedIds,
-                },
-              },
+              nonlethalDamage: sess.nonlethalDamage - nonlethalCleared,
+              currentHp: Math.min(maxHp, sess.currentHp + remainingHealing),
             }
-          }
-          return s
-        }),
+          }),
 
-      setHp: (id, hp) =>
-        set((s) => ({
-          sessions: {
-            ...s.sessions,
-            [id]: { ...(s.sessions[id] ?? defaultSession(id)), currentHp: hp },
-          },
-        })),
+        setTempHp: (id, temp) => update(id, () => ({ tempHp: temp })),
 
-      adjustHp: (id, delta, maxHp) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id, maxHp)
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                currentHp: Math.min(maxHp, sess.currentHp + delta),
-              },
-            },
-          }
-        }),
+        setNonlethal: (id, nl) => update(id, () => ({ nonlethalDamage: nl })),
 
-      applyDamage: (id, damage, conScore = 10) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          if (damage <= 0) return s
-          const absorbedByTemp = Math.min(sess.tempHp, damage)
-          const remainingDamage = damage - absorbedByTemp
-          const deathThreshold = -Math.max(1, conScore)
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                tempHp: sess.tempHp - absorbedByTemp,
-                currentHp: Math.max(deathThreshold, sess.currentHp - remainingDamage),
-              },
-            },
-          }
-        }),
+        // ─── Daily resources ───────────────────────────────────────────────────
 
-      applyHealing: (id, healing, maxHp = Number.MAX_SAFE_INTEGER) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          if (healing <= 0) return s
-          const nonlethalCleared = Math.min(sess.nonlethalDamage, healing)
-          const remainingHealing = healing - nonlethalCleared
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                nonlethalDamage: sess.nonlethalDamage - nonlethalCleared,
-                currentHp: Math.min(maxHp, sess.currentHp + remainingHealing),
-              },
-            },
-          }
-        }),
+        spendResource: (id, resourceId, max) =>
+          update(id, (sess) => {
+            const current = sess.spentResources[resourceId] ?? 0
+            if (current >= max) return null
+            return { spentResources: { ...sess.spentResources, [resourceId]: current + 1 } }
+          }),
 
-      setTempHp: (id, temp) =>
-        set((s) => ({
-          sessions: {
-            ...s.sessions,
-            [id]: { ...(s.sessions[id] ?? defaultSession(id)), tempHp: temp },
-          },
-        })),
+        setResourceSpent: (id, resourceId, amount) =>
+          update(id, (sess) => ({
+            spentResources: { ...sess.spentResources, [resourceId]: amount },
+          })),
 
-      setNonlethal: (id, nl) =>
-        set((s) => ({
-          sessions: {
-            ...s.sessions,
-            [id]: {
-              ...(s.sessions[id] ?? defaultSession(id)),
-              nonlethalDamage: nl,
-            },
-          },
-        })),
+        recoverResource: (id, resourceId) =>
+          update(id, (sess) => {
+            const current = sess.spentResources[resourceId] ?? 0
+            if (current <= 0) return null
+            return { spentResources: { ...sess.spentResources, [resourceId]: current - 1 } }
+          }),
 
-      spendResource: (id, resourceId, max) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const current = sess.spentResources[resourceId] ?? 0
-          if (current >= max) return s
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                spentResources: {
-                  ...sess.spentResources,
-                  [resourceId]: current + 1,
-                },
-              },
-            },
-          }
-        }),
+        // ─── Buffs & conditions ────────────────────────────────────────────────
 
-      setResourceSpent: (id, resourceId, amount) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                spentResources: { ...sess.spentResources, [resourceId]: amount },
-              },
-            },
-          }
-        }),
+        toggleBuff: (id, buffId) =>
+          update(id, (sess) => ({ activeBuffIds: toggleInList(sess.activeBuffIds, buffId) })),
 
-      recoverResource: (id, resourceId) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const current = sess.spentResources[resourceId] ?? 0
-          if (current <= 0) return s
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                spentResources: {
-                  ...sess.spentResources,
-                  [resourceId]: current - 1,
-                },
-              },
-            },
-          }
-        }),
+        addCustomBuff: (id, buff) =>
+          update(id, (sess) => {
+            const existing = sess.customBuffs ?? []
+            const customBuffs = existing.some((b) => b.id === buff.id)
+              ? existing.map((b) => (b.id === buff.id ? buff : b))
+              : [...existing, buff]
+            const activeBuffIds = sess.activeBuffIds.includes(buff.id)
+              ? sess.activeBuffIds
+              : [...sess.activeBuffIds, buff.id]
+            return { customBuffs, activeBuffIds }
+          }),
 
-      toggleBuff: (id, buffId) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const active = sess.activeBuffIds.includes(buffId)
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                activeBuffIds: active
-                  ? sess.activeBuffIds.filter((b) => b !== buffId)
-                  : [...sess.activeBuffIds, buffId],
-              },
-            },
-          }
-        }),
+        removeCustomBuff: (id, buffId) =>
+          update(id, (sess) => ({
+            customBuffs: (sess.customBuffs ?? []).filter((b) => b.id !== buffId),
+            activeBuffIds: sess.activeBuffIds.filter((b) => b !== buffId),
+          })),
 
-      addCustomBuff: (id, buff) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const existing = sess.customBuffs ?? []
-          const updated = existing.some((b) => b.id === buff.id)
-            ? existing.map((b) => (b.id === buff.id ? buff : b))
-            : [...existing, buff]
-          const activeBuffIds = sess.activeBuffIds.includes(buff.id)
-            ? sess.activeBuffIds
-            : [...sess.activeBuffIds, buff.id]
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                customBuffs: updated,
-                activeBuffIds,
-              },
-            },
-          }
-        }),
-
-      removeCustomBuff: (id, buffId) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                customBuffs: (sess.customBuffs ?? []).filter((b) => b.id !== buffId),
-                activeBuffIds: sess.activeBuffIds.filter((b) => b !== buffId),
-              },
-            },
-          }
-        }),
-
-      toggleSpellBuff: (id, spell) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const buffId = `spell-buff-${spell.id}`
-          const exists = (sess.customBuffs ?? []).some((b) => b.id === buffId)
-          const isActive = sess.activeBuffIds.includes(buffId)
-
-          if (exists) {
+        toggleSpellBuff: (id, spell) =>
+          update(id, (sess) => {
+            const buffId = `spell-buff-${spell.id}`
+            const exists = (sess.customBuffs ?? []).some((b) => b.id === buffId)
+            if (exists) {
+              return { activeBuffIds: toggleInList(sess.activeBuffIds, buffId) }
+            }
             return {
-              sessions: {
-                ...s.sessions,
-                [id]: {
-                  ...sess,
-                  activeBuffIds: isActive
-                    ? sess.activeBuffIds.filter((b) => b !== buffId)
-                    : [...sess.activeBuffIds, buffId],
-                },
+              customBuffs: [...(sess.customBuffs ?? []), spellToBuff(spell)],
+              // Guard against a stale active id without its buff definition.
+              activeBuffIds: sess.activeBuffIds.includes(buffId)
+                ? sess.activeBuffIds
+                : [...sess.activeBuffIds, buffId],
+            }
+          }),
+
+        toggleCondition: (id, condition) =>
+          update(id, (sess) => ({ conditions: toggleInList(sess.conditions, condition) })),
+
+        // ─── Spell preparation ─────────────────────────────────────────────────
+
+        toggleSpellPrepared: (id, spellId, _level, slotMax) =>
+          update(id, (sess) => {
+            const prepared = normalizePreparedSpells(sess.preparedSpells, sess.preparedSpellIds)
+            const current = prepared[spellId] ?? 0
+            const nextSpent = { ...(sess.spentPreparedSpells ?? {}) }
+            if (current > 0) {
+              delete prepared[spellId]
+              delete nextSpent[spellId]
+            } else if (slotMax > 0) {
+              prepared[spellId] = 1
+            } else {
+              return null
+            }
+            return {
+              preparedSpells: prepared,
+              preparedSpellIds: expandPreparedSpells(prepared),
+              spentPreparedSpells: nextSpent,
+            }
+          }),
+
+        prepareSpell: (id, spellId, maxCopies = Number.MAX_SAFE_INTEGER) =>
+          update(id, (sess) => {
+            const prepared = normalizePreparedSpells(sess.preparedSpells, sess.preparedSpellIds)
+            const current = prepared[spellId] ?? 0
+            if (current >= Math.max(0, maxCopies)) return null
+            prepared[spellId] = current + 1
+            return {
+              preparedSpells: prepared,
+              preparedSpellIds: expandPreparedSpells(prepared),
+            }
+          }),
+
+        unprepareSpell: (id, spellId) =>
+          update(id, (sess) => {
+            const prepared = normalizePreparedSpells(sess.preparedSpells, sess.preparedSpellIds)
+            const current = prepared[spellId] ?? 0
+            if (current <= 0) return null
+            const nextSpent = { ...(sess.spentPreparedSpells ?? {}) }
+            if (current === 1) {
+              delete prepared[spellId]
+              delete nextSpent[spellId]
+            } else {
+              prepared[spellId] = current - 1
+              if ((nextSpent[spellId] ?? 0) > current - 1) {
+                nextSpent[spellId] = current - 1
+              }
+            }
+            return {
+              preparedSpells: prepared,
+              preparedSpellIds: expandPreparedSpells(prepared),
+              spentPreparedSpells: nextSpent,
+            }
+          }),
+
+        clearPreparedSpells: (id) =>
+          update(id, () => ({
+            preparedSpells: {},
+            preparedSpellIds: [],
+            spentPreparedSpells: {},
+          })),
+
+        // ─── Spell slots & prepared uses ───────────────────────────────────────
+
+        spendSpellSlot: (id, level, max) =>
+          update(id, (sess) => {
+            const current = sess.spentSpellSlots[level] ?? 0
+            if (max <= 0 || current >= max) return null
+            return { spentSpellSlots: { ...sess.spentSpellSlots, [level]: current + 1 } }
+          }),
+
+        recoverSpellSlot: (id, level) =>
+          update(id, (sess) => {
+            const current = sess.spentSpellSlots[level] ?? 0
+            if (current <= 0) return null
+            return {
+              spentSpellSlots: { ...sess.spentSpellSlots, [level]: Math.max(0, current - 1) },
+            }
+          }),
+
+        setSpellSlotSpent: (id, level, amount) =>
+          update(id, (sess) => ({
+            spentSpellSlots: setOrDelete(sess.spentSpellSlots, level, amount),
+          })),
+
+        spendPreparedSpell: (id, spellId, maxCopies) =>
+          update(id, (sess) => {
+            const current = sess.spentPreparedSpells?.[spellId] ?? 0
+            if (maxCopies <= 0 || current >= maxCopies) return null
+            return {
+              spentPreparedSpells: { ...(sess.spentPreparedSpells ?? {}), [spellId]: current + 1 },
+            }
+          }),
+
+        recoverPreparedSpell: (id, spellId) =>
+          update(id, (sess) => {
+            const current = sess.spentPreparedSpells?.[spellId] ?? 0
+            if (current <= 0) return null
+            return {
+              spentPreparedSpells: setOrDelete(sess.spentPreparedSpells ?? {}, spellId, current - 1),
+            }
+          }),
+
+        setPreparedSpellSpent: (id, spellId, amount) =>
+          update(id, (sess) => ({
+            spentPreparedSpells: setOrDelete(sess.spentPreparedSpells ?? {}, spellId, amount),
+          })),
+
+        // ─── Inventory ─────────────────────────────────────────────────────────
+
+        toggleItemEquipped: (id, itemId) =>
+          update(id, (sess) => ({
+            equippedItemIds: toggleInList(sess.equippedItemIds ?? [], itemId),
+          })),
+
+        setAmmo: (id, weaponId, amount) =>
+          update(id, (sess) => ({ ammo: { ...sess.ammo, [weaponId]: amount } })),
+
+        setItemQuantity: (id, itemId, qty) =>
+          update(id, (sess) => ({
+            itemQuantities: { ...sess.itemQuantities, [itemId]: Math.max(0, qty) },
+          })),
+
+        adjustItemQuantity: (id, itemId, delta) =>
+          update(id, (sess) => {
+            const current = sess.itemQuantities[itemId] ?? 0
+            return {
+              itemQuantities: { ...sess.itemQuantities, [itemId]: Math.max(0, current + delta) },
+            }
+          }),
+
+        setCoins: (id, coins) => update(id, () => ({ coins })),
+
+        adjustCoin: (id, denom, delta) =>
+          update(id, (sess) => ({
+            coins: { ...sess.coins, [denom]: Math.max(0, (sess.coins[denom] ?? 0) + delta) },
+          })),
+
+        // ─── Summons ───────────────────────────────────────────────────────────
+
+        setSummon: (id, summon) => update(id, () => ({ activeSummon: summon })),
+
+        adjustSummonHp: (id, delta) =>
+          update(id, (sess) => {
+            if (!sess.activeSummon) return null
+            return {
+              activeSummon: {
+                ...sess.activeSummon,
+                currentHp: Math.max(0, sess.activeSummon.currentHp + delta),
               },
             }
-          }
+          }),
 
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                customBuffs: [...(sess.customBuffs ?? []), spellToBuff(spell)],
-                activeBuffIds: [...sess.activeBuffIds, buffId],
+        clearSummon: (id) => update(id, () => ({ activeSummon: null })),
+
+        // ─── Companions ────────────────────────────────────────────────────────
+
+        setCompanionHp: (charId, companionId, hp) =>
+          update(charId, (sess) => ({
+            companionHp: { ...(sess.companionHp ?? {}), [companionId]: hp },
+          })),
+
+        adjustCompanionHp: (charId, companionId, delta, maxHp) =>
+          update(charId, (sess) => {
+            const current = sess.companionHp?.[companionId] ?? maxHp
+            return {
+              companionHp: {
+                ...(sess.companionHp ?? {}),
+                [companionId]: Math.min(maxHp, current + delta),
               },
-            },
-          }
-        }),
-
-      toggleCondition: (id, condition) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const has = sess.conditions.includes(condition)
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                conditions: has
-                  ? sess.conditions.filter((c) => c !== condition)
-                  : [...sess.conditions, condition],
-              },
-            },
-          }
-        }),
-
-      toggleSpellPrepared: (id, spellId, _level, slotMax) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const prepared = normalizePreparedSpells(sess.preparedSpells, sess.preparedSpellIds)
-          const current = prepared[spellId] ?? 0
-          const nextSpent = { ...(sess.spentPreparedSpells ?? {}) }
-          if (current > 0) {
-            delete prepared[spellId]
-            delete nextSpent[spellId]
-          } else if (slotMax > 0) {
-            prepared[spellId] = 1
-          }
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                preparedSpells: prepared,
-                preparedSpellIds: expandPreparedSpells(prepared),
-                spentPreparedSpells: nextSpent,
-              },
-            },
-          }
-        }),
-
-      prepareSpell: (id, spellId, maxCopies = Number.MAX_SAFE_INTEGER) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const prepared = normalizePreparedSpells(sess.preparedSpells, sess.preparedSpellIds)
-          const current = prepared[spellId] ?? 0
-          if (current >= Math.max(0, maxCopies)) return s
-          prepared[spellId] = current + 1
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                preparedSpells: prepared,
-                preparedSpellIds: expandPreparedSpells(prepared),
-              },
-            },
-          }
-        }),
-
-      unprepareSpell: (id, spellId) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const prepared = normalizePreparedSpells(sess.preparedSpells, sess.preparedSpellIds)
-          const current = prepared[spellId] ?? 0
-          if (current <= 0) return s
-          const nextSpent = { ...(sess.spentPreparedSpells ?? {}) }
-          if (current === 1) {
-            delete prepared[spellId]
-            delete nextSpent[spellId]
-          } else {
-            prepared[spellId] = current - 1
-            if ((nextSpent[spellId] ?? 0) > current - 1) {
-              nextSpent[spellId] = current - 1
             }
-          }
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                preparedSpells: prepared,
-                preparedSpellIds: expandPreparedSpells(prepared),
-                spentPreparedSpells: nextSpent,
-              },
+          }),
+
+        setCompanionTempHp: (charId, companionId, temp) =>
+          update(charId, (sess) => ({
+            companionTempHp: { ...(sess.companionTempHp ?? {}), [companionId]: temp },
+          })),
+
+        toggleCompanionCondition: (charId, companionId, condition) =>
+          update(charId, (sess) => ({
+            companionConditions: {
+              ...(sess.companionConditions ?? {}),
+              [companionId]: toggleInList(sess.companionConditions?.[companionId] ?? [], condition),
             },
-          }
-        }),
+          })),
 
-      clearPreparedSpells: (id) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                preparedSpells: {},
-                preparedSpellIds: [],
-                spentPreparedSpells: {},
-              },
-            },
-          }
-        }),
+        setActiveCompanion: (charId, companionId) =>
+          update(charId, () => ({ activeCompanionId: companionId })),
 
-      toggleItemEquipped: (id, itemId) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const list = sess.equippedItemIds ?? []
-          const has = list.includes(itemId)
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                equippedItemIds: has ? list.filter((x) => x !== itemId) : [...list, itemId],
-              },
-            },
-          }
-        }),
+        // ─── Action economy / rounds ───────────────────────────────────────────
 
-      spendSpellSlot: (id, level, max) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const current = sess.spentSpellSlots[level] ?? 0
-          if (max <= 0 || current >= max) return s
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                spentSpellSlots: {
-                  ...sess.spentSpellSlots,
-                  [level]: current + 1,
-                },
-              },
-            },
-          }
-        }),
+        toggleRoundAction: (charId, action) =>
+          update(charId, (sess) => ({
+            actionEconomy: computeNextActionEconomy(sess.actionEconomy ?? defaultActionEconomy(), action),
+          })),
 
-      recoverSpellSlot: (id, level) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const current = sess.spentSpellSlots[level] ?? 0
-          if (current <= 0) return s
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                spentSpellSlots: {
-                  ...sess.spentSpellSlots,
-                  [level]: Math.max(0, current - 1),
-                },
-              },
-            },
-          }
-        }),
+        // Kept as an alias of `nextRound` for backwards compatibility: clearing the
+        // action tracker ends the current round.
+        resetRoundActions: (charId) =>
+          update(charId, (sess) => ({
+            actionEconomy: defaultActionEconomy(),
+            currentRound: (sess.currentRound ?? 1) + 1,
+          })),
 
-      setSpellSlotSpent: (id, level, amount) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const nextSpent = { ...sess.spentSpellSlots }
-          if (amount <= 0) {
-            delete nextSpent[level]
-          } else {
-            nextSpent[level] = amount
-          }
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                spentSpellSlots: nextSpent,
-              },
-            },
-          }
-        }),
+        nextRound: (charId) =>
+          update(charId, (sess) => ({
+            actionEconomy: defaultActionEconomy(),
+            currentRound: (sess.currentRound ?? 1) + 1,
+          })),
 
-      spendPreparedSpell: (id, spellId, maxCopies) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const current = sess.spentPreparedSpells?.[spellId] ?? 0
-          if (maxCopies <= 0 || current >= maxCopies) return s
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                spentPreparedSpells: {
-                  ...(sess.spentPreparedSpells ?? {}),
-                  [spellId]: current + 1,
-                },
-              },
-            },
-          }
-        }),
+        resetCombatRound: (charId) =>
+          update(charId, () => ({
+            actionEconomy: defaultActionEconomy(),
+            currentRound: 1,
+          })),
 
-      recoverPreparedSpell: (id, spellId) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const current = sess.spentPreparedSpells?.[spellId] ?? 0
-          if (current <= 0) return s
-          const nextSpent = { ...(sess.spentPreparedSpells ?? {}) }
-          if (current === 1) {
-            delete nextSpent[spellId]
-          } else {
-            nextSpent[spellId] = current - 1
-          }
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                spentPreparedSpells: nextSpent,
-              },
-            },
-          }
-        }),
+        setCombatRound: (charId, round) =>
+          update(charId, () => ({ currentRound: Math.max(1, round) })),
 
-      setPreparedSpellSpent: (id, spellId, amount) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const nextSpent = { ...(sess.spentPreparedSpells ?? {}) }
-          if (amount <= 0) {
-            delete nextSpent[spellId]
-          } else {
-            nextSpent[spellId] = amount
-          }
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                spentPreparedSpells: nextSpent,
-              },
-            },
-          }
-        }),
+        // ─── Bulk ──────────────────────────────────────────────────────────────
 
-      setAmmo: (id, weaponId, amount) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: { ...sess, ammo: { ...sess.ammo, [weaponId]: amount } },
-            },
-          }
-        }),
+        hydrateSessions: (incoming) =>
+          set((s) => {
+            const entries = Object.entries(incoming)
+            if (entries.length === 0) return s
+            const normalized = Object.fromEntries(
+              entries.map(([id, sess]) => [
+                id,
+                normalizePersistedSession({ ...sess, characterId: sess.characterId || id }),
+              ])
+            )
+            return { sessions: { ...s.sessions, ...normalized } }
+          }),
 
-      setItemQuantity: (id, itemId, qty) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: { ...sess, itemQuantities: { ...sess.itemQuantities, [itemId]: Math.max(0, qty) } },
-            },
-          }
-        }),
-
-      adjustItemQuantity: (id, itemId, delta) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          const current = sess.itemQuantities[itemId] ?? 0
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: { ...sess, itemQuantities: { ...sess.itemQuantities, [itemId]: Math.max(0, current + delta) } },
-            },
-          }
-        }),
-
-      setCoins: (id, coins) =>
-        set((s) => ({
-          sessions: {
-            ...s.sessions,
-            [id]: { ...(s.sessions[id] ?? defaultSession(id)), coins },
-          },
-        })),
-
-      adjustCoin: (id, denom, delta) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: { ...sess, coins: { ...sess.coins, [denom]: Math.max(0, (sess.coins[denom] ?? 0) + delta) } },
-            },
-          }
-        }),
-
-      setSummon: (id, summon) =>
-        set((s) => ({
-          sessions: {
-            ...s.sessions,
-            [id]: { ...(s.sessions[id] ?? defaultSession(id)), activeSummon: summon },
-          },
-        })),
-
-      adjustSummonHp: (id, delta) =>
-        set((s) => {
-          const sess = s.sessions[id] ?? defaultSession(id)
-          if (!sess.activeSummon) return s
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...sess,
-                activeSummon: {
-                  ...sess.activeSummon,
-                  currentHp: Math.max(0, sess.activeSummon.currentHp + delta),
-                },
-              },
-            },
-          }
-        }),
-
-      clearSummon: (id) =>
-        set((s) => ({
-          sessions: {
-            ...s.sessions,
-            [id]: { ...(s.sessions[id] ?? defaultSession(id)), activeSummon: null },
-          },
-        })),
-
-      setCompanionHp: (charId, companionId, hp) =>
-        set((s) => {
-          const sess = s.sessions[charId] ?? defaultSession(charId)
-          return {
-            sessions: {
-              ...s.sessions,
-              [charId]: {
-                ...sess,
-                companionHp: {
-                  ...(sess.companionHp ?? {}),
-                  [companionId]: hp,
-                },
-              },
-            },
-          }
-        }),
-
-      adjustCompanionHp: (charId, companionId, delta, maxHp) =>
-        set((s) => {
-          const sess = s.sessions[charId] ?? defaultSession(charId)
-          const current = sess.companionHp?.[companionId] ?? maxHp
-          return {
-            sessions: {
-              ...s.sessions,
-              [charId]: {
-                ...sess,
-                companionHp: {
-                  ...(sess.companionHp ?? {}),
-                  [companionId]: Math.min(maxHp, current + delta),
-                },
-              },
-            },
-          }
-        }),
-
-      setCompanionTempHp: (charId, companionId, temp) =>
-        set((s) => {
-          const sess = s.sessions[charId] ?? defaultSession(charId)
-          return {
-            sessions: {
-              ...s.sessions,
-              [charId]: {
-                ...sess,
-                companionTempHp: {
-                  ...(sess.companionTempHp ?? {}),
-                  [companionId]: temp,
-                },
-              },
-            },
-          }
-        }),
-
-      toggleCompanionCondition: (charId, companionId, condition) =>
-        set((s) => {
-          const sess = s.sessions[charId] ?? defaultSession(charId)
-          const currConds = sess.companionConditions?.[companionId] ?? []
-          const updated = currConds.includes(condition)
-            ? currConds.filter((c) => c !== condition)
-            : [...currConds, condition]
-          return {
-            sessions: {
-              ...s.sessions,
-              [charId]: {
-                ...sess,
-                companionConditions: {
-                  ...(sess.companionConditions ?? {}),
-                  [companionId]: updated,
-                },
-              },
-            },
-          }
-        }),
-
-      setActiveCompanion: (charId, companionId) =>
-        set((s) => {
-          const sess = s.sessions[charId] ?? defaultSession(charId)
-          return {
-            sessions: {
-              ...s.sessions,
-              [charId]: {
-                ...sess,
-                activeCompanionId: companionId,
-              },
-            },
-          }
-        }),
-
-      toggleRoundAction: (charId, action) =>
-        set((s) => {
-          const sess = s.sessions[charId] ?? defaultSession(charId)
-          const current = sess.actionEconomy ?? defaultActionEconomy()
-          const updated = computeNextActionEconomy(current, action)
-
-          return {
-            sessions: {
-              ...s.sessions,
-              [charId]: {
-                ...sess,
-                actionEconomy: updated,
-              },
-            },
-          }
-        }),
-
-      resetRoundActions: (charId) =>
-        set((s) => {
-          const sess = s.sessions[charId] ?? defaultSession(charId)
-          return {
-            sessions: {
-              ...s.sessions,
-              [charId]: {
-                ...sess,
-                actionEconomy: defaultActionEconomy(),
-                currentRound: (sess.currentRound ?? 1) + 1,
-              },
-            },
-          }
-        }),
-
-      nextRound: (charId) =>
-        set((s) => {
-          const sess = s.sessions[charId] ?? defaultSession(charId)
-          return {
-            sessions: {
-              ...s.sessions,
-              [charId]: {
-                ...sess,
-                actionEconomy: defaultActionEconomy(),
-                currentRound: (sess.currentRound ?? 1) + 1,
-              },
-            },
-          }
-        }),
-
-      resetCombatRound: (charId) =>
-        set((s) => {
-          const sess = s.sessions[charId] ?? defaultSession(charId)
-          return {
-            sessions: {
-              ...s.sessions,
-              [charId]: {
-                ...sess,
-                actionEconomy: defaultActionEconomy(),
-                currentRound: 1,
-              },
-            },
-          }
-        }),
-
-      setCombatRound: (charId, round) =>
-        set((s) => {
-          const sess = s.sessions[charId] ?? defaultSession(charId)
-          return {
-            sessions: {
-              ...s.sessions,
-              [charId]: {
-                ...sess,
-                currentRound: Math.max(1, round),
-              },
-            },
-          }
-        }),
-
-      hydrateSessions: (incoming) =>
-        set((s) => {
-          const entries = Object.entries(incoming)
-          if (entries.length === 0) return s
-          const normalized = Object.fromEntries(
-            entries.map(([id, sess]) => [
-              id,
-              normalizePersistedSession({ ...sess, characterId: sess.characterId || id }),
-            ])
-          )
-          return {
-            sessions: {
-              ...s.sessions,
-              ...normalized,
-            },
-          }
-        }),
-
-      longRest: (id, maxHp) =>
-        set((s) => {
-          const current = s.sessions[id] ?? defaultSession(id, maxHp)
-          return {
-            sessions: {
-              ...s.sessions,
-              [id]: {
-                ...current,
-                currentHp: maxHp,
-                tempHp: 0,
-                nonlethalDamage: 0,
-                spentResources: {},
-                spentSpellSlots: {},
-                spentPreparedSpells: {},
-                preparedSpells: current.preparedSpells ?? {},
-                preparedSpellIds: current.preparedSpellIds ?? [],
-                activeBuffIds: [],
-                conditions: [],
-                activeSummon: null,
-                companionHp: {},
-                companionTempHp: {},
-                companionConditions: {},
-                actionEconomy: defaultActionEconomy(),
-                currentRound: 1,
-              },
-            },
-          }
-        }),
-    }),
+        longRest: (id, maxHp) =>
+          update(
+            id,
+            (current) => ({
+              currentHp: maxHp,
+              tempHp: 0,
+              nonlethalDamage: 0,
+              spentResources: {},
+              spentSpellSlots: {},
+              spentPreparedSpells: {},
+              preparedSpells: current.preparedSpells ?? {},
+              preparedSpellIds: current.preparedSpellIds ?? [],
+              activeBuffIds: [],
+              conditions: [],
+              activeSummon: null,
+              companionHp: {},
+              companionTempHp: {},
+              companionConditions: {},
+              actionEconomy: defaultActionEconomy(),
+              currentRound: 1,
+            }),
+            maxHp
+          ),
+      }
+    },
     {
       name: 'neon-sessions',
       version: 2,

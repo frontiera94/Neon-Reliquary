@@ -2,6 +2,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { CombatSpellsSection } from './CombatSpellsSection'
+import { SpellsPage } from '../../pages/SpellsPage'
+import { useCharacterStore } from '../../store/useCharacterStore'
+import { useSessionStore } from '../../store/useSessionStore'
+import { useInspectorStore } from '../../store/useInspectorStore'
 import type { Spell, SpellSlot } from '../../types/resources'
 import type { AbilityScore } from '../../types/character'
 
@@ -484,5 +488,105 @@ describe('CombatSpellsSection', () => {
     expect(screen.getByText('Shocking Grasp')).toBeInTheDocument()
     expect(screen.getByText('Shield')).toBeInTheDocument()
   })
+
+  it('deactivates an active derived spell buff (spell-buff-<id>) when matchBuff is null', () => {
+    const mockOnToggleBuff = vi.fn()
+    renderComponent({
+      allBuffs: [],
+      activeBuffIds: ['spell-buff-spell-shield'],
+      onToggleBuff: mockOnToggleBuff,
+    })
+
+    const buffOnBtn = screen.getByRole('button', { name: /buff on/i })
+    fireEvent.click(buffOnBtn)
+    expect(mockOnToggleBuff).toHaveBeenCalledWith('spell-buff-spell-shield')
+  })
 })
 
+describe('SpellsPage buff toggle & Spell Focus DC in Inspector', () => {
+  it('activates and deactivates a derived spell buff and includes Spell Focus bonus in Inspector DC', () => {
+    const charId = 'spells-page-test-char'
+    const shieldSpell: Spell = {
+      id: 'test-shield-of-faith',
+      name: 'Shield of Faith',
+      level: 1,
+      school: 'Abjuration',
+      castingTime: '1 standard action',
+      range: 'Touch',
+      duration: '1 min./level',
+      savingThrow: 'Will negates (harmless)',
+      spellResistance: true,
+      components: 'V, S, DF',
+      description: 'Grants +2 deflection bonus to AC.',
+    }
+
+    useCharacterStore.setState({
+      activeCharacterId: charId,
+      characters: [
+        {
+          id: charId,
+          name: 'Aurelia',
+          class: 'Wizard',
+          level: 4,
+          race: 'Elf',
+          alignment: 'Neutral Good',
+          maxHp: 28,
+          initiativeBonus: 4,
+          speed: 30,
+          abilities: mockAbilities, // INT 18 (+4 mod) -> base Lv1 DC = 15
+          armorClass: {
+            total: 14,
+            touch: 14,
+            flatFooted: 10,
+            armorBonus: 0,
+            shieldBonus: 0,
+            dexBonus: 4,
+            naturalArmor: 0,
+            deflection: 0,
+            misc: 0,
+            spellFailureChance: 0,
+          },
+          baseAttackBonus: [2],
+          savingThrows: { fort: 3, ref: 5, will: 5, fortBase: 1, refBase: 1, willBase: 4 },
+          skills: [],
+          feats: [{ id: 'sf-abj', index: 1, name: 'Greater Spell Focus (Abjuration)', shortDesc: '', fullDesc: '' }],
+          weapons: [],
+          buffs: [],
+          dailyResources: [],
+          classAbilities: [],
+          spellSlots: [{ level: 1, total: 2 }],
+          spells: [shieldSpell],
+          inventory: [],
+        },
+      ],
+    })
+    useSessionStore.getState().initSession(charId, 28)
+    useSessionStore.getState().prepareSpell(charId, shieldSpell.id, 2)
+
+    render(<SpellsPage />)
+
+    // Row badge and details show DC 17 (10 + 1 spell level + 4 INT + 2 Greater Spell Focus)
+    expect(screen.getAllByText(/DC 17/i).length).toBeGreaterThanOrEqual(1)
+
+    // Activate as Buff -> adds custom buff spell-buff-test-shield-of-faith with +2 AC
+    const activateBtn = screen.getByRole('button', { name: /activate as buff/i })
+    fireEvent.click(activateBtn)
+
+    let sess = useSessionStore.getState().getSession(charId)
+    expect(sess.activeBuffIds).toContain('spell-buff-test-shield-of-faith')
+    expect(sess.customBuffs?.find((b) => b.id === 'spell-buff-test-shield-of-faith')?.acMod).toBe(2)
+
+    // Deactivate Buff -> toggles spell-buff-test-shield-of-faith off
+    const deactivateBtn = screen.getByRole('button', { name: /deactivate buff/i })
+    fireEvent.click(deactivateBtn)
+
+    sess = useSessionStore.getState().getSession(charId)
+    expect(sess.activeBuffIds).not.toContain('spell-buff-test-shield-of-faith')
+
+    // Clicking Inspect passes DC 17 (with Greater Spell Focus) into useInspectorStore
+    const inspectBtn = screen.getByRole('button', { name: /^inspect$/i })
+    fireEvent.click(inspectBtn)
+    const inspected = useInspectorStore.getState().currentItem
+    expect(inspected?.meta).toContainEqual({ label: 'Spell DC', value: 17 })
+  })
+})

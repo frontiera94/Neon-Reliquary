@@ -6,7 +6,12 @@ import {
   calcEffectiveWeaponStats,
   calcEffectiveSkills,
   getActiveActionRestrictions,
+  getSpellFocusBonus,
+  calcDetailedAcBreakdowns,
+  deriveBuffFromSpell,
 } from './stat-calc'
+import { spellToBuff } from './spell-buffs'
+import type { Spell } from '../types/resources'
 import type { Weapon, BuffToggle } from '../types/combat'
 import type { SavingThrow, ArmorClass } from '../types/defense'
 import type { Skill } from '../types/skills'
@@ -539,6 +544,88 @@ describe('stat-calc engine', () => {
     it('returns empty array when conditions list has no restrictions', () => {
       expect(getActiveActionRestrictions([])).toEqual([])
       expect(getActiveActionRestrictions(['shaken', 'fatigued'])).toEqual([])
+    })
+  })
+
+  describe('getSpellFocusBonus', () => {
+    it('returns +1 for Spell Focus and +2 for Greater Spell Focus (case-insensitive)', () => {
+      const feats = [
+        { id: 'sf-evo', name: 'Spell Focus (Evocation)', category: 'general' as const, description: '' },
+        { id: 'gsf-nec', name: 'Greater Spell Focus (Necromancy)', category: 'general' as const, description: '' },
+      ]
+      expect(getSpellFocusBonus('evocation', feats)).toBe(1)
+      expect(getSpellFocusBonus('NECROMANCY', feats)).toBe(2)
+      expect(getSpellFocusBonus('Illusion', feats)).toBe(0)
+      expect(getSpellFocusBonus('Evocation', undefined)).toBe(0)
+    })
+  })
+
+  describe('calcDetailedAcBreakdowns', () => {
+    it('includes misc bonus in totalBreakdown, touchBreakdown, and flatFootedBreakdown', () => {
+      const baseAc: ArmorClass = {
+        total: 19,
+        touch: 13,
+        flatFooted: 17,
+        armorBonus: 4,
+        shieldBonus: 2,
+        dexBonus: 2,
+        naturalArmor: 0,
+        deflection: 0,
+        misc: 1,
+        spellFailureChance: 0,
+      }
+      const breakdowns = calcDetailedAcBreakdowns(baseAc, 2, [], [])
+
+      expect(breakdowns.totalBreakdown).toContainEqual({ label: 'Misc', value: 1 })
+      expect(breakdowns.touchBreakdown).toContainEqual({ label: 'Misc', value: 1 })
+      expect(breakdowns.flatFootedBreakdown).toContainEqual({ label: 'Misc', value: 1 })
+    })
+  })
+
+  describe('calcEffectiveArmorClass negative DEX & deriveBuffFromSpell / spellToBuff parity', () => {
+    it('penalizes flatFooted AC when effectiveDexMod becomes negative (e.g. Paralyzed)', () => {
+      const baseAc: ArmorClass = {
+        total: 18,
+        touch: 12,
+        flatFooted: 16,
+        armorBonus: 6,
+        shieldBonus: 0,
+        dexBonus: 2,
+        naturalArmor: 0,
+        deflection: 0,
+        misc: 0,
+        spellFailureChance: 0,
+      }
+      // Paralyzed sets DEX to 0 (mod -5) from base DEX 14 (mod +2)
+      const res = calcEffectiveArmorClass(baseAc, 2, -5, ['paralyzed'], [])
+      expect(res.total).toBe(11)
+      expect(res.touch).toBe(5)
+      expect(res.flatFooted).toBe(11)
+    })
+
+    it('derives consistent modifiers in deriveBuffFromSpell and spellToBuff including Shield of Faith (+2 AC) vs Shield (+4 AC)', () => {
+      const makeSpell = (id: string, name: string, level = 1): Spell => ({
+        id,
+        name,
+        level,
+        school: 'Abjuration',
+        castingTime: '1 standard action',
+        range: 'Personal',
+        duration: '1 min./level',
+        description: '',
+        spellResistance: false,
+        components: 'V, S',
+      })
+
+      const shieldOfFaith = deriveBuffFromSpell(makeSpell('sof', 'Shield of Faith'))
+      const shield = deriveBuffFromSpell(makeSpell('shd', 'Shield'))
+      const haste = deriveBuffFromSpell(makeSpell('hst', 'Haste', 3))
+      const divineFavor = spellToBuff(makeSpell('df', 'Divine Favor', 1))
+
+      expect(shieldOfFaith.acMod).toBe(2)
+      expect(shield.acMod).toBe(4)
+      expect(haste).toMatchObject({ attackMod: 1, acMod: 1, saveMod: { ref: 1 } })
+      expect(divineFavor).toMatchObject({ attackMod: 1, damageMod: 1, spellId: 'df' })
     })
   })
 })

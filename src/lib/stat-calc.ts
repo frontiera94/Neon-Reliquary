@@ -251,6 +251,8 @@ export function calcEffectiveArmorClass(
   if (dexDelta !== 0) {
     total += dexDelta
     touch += dexDelta
+    // Negative DEX modifiers penalize Flat-Footed AC in PF1e; positive DEX is ignored when flat-footed.
+    flatFooted += Math.min(0, effectiveDexMod) - Math.min(0, baseDexMod)
     breakdown.push({ label: 'DEX Shift', value: dexDelta })
   }
 
@@ -831,6 +833,23 @@ export function calcConcentrationBonus(
   return casterLevel + castingAbilityMod + featBonus
 }
 
+/** Spell Focus / Greater Spell Focus DC bonus (+1 / +2) for a given school. */
+export function getSpellFocusBonus(
+  school: string,
+  feats?: { id?: string; name: string }[] | null
+): number {
+  if (!school || !feats?.length) return 0
+  const schoolLower = school.toLowerCase()
+  let bonus = 0
+  for (const f of feats) {
+    const nameLower = f.name.toLowerCase()
+    if (nameLower.includes('spell focus') && nameLower.includes(schoolLower)) {
+      bonus = Math.max(bonus, nameLower.includes('greater') ? 2 : 1)
+    }
+  }
+  return bonus
+}
+
 /* -------------------------------------------------------------------------- */
 /* Buff <-> resource and buff <-> spell linkage                               */
 /* -------------------------------------------------------------------------- */
@@ -921,14 +940,27 @@ export function deriveBuffFromSpell(spell: Spell): BuffToggle {
     spellId: spell.id,
   }
 
-  if (/shield|mage armor/.test(key)) buff.acMod = 4
-  else if (/barkskin/.test(key)) buff.acMod = 2
-  else if (/haste/.test(key)) {
+  if (/shield of faith/.test(key)) {
+    buff.acMod = 2
+  } else if (/shield|mage armor/.test(key)) {
+    buff.acMod = 4
+  } else if (/barkskin/.test(key)) {
+    buff.acMod = 2
+  } else if (/haste/.test(key)) {
     buff.attackMod = 1
     buff.acMod = 1
+    buff.saveMod = { ref: 1 }
   } else if (/bless/.test(key)) {
     buff.attackMod = 1
     buff.saveMod = 1
+  } else if (/prayer/.test(key)) {
+    buff.attackMod = 1
+    buff.damageMod = 1
+    buff.saveMod = 1
+  } else if (/good hope/.test(key)) {
+    buff.attackMod = 2
+    buff.damageMod = 2
+    buff.saveMod = 2
   } else if (/heroism/.test(key)) {
     buff.attackMod = 2
     buff.saveMod = 2
@@ -936,6 +968,18 @@ export function deriveBuffFromSpell(spell: Spell): BuffToggle {
     const mod = Math.min(3, Math.max(1, Math.floor(spell.level || 1)))
     buff.attackMod = mod
     buff.damageMod = mod
+  } else if (/greater magic weapon/.test(key)) {
+    const mod = Math.min(5, Math.max(1, Math.floor(spell.level / 2) + 1))
+    buff.attackMod = mod
+    buff.damageMod = mod
+  } else if (/magic weapon/.test(key)) {
+    buff.attackMod = 1
+    buff.damageMod = 1
+  } else if (/protection from/.test(key)) {
+    buff.acMod = 2
+    buff.saveMod = 2
+  } else if (/remove fear/.test(key)) {
+    buff.saveMod = 4
   } else if (/resist energy/.test(key)) {
     buff.description = `${spell.description} (resistance active)`
   } else if (/true strike/.test(key)) {
@@ -952,6 +996,17 @@ export function deriveBuffFromSpell(spell: Spell): BuffToggle {
     buff.abilityMods = { wis: 4 }
   } else if (/eagle'?s splendor/.test(key)) {
     buff.abilityMods = { cha: 4 }
+  } else if (/enlarge person/.test(key)) {
+    buff.abilityMods = { str: 2 }
+    buff.acMod = -1
+    buff.attackMod = -1
+  } else if (/reduce person/.test(key)) {
+    buff.abilityMods = { dex: 2 }
+    buff.acMod = 1
+    buff.attackMod = 1
+  } else if (/righteous might/.test(key)) {
+    buff.abilityMods = { str: 4, con: 2 }
+    buff.acMod = 2
   } else if (/resistance/.test(key)) {
     buff.saveMod = 1
   }
@@ -1028,6 +1083,7 @@ export function calcDetailedAcBreakdowns(
   if (effectiveDexMod < 0) flatFootedBreakdown.push({ label: 'DEX Penalty', value: effectiveDexMod })
   if (baseAc.naturalArmor > 0) flatFootedBreakdown.push({ label: 'Natural Armor', value: baseAc.naturalArmor })
   if (baseAc.deflection > 0) flatFootedBreakdown.push({ label: 'Deflection', value: baseAc.deflection })
+  if (baseAc.misc !== 0) flatFootedBreakdown.push({ label: 'Misc', value: baseAc.misc })
   if (conditions.includes('blinded')) flatFootedBreakdown.push({ label: 'Blinded', value: -2 })
   if (conditions.includes('stunned')) flatFootedBreakdown.push({ label: 'Stunned', value: -2 })
   for (const buff of activeBuffs) {
