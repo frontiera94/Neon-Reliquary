@@ -418,4 +418,97 @@ describe('CombatPage component', () => {
     // Power Attack has meleeOnly: true, should display Melee only
     expect(screen.getByText(/Melee only/)).toBeInTheDocument()
   })
+
+  it('renders and selects companion in CombatPage using session.activeCompanionId', () => {
+    const companion1 = {
+      id: 'comp-wolf',
+      name: 'Ignis Wolf',
+      type: 'animal_companion' as const,
+      species: 'Wolf',
+      size: 'Medium' as const,
+      maxHp: 26,
+      speed: '50 ft.',
+      initiativeBonus: 3,
+      armorClass: { total: 17, touch: 13, flatFooted: 14 },
+      savingThrows: { fort: 5, ref: 6, will: 2 },
+      abilities: { str: 14, dex: 16, con: 14, int: 2, wis: 12, cha: 6 },
+      baseAttackBonus: 3,
+      attacks: [{ name: 'Bite', bonus: 5, damageDice: '1d6+3' }],
+      skills: [],
+      specialQualities: [],
+    }
+
+    const companion2 = {
+      id: 'comp-raven',
+      name: 'Corvus Raven',
+      type: 'familiar' as const,
+      species: 'Raven',
+      size: 'Tiny' as const,
+      maxHp: 12,
+      speed: '40 ft. fly',
+      initiativeBonus: 2,
+      armorClass: { total: 15, touch: 14, flatFooted: 13 },
+      savingThrows: { fort: 2, ref: 4, will: 4 },
+      abilities: { str: 2, dex: 15, con: 8, int: 8, wis: 14, cha: 6 },
+      baseAttackBonus: 2,
+      attacks: [{ name: 'Claws', bonus: 4, damageDice: '1d2-4' }],
+      skills: [],
+      specialQualities: [],
+    }
+
+    const charWithCompanions: FullCharacter = {
+      ...combatChar,
+      id: 'druid-test-char',
+      companions: [companion1, companion2],
+    }
+
+    useCharacterStore.setState({
+      characters: [charWithCompanions],
+      activeCharacterId: 'druid-test-char',
+    })
+
+    // Initially select companion2 (Corvus Raven) in session
+    useSessionStore.setState({
+      sessions: {
+        'druid-test-char': {
+          characterId: 'druid-test-char',
+          activeCompanionId: 'comp-raven',
+          currentHp: 38,
+          tempHp: 0,
+          nonlethalDamage: 0,
+          conditions: [],
+          spentResources: {},
+          preparedSpellIds: [],
+          spentSpellSlots: {},
+          activeBuffIds: [],
+          customBuffs: [],
+          ammo: {},
+          activeSummon: null,
+          itemQuantities: {},
+          coins: { gp: 0, sp: 0, cp: 0 },
+          companionHp: { 'comp-raven': 12, 'comp-wolf': 26 },
+        },
+      },
+    })
+
+    render(
+      <MemoryRouter>
+        <CombatPage />
+      </MemoryRouter>
+    )
+
+    // Should render Corvus Raven since activeCompanionId is comp-raven
+    expect(screen.getAllByText('Corvus Raven').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('Claws')).toBeInTheDocument()
+
+    // Multiple companions exist, so switcher buttons should be visible
+    const wolfSwitcherButton = screen.getByRole('button', { name: 'Ignis Wolf' })
+    expect(wolfSwitcherButton).toBeInTheDocument()
+
+    // Click to switch companion to Ignis Wolf
+    fireEvent.click(wolfSwitcherButton)
+
+    // Session activeCompanionId should now be comp-wolf
+    expect(useSessionStore.getState().getSession('druid-test-char').activeCompanionId).toBe('comp-wolf')
+  })
 })

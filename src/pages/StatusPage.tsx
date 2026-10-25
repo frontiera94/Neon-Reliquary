@@ -138,28 +138,32 @@ export function StatusPage() {
         )}
 
         {/* Bonded Companion Quick Banner */}
-        {char.companions && char.companions.length > 0 && (
-          <div className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm border border-primary/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary text-2xl">pets</span>
-              <div>
-                <p className="font-headline text-sm font-bold text-on-surface">
-                  Bonded Companion: <span className="text-secondary">{char.companions[0].name}</span>
-                </p>
-                <p className="font-label text-[10px] text-tertiary uppercase">
-                  {char.companions[0].type.replace('_', ' ')} • {char.companions[0].species} • HP {session.companionHp?.[char.companions[0].id] ?? char.companions[0].maxHp} / {char.companions[0].maxHp}
-                </p>
+        {char.companions && char.companions.length > 0 && (() => {
+          const activeCompanionId = session.activeCompanionId ?? char.companions[0]?.id
+          const companion = char.companions.find((c) => c.id === activeCompanionId) ?? char.companions[0]
+          return (
+            <div className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm border border-primary/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary text-2xl">pets</span>
+                <div>
+                  <p className="font-headline text-sm font-bold text-on-surface">
+                    Bonded Companion: <span className="text-secondary">{companion.name}</span>
+                  </p>
+                  <p className="font-label text-[10px] text-tertiary uppercase">
+                    {companion.type.replace('_', ' ')} • {companion.species} • HP {session.companionHp?.[companion.id] ?? companion.maxHp} / {companion.maxHp}
+                  </p>
+                </div>
               </div>
+              <Link
+                to="/companion"
+                className="px-4 py-2 bg-primary/10 border border-primary text-primary font-label text-xs uppercase tracking-widest rounded-xl hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all flex items-center gap-2 cursor-pointer"
+              >
+                Open Companion Sheet
+                <span className="material-symbols-outlined text-xs">arrow_forward</span>
+              </Link>
             </div>
-            <Link
-              to="/companion"
-              className="px-4 py-2 bg-primary/10 border border-primary text-primary font-label text-xs uppercase tracking-widest rounded-xl hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all flex items-center gap-2 cursor-pointer"
-            >
-              Open Companion Sheet
-              <span className="material-symbols-outlined text-xs">arrow_forward</span>
-            </Link>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Vitality Core */}
         <section className="lg:col-span-12 flex flex-col items-center justify-center bg-surface-container/90 backdrop-blur-sm p-8 relative overflow-hidden group rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] transition-all">

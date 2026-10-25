@@ -36,6 +36,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     setSummon,
     adjustSummonHp,
     clearSummon,
+    setActiveCompanion,
     adjustCompanionHp,
     spendSpellSlot,
     recoverSpellSlot,
@@ -104,9 +105,18 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
       )
     : null
 
-  const companion = char.companions?.[0]
+  // Companion overview — resolved dynamically through activeCompanionId
+  const companions = char.companions ?? []
+  const activeCompanionId = session.activeCompanionId ?? companions[0]?.id
+  const companion = companions.find((c) => c.id === activeCompanionId) ?? companions[0]
   const companionHp = companion ? session.companionHp?.[companion.id] ?? companion.maxHp : 0
   const companionHpPct = companion ? Math.max(0, Math.min(100, (companionHp / companion.maxHp) * 100)) : 0
+  const companionConditions = companion ? session.companionConditions?.[companion.id] ?? [] : []
+  const conditionAttackMod =
+    (companionConditions.includes('shaken') || companionConditions.includes('frightened') ? -2 : 0) +
+    (companionConditions.includes('sickened') ? -2 : 0) +
+    (companionConditions.includes('prone') ? -4 : 0)
+  const conditionDamageMod = companionConditions.includes('sickened') ? -2 : 0
 
   return (
     <div className={embedded ? 'space-y-4' : 'space-y-4 px-4 py-4 md:px-8 md:py-6'}>
@@ -300,16 +310,41 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
             </section>
           )}
 
-          {/* Companion — one compact row plus its attacks. */}
+          {/* Companion — one compact row plus its attacks and quick selection. */}
           {companion && (
             <section aria-labelledby="companion-heading">
-              <div className="mb-2 flex items-end justify-between gap-3">
-                <div className="flex items-baseline gap-2">
-                  <h2 id="companion-heading" className="font-headline text-base font-bold text-white">
-                    Companion
-                  </h2>
-                  <span className="font-label text-[10px] text-tertiary">{companion.name}</span>
+              <div className="mb-2 flex flex-wrap items-end justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-baseline gap-2">
+                    <h2 id="companion-heading" className="font-headline text-base font-bold text-white">
+                      Companion
+                    </h2>
+                    <span className="font-label text-[10px] text-tertiary">{companion.name}</span>
+                  </div>
+
+                  {companions.length > 1 && (
+                    <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-surface-container-high/80 p-0.5">
+                      {companions.map((comp) => {
+                        const isSelected = comp.id === companion.id
+                        return (
+                          <button
+                            key={comp.id}
+                            type="button"
+                            onClick={() => setActiveCompanion(char.id, comp.id)}
+                            className={`rounded-md px-2 py-0.5 font-label text-[10px] font-bold uppercase transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-primary text-surface-lowest shadow-[0_0_10px_rgba(0,240,255,0.3)]'
+                                : 'text-tertiary hover:bg-white/5 hover:text-white'
+                            }`}
+                          >
+                            {comp.name}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
+
                 <Link
                   to="/companion"
                   className="flex items-center gap-1 font-label text-[10px] uppercase tracking-wider text-tertiary transition-colors hover:text-primary"
@@ -336,6 +371,18 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                     <p className="font-label text-[10px] uppercase tracking-wider text-tertiary">
                       {companion.type.replace('_', ' ')} · {companion.species} · AC {companion.armorClass.total}
                     </p>
+                    {companionConditions.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {companionConditions.map((cond) => (
+                          <span
+                            key={cond}
+                            className="rounded-full border border-error/40 bg-error/20 px-1.5 py-0.2 font-label text-[9px] font-bold uppercase tracking-wider text-error"
+                          >
+                            {cond}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -374,9 +421,11 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                       const baseDmgBonus = atk.damageBonus !== undefined && atk.damageBonus !== parsed.bonus
                         ? atk.damageBonus + parsed.bonus
                         : (atk.damageBonus ?? parsed.bonus)
+                      const effectiveAtkBonus = atk.bonus + conditionAttackMod
+                      const finalDmgBonus = baseDmgBonus + conditionDamageMod
                       const dmgLabel = isTouch
                         ? atk.damageDice
-                        : formatDamage(`${parsed.count}d${parsed.sides}`, baseDmgBonus)
+                        : formatDamage(`${parsed.count}d${parsed.sides}`, finalDmgBonus)
 
                       return (
                         <div
@@ -389,31 +438,31 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                               openRoll({
                                 diceType: 20,
                                 count: 1,
-                                modifier: atk.bonus,
-                                label: `${companion.name} — ${atk.name} Atk`,
+                                modifier: effectiveAtkBonus,
+                                label: `${companion.name} — ${atk.name} Atk${conditionAttackMod !== 0 ? ` (${conditionAttackMod >= 0 ? '+' : ''}${conditionAttackMod})` : ''}`,
                                 critRange: atk.critRange ?? 20,
                               })
                             }
                             className="min-h-[32px] rounded-lg bg-primary/10 px-2 font-label text-[11px] font-bold text-primary transition-colors hover:bg-primary/20 cursor-pointer"
                             title={`Roll ${atk.name} attack`}
                           >
-                            {atk.bonus >= 0 ? `+${atk.bonus}` : atk.bonus}
+                            {effectiveAtkBonus >= 0 ? `+${effectiveAtkBonus}` : effectiveAtkBonus}
                           </button>
                           <button
                             onClick={() => {
                               if (isTouch) {
                                 openRoll({
-                                  diceType: 20,
-                                  count: 1,
-                                  modifier: atk.bonus,
-                                  label: `${companion.name} — Touch Attack`,
-                                })
+                                   diceType: 20,
+                                   count: 1,
+                                   modifier: effectiveAtkBonus,
+                                   label: `${companion.name} — Touch Attack`,
+                                 })
                               } else {
                                 openRoll({
                                   diceType: parsed.sides,
                                   count: parsed.count,
-                                  modifier: baseDmgBonus,
-                                  label: `${companion.name} — ${atk.name} Dmg`,
+                                  modifier: finalDmgBonus,
+                                  label: `${companion.name} — ${atk.name} Dmg${conditionDamageMod !== 0 ? ` (${conditionDamageMod >= 0 ? '+' : ''}${conditionDamageMod})` : ''}`,
                                 })
                               }
                             }}

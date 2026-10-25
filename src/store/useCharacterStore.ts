@@ -32,6 +32,7 @@ interface CharacterStore {
   setActiveCharacter: (id: string) => void
   loadCharacter: (c: FullCharacter) => void
   removeCharacter: (id: string) => void
+  setCompanion: (characterId: string, companion: Companion) => void
   addCompanion: (characterId: string, companion: Companion) => void
   removeCompanion: (characterId: string, companionId: string) => void
   activeCharacter: () => FullCharacter | null
@@ -53,6 +54,13 @@ export const useCharacterStore = create<CharacterStore>()(
         set((state) => ({
           characters: state.characters.filter((x) => x.id !== id),
           activeCharacterId: state.activeCharacterId === id ? null : state.activeCharacterId,
+        })),
+      setCompanion: (characterId, companion) =>
+        set((state) => ({
+          characters: state.characters.map((c) => {
+            if (c.id !== characterId) return c
+            return { ...c, companions: [companion] }
+          }),
         })),
       addCompanion: (characterId, companion) =>
         set((state) => ({

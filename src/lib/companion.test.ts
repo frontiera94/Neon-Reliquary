@@ -137,4 +137,47 @@ describe('Companion system', () => {
     const removed = useCharacterStore.getState().characters.find((c) => c.id === 'test-hero')
     expect(removed?.companions?.length).toBe(0)
   })
+
+  it('allows setCompanion to enforce 1 single companion by replacing existing one', () => {
+    const { loadCharacter, setCompanion } = useCharacterStore.getState()
+    const dummyChar: FullCharacter = {
+      id: 'druid-hero',
+      name: 'Druid Hero',
+      class: 'Druid',
+      level: 4,
+      race: 'Elf',
+      alignment: 'TN',
+      abilities: { str: 10, dex: 14, con: 12, int: 10, wis: 16, cha: 10 },
+      maxHp: 28,
+      baseAttackBonus: [3],
+      initiativeBonus: 2,
+      speed: 30,
+      armorClass: { total: 15, touch: 12, flatFooted: 13, armorBonus: 3, shieldBonus: 0, dexBonus: 2, naturalArmor: 0, deflection: 0, misc: 0, spellFailureChance: 0 },
+      savingThrows: { fort: 5, ref: 3, will: 7, fortBase: 4, refBase: 1, willBase: 4 },
+      skills: [],
+      weapons: [],
+      buffs: [],
+      dailyResources: [],
+      feats: [],
+      classAbilities: [],
+      spellSlots: [],
+      spells: [],
+      inventory: [],
+    }
+
+    loadCharacter(dummyChar)
+    // Bond initial companion (Wolf)
+    const wolf = COMPANION_PRESETS.find((p) => p.species.toLowerCase().includes('wolf')) ?? COMPANION_PRESETS[0]
+    setCompanion('druid-hero', wolf)
+    let char = useCharacterStore.getState().characters.find((c) => c.id === 'druid-hero')
+    expect(char?.companions?.length).toBe(1)
+    expect(char?.companions?.[0].id).toBe(wolf.id)
+
+    // Replace with Cat familiar/preset
+    const cat = COMPANION_PRESETS.find((p) => p.species.toLowerCase().includes('cat')) ?? COMPANION_PRESETS[1]
+    setCompanion('druid-hero', cat)
+    char = useCharacterStore.getState().characters.find((c) => c.id === 'druid-hero')
+    expect(char?.companions?.length).toBe(1)
+    expect(char?.companions?.[0].id).toBe(cat.id)
+  })
 })
