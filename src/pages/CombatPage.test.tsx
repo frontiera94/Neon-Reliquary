@@ -403,4 +403,77 @@ describe('CombatPage component', () => {
     // Power Attack has meleeOnly: true, should display Melee only
     expect(screen.getByText(/Melee only/)).toBeInTheDocument()
   })
+
+  it('renders prepared spell use pips under Buffs & Effects for prepared casters', () => {
+    const magusWithSpells = {
+      ...combatChar,
+      spellSlots: [{ level: 1, total: 3 }],
+      spells: [
+        {
+          id: 'spell-shocking-grasp',
+          name: 'Shocking Grasp',
+          level: 1,
+          school: 'Evocation',
+          castingTime: '1 standard action',
+          range: 'Touch',
+          duration: 'Instantaneous',
+          spellResistance: true,
+          components: 'V, S',
+          description: 'A touch attack dealing electricity damage.',
+        },
+        {
+          id: 'spell-shield',
+          name: 'Shield',
+          level: 1,
+          school: 'Abjuration',
+          castingTime: '1 standard action',
+          range: 'Personal',
+          duration: '1 min./level',
+          spellResistance: false,
+          components: 'V, S',
+          description: 'Invisible shield giving +4 shield bonus.',
+        },
+      ],
+    }
+
+    useCharacterStore.setState({
+      activeCharacterId: magusWithSpells.id,
+      characters: [magusWithSpells],
+    })
+
+    useSessionStore.setState({
+      sessions: {
+        [magusWithSpells.id]: {
+          characterId: magusWithSpells.id,
+          currentHp: 38,
+          tempHp: 0,
+          nonlethalDamage: 0,
+          conditions: [],
+          spentResources: {},
+          preparedSpells: { 'spell-shocking-grasp': 2, 'spell-shield': 1 },
+          preparedSpellIds: ['spell-shocking-grasp', 'spell-shocking-grasp', 'spell-shield'],
+          spentPreparedSpells: { 'spell-shocking-grasp': 1 },
+          spentSpellSlots: {},
+          activeBuffIds: [],
+          customBuffs: [],
+          ammo: {},
+          activeSummon: null,
+          itemQuantities: {},
+          coins: { gp: 0, sp: 0, cp: 0 },
+        },
+      },
+    })
+
+    render(
+      <MemoryRouter>
+        <CombatPage />
+      </MemoryRouter>
+    )
+
+    // Heading in Buffs & Effects sidebar
+    expect(screen.getByText('Prepared Spells')).toBeInTheDocument()
+    // Should render Shocking Grasp and Shield in Buffs & Effects
+    expect(screen.getAllByText('Shocking Grasp').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Shield').length).toBeGreaterThan(0)
+  })
 })
