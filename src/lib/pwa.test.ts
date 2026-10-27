@@ -95,7 +95,6 @@ describe('PWA Utility & Registration', () => {
     it('returns null safely when serviceWorker is not supported in navigator', () => {
       const originalNav = globalThis.navigator
       try {
-        // @ts-expect-error Mocking navigator without serviceWorker
         Object.defineProperty(globalThis, 'navigator', { value: {}, configurable: true })
         const result = initPwa()
         expect(result).toBeNull()
@@ -115,7 +114,6 @@ describe('PWA Utility & Registration', () => {
 
       const originalNav = globalThis.navigator
       try {
-        // @ts-expect-error Mocking navigator for test
         Object.defineProperty(globalThis, 'navigator', { value: fakeNavigator, configurable: true })
 
         const controller = initPwa({
