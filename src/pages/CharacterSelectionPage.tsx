@@ -116,7 +116,7 @@ export function CharacterSelectionPage() {
       </header>
 
       {/* Main Content: Desktop Split View & Mobile Stack */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-6 z-10 flex flex-col justify-center">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8 z-10 flex flex-col justify-start">
         {/* Title & Subtitle */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-3">
           <div>
@@ -230,10 +230,9 @@ export function CharacterSelectionPage() {
           <section className="lg:col-span-7 flex flex-col" aria-label="Dettagli personaggio">
             <motion.div
               key={activeChar.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25 }}
+              initial={{ opacity: 0.8 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15 }}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.2}
@@ -241,7 +240,7 @@ export function CharacterSelectionPage() {
                 if (info.offset.x < -40) selectRelative(1)
                 if (info.offset.x > 40) selectRelative(-1)
               }}
-              className="glass-card rounded-2xl md:rounded-3xl border border-white/10 p-5 md:p-7 relative overflow-hidden flex flex-col gap-6 shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+              className="glass-card rounded-2xl md:rounded-3xl border border-white/10 p-5 md:p-7 relative overflow-hidden flex flex-col gap-6 shadow-[0_8px_32px_rgba(0,0,0,0.4)] min-h-[500px]"
             >
               {/* Active Badge Marker */}
               <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
