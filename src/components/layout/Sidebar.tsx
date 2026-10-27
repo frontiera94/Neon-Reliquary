@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useCharacterStore } from '../../store/useCharacterStore'
+import { CharacterDropdown } from '../character/CharacterDropdown'
 
 const navItems = [
   { to: '/status', icon: 'analytics', label: 'Status' },
@@ -21,23 +22,7 @@ export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
     >
       {char && (
         <div className="px-6 mb-8">
-          <div className="flex items-center gap-3 p-2 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-            <div className="w-12 h-12 bg-surface-container-highest border border-primary/30 overflow-hidden flex-shrink-0 rounded-xl">
-              {char.portrait ? (
-                <img src={char.portrait} alt={char.name} className="w-full h-full object-cover" />
-              ) : (
-                <span className="material-symbols-outlined text-primary flex items-center justify-center h-full w-full">
-                  person
-                </span>
-              )}
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-headline text-white text-sm font-bold leading-tight truncate">{char.name}</h3>
-              <p className="font-label text-tertiary text-[10px] uppercase tracking-wider truncate">
-                Lv {char.level} {char.class}
-              </p>
-            </div>
-          </div>
+          <CharacterDropdown align="left" variant="sidebar" />
         </div>
       )}
 
