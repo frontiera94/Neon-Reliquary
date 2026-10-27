@@ -42,6 +42,7 @@ export function CharacterSelectionPage() {
     if (!activeChar) return
     setActiveCharacter(activeChar.id)
     initSession(activeChar.id, activeChar.maxHp)
+    window.scrollTo(0, 0)
     navigate('/status')
   }, [activeChar, setActiveCharacter, initSession, navigate])
 
@@ -351,29 +352,7 @@ export function CharacterSelectionPage() {
                 </p>
               </div>
 
-              {/* Tratti Distintivi (Highlights) */}
-              <div>
-                <p className="font-label text-[11px] uppercase tracking-wider text-tertiary font-bold mb-2">
-                  Tratti Distintivi & Specializzazione
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {activeLore.highlights.map((highlight, i) => (
-                    <span
-                      key={i}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 font-label text-xs text-on-surface hover:border-primary/40 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-xs text-primary">verified</span>
-                      <span>{highlight}</span>
-                    </span>
-                  ))}
-                  {activeLore.deityOrPatron && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/10 font-label text-xs text-secondary/90">
-                      <span className="material-symbols-outlined text-xs text-secondary">token</span>
-                      <span>{activeLore.deityOrPatron}</span>
-                    </span>
-                  )}
-                </div>
-              </div>
+
 
               {/* Compagno / Famiglio Legato (se presente) */}
               {activeChar.companions && activeChar.companions.length > 0 && (

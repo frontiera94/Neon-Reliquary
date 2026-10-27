@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { MainLayout } from './components/layout/MainLayout'
 import { SessionSyncManager } from './components/sync/SessionSyncManager'
 import { CharacterSelectionPage } from './pages/CharacterSelectionPage'
@@ -10,9 +11,20 @@ import { FeaturesPage } from './pages/FeaturesPage'
 import { InventoryPage } from './pages/InventoryPage'
 import { CompanionPage } from './pages/CompanionPage'
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+
+  return null
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <SessionSyncManager />
       <Routes>
         <Route path="/characters" element={<CharacterSelectionPage />} />

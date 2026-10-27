@@ -89,6 +89,8 @@ if (typeof window !== 'undefined') {
     disconnect() {}
   }
 
+  window.scrollTo = () => {}
+
   if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
     Element.prototype.scrollIntoView = () => {}
   }
