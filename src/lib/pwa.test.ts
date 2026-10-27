@@ -1,4 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+vi.mock('virtual:pwa-register', () => ({
+  registerSW: (options?: { onRegisteredSW?: (url: string, reg: unknown) => void }) => {
+    options?.onRegisteredSW?.('mock-sw.js', { update: () => Promise.resolve() })
+    return () => Promise.resolve()
+  },
+}))
 import {
   extractGstaticFontUrls,
   warmOfflineAssets,
@@ -90,11 +96,11 @@ describe('PWA Utility & Registration', () => {
       const originalNav = globalThis.navigator
       try {
         // @ts-expect-error Mocking navigator without serviceWorker
-        globalThis.navigator = {}
+        Object.defineProperty(globalThis, 'navigator', { value: {}, configurable: true })
         const result = initPwa()
         expect(result).toBeNull()
       } finally {
-        globalThis.navigator = originalNav
+        Object.defineProperty(globalThis, 'navigator', { value: originalNav, configurable: true })
       }
     })
 
@@ -110,7 +116,7 @@ describe('PWA Utility & Registration', () => {
       const originalNav = globalThis.navigator
       try {
         // @ts-expect-error Mocking navigator for test
-        globalThis.navigator = fakeNavigator
+        Object.defineProperty(globalThis, 'navigator', { value: fakeNavigator, configurable: true })
 
         const controller = initPwa({
           checkIntervalMs: 5000,
@@ -123,7 +129,7 @@ describe('PWA Utility & Registration', () => {
 
         controller?.stop()
       } finally {
-        globalThis.navigator = originalNav
+        Object.defineProperty(globalThis, 'navigator', { value: originalNav, configurable: true })
       }
     })
   })
