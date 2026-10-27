@@ -21,7 +21,7 @@ export function CoinPurseWidget({
         return (
           <div key={key} className="bg-surface-container-high/80 backdrop-blur-sm border border-white/10 rounded-xl p-4 flex flex-col gap-2 shadow-[0_4px_16px_rgba(0,0,0,0.2)]">
             <span className={`font-label text-[10px] uppercase tracking-[0.2em] font-bold ${color}`}>{label}</span>
-            <span className={`font-label text-4xl font-black ${color}`}>{val}</span>
+            <span className={`font-label text-3xl sm:text-4xl font-black ${color}`}>{val}</span>
             <div className="flex items-center gap-1 mt-1">
               <button
                 onClick={() => onAdjust(key, -10)}
@@ -64,4 +64,3 @@ export function CoinPurseWidget({
     </div>
   )
 }
-

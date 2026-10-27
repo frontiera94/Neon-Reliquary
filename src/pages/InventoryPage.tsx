@@ -45,23 +45,23 @@ export function InventoryPage() {
     .filter(({ items }) => items.length > 0)
 
   return (
-    <div className="p-6 md:p-12 lg:p-16">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
       {/* Header */}
-      <div className="max-w-5xl mx-auto mb-12">
-        <h1 className="font-headline text-5xl md:text-7xl font-bold text-on-surface mb-4 tracking-tighter uppercase">
+      <div>
+        <h1 className="font-headline text-2xl sm:text-3xl font-black text-on-surface mb-1.5 tracking-tight uppercase">
           Inventory & <span className="text-secondary neon-glow-accent">Gear</span>
         </h1>
-        <div className="h-1 w-24 bg-gradient-to-r from-primary to-secondary rounded-full mb-8" />
-        <p className="font-body text-tertiary text-lg max-w-2xl leading-relaxed">
-          Equipment carried by {char.name}.
+        <div className="h-1 w-20 bg-gradient-to-r from-primary to-secondary rounded-full mb-3" />
+        <p className="font-label text-xs sm:text-sm text-tertiary tracking-wide">
+          Equipment carried by <span className="text-white font-medium">{char.name}</span>.
         </p>
       </div>
 
-      <div className="max-w-5xl mx-auto space-y-12">
+      <div className="space-y-8">
         {/* Equipment slot grid */}
         <section>
-          <div className="flex items-center gap-4 mb-6">
-            <h2 className="font-headline text-2xl text-white font-bold uppercase tracking-tight">Equipment</h2>
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">Equipment</h2>
             <div className="flex-1 h-px bg-white/10" />
           </div>
           <EquipmentSlotGrid
@@ -73,8 +73,8 @@ export function InventoryPage() {
 
         {/* Coin purse */}
         <section>
-          <div className="flex items-center gap-4 mb-6">
-            <h2 className="font-headline text-2xl text-white font-bold uppercase tracking-tight">Coin Purse</h2>
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">Coin Purse</h2>
             <div className="flex-1 h-px bg-white/10" />
           </div>
           <CoinPurseWidget
@@ -89,12 +89,12 @@ export function InventoryPage() {
         ) : (
           itemsByCategory.map(({ cat, items }) => (
             <section key={cat}>
-              <div className="flex items-center gap-4 mb-6">
-                <h2 className="font-headline text-2xl text-white font-bold uppercase tracking-tight">
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">
                   {CATEGORY_LABELS[cat]}
                 </h2>
                 <div className="flex-1 h-px bg-white/10" />
-                <span className="font-label text-xs text-primary/80 bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                <span className="font-label text-[10px] text-primary/80 bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider font-semibold">
                   {items.length} item{items.length !== 1 ? 's' : ''}
                 </span>
               </div>

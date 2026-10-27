@@ -129,7 +129,7 @@ export function CharacterSelectionPage() {
                 {String(activeIndex + 1).padStart(2, '0')} / {String(chars.length).padStart(2, '0')}
               </span>
             </div>
-            <h1 className="font-headline text-3xl md:text-5xl font-black tracking-tight text-white">
+            <h1 className="font-headline text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white uppercase">
               CHOOSE YOUR <span className="text-primary neon-glow">RELIC</span>
             </h1>
           </div>
@@ -307,7 +307,7 @@ export function CharacterSelectionPage() {
                     <p className="font-label text-xs uppercase tracking-widest text-primary font-bold">
                       {activeLore.archetype}
                     </p>
-                    <h2 className="font-headline text-3xl sm:text-4xl font-extrabold text-white leading-tight mt-0.5">
+                    <h2 className="font-headline text-2xl sm:text-3xl font-extrabold text-white leading-tight mt-0.5">
                       {activeChar.name}
                     </h2>
                   </div>
@@ -457,12 +457,12 @@ function RosterItemCard({
       {/* Character Core Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <h3 className={`font-headline text-sm font-bold truncate ${isSelected ? 'text-white' : 'text-on-surface group-hover:text-white'}`}>
+          <h3 className={`font-headline text-sm sm:text-base font-bold truncate ${isSelected ? 'text-white' : 'text-on-surface group-hover:text-white'}`}>
             {char.name}
           </h3>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {isCharActive && (
-              <span className="px-1.5 py-0.5 rounded bg-secondary/15 border border-secondary/30 font-label text-[9px] text-secondary font-bold uppercase tracking-widest">
+              <span className="px-1.5 py-0.5 rounded bg-secondary/15 border border-secondary/30 font-label text-[10px] text-secondary font-bold uppercase tracking-widest">
                 Active
               </span>
             )}
@@ -502,10 +502,10 @@ function RosterItemCard({
             {currentHp}/{maxHp}
           </span>
           {isDead && (
-            <span className="font-label text-[8px] uppercase text-error font-bold">Dead</span>
+            <span className="font-label text-[10px] uppercase text-error font-bold">Dead</span>
           )}
           {isDying && (
-            <span className="font-label text-[8px] uppercase text-error font-bold animate-pulse">Dying</span>
+            <span className="font-label text-[10px] uppercase text-error font-bold animate-pulse">Dying</span>
           )}
         </div>
       </div>
