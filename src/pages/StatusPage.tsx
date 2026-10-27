@@ -164,13 +164,13 @@ export function StatusPage() {
         {/* Vitality Core */}
         <section className="lg:col-span-12 flex flex-col items-center justify-center bg-surface-container/90 backdrop-blur-sm p-8 relative overflow-hidden group rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] transition-all">
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent pointer-events-none" />
-          <h2 className="font-headline text-secondary text-lg mb-8 uppercase tracking-widest neon-glow-accent font-bold">
+          <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-8 neon-glow-accent">
             Vitality Core
           </h2>
           <div className="text-center">
             <div
-              className="font-label font-black text-primary"
-              style={{ fontSize: '5rem', lineHeight: 1, textShadow: '0 0 30px rgba(0,240,255,0.4)' }}
+              className="font-label text-5xl sm:text-6xl font-black text-primary leading-none"
+              style={{ textShadow: '0 0 30px rgba(0,240,255,0.4)' }}
             >
               {hp}
             </div>
@@ -418,7 +418,7 @@ export function StatusPage() {
                   )}
                 </div>
                 <p
-                  className={`font-label text-3xl font-black ${
+                  className={`font-label text-3xl sm:text-4xl font-black ${
                     delta < 0 ? 'text-error' : delta > 0 ? 'text-primary' : 'text-on-surface'
                   }`}
                 >
@@ -438,7 +438,7 @@ export function StatusPage() {
         {/* Daily Resources */}
         {char.dailyResources.length > 0 && (
           <section className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all">
-            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent font-bold">
+            <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
               Daily Resources
             </h2>
             <div className="flex flex-wrap gap-3">
@@ -461,7 +461,7 @@ export function StatusPage() {
         {/* Conditions */}
         <section className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
+            <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary neon-glow-accent">
               Conditions
             </h2>
             <button
@@ -581,7 +581,7 @@ function DefenseCard({
   const cardContent = (
     <>
       <p className={`font-label text-[10px] uppercase tracking-widest ${textColor} font-bold`}>{label}</p>
-      <p className={`font-label text-4xl font-black ${valColor}`}>
+      <p className={`font-label text-3xl sm:text-4xl font-black ${valColor}`}>
         {displayVal}
       </p>
       <p className="font-label text-[10px] text-on-surface-variant mt-1 font-mono">{sub}</p>

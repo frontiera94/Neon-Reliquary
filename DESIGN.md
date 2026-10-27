@@ -28,10 +28,25 @@
 
 ## 3. Typography & Hierarchy
 
-- **Headline**: `Noto Serif, serif` — used for major section titles and character names.
-- **Body**: `Manrope, Inter, sans-serif` — fluid, readable prose for spell descriptions, abilities, and chat logs.
-- **Label / Data**: `Space Grotesk, JetBrains Mono, monospace` — tactical, high-legibility numbers, dice outputs, tags, and stats.
-- **Micro-copy**: Tracked uppercase with letter-spacing `0.1em` to `0.2em`, font-weight 600+.
+### Font Stacks
+- **Headline**: `Noto Serif, serif` (`font-headline`) — major section titles, character names, prominent entities.
+- **Body**: `Manrope, Inter, sans-serif` (`font-body`) — fluid, readable prose for descriptions, abilities, lore, chat logs.
+- **Label / Data**: `Space Grotesk, JetBrains Mono, monospace` (`font-label`, `font-mono`) — tactical data, modifiers, dice output, tags, stats.
+
+### Standard Typographic Scale
+| Role | Element / Semantic Use | Tailwind Classes | Notes |
+|---|---|---|---|
+| **Page Title** | Top-level page heading (`h1`) | `font-headline text-2xl sm:text-3xl font-black uppercase tracking-tight` | Standardized across all 7 views |
+| **Page Subtitle / Meta** | Context line below page title | `font-label text-xs sm:text-sm text-tertiary tracking-wide` | Consistent subtitle size & tracking |
+| **Section Header** | Major card/grid sections (`h2`, `h3`) | `font-headline text-lg sm:text-xl font-bold uppercase tracking-wider` | E.g. Attacks, Vitality Core, Equipment |
+| **Sub-section / Group Header** | Category dividers, level headers | `font-label text-xs font-bold uppercase tracking-[0.2em] text-primary` | Level markers, action economy groups |
+| **Card / Item Title** | Weapon names, inventory items, feats | `font-headline text-base sm:text-lg font-bold` | Weapon card, item card, feat title |
+| **Hero Data Number** | Dominant vital stat (HP in Vitality Core) | `font-label text-5xl sm:text-6xl font-black` | Balanced, avoids unbounded rem sizes |
+| **Defense / Stat Number** | AC, Saves, Ability mods, Coin totals | `font-label text-3xl sm:text-4xl font-black` | Clear tactical prominence |
+| **Action / Roll Value** | Numbers on attack & roll buttons | `font-label text-base sm:text-lg font-black` | Tactile, readable action targets |
+| **Body Prose** | Ability rules, spell text, item lore | `font-body text-xs sm:text-sm leading-relaxed text-on-surface-variant` | High legibility |
+| **Chips / Badges / Tags** | Status chips, action tags, schools | `font-label text-[10px] sm:text-xs font-bold uppercase tracking-wider` | Accessible minimum (≥10px) |
+| **Micro Data / Tooltip breakdown** | Formula breakdowns, secondary labels | `font-label text-[10px] text-tertiary` | Never smaller than 10px |
 
 ---
 
