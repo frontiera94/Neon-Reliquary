@@ -2,7 +2,7 @@
   "id": "agelmund",
   "name": "Agelmund",
   "class": "Monk",
-  "level": 4,
+  "level": 5,
   "race": "Human",
   "alignment": "Lawful Evil",
   "portrait": "https://placehold.co/400x600/1f1f25/00daf3?text=Agelmund",
@@ -15,22 +15,22 @@
     "wis": 14,
     "cha": 12
   },
-  "maxHp": 36,
+  "maxHp": 48,
   "baseAttackBonus": [
-    4
+    5
   ],
   "initiativeBonus": 2,
   "speed": 40,
   "armorClass": {
-    "total": 16,
-    "touch": 16,
-    "flatFooted": 13,
+    "total": 17,
+    "touch": 17,
+    "flatFooted": 14,
     "armorBonus": 0,
     "shieldBonus": 0,
     "dexBonus": 2,
     "naturalArmor": 0,
     "deflection": 0,
-    "misc": 4,
+    "misc": 5,
     "spellFailureChance": 0
   },
   "savingThrows": {
@@ -46,9 +46,9 @@
       "id": "acrobatics",
       "name": "Acrobatics",
       "ability": "dex",
-      "ranks": 3,
+      "ranks": 4,
       "classSkill": true,
-      "miscBonus": 0,
+      "miscBonus": 3,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -66,9 +66,9 @@
       "id": "diplomacy",
       "name": "Diplomacy",
       "ability": "cha",
-      "ranks": 3,
+      "ranks": 4,
       "classSkill": true,
-      "miscBonus": 3,
+      "miscBonus": 6,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -76,9 +76,9 @@
       "id": "intimidate",
       "name": "Intimidate",
       "ability": "cha",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
-      "miscBonus": 0,
+      "miscBonus": 3,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -96,9 +96,9 @@
       "id": "perception",
       "name": "Perception",
       "ability": "wis",
-      "ranks": 3,
+      "ranks": 4,
       "classSkill": true,
-      "miscBonus": 2,
+      "miscBonus": 5,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -106,9 +106,9 @@
       "id": "sense-motive",
       "name": "Sense Motive",
       "ability": "wis",
-      "ranks": 1,
+      "ranks": 2,
       "classSkill": true,
-      "miscBonus": 2,
+      "miscBonus": 5,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -118,7 +118,7 @@
       "ability": "dex",
       "ranks": 3,
       "classSkill": true,
-      "miscBonus": 0,
+      "miscBonus": 3,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -126,9 +126,9 @@
       "id": "survival",
       "name": "Survival",
       "ability": "wis",
-      "ranks": 1,
+      "ranks": 0,
       "classSkill": false,
-      "miscBonus": 0,
+      "miscBonus": 1,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -146,11 +146,11 @@
   "weapons": [
     {
       "id": "unarmed-strike",
-      "name": "Unarmed Strike (Flurry: +9/+9)",
+      "name": "Unarmed Strike (Flurry: +10/+10)",
       "type": "melee",
       "attackBonus": [
-        9,
-        9
+        10,
+        10
       ],
       "damageDice": "1d8",
       "damageBonus": 5,
@@ -167,7 +167,7 @@
       "name": "Masterwork Knuckle Axe",
       "type": "melee",
       "attackBonus": [
-        6
+        7
       ],
       "damageDice": "1d6",
       "damageBonus": 5,
@@ -183,7 +183,7 @@
       "name": "Dagger",
       "type": "melee",
       "attackBonus": [
-        9
+        10
       ],
       "damageDice": "1d4",
       "damageBonus": 5,
@@ -191,6 +191,22 @@
       "critMultiplier": 2,
       "tags": [
         "Throwable"
+      ]
+    },
+    {
+      "id": "oil-flask",
+      "name": "Oil, 1 Pint Flask",
+      "type": "ranged",
+      "attackBonus": [
+        7
+      ],
+      "damageDice": "1d6",
+      "damageBonus": 0,
+      "critRange": 20,
+      "critMultiplier": 2,
+      "tags": [
+        "Splash",
+        "Consumable"
       ]
     }
   ],
@@ -205,6 +221,15 @@
       "extraDamageDice": "1d6",
       "meleeOnly": true,
       "color": "primary"
+    },
+    {
+      "id": "defensive-spin",
+      "name": "Defensive Spin (+4 Dodge AC on hit)",
+      "active": false,
+      "attackMod": 0,
+      "damageMod": 0,
+      "acMod": 4,
+      "color": "secondary"
     },
     {
       "id": "ki-extra-attack",
@@ -223,6 +248,16 @@
       "damageMod": 0,
       "acMod": 0,
       "color": "error"
+    },
+    {
+      "id": "axe-to-grind",
+      "name": "Axe to Grind (+1 dmg vs sole foe threatened)",
+      "active": false,
+      "attackMod": 0,
+      "damageMod": 1,
+      "acMod": 0,
+      "meleeOnly": true,
+      "color": "primary"
     }
   ],
   "dailyResources": [
@@ -235,8 +270,14 @@
     {
       "id": "stunning-fist",
       "name": "Stunning Fist",
-      "total": 4,
+      "total": 5,
       "label": "Feat: Stunning Fist"
+    },
+    {
+      "id": "stamina-pool",
+      "name": "Stamina Pool",
+      "total": 7,
+      "label": "Pool: Stamina"
     }
   ],
   "feats": [
@@ -244,25 +285,25 @@
       "id": "flurry-of-blows",
       "index": 1,
       "name": "Flurry of Blows",
-      "shortDesc": "Full-attack: make one additional attack at highest BAB (+9/+9). Can spend 1 ki for a third attack.",
-      "fullDesc": "As a full-attack action, Agelmund can make one additional attack at his highest base attack bonus (+9). This stacks with haste. He can use unarmed strikes or monk special weapons (like the knuckle axe) in any combination. Does not take multi-weapon penalties."
+      "shortDesc": "Full-attack: make one additional attack at highest BAB (+10/+10). Can spend 1 ki for a third attack.",
+      "fullDesc": "As a full-attack action, Agelmund can make one additional attack at his highest base attack bonus (+10). This stacks with haste. He can use unarmed strikes or monk special weapons in any combination. Does not take multi-weapon penalties."
     },
     {
       "id": "stunning-fist",
       "index": 2,
-      "name": "Stunning Fist (4/day, DC 14)",
-      "shortDesc": "Declare before attack roll. On hit: Fort DC 14 or target stunned 1 round. At level 4 can choose to fatigue instead.",
-      "fullDesc": "You must declare use before rolling. If the attack hits and the target fails Fort DC 14, it is stunned for 1 round (or fatigued — Agelmund's choice at 4th level). A stunned creature drops held items, cannot act, loses DEX to AC, and takes −2 penalty to AC. 4 uses per day.",
-      "bonusValue": 4,
-      "bonusMax": 4,
+      "name": "Stunning Fist (5/day, DC 14)",
+      "shortDesc": "Declare before attack roll. On hit: Fort DC 14 or target stunned 1 round. At level 4+ can fatigue instead.",
+      "fullDesc": "You must declare use before rolling. If the attack hits and the target fails Fort DC 14, it is stunned for 1 round (or fatigued — Agelmund's choice). A stunned creature drops held items, cannot act, loses DEX to AC, and takes −2 penalty to AC. 5 uses per day.",
+      "bonusValue": 5,
+      "bonusMax": 5,
       "bonusLabel": "Uses Remaining"
     },
     {
       "id": "ki-pool",
       "index": 3,
       "name": "Ki Pool (6 pts)",
-      "shortDesc": "Supernatural energy pool. 1 pt = extra flurry attack. 2 pts = Wholeness of Body (1d8+4 healing).",
-      "fullDesc": "Ki pool = 1/2 monk level (2) + WIS mod (2) + Extra Ki feat (2) = 6 pts. At 3rd level, unarmed strikes count as magic weapons. Spend 1 ki as a swift action to gain one extra unarmed strike in a flurry. Spend 2 ki as a standard action for Wholeness of Body: heal 1d8+4 damage.",
+      "shortDesc": "Supernatural energy pool. 1 pt = extra flurry attack. 2 pts = Wholeness of Body (1d8+5 healing).",
+      "fullDesc": "Ki pool = 1/2 monk level (2) + WIS mod (2) + Extra Ki feat (2) = 6 pts. Unarmed strikes count as magic weapons. Spend 1 ki as a swift action to gain one extra unarmed strike in a flurry. Spend 2 ki as a standard action for Wholeness of Body: heal 1d8+5 damage.",
       "bonusValue": 6,
       "bonusMax": 6,
       "bonusLabel": "Ki Points"
@@ -272,38 +313,81 @@
       "index": 4,
       "name": "Jabbing Style",
       "shortDesc": "When you hit a target with an unarmed strike that you already hit this round, deal +1d6 extra damage.",
-      "fullDesc": "A cluster of quick strikes deals more damage than a single blow. When you hit a target with an unarmed strike AND you have hit that target with an unarmed strike previously that same round, you deal an extra 1d6 points of damage to that target. This makes Flurry of Blows very efficient."
+      "fullDesc": "A cluster of quick strikes deals more damage than a single blow. When you hit a target with an unarmed strike AND you have hit that target with an unarmed strike previously that same round, you deal an extra 1d6 points of damage to that target."
+    },
+    {
+      "id": "defensive-spin",
+      "index": 5,
+      "name": "Defensive Spin (Style Strike)",
+      "shortDesc": "On flurry hit with fist: gain +4 dodge bonus to AC against target until start of next turn.",
+      "fullDesc": "The monk spins about, confounding his foe. If the attack hits, the monk gains a +4 dodge bonus to AC against any attacks made by the target of the style strike until the start of his next turn. This bonus does not stack with itself. The monk must attack with a fist to use this style strike."
+    },
+    {
+      "id": "combat-stamina",
+      "index": 6,
+      "name": "Combat Stamina (7 pts)",
+      "shortDesc": "Spend up to 5 stamina for competence bonus on attack rolls, or use combat tricks.",
+      "fullDesc": "After you make an attack roll with a manufactured weapon, unarmed strike, or natural weapon, but before results are revealed, spend up to 5 stamina to gain a competence bonus equal to points spent. Can also spend stamina points on combat tricks associated with combat feats (Dodge, Deflect Arrows, Improved Grapple, Stunning Fist).",
+      "bonusValue": 7,
+      "bonusMax": 7,
+      "bonusLabel": "Stamina Points"
     },
     {
       "id": "improved-grapple",
-      "index": 5,
+      "index": 7,
       "name": "Improved Grapple (Granted)",
       "shortDesc": "No AoO when grappling. +2 on grapple CMB checks and +2 CMD vs. grapple attempts.",
-      "fullDesc": "You do not provoke an attack of opportunity when performing a grapple combat maneuver. You receive a +2 bonus on checks made to grapple a foe and a +2 bonus to CMD whenever an opponent tries to grapple you. Grapple CMB: +11 (BAB 4 + STR 5 + 2 Improved Grapple).",
+      "fullDesc": "You do not provoke an attack of opportunity when performing a grapple combat maneuver. You receive a +2 bonus on checks made to grapple a foe and a +2 bonus to CMD whenever an opponent tries to grapple you. Grapple CMB: +12 (BAB 5 + STR 5 + 2 Improved Grapple).",
       "bonusValue": 2,
       "bonusMax": 2,
       "bonusLabel": "Grapple Bonus"
     },
     {
       "id": "deflect-arrows",
-      "index": 6,
+      "index": 8,
       "name": "Deflect Arrows (Granted)",
       "shortDesc": "Once per round, with a free hand, deflect one ranged weapon attack to take no damage.",
       "fullDesc": "You must have at least one hand free. Once per round when you would be hit with a ranged weapon attack, you may deflect it to take no damage. You must be aware of the attack and not flat-footed. Unusually massive projectiles and natural/spell attacks cannot be deflected."
     },
     {
       "id": "dodge",
-      "index": 7,
+      "index": 9,
       "name": "Dodge",
-      "shortDesc": "+1 dodge bonus to AC (already included in AC 16).",
-      "fullDesc": "Your training allows you to react swiftly. You gain a +1 dodge bonus to your AC. A condition that makes you lose your DEX bonus to AC also makes you lose the benefits of this feat. This +1 is already included in the misc AC bonus."
+      "shortDesc": "+1 dodge bonus to AC (already included in AC 17).",
+      "fullDesc": "Your training allows you to react swiftly. You gain a +1 dodge bonus to your AC. A condition that makes you lose your DEX bonus to AC also makes you lose the benefits of this feat."
+    },
+    {
+      "id": "extra-ki",
+      "index": 10,
+      "name": "Extra Ki",
+      "shortDesc": "+2 ki points to ki pool.",
+      "fullDesc": "You can use your ki pool more times per day than most. Your ki pool increases by 2."
+    },
+    {
+      "id": "alertness",
+      "index": 11,
+      "name": "Alertness",
+      "shortDesc": "+2 on Perception and Sense Motive checks.",
+      "fullDesc": "You often notice things that others might miss. You get a +2 bonus on Perception and Sense Motive skill checks. If you have 10 or more ranks in one of these skills, the bonus increases to +4 for that skill."
     }
   ],
   "classAbilities": [
     {
       "id": "ac-bonus",
       "name": "Monk AC Bonus (Unarmored)",
-      "description": "While unarmored and unencumbered, Agelmund adds WIS modifier (+2) to AC and CMD, plus +1 at 4th level. His misc AC bonus of +4 = WIS(+2) + monk level(+1) + Dodge feat(+1). Touch AC equals total AC (16) since he wears no armor.",
+      "description": "While unarmored and unencumbered, Agelmund adds WIS modifier (+2) to AC and CMD, plus +1 at 4th level. His AC of 17 = 10 + DEX(+2) + Dodge(+1) + WIS/Monk bonus(+4). Touch AC equals total AC (17) since he wears no armor.",
+      "isSignature": true
+    },
+    {
+      "id": "purity-of-body",
+      "name": "Purity of Body (Lvl 5)",
+      "description": "At 5th level, a monk gains immunity to all diseases, including supernatural and magical diseases.",
+      "isSignature": true
+    },
+    {
+      "id": "style-strike",
+      "name": "Style Strike (Defensive Spin)",
+      "description": "At 5th level, a monk can learn one type of style strike. Whenever he makes a flurry of blows, he can designate one unarmed strike as a style strike (Defensive Spin: +4 dodge AC vs target on hit).",
       "isSignature": true
     },
     {
@@ -313,9 +397,21 @@
       "isSignature": false
     },
     {
+      "id": "fast-movement",
+      "name": "Fast Movement (Ex)",
+      "description": "At 3rd level, a monk gains an enhancement bonus to land speed (+10 ft at 5th level, total 40 ft). Lost if wearing armor or carrying a medium or heavy load.",
+      "isSignature": false
+    },
+    {
       "id": "still-mind",
-      "name": "Still Mind (Lvl 4)",
+      "name": "Still Mind",
       "description": "+2 bonus on saving throws against enchantment spells and effects.",
+      "isSignature": false
+    },
+    {
+      "id": "wholeness-of-body",
+      "name": "Wholeness of Body (Ki Power)",
+      "description": "Heal own wounds as a standard action: spend 2 ki to heal 1d8 + monk level (1d8+5 HP).",
       "isSignature": false
     }
   ],
@@ -323,61 +419,39 @@
   "spells": [],
   "inventory": [
     {
-      "id": "ag-outfit",
-      "name": "Monk's Outfit",
-      "description": "Simple linen clothes, perfectly suited for unarmored combat.",
-      "category": "armor",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "body"
-    },
-    {
-      "id": "ag-kama",
-      "name": "Kama",
-      "description": "A sickle-like weapon favored by monks.",
+      "id": "ag-knuckle-axe",
+      "name": "Masterwork Knuckle Axe",
+      "description": "Exotic light weapon dealing 1d6 slashing damage, ×3 crit. Masterwork (+1 attack).",
       "category": "weapon",
       "quantity": 1,
       "equipped": true,
       "slot": "mainHand"
     },
     {
-      "id": "ag-shurikens",
-      "name": "Shuriken",
-      "description": "Small bladed throwing stars.",
+      "id": "ag-dagger",
+      "name": "Dagger",
+      "description": "1d4 piercing/slashing, 19-20/×2 crit.",
       "category": "weapon",
-      "quantity": 20
+      "quantity": 1
     },
     {
-      "id": "ag-cure-light",
-      "name": "Potion of Cure Light Wounds",
-      "description": "Heals 1d8+1 hit points.",
+      "id": "ag-oil-flask",
+      "name": "Oil, 1 Pint Flask",
+      "description": "Flask of oil, can be thrown as a splash weapon or used for hooded lantern.",
       "category": "consumable",
-      "quantity": 3
+      "quantity": 2
     },
     {
       "id": "ag-backpack",
-      "name": "Backpack",
-      "description": "Holds up to 2 cubic feet / 20 lbs.",
+      "name": "Backpack, Common",
+      "description": "Holds gear for travel.",
       "category": "gear",
-      "quantity": 1
-    },
-    {
-      "id": "ag-rope",
-      "name": "Silk Rope (50 ft)",
-      "description": "Strong and light.",
-      "category": "gear",
-      "quantity": 1
-    },
-    {
-      "id": "ag-rations",
-      "name": "Trail Rations",
-      "description": "One day's worth of dried food.",
-      "category": "consumable",
-      "quantity": 5
+      "quantity": 1,
+      "equipped": true
     },
     {
       "id": "ag-waterskin",
-      "name": "Waterskin",
+      "name": "Waterskin, Filled",
       "description": "Holds 1 gallon of liquid.",
       "category": "gear",
       "quantity": 1
@@ -385,59 +459,51 @@
     {
       "id": "ag-bedroll",
       "name": "Bedroll",
-      "description": "A thin mat for sleeping.",
+      "description": "Bedroll for resting in the wild.",
       "category": "gear",
       "quantity": 1
     },
     {
-      "id": "ag-amulet-na",
-      "name": "Amulet of Natural Armor +1",
-      "description": "+1 natural armor bonus to AC.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "neck"
+      "id": "ag-rope",
+      "name": "Rope (50 ft.)",
+      "description": "Hemp rope, 50 feet.",
+      "category": "gear",
+      "quantity": 1
     },
     {
-      "id": "ag-cloak-res",
-      "name": "Cloak of Resistance +1",
-      "description": "A dark-hemmed cloak. +1 resistance bonus on all saving throws.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "shoulders"
+      "id": "ag-blanket",
+      "name": "Blanket",
+      "description": "Warm wool blanket.",
+      "category": "gear",
+      "quantity": 1
     },
     {
-      "id": "ag-bracers",
-      "name": "Bracers of Armor +2",
-      "description": "Worn in place of armor. Grant +2 armor bonus to AC.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "wrists"
+      "id": "ag-ball",
+      "name": "Ball (2 in)",
+      "description": "Small solid ball.",
+      "category": "gear",
+      "quantity": 1
     },
     {
-      "id": "ag-ring-prot",
-      "name": "Ring of Protection +1",
-      "description": "+1 deflection bonus to AC.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "ring1"
+      "id": "ag-lantern",
+      "name": "Lantern, Hooded",
+      "description": "Bright illumination 30 ft., shadowy illumination 60 ft.",
+      "category": "gear",
+      "quantity": 1
     },
     {
-      "id": "ag-belt-con",
-      "name": "Belt of Mighty Constitution +2",
-      "description": "+2 enhancement bonus to Constitution.",
-      "category": "magic",
+      "id": "ag-pouch",
+      "name": "Pouch, Belt",
+      "description": "Small pouch worn at belt.",
+      "category": "gear",
       "quantity": 1,
       "equipped": true,
       "slot": "belt"
     }
   ],
   "startingCoins": {
-    "gp": 45,
-    "sp": 12,
-    "cp": 7
+    "gp": 65,
+    "sp": 1,
+    "cp": 2
   }
 }
