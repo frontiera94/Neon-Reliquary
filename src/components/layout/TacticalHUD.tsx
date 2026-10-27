@@ -16,6 +16,9 @@ import { TacticalHpPopover } from './TacticalHpPopover'
 import { SettingsPanel } from './SettingsPanel'
 import { CloudSyncBadge } from '../sync/CloudSyncBadge'
 import { useInspectorStore } from '../../store/useInspectorStore'
+import { CharacterDropdown } from '../character/CharacterDropdown'
+import { CharacterEmblem } from '../character/CharacterEmblem'
+import { getCharacterLore } from '../../lib/character-lore'
 
 export function TacticalHUD() {
   const navigate = useNavigate()
@@ -29,6 +32,7 @@ export function TacticalHUD() {
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [hpPopoverOpen, setHpPopoverOpen] = useState(false)
+  const [characterDropdownOpen, setCharacterDropdownOpen] = useState(false)
 
   // Character Cycling
   const idx = char ? characters.findIndex((c) => c.id === char.id) : -1
@@ -132,11 +136,39 @@ export function TacticalHUD() {
               NEON RELIQUARY
             </span>
             <div className="hidden md:block h-8 w-px bg-white/10 mx-1" />
-            <div className="hidden xl:block">
-              <h1 className="font-headline text-base leading-none text-white font-bold">{char.name}</h1>
-              <p className="font-label text-xs tracking-widest text-tertiary uppercase mt-0.5">
-                Level {char.level} {char.class}
-              </p>
+            <div
+              className="hidden xl:flex items-center gap-2.5 cursor-pointer group select-none"
+              onClick={() => setCharacterDropdownOpen((prev) => !prev)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') setCharacterDropdownOpen((prev) => !prev)
+              }}
+              aria-label="Toggle character dropdown"
+            >
+              <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
+                <CharacterEmblem
+                  characterId={char.id}
+                  lore={getCharacterLore(char.id)}
+                  variant="avatar"
+                  className="w-full h-full"
+                />
+              </div>
+              <div>
+                <h1 className="font-headline text-base leading-none text-white font-bold group-hover:text-primary transition-colors flex items-center gap-1">
+                  <span>{char.name}</span>
+                  <span
+                    className={`material-symbols-outlined text-xs text-tertiary group-hover:text-primary transition-transform duration-200 ${
+                      characterDropdownOpen ? 'rotate-180 text-primary' : ''
+                    }`}
+                  >
+                    expand_more
+                  </span>
+                </h1>
+                <p className="font-label text-xs tracking-widest text-tertiary uppercase mt-0.5">
+                  Level {char.level} {char.class}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -521,13 +553,13 @@ export function TacticalHUD() {
               </div>
             )}
 
-            <button
-              onClick={() => navigate('/characters')}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-xs rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_20px_rgba(0,240,255,0.25)] transition-all duration-300 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-sm text-primary">account_circle</span>
-              <span className="hidden xl:inline">Character Switcher</span>
-            </button>
+            <CharacterDropdown
+              align="right"
+              variant="cockpit"
+              isOpen={characterDropdownOpen}
+              onToggle={() => setCharacterDropdownOpen((prev) => !prev)}
+              onClose={() => setCharacterDropdownOpen(false)}
+            />
 
             <button
               onClick={() => setSettingsOpen(true)}
