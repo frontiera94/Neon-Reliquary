@@ -21,7 +21,12 @@ if (!process.stdin.isTTY) {
 }
 
 function runGit(args, cwd = currentRepoDir) {
-  return execSync(`git ${args}`, { cwd, encoding: 'utf8' }).trim();
+  const env = { ...process.env };
+  delete env.GIT_DIR;
+  delete env.GIT_WORK_TREE;
+  delete env.GIT_INDEX_FILE;
+  delete env.GIT_PREFIX;
+  return execSync(`git ${args}`, { cwd, env, encoding: 'utf8' }).trim();
 }
 
 function log(msg) {
