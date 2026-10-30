@@ -134,6 +134,101 @@ describe('Character JSON integrity', () => {
     })
   })
 
+  describe('Knam Level 5 specific checks', () => {
+    const raw = fs.readFileSync(path.join(dataDir, 'knam.json'), 'utf8')
+    const knam = JSON.parse(raw) as FullCharacter
+
+    it('has level 5 and 66 HP', () => {
+      expect(knam.level).toBe(5)
+      expect(knam.maxHp).toBe(66)
+    })
+
+    it('has BAB [5], speed 40, and initiative bonus +6', () => {
+      expect(knam.baseAttackBonus).toEqual([5])
+      expect(knam.speed).toBe(40)
+      expect(knam.initiativeBonus).toBe(6)
+    })
+
+    it('has AC 19, touch 13, and saves fort 9, ref 3, will 4', () => {
+      expect(knam.armorClass.total).toBe(19)
+      expect(knam.armorClass.touch).toBe(13)
+      expect(knam.savingThrows.fort).toBe(9)
+      expect(knam.savingThrows.ref).toBe(3)
+      expect(knam.savingThrows.will).toBe(4)
+    })
+
+    it('has bloodrage rounds set to 16 in daily resources', () => {
+      const rage = knam.dailyResources.find((r) => r.id === 'bloodrage-rounds')
+      expect(rage).toBeDefined()
+      expect(rage?.total).toBe(16)
+    })
+
+    it('has 3 1st-level spells including Ear-Piercing Scream and Burning Hands with 5d4', () => {
+      expect(knam.spells.length).toBe(3)
+      expect(knam.spells.some((s) => s.id === 'ear-piercing-scream')).toBe(true)
+      const bh = knam.spells.find((s) => s.id === 'burning-hands-k')
+      expect(bh?.damageDice).toBe('5d4')
+    })
+
+    it('has Masterwork Earth Breaker with attack bonus +10', () => {
+      const eb = knam.weapons.find((w) => w.id === 'earth-breaker')
+      expect(eb).toBeDefined()
+      expect(eb?.attackBonus).toEqual([10])
+    })
+
+    it('has Improved Uncanny Dodge feature', () => {
+      expect(knam.classAbilities.some((ca) => ca.id === 'improved-uncanny-dodge')).toBe(true)
+    })
+  })
+
+  describe('Agelmund Level 5 specific checks', () => {
+    const raw = fs.readFileSync(path.join(dataDir, 'agelmund.json'), 'utf8')
+    const agelmund = JSON.parse(raw) as FullCharacter
+
+    it('has level 5 and 48 HP', () => {
+      expect(agelmund.level).toBe(5)
+      expect(agelmund.maxHp).toBe(48)
+    })
+
+    it('has BAB [5] and speed 40', () => {
+      expect(agelmund.baseAttackBonus).toEqual([5])
+      expect(agelmund.speed).toBe(40)
+    })
+
+    it('has AC 17, touch 17, flat-footed 14', () => {
+      expect(agelmund.armorClass.total).toBe(17)
+      expect(agelmund.armorClass.touch).toBe(17)
+      expect(agelmund.armorClass.flatFooted).toBe(14)
+    })
+
+    it('has Unarmed Strike flurry +10/+10', () => {
+      const strike = agelmund.weapons.find((w) => w.id === 'unarmed-strike')
+      expect(strike).toBeDefined()
+      expect(strike?.attackBonus).toEqual([10, 10])
+    })
+
+    it('has Stunning Fist with 5 daily uses and stamina pool of 7', () => {
+      const sf = agelmund.dailyResources.find((r) => r.id === 'stunning-fist')
+      expect(sf).toBeDefined()
+      expect(sf?.total).toBe(5)
+      const sp = agelmund.dailyResources.find((r) => r.id === 'stamina-pool')
+      expect(sp).toBeDefined()
+      expect(sp?.total).toBe(7)
+    })
+
+    it('has Purity of Body and Defensive Spin style strike', () => {
+      expect(agelmund.classAbilities.some((ca) => ca.id === 'purity-of-body')).toBe(true)
+      expect(agelmund.classAbilities.some((ca) => ca.id === 'style-strike')).toBe(true)
+      expect(agelmund.feats.some((f) => f.id === 'defensive-spin')).toBe(true)
+    })
+
+    it('has defensive-spin buff configured with +4 AC', () => {
+      const spin = agelmund.buffs.find((b) => b.id === 'defensive-spin')
+      expect(spin).toBeDefined()
+      expect(spin?.acMod).toBe(4)
+    })
+  })
+
   describe('Combat buff meleeOnly restrictions for ranged weapon characters', () => {
     it('sample-kaelen has power-attack configured as meleeOnly', () => {
       const raw = fs.readFileSync(path.join(dataDir, 'sample-kaelen.json'), 'utf8')

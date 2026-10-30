@@ -774,37 +774,4 @@ describe('TacticalHUD Component', () => {
       expect(screen.queryByText('Shield Spell')).not.toBeInTheDocument()
     })
   })
-
-  describe('Suite 7: Character Switcher Drawer Integration', () => {
-    it('opens character switcher drawer when tapping character identity button', () => {
-      render(
-        <MemoryRouter>
-          <TacticalHUD />
-        </MemoryRouter>
-      )
-
-      const trigger = screen.getByRole('button', { name: /Open character menu/i })
-      fireEvent.click(trigger)
-
-      expect(screen.getByTestId('character-switcher-drawer')).toBeInTheDocument()
-      expect(screen.getByRole('heading', { name: /Switch Character/i })).toBeInTheDocument()
-    })
-
-    it('switches character when tapping a character card in the drawer', () => {
-      render(
-        <MemoryRouter>
-          <TacticalHUD />
-        </MemoryRouter>
-      )
-
-      const switcherBtn = screen.getByRole('button', { name: /Character Switcher/i })
-      fireEvent.click(switcherBtn)
-
-      const noorieCard = screen.getByRole('button', { name: /Select Noorie/i })
-      fireEvent.click(noorieCard)
-
-      expect(useCharacterStore.getState().activeCharacterId).toBe('char-2')
-      expect(screen.queryByTestId('character-switcher-drawer')).not.toBeInTheDocument()
-    })
-  })
 })

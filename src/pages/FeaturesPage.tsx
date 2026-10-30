@@ -41,14 +41,14 @@ export function FeaturesPage() {
   const totalResults = (showFeats ? filteredFeats.length : 0) + (showAbilities ? filteredAbilities.length : 0)
 
   return (
-    <div className="p-3.5 sm:p-5 md:p-8 max-w-5xl mx-auto space-y-4 md:space-y-5">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="font-headline text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight uppercase">
+          <h1 className="font-headline text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
             Features & <span className="text-secondary neon-glow-accent">Abilities</span>
           </h1>
-          <p className="font-label text-xs text-tertiary tracking-wide mt-0.5">
+          <p className="font-label text-xs sm:text-sm text-tertiary tracking-wide mt-0.5">
             Powers, talents and feats for <span className="text-white font-medium">{char.name}</span>
           </p>
         </div>
@@ -86,10 +86,10 @@ export function FeaturesPage() {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-label text-[9px] uppercase tracking-wider text-primary font-bold">
+                <span className="font-label text-[10px] uppercase tracking-wider text-primary font-bold">
                   Signature Ability
                 </span>
-                <h2 className="font-headline text-sm sm:text-base font-bold text-white truncate">
+                <h2 className="font-headline text-base sm:text-lg font-bold text-white truncate">
                   {signatureAbility.name}
                 </h2>
               </div>
@@ -158,7 +158,7 @@ export function FeaturesPage() {
                 {activeTab === 'all' && (
                   <div className="flex items-center gap-3 pt-1">
                     <span className="material-symbols-outlined text-secondary text-base">auto_awesome</span>
-                    <h2 className="font-headline text-xs sm:text-sm font-bold uppercase tracking-wider text-secondary">
+                    <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary">
                       Class Abilities ({filteredAbilities.length})
                     </h2>
                     <div className="flex-1 h-px bg-white/10" />
@@ -183,7 +183,7 @@ export function FeaturesPage() {
                 {activeTab === 'all' && (
                   <div className="flex items-center gap-3 pt-2">
                     <span className="material-symbols-outlined text-primary text-base">military_tech</span>
-                    <h2 className="font-headline text-xs sm:text-sm font-bold uppercase tracking-wider text-primary">
+                    <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-primary">
                       Feats ({filteredFeats.length})
                     </h2>
                     <div className="flex-1 h-px bg-white/10" />
@@ -226,11 +226,11 @@ function ClassAbilityItem({
             </span>
             <div className="min-w-0 flex-1 pr-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-headline text-sm font-bold text-white group-hover:text-secondary uppercase tracking-tight transition-colors">
+                <span className="font-headline text-base sm:text-lg font-bold text-white group-hover:text-secondary uppercase tracking-tight transition-colors">
                   {ability.name}
                 </span>
                 {ability.isSignature && (
-                  <span className="font-label text-[9px] uppercase tracking-wider text-primary bg-primary/20 border border-primary/30 px-1.5 py-0.2 rounded font-bold">
+                  <span className="font-label text-[10px] uppercase tracking-wider text-primary bg-primary/20 border border-primary/30 px-1.5 py-0.2 rounded font-bold">
                     Signature
                   </span>
                 )}
@@ -283,7 +283,7 @@ function FeatAccordionItem({
               #{feat.index.toString().padStart(2, '0')}
             </span>
             <div className="min-w-0 flex-1 pr-2">
-              <span className="font-headline text-sm font-bold text-white group-hover:text-primary uppercase tracking-tight transition-colors">
+              <span className="font-headline text-base sm:text-lg font-bold text-white group-hover:text-primary uppercase tracking-tight transition-colors">
                 {feat.name}
               </span>
               <p className="font-body text-xs text-tertiary line-clamp-2 mt-0.5 leading-snug">

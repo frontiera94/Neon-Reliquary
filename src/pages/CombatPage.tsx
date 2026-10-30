@@ -134,7 +134,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
         <div className="space-y-4 xl:col-span-7">
           <section aria-labelledby="attacks-heading">
             <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <h2 id="attacks-heading" className="font-headline text-lg font-bold text-white">
+              <h2 id="attacks-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
                 Attacks
               </h2>
               <span className="font-label text-[10px] uppercase tracking-wider text-tertiary">
@@ -305,7 +305,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
             <section aria-labelledby="summon-heading" className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-baseline gap-2">
-                  <h2 id="summon-heading" className="font-headline text-base font-bold text-white">
+                  <h2 id="summon-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
                     Summoned ally
                   </h2>
                   <span className="font-label text-[10px] uppercase tracking-wider text-primary">
@@ -329,7 +329,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
               <div className="mb-2 flex flex-wrap items-end justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex items-baseline gap-2">
-                    <h2 id="companion-heading" className="font-headline text-base font-bold text-white">
+                    <h2 id="companion-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
                       Companion
                     </h2>
                     <span className="font-label text-[10px] text-tertiary">{companion.name}</span>
@@ -389,7 +389,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         {companionConditions.map((cond) => (
                           <span
                             key={cond}
-                            className="rounded-full border border-error/40 bg-error/20 px-1.5 py-0.2 font-label text-[9px] font-bold uppercase tracking-wider text-error"
+                            className="rounded-full border border-error/40 bg-error/20 px-1.5 py-0.2 font-label text-[10px] font-bold uppercase tracking-wider text-error"
                           >
                             {cond}
                           </span>
@@ -502,7 +502,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <h2 id="buffs-heading" className="font-headline text-base font-bold text-white">
+                <h2 id="buffs-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
                   Buffs & Effects
                 </h2>
                 <span className="font-label text-[10px] text-tertiary">
@@ -562,8 +562,8 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                           {tokens.map((token, index) => (
                             <span key={`${token.label}-${index}`} className="contents">
-                              {index > 0 && <span className="font-label text-[8px] text-tertiary/40">|</span>}
-                              <span className={`font-label text-[9px] tabular-nums ${isActive ? `font-bold ${modifierColor(token.value)}` : 'text-tertiary/50'}`}>
+                              {index > 0 && <span className="font-label text-[10px] text-tertiary/40">|</span>}
+                              <span className={`font-label text-[10px] tabular-nums ${isActive ? `font-bold ${modifierColor(token.value)}` : 'text-tertiary/50'}`}>
                                 {token.value !== null ? `${token.value > 0 ? '+' : ''}${token.value} ${token.label}` : `+${token.label}`}
                               </span>
                             </span>
@@ -590,7 +590,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                       </span>
                     </span>
                     <span
-                      className="flex-shrink-0 font-label text-[9px] font-bold uppercase tracking-wider"
+                      className="flex-shrink-0 font-label text-[10px] font-bold uppercase tracking-wider"
                       style={{ color: isActive ? hex : 'rgba(255,255,255,0.32)' }}
                     >
                       {isActive ? 'On' : 'Off'}
@@ -622,12 +622,12 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                     {spellAvailability.profile.mode === 'prepared' ? 'Prepared Spells' : 'Spell Slots'}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="font-label text-[9px] text-tertiary tabular-nums">
+                    <span className="font-label text-[10px] text-tertiary tabular-nums">
                       {spellAvailability.remainingSlots}/{spellAvailability.totalSlots}
                     </span>
                     <Link
                       to="/spells"
-                      className="font-label text-[9px] text-primary hover:underline uppercase tracking-wider flex items-center gap-0.5"
+                      className="font-label text-[10px] text-primary hover:underline uppercase tracking-wider flex items-center gap-0.5"
                       title="Manage prepared spells in Repository"
                     >
                       <span>Spells</span>
@@ -656,17 +656,17 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         .map((lvl) => (
                           <div
                             key={`unprep-${lvl.level}`}
-                            className="flex items-center justify-between text-tertiary/60 font-label text-[9px] uppercase tracking-wider px-1 py-0.5"
+                            className="flex items-center justify-between text-tertiary/60 font-label text-[10px] uppercase tracking-wider px-1 py-0.5"
                           >
                             <span className="flex items-center gap-1.5">
-                              <span className="px-1 py-0.5 rounded bg-white/5 border border-white/5 text-[8px] font-bold">
+                              <span className="px-1 py-0.5 rounded bg-white/5 border border-white/5 text-[10px] font-bold">
                                 L{lvl.level}
                               </span>
                               <span>{lvl.unpreparedCount} Unprepared Slot{lvl.unpreparedCount > 1 ? 's' : ''}</span>
                             </span>
                             <Link
                               to="/spells"
-                              className="text-primary hover:underline text-[9px] capitalize"
+                              className="text-primary hover:underline text-[10px] capitalize"
                             >
                               prepare +
                             </Link>
@@ -678,7 +678,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                       <span>{spellAvailability.totalSlots} slots free to prepare</span>
                       <Link
                         to="/spells"
-                        className="text-primary hover:underline font-bold uppercase text-[9px]"
+                        className="text-primary hover:underline font-bold uppercase text-[10px]"
                       >
                         Prepare Spells →
                       </Link>

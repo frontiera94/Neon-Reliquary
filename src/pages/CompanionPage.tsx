@@ -66,10 +66,10 @@ export function CompanionPage() {
           <div className="w-16 h-16 mx-auto bg-surface-container-high rounded-2xl border border-primary/30 flex items-center justify-center text-primary shadow-[0_0_20px_rgba(0,240,255,0.15)]">
             <span className="material-symbols-outlined text-3xl">pets</span>
           </div>
-          <h2 className="font-headline text-3xl text-white font-bold tracking-tight">
+          <h2 className="font-headline text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
             Manifest a Companion
           </h2>
-          <p className="font-body text-sm text-tertiary max-w-lg mx-auto leading-relaxed">
+          <p className="font-body text-xs sm:text-sm text-tertiary max-w-lg mx-auto leading-relaxed">
             {char.name} does not currently have an active companion. Select a preset below to bond a familiar or companion to their neural weave.
           </p>
         </div>
@@ -277,7 +277,7 @@ export function CompanionPage() {
               )}
             </div>
 
-            <h1 className="font-headline text-3xl font-bold text-white mt-1.5">
+            <h1 className="font-headline text-2xl sm:text-3xl font-bold text-white mt-1.5">
               {activeCompanion.name}
             </h1>
             <p className="font-label text-xs text-tertiary tracking-wider mt-0.5">
@@ -301,13 +301,13 @@ export function CompanionPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Vitality Core */}
         <section className="lg:col-span-6 bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] flex flex-col items-center justify-center text-center relative overflow-hidden">
-          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
+          <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
             Vitality Core
           </h2>
 
           <div
-            className="font-label font-black text-primary"
-            style={{ fontSize: '4.5rem', lineHeight: 1, textShadow: '0 0 25px rgba(0,240,255,0.3)' }}
+            className="font-label text-5xl sm:text-6xl font-black text-primary leading-none"
+            style={{ textShadow: '0 0 25px rgba(0,240,255,0.3)' }}
           >
             {currentHp}
           </div>
@@ -374,7 +374,7 @@ export function CompanionPage() {
             <p className="font-label text-[10px] uppercase tracking-widest text-tertiary">
               Armor Class
             </p>
-            <p className="font-label text-3xl font-bold text-white mt-1">
+            <p className="font-label text-3xl sm:text-4xl font-black text-white mt-1">
               {activeCompanion.armorClass.total + conditionAcMod}
             </p>
             <p className="font-label text-[10px] text-tertiary mt-1">
@@ -397,7 +397,7 @@ export function CompanionPage() {
             <p className="font-label text-[10px] uppercase tracking-widest text-primary font-semibold">
               Initiative
             </p>
-            <p className="font-label text-3xl font-bold text-primary mt-1">
+            <p className="font-label text-3xl sm:text-4xl font-black text-primary mt-1">
               +{activeCompanion.initiativeBonus}
             </p>
             <p className="font-label text-[10px] text-tertiary mt-1">Click to roll d20</p>
@@ -421,7 +421,7 @@ export function CompanionPage() {
             <p className="font-label text-[10px] uppercase tracking-widest text-secondary font-semibold">
               Fortitude
             </p>
-            <p className="font-label text-2xl font-bold text-white mt-1">
+            <p className="font-label text-3xl sm:text-4xl font-black text-white mt-1">
               +{activeCompanion.savingThrows.fort + conditionSaveMod}
             </p>
             <p className="font-label text-[10px] text-tertiary mt-0.5">Fort Save</p>
@@ -445,7 +445,7 @@ export function CompanionPage() {
             <p className="font-label text-[10px] uppercase tracking-widest text-secondary font-semibold">
               Reflex
             </p>
-            <p className="font-label text-2xl font-bold text-white mt-1">
+            <p className="font-label text-3xl sm:text-4xl font-black text-white mt-1">
               +{activeCompanion.savingThrows.ref + conditionSaveMod}
             </p>
             <p className="font-label text-[10px] text-tertiary mt-0.5">Reflex Save</p>
@@ -469,7 +469,7 @@ export function CompanionPage() {
             <p className="font-label text-[10px] uppercase tracking-widest text-secondary font-semibold">
               Willpower
             </p>
-            <p className="font-label text-2xl font-bold text-white mt-1">
+            <p className="font-label text-3xl sm:text-4xl font-black text-white mt-1">
               +{activeCompanion.savingThrows.will + conditionSaveMod}
             </p>
             <p className="font-label text-[10px] text-tertiary mt-0.5">Will Save</p>
@@ -479,7 +479,7 @@ export function CompanionPage() {
 
       {/* Ability Scores Grid */}
       <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
-        <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
+        <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
           Companion Ability Scores
         </h2>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
@@ -502,7 +502,7 @@ export function CompanionPage() {
                 <span className="font-label text-[10px] text-tertiary uppercase block">
                   {key.toUpperCase()}
                 </span>
-                <span className="font-label text-2xl font-black text-primary block my-1">
+                <span className="font-label text-2xl sm:text-3xl font-black text-primary block my-1">
                   {mod >= 0 ? `+${mod}` : mod}
                 </span>
                 <span className="font-label text-xs text-on-surface-variant block">{score}</span>
@@ -514,7 +514,7 @@ export function CompanionPage() {
 
       {/* Natural Attacks */}
       <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
-        <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
+        <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
           Natural Attacks & Tactics
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -530,7 +530,7 @@ export function CompanionPage() {
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-headline text-xl font-bold text-white">{atk.name}</h3>
+                    <h3 className="font-headline text-base sm:text-lg font-bold text-white">{atk.name}</h3>
                     <span className="font-label text-xs text-secondary border border-secondary/30 px-2.5 py-0.5 rounded-full font-semibold">
                       {critRange < 20 ? `${critRange}-20` : '20'}/x{critMult}
                     </span>
@@ -606,7 +606,7 @@ export function CompanionPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Skills */}
         <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
-          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
+          <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
             Trained Instincts & Skills
           </h2>
           <div className="space-y-2">
@@ -655,7 +655,7 @@ export function CompanionPage() {
           {/* Tricks */}
           {activeCompanion.tricks && activeCompanion.tricks.length > 0 && (
             <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
-              <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
+              <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
                 Known Tricks ({activeCompanion.tricks.length})
               </h2>
               <div className="flex flex-wrap gap-2">
@@ -674,7 +674,7 @@ export function CompanionPage() {
           {/* Special Qualities */}
           {activeCompanion.specialQualities && activeCompanion.specialQualities.length > 0 && (
             <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
-              <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
+              <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
                 Special Qualities & Abilities
               </h2>
               <div className="space-y-3">
@@ -696,7 +696,7 @@ export function CompanionPage() {
 
       {/* Companion Conditions */}
       <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
-        <h2 className="font-headline text-secondary text-sm uppercase tracking-widest mb-4 neon-glow-accent">
+        <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
           Afflicted Conditions ({activeCompanion.name})
         </h2>
         <div className="flex flex-wrap gap-2">

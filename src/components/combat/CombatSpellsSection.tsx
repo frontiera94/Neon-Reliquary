@@ -277,7 +277,7 @@ export function CombatSpellsSection({
           <span className="material-symbols-outlined text-lg text-secondary">auto_fix_high</span>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              <h3 className="font-headline text-base font-bold text-white">
+              <h3 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
                 Combat Spells & Invocations
               </h3>
               <span className="font-label text-[10px] text-secondary">
@@ -285,7 +285,7 @@ export function CombatSpellsSection({
               </span>
               {spellFailureChance > 0 && (
                 <span
-                  className="flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 font-label text-[9px] font-bold uppercase tracking-wider text-amber-300"
+                  className="flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 font-label text-[10px] font-bold uppercase tracking-wider text-amber-300"
                   title={`Arcane Spell Failure: ${spellFailureChance}% chance of failure when casting spells with somatic components while wearing armor or shields.`}
                 >
                   <span className="material-symbols-outlined text-[11px] leading-none text-amber-400">warning</span>
@@ -548,20 +548,20 @@ export function CombatSpellsSection({
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary border border-secondary/30 text-[9px] font-label uppercase tracking-widest font-bold">
+                            <span className="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary border border-secondary/30 text-[10px] font-label uppercase tracking-widest font-bold">
                               {spell.level === 0 ? 'Cantrip' : `Level ${spell.level}`}
                             </span>
                             <span className="text-tertiary text-[10px] font-label uppercase tracking-wider">
                               {spell.school}
                             </span>
                             {isBuffActive && (
-                              <span className="px-2 py-0.5 rounded-full bg-secondary text-white font-label text-[9px] uppercase tracking-widest font-bold">
+                              <span className="px-2 py-0.5 rounded-full bg-secondary text-white font-label text-[10px] uppercase tracking-widest font-bold">
                                 Buff Active
                               </span>
                             )}
                             {showsAsf && (
                               <span
-                                className="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 font-mono text-[9px] font-bold uppercase tracking-wider cursor-help flex items-center gap-0.5"
+                                className="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 font-mono text-[10px] font-bold uppercase tracking-wider cursor-help flex items-center gap-0.5"
                                 title={`Arcane Spell Failure: ${spellFailureChance}% chance of failure due to Somatic component (S)`}
                               >
                                 <span className="material-symbols-outlined text-[10px] text-amber-400">warning</span>
@@ -569,7 +569,7 @@ export function CombatSpellsSection({
                               </span>
                             )}
                           </div>
-                          <h4 className="font-headline text-base font-bold text-white mt-1">
+                          <h4 className="font-headline text-base sm:text-lg font-bold text-white mt-1">
                             {spell.name}
                           </h4>
                         </div>
@@ -577,7 +577,7 @@ export function CombatSpellsSection({
                         <div className="flex items-center gap-1.5 flex-shrink-0">
                           {spell.savingThrow && (
                             <div className="text-right">
-                              <span className="font-label text-[9px] text-tertiary uppercase tracking-widest block">
+                              <span className="font-label text-[10px] text-tertiary uppercase tracking-widest block">
                                 DC
                               </span>
                               <span className="font-mono text-sm font-black text-secondary">

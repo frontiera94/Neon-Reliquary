@@ -2,7 +2,7 @@
   "id": "knam",
   "name": "Knam",
   "class": "Bloodrager",
-  "level": 4,
+  "level": 5,
   "race": "Human",
   "alignment": "Chaotic Evil",
   "portrait": "https://placehold.co/400x600/1f1f25/00daf3?text=Knam",
@@ -15,39 +15,60 @@
     "wis": 12,
     "cha": 15
   },
-  "maxHp": 51,
+  "maxHp": 66,
   "baseAttackBonus": [
-    4
+    5
   ],
-  "initiativeBonus": 2,
-  "speed": 30,
+  "initiativeBonus": 6,
+  "speed": 40,
   "armorClass": {
     "total": 19,
-    "touch": 12,
+    "touch": 13,
     "flatFooted": 19,
-    "armorBonus": 6,
+    "armorBonus": 5,
     "shieldBonus": 0,
     "dexBonus": 2,
     "naturalArmor": 1,
-    "deflection": 0,
+    "deflection": 1,
     "misc": 0,
-    "spellFailureChance": 25
+    "spellFailureChance": 10,
+    "armorCheckPenalty": 0
   },
   "savingThrows": {
-    "fort": 7,
+    "fort": 9,
     "ref": 3,
-    "will": 2,
+    "will": 4,
     "fortBase": 4,
     "refBase": 1,
     "willBase": 1
   },
   "skills": [
     {
+      "id": "acrobatics",
+      "name": "Acrobatics",
+      "ability": "dex",
+      "ranks": 0,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
       "id": "bluff",
       "name": "Bluff",
       "ability": "cha",
       "ranks": 2,
       "classSkill": false,
+      "miscBonus": 2,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "climb",
+      "name": "Climb",
+      "ability": "str",
+      "ranks": 0,
+      "classSkill": true,
       "miscBonus": 0,
       "trained": true,
       "armorCheckPenalty": false
@@ -56,9 +77,9 @@
       "id": "diplomacy",
       "name": "Diplomacy",
       "ability": "cha",
-      "ranks": 3,
+      "ranks": 4,
       "classSkill": false,
-      "miscBonus": 0,
+      "miscBonus": 4,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -66,9 +87,9 @@
       "id": "intimidate",
       "name": "Intimidate",
       "ability": "cha",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
-      "miscBonus": 0,
+      "miscBonus": 7,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -78,7 +99,7 @@
       "ability": "int",
       "ranks": 1,
       "classSkill": true,
-      "miscBonus": 0,
+      "miscBonus": 3,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -86,9 +107,9 @@
       "id": "perception",
       "name": "Perception",
       "ability": "wis",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
-      "miscBonus": 2,
+      "miscBonus": 5,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -96,9 +117,19 @@
       "id": "sense-motive",
       "name": "Sense Motive",
       "ability": "wis",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": false,
       "miscBonus": 2,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "sleight-of-hand",
+      "name": "Sleight of Hand",
+      "ability": "dex",
+      "ranks": 1,
+      "classSkill": false,
+      "miscBonus": 0,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -108,7 +139,7 @@
       "ability": "int",
       "ranks": 2,
       "classSkill": true,
-      "miscBonus": 0,
+      "miscBonus": 3,
       "trained": true,
       "armorCheckPenalty": false
     },
@@ -118,9 +149,9 @@
       "ability": "dex",
       "ranks": 1,
       "classSkill": false,
-      "miscBonus": -5,
+      "miscBonus": 0,
       "trained": true,
-      "armorCheckPenalty": true
+      "armorCheckPenalty": false
     },
     {
       "id": "survival",
@@ -131,6 +162,16 @@
       "miscBonus": 1,
       "trained": false,
       "armorCheckPenalty": false
+    },
+    {
+      "id": "swim",
+      "name": "Swim",
+      "ability": "str",
+      "ranks": 0,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
     }
   ],
   "weapons": [
@@ -139,7 +180,7 @@
       "name": "Masterwork Earth Breaker",
       "type": "melee",
       "attackBonus": [
-        9
+        10
       ],
       "damageDice": "2d6",
       "damageBonus": 6,
@@ -155,20 +196,22 @@
       "name": "Spiked Gauntlet",
       "type": "melee",
       "attackBonus": [
-        8
+        9
       ],
       "damageDice": "1d4",
       "damageBonus": 4,
       "critRange": 20,
       "critMultiplier": 2,
-      "tags": []
+      "tags": [
+        "Equipped"
+      ]
     },
     {
       "id": "bite-attack",
       "name": "Bite (Ring of Rat Fangs)",
       "type": "melee",
       "attackBonus": [
-        8
+        9
       ],
       "damageDice": "1d4",
       "damageBonus": 4,
@@ -177,6 +220,37 @@
       "tags": [
         "Natural Attack",
         "In Rage Only"
+      ]
+    },
+    {
+      "id": "dagger-kn",
+      "name": "Dagger",
+      "type": "melee",
+      "attackBonus": [
+        9
+      ],
+      "damageDice": "1d4",
+      "damageBonus": 4,
+      "critRange": 19,
+      "critMultiplier": 2,
+      "tags": [
+        "Throwable"
+      ]
+    },
+    {
+      "id": "alchemists-fire",
+      "name": "Alchemist's Fire",
+      "type": "ranged",
+      "attackBonus": [
+        7
+      ],
+      "damageDice": "1d6",
+      "damageBonus": 0,
+      "critRange": 20,
+      "critMultiplier": 2,
+      "tags": [
+        "Splash",
+        "Consumable"
       ]
     }
   ],
@@ -208,77 +282,125 @@
       "damageMod": 0,
       "acMod": 0,
       "color": "secondary"
+    },
+    {
+      "id": "dirty-fighter",
+      "name": "Dirty Fighter (+1 dmg when flanking)",
+      "active": false,
+      "attackMod": 0,
+      "damageMod": 1,
+      "acMod": 0,
+      "meleeOnly": true,
+      "color": "secondary"
     }
   ],
   "dailyResources": [
     {
       "id": "bloodrage-rounds",
       "name": "Bloodrage Rounds",
-      "total": 14,
+      "total": 16,
       "label": "Pool: Bloodrage"
     },
     {
-      "id": "staggering-strike",
-      "name": "Staggering Strike (on crit)",
-      "total": 5,
-      "label": "Ability: Stagg. Strike"
+      "id": "spells-1",
+      "name": "Lvl 1 Spells",
+      "total": 2
     }
   ],
   "feats": [
     {
       "id": "bloodrage",
       "index": 1,
-      "name": "Bloodrage (14 rounds/day)",
+      "name": "Bloodrage (16 rounds/day)",
       "shortDesc": "+4 morale STR, +4 CON, +2 Will saves, −2 AC. Free action to enter/exit.",
-      "fullDesc": "While bloodraging: STR becomes 22 (+6), CON becomes 20 (+5), Will saves +2. AC is reduced by 2. Cannot use CHA/DEX/INT-based skills (except Acrobatics, Fly, Intimidate, Ride). Earth Breaker in rage: attack +11, damage 2d6+9. On exit, fatigued for 2× rounds spent raging.",
-      "bonusValue": 14,
-      "bonusMax": 14,
+      "fullDesc": "While bloodraging: STR becomes 22 (+6), CON becomes 20 (+5), Will saves +2. AC is reduced by 2. Gains 10 temporary HP from CON increase. Cannot use CHA/DEX/INT-based skills (except Acrobatics, Fly, Intimidate, Ride). Earth Breaker in rage: attack +12, damage 2d6+9. On exit, fatigued for 2× rounds spent raging.",
+      "bonusValue": 16,
+      "bonusMax": 16,
       "bonusLabel": "Rounds Remaining"
     },
     {
-      "id": "staggering-strike",
-      "index": 2,
-      "name": "Staggering Strike (Su)",
-      "shortDesc": "On a confirmed critical hit: Fort DC 15 or target is staggered for 1 round.",
-      "fullDesc": "When you confirm a critical hit, the target must succeed a Fortitude saving throw (DC 15) or be staggered for 1 round. These effects stack with the Staggering Critical feat. The target must save against each effect individually.",
-      "bonusValue": 5,
-      "bonusMax": 5,
-      "bonusLabel": "Uses Remaining"
-    },
-    {
       "id": "aberrant-bloodline",
-      "index": 3,
+      "index": 2,
       "name": "Aberrant Bloodline",
-      "shortDesc": "Bloodline grants +5 ft. reach during bloodrage and strange physical alterations.",
-      "fullDesc": "Knam's bloodline is alien and bizarre. When bloodraging, his reach increases by 5 feet (reach becomes 10 ft. with all weapons). At higher levels this bloodline grants further supernatural abilities including tentacle attacks and acid immunity."
+      "shortDesc": "Bloodline grants +5 ft. reach during bloodrage and alien powers.",
+      "fullDesc": "Knam's bloodline is alien and bizarre. When bloodraging, his reach increases by 5 feet (reach becomes 10 ft. with all weapons). At higher levels this bloodline grants further supernatural abilities."
     },
     {
       "id": "power-attack",
-      "index": 4,
+      "index": 3,
       "name": "Power Attack",
       "shortDesc": "−2 attack / +4 damage (×1.5 for 2H = +6 damage with Earth Breaker).",
-      "fullDesc": "Take a −2 penalty on all melee attack rolls to gain +4 bonus on all melee damage rolls (+6 with a two-handed weapon). The bonus to damage is halved for off-hand weapons. The penalty disappears for your first attack each turn when using Furious Focus."
+      "fullDesc": "Take a −2 penalty on all melee attack rolls to gain +4 bonus on all melee damage rolls (+6 with a two-handed weapon). The bonus to damage is halved for off-hand weapons. The penalty is ignored for your first attack each turn when using Furious Focus."
     },
     {
       "id": "furious-focus",
-      "index": 5,
+      "index": 4,
       "name": "Furious Focus",
-      "shortDesc": "When using Power Attack with a 2H weapon, the first attack each turn does NOT suffer the −2 penalty.",
+      "shortDesc": "When using Power Attack with a 2H weapon, first attack ignores −2 penalty.",
       "fullDesc": "When wielding a two-handed weapon or a one-handed weapon with two hands and using the Power Attack feat, you do not suffer Power Attack's penalty on melee attack rolls on the FIRST attack you make each turn. You still suffer the penalty on any additional attacks, including attacks of opportunity."
     },
     {
       "id": "alertness",
-      "index": 6,
+      "index": 5,
       "name": "Alertness",
       "shortDesc": "+2 on Perception and Sense Motive checks.",
       "fullDesc": "You often notice things that others might miss. You get a +2 bonus on Perception and Sense Motive skill checks. If you have 10 or more ranks in one of these skills, the bonus increases to +4 for that skill."
     },
     {
       "id": "toughness",
-      "index": 7,
+      "index": 6,
       "name": "Toughness",
-      "shortDesc": "+4 hit points.",
-      "fullDesc": "You have enhanced physical stamina, granting +4 hit points. These are already included in Knam's HP total of 51."
+      "shortDesc": "+5 hit points.",
+      "fullDesc": "You have enhanced physical stamina, granting +5 hit points (+1 per Hit Die). These are already included in Knam's HP total of 66."
+    },
+    {
+      "id": "combat-reflexes",
+      "index": 7,
+      "name": "Combat Reflexes",
+      "shortDesc": "Make 2 additional attacks of opportunity per round; can make AoOs while flat-footed.",
+      "fullDesc": "You may make 2 additional attacks of opportunity per round (up to your Dexterity bonus). With this feat, you may also make attacks of opportunity while flat-footed."
+    },
+    {
+      "id": "improved-initiative",
+      "index": 8,
+      "name": "Improved Initiative",
+      "shortDesc": "+4 bonus on initiative checks.",
+      "fullDesc": "Your quick reflexes allow you to react quickly to danger. You get a +4 bonus on initiative checks, raising Knam's initiative modifier to +6."
+    },
+    {
+      "id": "great-fortitude",
+      "index": 9,
+      "name": "Great Fortitude",
+      "shortDesc": "+2 bonus on all Fortitude saving throws.",
+      "fullDesc": "You are resistant to poisons, diseases, and other deadly maladies. You get a +2 bonus on all Fortitude saving throws."
+    },
+    {
+      "id": "iron-will",
+      "index": 10,
+      "name": "Iron Will",
+      "shortDesc": "+2 bonus on all Will saving throws.",
+      "fullDesc": "You are more resistant to mental effects. You get a +2 bonus on all Will saving throws."
+    },
+    {
+      "id": "improved-disarm",
+      "index": 11,
+      "name": "Improved Disarm",
+      "shortDesc": "+2 on disarm CMB and CMD; does not provoke attacks of opportunity.",
+      "fullDesc": "You do not provoke an attack of opportunity when performing a disarm combat maneuver. In addition, you receive a +2 bonus on checks made to disarm a foe and a +2 bonus to Combat Maneuver Defense whenever an opponent tries to disarm you."
+    },
+    {
+      "id": "persuasive",
+      "index": 12,
+      "name": "Persuasive",
+      "shortDesc": "+2 bonus on Diplomacy and Intimidate checks.",
+      "fullDesc": "You are skilled at swaying attitudes and intimidating others into your way of thinking. You get a +2 bonus on Diplomacy and Intimidate skill checks."
+    },
+    {
+      "id": "eschew-materials",
+      "index": 13,
+      "name": "Eschew Materials",
+      "shortDesc": "Cast spells without minor material components costing 1 gp or less.",
+      "fullDesc": "You can cast any spell with a material component costing 1 gp or less without needing that component."
     }
   ],
   "classAbilities": [
@@ -289,9 +411,21 @@
       "isSignature": true
     },
     {
+      "id": "improved-uncanny-dodge",
+      "name": "Improved Uncanny Dodge (Lvl 5)",
+      "description": "Knam can no longer be flanked. This defense denies a rogue the ability to sneak attack him by flanking, unless the attacker is a rogue of at least 9th level.",
+      "isSignature": true
+    },
+    {
+      "id": "fast-movement",
+      "name": "Fast Movement (Ex)",
+      "description": "A bloodrager's land speed is faster than normal by 10 feet when wearing light, medium, or no armor and not carrying a heavy load. Increases speed to 40 ft.",
+      "isSignature": false
+    },
+    {
       "id": "blood-casting",
-      "name": "Blood Casting (Lvl 4)",
-      "description": "At 4th level, Knam can cast bloodrager spells even while bloodraging, and can attempt concentration checks for them during the bloodrage. He can only cast bloodrager-list spells in this state.",
+      "name": "Blood Casting",
+      "description": "Knam can cast bloodrager spells even while bloodraging, and can attempt concentration checks for them during the bloodrage. He can only cast bloodrager-list spells in this state.",
       "isSignature": false
     },
     {
@@ -319,9 +453,9 @@
       "savingThrow": "Reflex half (DC 13)",
       "spellResistance": true,
       "components": "V, S",
-      "description": "A cone of searing flame deals 4d4 fire damage to all creatures in the area. Reflex DC 13 halves.",
+      "description": "A cone of searing flame deals 5d4 points of fire damage to all creatures in the area. Reflex DC 13 halves.",
       "isAttackSpell": true,
-      "damageDice": "4d4"
+      "damageDice": "5d4"
     },
     {
       "id": "color-spray",
@@ -336,102 +470,67 @@
       "components": "V, S, M",
       "description": "A vivid cone of clashing colors springs from your hand. Creatures with 2 or fewer HD are knocked unconscious; 3-4 HD are blinded and stunned; 5+ HD are stunned for 1 round (all if they fail Will DC 13).",
       "isAttackSpell": true
+    },
+    {
+      "id": "ear-piercing-scream",
+      "name": "Ear-Piercing Scream",
+      "level": 1,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "Instantaneous; see text",
+      "savingThrow": "Fortitude partial (DC 13)",
+      "spellResistance": true,
+      "components": "V, S",
+      "description": "You unleash a powerful scream, inaudible to all but a single target. The target is dazed for 1 round and takes 2d6 points of sonic damage. A successful save negates the daze effect and halves the damage.",
+      "isAttackSpell": true,
+      "damageDice": "2d6"
     }
   ],
   "inventory": [
     {
-      "id": "kn-armor",
-      "name": "Breastplate",
-      "description": "+6 AC, medium armor. Dented from battle.",
+      "id": "kn-mithral-shirt",
+      "name": "+1 Mithral Shirt (Large)",
+      "description": "+5 AC, max DEX +6, light armor, 0 armor check penalty, 10% spell failure.",
       "category": "armor",
       "quantity": 1,
       "equipped": true,
-      "slot": "body"
+      "slot": "body",
+      "armorBonus": 5,
+      "armorCheckPenalty": 0,
+      "spellFailureChance": 10
     },
     {
-      "id": "kn-greataxe",
-      "name": "Greataxe",
-      "description": "Two-handed axe dealing 1d12 damage, ×3 crit.",
+      "id": "kn-earth-breaker",
+      "name": "Masterwork Earth Breaker",
+      "description": "Two-handed bludgeoning weapon dealing 2d6 damage, ×3 crit. Masterwork (+1 attack).",
       "category": "weapon",
       "quantity": 1,
       "equipped": true,
       "slot": "mainHand"
     },
     {
-      "id": "kn-handaxe",
-      "name": "Handaxe",
-      "description": "A light throwing axe, 1d6.",
+      "id": "kn-spiked-gauntlet",
+      "name": "Spiked Gauntlet",
+      "description": "1d4 piercing damage, ×2 crit. Worn on hands.",
       "category": "weapon",
-      "quantity": 2
+      "quantity": 2,
+      "equipped": true,
+      "slot": "hands"
     },
     {
-      "id": "kn-cure-mod",
-      "name": "Potion of Cure Moderate Wounds",
-      "description": "Heals 2d8+3 hit points.",
-      "category": "consumable",
-      "quantity": 2
-    },
-    {
-      "id": "kn-rage-pot",
-      "name": "Potion of Bull's Strength",
-      "description": "+4 enhancement bonus to Strength for 4 minutes.",
-      "category": "consumable",
+      "id": "kn-dagger",
+      "name": "Dagger",
+      "description": "1d4 piercing/slashing, 19-20/×2 crit. Can be thrown (10 ft).",
+      "category": "weapon",
       "quantity": 1
     },
     {
-      "id": "kn-backpack",
-      "name": "Backpack",
-      "description": "Holds gear for the road.",
-      "category": "gear",
-      "quantity": 1
-    },
-    {
-      "id": "kn-rations",
-      "name": "Trail Rations",
-      "description": "One day's worth of dried food.",
+      "id": "kn-alchemists-fire",
+      "name": "Alchemist's Fire",
+      "description": "Flask of volatile liquid dealing 1d6 fire damage on direct hit, 1 splash damage.",
       "category": "consumable",
-      "quantity": 4
-    },
-    {
-      "id": "kn-waterskin",
-      "name": "Waterskin",
-      "description": "Holds 1 gallon of liquid.",
-      "category": "gear",
-      "quantity": 1
-    },
-    {
-      "id": "kn-torches",
-      "name": "Torch",
-      "description": "Burns for 1 hour, illuminates 20 ft.",
-      "category": "gear",
-      "quantity": 6
-    },
-    {
-      "id": "kn-belt-str",
-      "name": "Belt of Giant Strength +2",
-      "description": "+2 enhancement bonus to Strength.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "belt"
-    },
-    {
-      "id": "kn-amulet-na",
-      "name": "Amulet of Natural Armor +1",
-      "description": "+1 natural armor bonus to AC.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "neck"
-    },
-    {
-      "id": "kn-cloak-res",
-      "name": "Cloak of Resistance +1",
-      "description": "+1 resistance bonus on all saving throws.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "shoulders"
+      "quantity": 5
     },
     {
       "id": "kn-ring-prot",
@@ -441,11 +540,61 @@
       "quantity": 1,
       "equipped": true,
       "slot": "ring1"
+    },
+    {
+      "id": "kn-ring-eloquence",
+      "name": "Ring of Eloquence",
+      "description": "Grants ability to speak four languages; +2 bonus on Bluff, Diplomacy, Intimidate, and Perform (Oratory); deafened spell failure only 10%.",
+      "category": "magic",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "ring2"
+    },
+    {
+      "id": "kn-neck-guard",
+      "name": "Neck Guard",
+      "description": "Provides a +1 armor bonus to AC against vampire bites or throat-targeted attacks.",
+      "category": "armor",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "neck"
+    },
+    {
+      "id": "kn-chain-belt",
+      "name": "Chain Belt",
+      "description": "Can hold up to 30 pounds of small items.",
+      "category": "gear",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "belt"
+    },
+    {
+      "id": "kn-boots-fire",
+      "name": "Boots (Fire-Resistant)",
+      "description": "Sturdy fire-resistant leather boots.",
+      "category": "gear",
+      "quantity": 1,
+      "equipped": true,
+      "slot": "feet"
+    },
+    {
+      "id": "kn-light-horse",
+      "name": "Light Horse",
+      "description": "Combat-trained mount.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "kn-saddle-military",
+      "name": "Saddle, Military",
+      "description": "+2 circumstance bonus on Ride checks related to staying in the saddle.",
+      "category": "gear",
+      "quantity": 1
     }
   ],
   "startingCoins": {
-    "gp": 78,
-    "sp": 4,
+    "gp": 2325,
+    "sp": 0,
     "cp": 0
   },
   "spellcasting": {

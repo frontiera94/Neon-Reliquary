@@ -14,9 +14,11 @@ import { CONDITION_INFO } from '../../lib/conditions'
 import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
 import { TacticalHpPopover } from './TacticalHpPopover'
 import { SettingsPanel } from './SettingsPanel'
-import { CharacterSwitcherDrawer } from './CharacterSwitcherDrawer'
 import { CloudSyncBadge } from '../sync/CloudSyncBadge'
 import { useInspectorStore } from '../../store/useInspectorStore'
+import { CharacterDropdown } from '../character/CharacterDropdown'
+import { CharacterEmblem } from '../character/CharacterEmblem'
+import { getCharacterLore } from '../../lib/character-lore'
 
 export function TacticalHUD() {
   const navigate = useNavigate()
@@ -30,7 +32,7 @@ export function TacticalHUD() {
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [hpPopoverOpen, setHpPopoverOpen] = useState(false)
-  const [charMenuOpen, setCharMenuOpen] = useState(false)
+  const [characterDropdownOpen, setCharacterDropdownOpen] = useState(false)
 
   // Character Cycling
   const idx = char ? characters.findIndex((c) => c.id === char.id) : -1
@@ -126,43 +128,48 @@ export function TacticalHUD() {
         {/* Main Cockpit Bar */}
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-2.5 md:flex md:flex-nowrap md:justify-between md:gap-4 md:px-6">
           {/* Left Cockpit: App Branding & Character Identity */}
-          <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2 md:gap-3">
+          <div className="col-start-1 row-start-1 flex flex-shrink-0 items-center gap-3">
             <span
-              className="text-base sm:text-xl md:text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft select-none shrink-0"
+              className="text-xl md:text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft select-none"
               onClick={() => navigate('/')}
             >
               NEON RELIQUARY
             </span>
-            <div className="h-5 md:h-8 w-px bg-white/10 shrink-0 mx-0.5" />
-            <button
-              type="button"
-              onClick={() => setCharMenuOpen(true)}
-              aria-label="Open character menu"
-              className="flex items-center gap-2 min-w-0 px-1.5 sm:px-2 py-1 rounded-xl bg-white/[0.03] hover:bg-primary/10 border border-white/[0.08] hover:border-primary/40 transition-all cursor-pointer text-left group"
+            <div className="h-5 md:h-8 w-px bg-white/10 mx-1 shrink-0" />
+            <div
+              className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer group select-none min-w-0"
+              onClick={() => setCharacterDropdownOpen((prev) => !prev)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') setCharacterDropdownOpen((prev) => !prev)
+              }}
+              aria-label="Toggle character dropdown"
             >
-              <div className="w-6 h-6 md:w-7 md:h-7 rounded-lg overflow-hidden bg-surface-container-highest border border-primary/30 shrink-0">
-                {char.portrait ? (
-                  <img src={char.portrait} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="material-symbols-outlined text-primary text-xs flex items-center justify-center h-full w-full">
-                    person
-                  </span>
-                )}
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg overflow-hidden flex-shrink-0">
+                <CharacterEmblem
+                  characterId={char.id}
+                  lore={getCharacterLore(char.id)}
+                  variant="avatar"
+                  className="w-full h-full"
+                />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-0.5 sm:gap-1">
-                  <h1 className="font-headline text-xs md:text-sm xl:text-base leading-none text-white font-bold truncate max-w-[85px] sm:max-w-[150px] xl:max-w-none">
-                    {char.name}
-                  </h1>
-                  <span className="material-symbols-outlined text-[12px] sm:text-[14px] text-tertiary group-hover:text-primary transition-colors shrink-0">
+                <h1 className="font-headline text-xs sm:text-base leading-none text-white font-bold group-hover:text-primary transition-colors flex items-center gap-1">
+                  <span className="truncate max-w-[85px] sm:max-w-none">{char.name}</span>
+                  <span
+                    className={`material-symbols-outlined text-[13px] sm:text-xs text-tertiary group-hover:text-primary transition-transform duration-200 ${
+                      characterDropdownOpen ? 'rotate-180 text-primary' : ''
+                    }`}
+                  >
                     expand_more
                   </span>
-                </div>
-                <p className="font-label text-[8px] sm:text-[9px] xl:text-xs tracking-wider xl:tracking-widest text-tertiary uppercase mt-0.5 truncate max-w-[85px] sm:max-w-[150px] xl:max-w-none">
+                </h1>
+                <p className="font-label text-[8px] sm:text-xs tracking-wider sm:tracking-widest text-tertiary uppercase mt-0.5 truncate max-w-[85px] sm:max-w-none">
                   Level {char.level} {char.class}
                 </p>
               </div>
-            </button>
+            </div>
           </div>
 
           {/* Center Cockpit: Tactical Vitals (HP Bar, AC, Saves) */}
@@ -546,15 +553,13 @@ export function TacticalHUD() {
               </div>
             )}
 
-            <button
-              type="button"
-              onClick={() => setCharMenuOpen(true)}
-              aria-label="Character Switcher"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-xs rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_20px_rgba(0,240,255,0.25)] transition-all duration-300 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-sm text-primary">account_circle</span>
-              <span className="hidden xl:inline">Character Switcher</span>
-            </button>
+            <CharacterDropdown
+              align="right"
+              variant="cockpit"
+              isOpen={characterDropdownOpen}
+              onToggle={() => setCharacterDropdownOpen((prev) => !prev)}
+              onClose={() => setCharacterDropdownOpen(false)}
+            />
 
             <button
               onClick={() => setSettingsOpen(true)}
@@ -566,7 +571,6 @@ export function TacticalHUD() {
           </div>
         </div>
       </header>
-      <CharacterSwitcherDrawer isOpen={charMenuOpen} onClose={() => setCharMenuOpen(false)} />
       <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </>
   )
