@@ -14,6 +14,7 @@ import { CONDITION_INFO } from '../../lib/conditions'
 import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
 import { TacticalHpPopover } from './TacticalHpPopover'
 import { SettingsPanel } from './SettingsPanel'
+import { CharacterSwitcherDrawer } from './CharacterSwitcherDrawer'
 import { CloudSyncBadge } from '../sync/CloudSyncBadge'
 import { useInspectorStore } from '../../store/useInspectorStore'
 
@@ -29,6 +30,7 @@ export function TacticalHUD() {
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [hpPopoverOpen, setHpPopoverOpen] = useState(false)
+  const [charMenuOpen, setCharMenuOpen] = useState(false)
 
   // Character Cycling
   const idx = char ? characters.findIndex((c) => c.id === char.id) : -1
@@ -124,20 +126,43 @@ export function TacticalHUD() {
         {/* Main Cockpit Bar */}
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-2.5 md:flex md:flex-nowrap md:justify-between md:gap-4 md:px-6">
           {/* Left Cockpit: App Branding & Character Identity */}
-          <div className="col-start-1 row-start-1 flex flex-shrink-0 items-center gap-3">
+          <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2 md:gap-3">
             <span
-              className="text-xl md:text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft select-none"
+              className="text-base sm:text-xl md:text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft select-none shrink-0"
               onClick={() => navigate('/')}
             >
               NEON RELIQUARY
             </span>
-            <div className="hidden md:block h-8 w-px bg-white/10 mx-1" />
-            <div className="hidden xl:block">
-              <h1 className="font-headline text-base leading-none text-white font-bold">{char.name}</h1>
-              <p className="font-label text-xs tracking-widest text-tertiary uppercase mt-0.5">
-                Level {char.level} {char.class}
-              </p>
-            </div>
+            <div className="h-5 md:h-8 w-px bg-white/10 shrink-0 mx-0.5" />
+            <button
+              type="button"
+              onClick={() => setCharMenuOpen(true)}
+              aria-label="Open character menu"
+              className="flex items-center gap-2 min-w-0 px-1.5 sm:px-2 py-1 rounded-xl bg-white/[0.03] hover:bg-primary/10 border border-white/[0.08] hover:border-primary/40 transition-all cursor-pointer text-left group"
+            >
+              <div className="w-6 h-6 md:w-7 md:h-7 rounded-lg overflow-hidden bg-surface-container-highest border border-primary/30 shrink-0">
+                {char.portrait ? (
+                  <img src={char.portrait} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="material-symbols-outlined text-primary text-xs flex items-center justify-center h-full w-full">
+                    person
+                  </span>
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-0.5 sm:gap-1">
+                  <h1 className="font-headline text-xs md:text-sm xl:text-base leading-none text-white font-bold truncate max-w-[85px] sm:max-w-[150px] xl:max-w-none">
+                    {char.name}
+                  </h1>
+                  <span className="material-symbols-outlined text-[12px] sm:text-[14px] text-tertiary group-hover:text-primary transition-colors shrink-0">
+                    expand_more
+                  </span>
+                </div>
+                <p className="font-label text-[8px] sm:text-[9px] xl:text-xs tracking-wider xl:tracking-widest text-tertiary uppercase mt-0.5 truncate max-w-[85px] sm:max-w-[150px] xl:max-w-none">
+                  Level {char.level} {char.class}
+                </p>
+              </div>
+            </button>
           </div>
 
           {/* Center Cockpit: Tactical Vitals (HP Bar, AC, Saves) */}
@@ -522,7 +547,9 @@ export function TacticalHUD() {
             )}
 
             <button
-              onClick={() => navigate('/characters')}
+              type="button"
+              onClick={() => setCharMenuOpen(true)}
+              aria-label="Character Switcher"
               className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-xs rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_20px_rgba(0,240,255,0.25)] transition-all duration-300 cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm text-primary">account_circle</span>
@@ -539,6 +566,7 @@ export function TacticalHUD() {
           </div>
         </div>
       </header>
+      <CharacterSwitcherDrawer isOpen={charMenuOpen} onClose={() => setCharMenuOpen(false)} />
       <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </>
   )
