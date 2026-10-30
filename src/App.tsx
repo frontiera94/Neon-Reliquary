@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { MainLayout } from './components/layout/MainLayout'
 import { SessionSyncManager } from './components/sync/SessionSyncManager'
+import { LandingPage } from './pages/LandingPage'
 import { CharacterSelectionPage } from './pages/CharacterSelectionPage'
 import { StatusPage } from './pages/StatusPage'
 import { SkillsPage } from './pages/SkillsPage'
@@ -15,6 +16,7 @@ export default function App() {
     <BrowserRouter>
       <SessionSyncManager />
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/characters" element={<CharacterSelectionPage />} />
         <Route element={<MainLayout />}>
           <Route path="/status" element={<StatusPage />} />
@@ -25,7 +27,7 @@ export default function App() {
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/companion" element={<CompanionPage />} />
         </Route>
-        <Route path="*" element={<Navigate to="/characters" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   )

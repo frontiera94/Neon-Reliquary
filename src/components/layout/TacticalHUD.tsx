@@ -77,7 +77,7 @@ export function TacticalHUD() {
       <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-surface/90 border-b border-white/[0.08] px-6 py-4 flex justify-between items-center" style={{ boxShadow: '0 4px 24px -6px rgba(0,240,255,0.1)' }}>
         <span
           className="text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft"
-          onClick={() => navigate('/characters')}
+          onClick={() => navigate('/')}
         >
           NEON RELIQUARY
         </span>
@@ -127,7 +127,7 @@ export function TacticalHUD() {
           <div className="col-start-1 row-start-1 flex flex-shrink-0 items-center gap-3">
             <span
               className="text-xl md:text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft select-none"
-              onClick={() => navigate('/characters')}
+              onClick={() => navigate('/')}
             >
               NEON RELIQUARY
             </span>
