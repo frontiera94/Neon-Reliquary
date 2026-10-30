@@ -149,6 +149,15 @@ async function main() {
     );
     log(`✅ Merge completato con successo:\n${mergeOutput}`);
 
+    // Push target branch to remote origin
+    try {
+      log(`Push del branch "${targetBranch}" su origin...`);
+      const pushOutput = runGit(`push origin ${targetBranch}`, targetDir);
+      log(`🚀 Push su origin/${targetBranch} completato con successo:\n${pushOutput}`);
+    } catch (pushErr) {
+      log(`⚠️ Push automatico non riuscito: ${pushErr.message}`);
+    }
+
     process.stdout.write('{}\n');
     process.exit(0);
   } catch (err) {
