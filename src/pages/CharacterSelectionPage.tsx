@@ -1,34 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { CloudSyncBadge } from '../components/sync/CloudSyncBadge'
+import { useSyncRoster } from '../lib/useSyncRoster'
 import type { FullCharacter } from '../store/useCharacterStore'
-import mazeData from '../data/mazikeen-noctis.json'
-import shotrixData from '../data/shotrix-blackburn.json'
-import knamData from '../data/knam.json'
-import agelmundData from '../data/agelmund.json'
-import marianoData from '../data/mariano-cardamomo.json'
-import noorieData from '../data/noorie.json'
 
 export function CharacterSelectionPage() {
   const navigate = useNavigate()
-  const { characters, loadCharacter, removeCharacter, setActiveCharacter, activeCharacterId } = useCharacterStore()
+  useSyncRoster()
+  const { characters, setActiveCharacter, activeCharacterId } = useCharacterStore()
   const { initSession } = useSessionStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
-
-  // Always sync character data from JSON files (loadCharacter upserts)
-  useEffect(() => {
-    removeCharacter('valerius')
-    removeCharacter('kaelen')
-    loadCharacter(mazeData as unknown as FullCharacter)
-    loadCharacter(shotrixData as unknown as FullCharacter)
-    loadCharacter(knamData as unknown as FullCharacter)
-    loadCharacter(agelmundData as unknown as FullCharacter)
-    loadCharacter(marianoData as unknown as FullCharacter)
-    loadCharacter(noorieData as unknown as FullCharacter)
-  }, [loadCharacter, removeCharacter])
 
   const chars = characters
   const effectiveId = selectedId ?? activeCharacterId ?? chars[0]?.id
@@ -72,7 +56,7 @@ export function CharacterSelectionPage() {
       <div className="absolute top-8 text-center z-20">
         <span
           className="text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft"
-          onClick={() => navigate('/status')}
+          onClick={() => navigate('/')}
         >
           NEON RELIQUARY
         </span>
