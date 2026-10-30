@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useInspectorStore } from '../store/useInspectorStore'
 import { featInspectorItem, classAbilityInspectorItem } from '../lib/inspector-items'
 import type { Feat, ClassAbility } from '../types/features'
+import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
 export function FeaturesPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
@@ -147,14 +149,19 @@ export function FeaturesPage() {
       </div>
 
       {/* Content Area */}
-      <div className="space-y-6">
+      <motion.div
+        variants={STAGGER_CONTAINER}
+        initial="initial"
+        animate="animate"
+        className="space-y-6"
+      >
         {totalResults === 0 ? (
           <p className="font-body text-tertiary italic text-center py-8">No features match your search.</p>
         ) : (
           <>
             {/* Class Abilities Section */}
             {showAbilities && filteredAbilities.length > 0 && (
-              <div className="space-y-2.5">
+              <motion.div variants={STAGGER_ITEM} className="space-y-2.5">
                 {activeTab === 'all' && (
                   <div className="flex items-center gap-3 pt-1">
                     <span className="material-symbols-outlined text-secondary text-base">auto_awesome</span>
@@ -174,12 +181,12 @@ export function FeaturesPage() {
                     />
                   ))}
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {/* Feats Section */}
             {showFeats && filteredFeats.length > 0 && (
-              <div className="space-y-2.5">
+              <motion.div variants={STAGGER_ITEM} className="space-y-2.5">
                 {activeTab === 'all' && (
                   <div className="flex items-center gap-3 pt-2">
                     <span className="material-symbols-outlined text-primary text-base">military_tech</span>
@@ -198,11 +205,11 @@ export function FeaturesPage() {
                     />
                   ))}
                 </div>
-              </div>
+              </motion.div>
             )}
           </>
         )}
-      </div>
+      </motion.div>
     </div>
   )
 }

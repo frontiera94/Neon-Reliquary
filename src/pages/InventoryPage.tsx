@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import type { ItemCategory, CoinPurse } from '../types/inventory'
 import { InventoryItemCard } from '../components/inventory/InventoryItemCard'
 import { CoinPurseWidget } from '../components/inventory/CoinPurseWidget'
 import { EquipmentSlotGrid } from '../components/inventory/EquipmentSlotGrid'
+import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
 const CATEGORY_ORDER: ItemCategory[] = ['weapon', 'armor', 'consumable', 'gear', 'magic']
 const CATEGORY_LABELS: Record<ItemCategory, string> = {
@@ -57,9 +59,14 @@ export function InventoryPage() {
         </p>
       </div>
 
-      <div className="space-y-8">
+      <motion.div
+        variants={STAGGER_CONTAINER}
+        initial="initial"
+        animate="animate"
+        className="space-y-8"
+      >
         {/* Equipment slot grid */}
-        <section>
+        <motion.section variants={STAGGER_ITEM}>
           <div className="flex items-center gap-3 mb-4">
             <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">Equipment</h2>
             <div className="flex-1 h-px bg-white/10" />
@@ -69,10 +76,10 @@ export function InventoryPage() {
             equippedIds={session.equippedItemIds}
             onUnequip={(itemId) => toggleItemEquipped(char.id, itemId)}
           />
-        </section>
+        </motion.section>
 
         {/* Coin purse */}
-        <section>
+        <motion.section variants={STAGGER_ITEM}>
           <div className="flex items-center gap-3 mb-4">
             <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">Coin Purse</h2>
             <div className="flex-1 h-px bg-white/10" />
@@ -81,14 +88,14 @@ export function InventoryPage() {
             coins={coins}
             onAdjust={(denom, delta) => adjustCoin(char.id, denom, delta)}
           />
-        </section>
+        </motion.section>
 
         {/* Item categories */}
         {itemsByCategory.length === 0 ? (
           <p className="font-body text-tertiary italic">No items in inventory.</p>
         ) : (
           itemsByCategory.map(({ cat, items }) => (
-            <section key={cat}>
+            <motion.section variants={STAGGER_ITEM} key={cat}>
               <div className="flex items-center gap-3 mb-4">
                 <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">
                   {CATEGORY_LABELS[cat]}
@@ -116,10 +123,10 @@ export function InventoryPage() {
                   )
                 })}
               </div>
-            </section>
+            </motion.section>
           ))
         )}
-      </div>
+      </motion.div>
     </div>
   )
 }

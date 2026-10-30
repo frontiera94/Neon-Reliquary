@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
@@ -16,6 +17,7 @@ import { getSpellAvailability } from '../lib/spell-availability'
 import { spellInspectorItem } from '../lib/inspector-items'
 import { SpellUsePips } from '../components/spells/SpellUsePips'
 import type { Spell, SpellAttackType } from '../types/resources'
+import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
 export function SpellsPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
@@ -158,7 +160,12 @@ export function SpellsPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
+    <motion.div
+      variants={STAGGER_CONTAINER}
+      initial="initial"
+      animate="animate"
+      className="p-4 md:p-8 max-w-6xl mx-auto space-y-6"
+    >
       {/* Header */}
       <header className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -383,7 +390,7 @@ export function SpellsPage() {
           const preparedCapacity = levelInfo?.preparedCapacity ?? 0
 
           return (
-            <div key={lvl} className="mb-8">
+            <motion.div variants={STAGGER_ITEM} key={lvl} className="mb-8">
               <div className="flex items-center gap-4 mb-3">
                 <h3 className="font-headline text-sm sm:text-base font-bold uppercase tracking-wider text-primary tabular-nums">
                   Level {lvl}
@@ -499,10 +506,10 @@ export function SpellsPage() {
                   )
                 })}
               </div>
-            </div>
+            </motion.div>
           )
         })}
-    </div>
+    </motion.div>
   )
 }
 

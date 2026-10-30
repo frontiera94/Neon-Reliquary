@@ -1,5 +1,8 @@
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { ActionEconomyState } from '../../types/combat'
 import { evaluateVitalStatus } from '../../lib/stat-calc'
+import { TACTICAL_SPRING, SNAPPY_SPRING } from '../../lib/motion-presets'
 
 interface CombatTacticalHUDProps {
   hp: number
@@ -32,10 +35,37 @@ export function CombatTacticalHUD({
     ? (hp === 0 ? 'disabled' : 'dying')
     : 'conscious'
 
+  const prevHpRef = useRef(hp)
+  const [hpDelta, setHpDelta] = useState<{ amount: number; id: number } | null>(null)
+  const [flashType, setFlashType] = useState<'damage' | 'heal' | null>(null)
+
+  useEffect(() => {
+    const diff = hp - prevHpRef.current
+    if (diff !== 0) {
+      setHpDelta({ amount: diff, id: Date.now() })
+      setFlashType(diff < 0 ? 'damage' : 'heal')
+      const timer = setTimeout(() => {
+        setFlashType(null)
+      }, 400)
+      const clearDeltaTimer = setTimeout(() => {
+        setHpDelta(null)
+      }, 1000)
+      prevHpRef.current = hp
+      return () => {
+        clearTimeout(timer)
+        clearTimeout(clearDeltaTimer)
+      }
+    }
+  }, [hp])
+
   return (
     <div className="flex items-center gap-3 flex-wrap">
       {/* Vitality Core & Defenses */}
-      <div className="flex items-center gap-1.5 bg-surface-container-high/90 border border-white/10 p-1.5 rounded-xl">
+      <div
+        className={`relative flex items-center gap-1.5 bg-surface-container-high/90 border border-white/10 p-1.5 rounded-xl transition-shadow ${
+          flashType === 'damage' ? 'animate-hp-damage' : flashType === 'heal' ? 'animate-hp-heal' : ''
+        }`}
+      >
         <button
           onClick={() => onAdjustHp(-10)}
           className="px-1.5 h-8 rounded-lg bg-surface-container-lowest hover:bg-error-container text-tertiary hover:text-white transition-all active:scale-95 flex items-center justify-center cursor-pointer border border-white/5 font-mono text-[10px] font-bold"
@@ -60,21 +90,47 @@ export function CombatTacticalHUD({
           <span className="material-symbols-outlined text-base">remove</span>
         </button>
 
-        <div className="px-3 py-1 text-center min-w-[90px]">
+        <div className="relative px-3 py-1 text-center min-w-[90px]">
+          <AnimatePresence>
+            {hpDelta && (
+              <motion.span
+                key={hpDelta.id}
+                initial={{ opacity: 0, y: 0, scale: 0.8 }}
+                animate={{ opacity: 1, y: -16, scale: 1.1 }}
+                exit={{ opacity: 0, y: -24 }}
+                transition={SNAPPY_SPRING}
+                className={`absolute left-1/2 -translate-x-1/2 top-0 pointer-events-none font-label text-xs font-black px-1.5 py-0.5 rounded shadow-lg ${
+                  hpDelta.amount < 0
+                    ? 'text-error bg-error/20 border border-error/50'
+                    : 'text-primary bg-primary/20 border border-primary/50'
+                }`}
+              >
+                {hpDelta.amount > 0 ? `+${hpDelta.amount}` : hpDelta.amount}
+              </motion.span>
+            )}
+          </AnimatePresence>
           <div className="flex items-baseline justify-center gap-1">
-            <span className="font-label text-xl font-black text-primary leading-none">
+            <motion.span
+              key={hp}
+              initial={{ scale: 1.15 }}
+              animate={{ scale: 1 }}
+              transition={SNAPPY_SPRING}
+              className="font-label text-xl font-black text-primary leading-none"
+            >
               {hp}
-            </span>
+            </motion.span>
             <span className="font-label text-xs text-tertiary">
               /{maxHp}
             </span>
           </div>
           {/* Mini Health Bar */}
           <div className="w-full h-1.5 bg-surface-container-lowest rounded-full overflow-hidden mt-1 border border-white/5">
-            <div
-              className="h-full rounded-full transition-all duration-300"
+            <motion.div
+              className="h-full rounded-full"
+              initial={false}
+              animate={{ width: `${percent}%` }}
+              transition={TACTICAL_SPRING}
               style={{
-                width: `${percent}%`,
                 background: 'linear-gradient(90deg, #00f0ff 0%, #d946ef 70%, #ff4b60 100%)',
               }}
             />

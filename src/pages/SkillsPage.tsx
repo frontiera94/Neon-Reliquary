@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { calcEffectiveAbilities, calcEffectiveSkills, getActiveActionRestrictions } from '../lib/stat-calc'
 import { ActionAlertBanner } from '../components/combat/ActionAlertBanner'
 import type { EffectiveSkill } from '../lib/stat-calc'
+import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
 const ABILITY_SHORT = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' }
 
@@ -111,30 +113,16 @@ export function SkillsPage() {
           No skills found
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+        <motion.div
+          variants={STAGGER_CONTAINER}
+          initial="initial"
+          animate="animate"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start"
+        >
           <div className="flex flex-col gap-4">
             {leftSkills.map((skill) => (
-              <SkillRow
-                key={skill.id}
-                skill={skill}
-                total={skill.effectiveTotal}
-                onRoll={() =>
-                  openRoll({
-                    diceType: 20,
-                    count: 1,
-                    modifier: skill.effectiveTotal,
-                    label: `${skill.name} Check`,
-                    breakdown: skill.breakdown,
-                  })
-                }
-              />
-            ))}
-          </div>
-          {rightSkills.length > 0 && (
-            <div className="flex flex-col gap-4">
-              {rightSkills.map((skill) => (
+              <motion.div key={skill.id} variants={STAGGER_ITEM}>
                 <SkillRow
-                  key={skill.id}
                   skill={skill}
                   total={skill.effectiveTotal}
                   onRoll={() =>
@@ -147,10 +135,31 @@ export function SkillsPage() {
                     })
                   }
                 />
+              </motion.div>
+            ))}
+          </div>
+          {rightSkills.length > 0 && (
+            <div className="flex flex-col gap-4">
+              {rightSkills.map((skill) => (
+                <motion.div key={skill.id} variants={STAGGER_ITEM}>
+                  <SkillRow
+                    skill={skill}
+                    total={skill.effectiveTotal}
+                    onRoll={() =>
+                      openRoll({
+                        diceType: 20,
+                        count: 1,
+                        modifier: skill.effectiveTotal,
+                        label: `${skill.name} Check`,
+                        breakdown: skill.breakdown,
+                      })
+                    }
+                  />
+                </motion.div>
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
       )}
     </div>
   )
