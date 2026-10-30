@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
@@ -26,6 +27,7 @@ import { SpellUsePips } from '../components/spells/SpellUsePips'
 import { buffModifierTokens, modifierColor } from '../lib/buff-summary'
 import type { Weapon } from '../types/combat'
 import type { DiceType } from '../types/dice'
+import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
 export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
   const char = useCharacterStore((s) => s.activeCharacter())
@@ -129,10 +131,15 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
       {/* Restrictions only appear when a condition actually limits actions. */}
       <ActionAlertBanner restrictions={restrictions} />
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12 xl:items-start">
+      <motion.div
+        variants={STAGGER_CONTAINER}
+        initial="initial"
+        animate="animate"
+        className="grid grid-cols-1 gap-4 xl:grid-cols-12 xl:items-start"
+      >
         {/* Primary column — what you do on your turn. */}
         <div className="space-y-4 xl:col-span-7">
-          <section aria-labelledby="attacks-heading">
+          <motion.section variants={STAGGER_ITEM} aria-labelledby="attacks-heading">
             <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
               <h2 id="attacks-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
                 Attacks
@@ -264,45 +271,49 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                 )
               })}
             </div>
-          </section>
+          </motion.section>
 
           {/* Spellbook stays folded: the page is about resolving the turn. */}
           {char.spells && char.spells.length > 0 && (
-            <CombatSpellsSection
-              spells={char.spells}
-              spellSlots={char.spellSlots}
-              preparedSpellIds={session.preparedSpellIds}
-              preparedSpells={session.preparedSpells}
-              spentPreparedSpells={session.spentPreparedSpells}
-              spentSpellSlots={session.spentSpellSlots}
-              spentResources={session.spentResources}
-              dailyResources={char.dailyResources}
-              charClass={char.class}
-              charLevel={char.level}
-              abilities={effectiveAbilities.scores}
-              baseAttackBonus={char.baseAttackBonus}
-              spellFailureChance={char.armorClass.spellFailureChance}
-              feats={char.feats}
-              spellAvailability={spellAvailability}
-              defaultExpanded={false}
-              openRoll={openRoll}
-              onSpendSlot={(lvl, max) => spendSpellSlot(char.id, lvl, max)}
-              onRecoverSlot={(lvl) => recoverSpellSlot(char.id, lvl)}
-              onSpendPreparedSpell={(spellId, max) => spendPreparedSpell(char.id, spellId, max)}
-              onRecoverPreparedSpell={(spellId) => recoverPreparedSpell(char.id, spellId)}
-              onSpendResource={(resourceId, max) => spendResource(char.id, resourceId, max)}
-              allBuffs={allBuffs}
-              activeBuffIds={activeBuffIds}
-              onToggleBuff={(buffId) => toggleBuff(char.id, buffId)}
-              onAddCustomBuff={(buff) => addCustomBuff(char.id, buff)}
-            />
+            <motion.div variants={STAGGER_ITEM}>
+              <CombatSpellsSection
+                spells={char.spells}
+                spellSlots={char.spellSlots}
+                preparedSpellIds={session.preparedSpellIds}
+                preparedSpells={session.preparedSpells}
+                spentPreparedSpells={session.spentPreparedSpells}
+                spentSpellSlots={session.spentSpellSlots}
+                spentResources={session.spentResources}
+                dailyResources={char.dailyResources}
+                charClass={char.class}
+                charLevel={char.level}
+                abilities={effectiveAbilities.scores}
+                baseAttackBonus={char.baseAttackBonus}
+                spellFailureChance={char.armorClass.spellFailureChance}
+                feats={char.feats}
+                spellAvailability={spellAvailability}
+                defaultExpanded={false}
+                openRoll={openRoll}
+                onSpendSlot={(lvl, max) => spendSpellSlot(char.id, lvl, max)}
+                onRecoverSlot={(lvl) => recoverSpellSlot(char.id, lvl)}
+                onSpendPreparedSpell={(spellId, max) => spendPreparedSpell(char.id, spellId, max)}
+                onRecoverPreparedSpell={(spellId) => recoverPreparedSpell(char.id, spellId)}
+                onSpendResource={(resourceId, max) => spendResource(char.id, resourceId, max)}
+                allBuffs={allBuffs}
+                activeBuffIds={activeBuffIds}
+                onToggleBuff={(buffId) => toggleBuff(char.id, buffId)}
+                onAddCustomBuff={(buff) => addCustomBuff(char.id, buff)}
+              />
+            </motion.div>
           )}
 
-          <CombatManeuversPanel maneuversCalc={maneuversCalc} openRoll={openRoll} />
+          <motion.div variants={STAGGER_ITEM}>
+            <CombatManeuversPanel maneuversCalc={maneuversCalc} openRoll={openRoll} />
+          </motion.div>
 
           {/* Summoned ally */}
           {activeSummonOption && activeSummon && (
-            <section aria-labelledby="summon-heading" className="space-y-2">
+            <motion.section variants={STAGGER_ITEM} aria-labelledby="summon-heading" className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-baseline gap-2">
                   <h2 id="summon-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
@@ -320,12 +331,12 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                 onDismiss={() => clearSummon(char.id)}
                 openRoll={openRoll}
               />
-            </section>
+            </motion.section>
           )}
 
           {/* Companion — one compact row plus its attacks and quick selection. */}
           {companion && (
-            <section aria-labelledby="companion-heading">
+            <motion.section variants={STAGGER_ITEM} aria-labelledby="companion-heading">
               <div className="mb-2 flex flex-wrap items-end justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex items-baseline gap-2">
@@ -490,13 +501,14 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                   </div>
                 )}
               </div>
-            </section>
+            </motion.section>
           )}
         </div>
 
         {/* Support column — state you need to read, not act on constantly. */}
         <aside className="space-y-4 xl:col-span-5">
-          <section
+          <motion.section
+            variants={STAGGER_ITEM}
             aria-labelledby="buffs-heading"
             className="rounded-2xl border border-white/10 bg-surface-container/70 p-4 backdrop-blur-sm"
           >
@@ -706,7 +718,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
             )}
 
             <DefensiveBadges compact />
-          </section>
+          </motion.section>
 
           <ContextualCombatFeatures collapsible defaultCollapsed compact />
 
@@ -724,7 +736,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
             />
           )}
         </aside>
-      </div>
+      </motion.div>
 
       {/* Full Attack Routine Modal */}
       {fullAttackWeapon && fullAttackEffective && (

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
@@ -20,6 +21,7 @@ import { BuffManagerModal } from '../components/combat/BuffManagerModal'
 import { DailyResourcePips } from '../components/combat/BuffResourceToggle'
 import { StatBreakdownTooltip } from '../components/ui/StatBreakdownTooltip'
 import type { ConditionType } from '../types/combat'
+import { STAGGER_CONTAINER, STAGGER_ITEM, SNAPPY_SPRING } from '../lib/motion-presets'
 
 const COLOR_MAP: Record<string, string> = {
   primary: 'text-primary',
@@ -125,12 +127,17 @@ export function StatusPage() {
 
   return (
     <div className="p-4 md:p-8">
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <motion.div
+        variants={STAGGER_CONTAINER}
+        initial="initial"
+        animate="animate"
+        className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6"
+      >
         {/* Tactical Restrictions Banner */}
         {restrictions.length > 0 && (
-          <div className="lg:col-span-12">
+          <motion.div variants={STAGGER_ITEM} className="lg:col-span-12">
             <ActionAlertBanner restrictions={restrictions} />
-          </div>
+          </motion.div>
         )}
 
         {/* Bonded Companion Quick Banner */}
@@ -138,7 +145,10 @@ export function StatusPage() {
           const activeCompanionId = session.activeCompanionId ?? char.companions[0]?.id
           const companion = char.companions.find((c) => c.id === activeCompanionId) ?? char.companions[0]
           return (
-            <div className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm border border-primary/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <motion.div
+              variants={STAGGER_ITEM}
+              className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm border border-primary/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4"
+            >
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary text-2xl">pets</span>
                 <div>
@@ -157,23 +167,30 @@ export function StatusPage() {
                 Open Companion Sheet
                 <span className="material-symbols-outlined text-xs">arrow_forward</span>
               </Link>
-            </div>
+            </motion.div>
           )
         })()}
 
         {/* Vitality Core */}
-        <section className="lg:col-span-12 flex flex-col items-center justify-center bg-surface-container/90 backdrop-blur-sm p-8 relative overflow-hidden group rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] transition-all">
+        <motion.section
+          variants={STAGGER_ITEM}
+          className="lg:col-span-12 flex flex-col items-center justify-center bg-surface-container/90 backdrop-blur-sm p-8 relative overflow-hidden group rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] transition-all"
+        >
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent pointer-events-none" />
           <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-8 neon-glow-accent">
             Vitality Core
           </h2>
           <div className="text-center">
-            <div
+            <motion.div
+              key={hp}
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+              transition={SNAPPY_SPRING}
               className="font-label text-5xl sm:text-6xl font-black text-primary leading-none"
               style={{ textShadow: '0 0 30px rgba(0,240,255,0.4)' }}
             >
               {hp}
-            </div>
+            </motion.div>
             {vitalStatus !== 'conscious' && (
               <div className="mt-2">
                 <span
@@ -288,10 +305,13 @@ export function StatusPage() {
               Buffs & Presets
             </button>
           </div>
-        </section>
+        </motion.section>
 
         {/* Defense Grid */}
-        <section className="lg:col-span-6 bg-surface-container/90 backdrop-blur-sm p-5 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all grid grid-cols-2 gap-4">
+        <motion.section
+          variants={STAGGER_ITEM}
+          className="lg:col-span-6 bg-surface-container/90 backdrop-blur-sm p-5 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all grid grid-cols-2 gap-4"
+        >
           <DefenseCard
             label="Armor Class"
             value={effectiveAc.total}
@@ -379,10 +399,13 @@ export function StatusPage() {
               })
             }
           />
-        </section>
+        </motion.section>
 
         {/* Ability Score Grid */}
-        <section className="lg:col-span-6 bg-surface-container/90 backdrop-blur-sm p-5 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all grid grid-cols-3 gap-3">
+        <motion.section
+          variants={STAGGER_ITEM}
+          className="lg:col-span-6 bg-surface-container/90 backdrop-blur-sm p-5 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all grid grid-cols-3 gap-3"
+        >
           {ABILITY_KEYS.map((key) => {
             const baseScore = char.abilities[key]
             const effScore = effectiveAbilities.scores[key]
@@ -433,11 +456,14 @@ export function StatusPage() {
               </button>
             )
           })}
-        </section>
+        </motion.section>
 
         {/* Daily Resources */}
         {char.dailyResources.length > 0 && (
-          <section className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all">
+          <motion.section
+            variants={STAGGER_ITEM}
+            className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all"
+          >
             <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
               Daily Resources
             </h2>
@@ -455,11 +481,14 @@ export function StatusPage() {
                 </div>
               ))}
             </div>
-          </section>
+          </motion.section>
         )}
 
         {/* Conditions */}
-        <section className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all">
+        <motion.section
+          variants={STAGGER_ITEM}
+          className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all"
+        >
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary neon-glow-accent">
               Conditions
@@ -533,8 +562,8 @@ export function StatusPage() {
               No active conditions
             </p>
           )}
-        </section>
-      </div>
+        </motion.section>
+      </motion.div>
 
       {/* Unified Buff & Condition Manager Modal */}
       <BuffManagerModal

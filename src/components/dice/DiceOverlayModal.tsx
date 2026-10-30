@@ -4,6 +4,7 @@ import { useDiceStore } from '../../store/useDiceStore'
 import type { DiceRoll } from '../../types/dice'
 import { rollDice } from '../../lib/dice-engine'
 import { DiceRollingAnimation } from './DiceRollingAnimation'
+import { CRIT_HIT_SHAKE, FUMBLE_GLITCH_SHAKE, SNAPPY_SPRING } from '../../lib/motion-presets'
 
 export function DiceOverlayModal() {
   const { isOpen, isRolling, pendingRoll, lastResult, openRoll, setResult, close } = useDiceStore()
@@ -87,22 +88,57 @@ export function DiceOverlayModal() {
               ) : lastResult ? (
                 <>
                   {/* Big result number */}
-                  <div className="relative mb-4">
+                  <div className="relative mb-4 flex items-center justify-center">
+                    {/* Crit Shockwave Ring */}
+                    {(lastResult.isCriticalThreat || lastResult.naturalRolls?.[0] === 20) && (
+                      <div className="absolute w-36 h-36 rounded-full border-2 border-secondary animate-crit-shockwave pointer-events-none" />
+                    )}
+
                     <div
                       className="absolute inset-0 rounded-full"
-                      style={{ background: lastResult.isCriticalThreat ? 'rgba(217,70,239,0.15)' : 'rgba(0,240,255,0.15)', filter: 'blur(35px)' }}
+                      style={{ background: lastResult.isCriticalThreat ? 'rgba(217,70,239,0.2)' : 'rgba(0,240,255,0.15)', filter: 'blur(35px)' }}
                     />
-                    <span
+                    <motion.span
+                      variants={
+                        lastResult.isCriticalThreat || lastResult.naturalRolls?.[0] === 20
+                          ? CRIT_HIT_SHAKE
+                          : lastResult.diceType === 20 && lastResult.naturalRolls?.[0] === 1
+                          ? FUMBLE_GLITCH_SHAKE
+                          : undefined
+                      }
+                      initial={
+                        lastResult.isCriticalThreat || (lastResult.diceType === 20 && lastResult.naturalRolls?.[0] === 1)
+                          ? 'initial'
+                          : { scale: 1.35, opacity: 0 }
+                      }
+                      animate={
+                        lastResult.isCriticalThreat || (lastResult.diceType === 20 && lastResult.naturalRolls?.[0] === 1)
+                          ? 'animate'
+                          : { scale: 1, opacity: 1 }
+                      }
+                      transition={
+                        !(lastResult.isCriticalThreat || (lastResult.diceType === 20 && lastResult.naturalRolls?.[0] === 1))
+                          ? SNAPPY_SPRING
+                          : undefined
+                      }
                       className="relative font-label text-[7rem] font-black leading-none"
                       style={{
-                        color: lastResult.isCriticalThreat ? '#d946ef' : '#00f0ff',
-                        textShadow: lastResult.isCriticalThreat
-                          ? '0 0 35px rgba(217,70,239,0.6)'
-                          : '0 0 35px rgba(0,240,255,0.45)'
+                        color:
+                          lastResult.diceType === 20 && lastResult.naturalRolls?.[0] === 1
+                            ? '#ff4b60'
+                            : lastResult.isCriticalThreat
+                            ? '#d946ef'
+                            : '#00f0ff',
+                        textShadow:
+                          lastResult.diceType === 20 && lastResult.naturalRolls?.[0] === 1
+                            ? '0 0 35px rgba(255,75,96,0.6)'
+                            : lastResult.isCriticalThreat
+                            ? '0 0 35px rgba(217,70,239,0.6)'
+                            : '0 0 35px rgba(0,240,255,0.45)',
                       }}
                     >
                       {lastResult.total}
-                    </span>
+                    </motion.span>
                   </div>
 
                   {/* Crit result badge */}

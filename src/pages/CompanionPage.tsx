@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
@@ -7,6 +8,7 @@ import { CONDITION_INFO } from '../lib/conditions'
 import { COMPANION_PRESETS } from '../data/companion-presets'
 import type { ConditionType } from '../types/combat'
 import type { Companion } from '../types/companion'
+import { STAGGER_CONTAINER, STAGGER_ITEM, SNAPPY_SPRING } from '../lib/motion-presets'
 
 const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const
 const ABILITY_NAMES = {
@@ -298,19 +300,31 @@ export function CompanionPage() {
       </header>
 
       {/* Main Grid: Vitality & Defenses */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <motion.div
+        variants={STAGGER_CONTAINER}
+        initial="initial"
+        animate="animate"
+        className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+      >
         {/* Vitality Core */}
-        <section className="lg:col-span-6 bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] flex flex-col items-center justify-center text-center relative overflow-hidden">
+        <motion.section
+          variants={STAGGER_ITEM}
+          className="lg:col-span-6 bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] flex flex-col items-center justify-center text-center relative overflow-hidden"
+        >
           <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
             Vitality Core
           </h2>
 
-          <div
+          <motion.div
+            key={currentHp}
+            initial={{ scale: 1.1 }}
+            animate={{ scale: 1 }}
+            transition={SNAPPY_SPRING}
             className="font-label text-5xl sm:text-6xl font-black text-primary leading-none"
             style={{ textShadow: '0 0 25px rgba(0,240,255,0.3)' }}
           >
             {currentHp}
-          </div>
+          </motion.div>
           <div className="font-label text-tertiary tracking-widest uppercase mt-2 text-xs">
             Hit Points / {activeCompanion.maxHp}
           </div>
@@ -366,10 +380,13 @@ export function CompanionPage() {
               </div>
             )}
           </div>
-        </section>
+        </motion.section>
 
         {/* Defense Grid */}
-        <section className="lg:col-span-6 bg-surface-container/70 backdrop-blur-md rounded-2xl p-4 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] grid grid-cols-2 gap-3">
+        <motion.section
+          variants={STAGGER_ITEM}
+          className="lg:col-span-6 bg-surface-container/70 backdrop-blur-md rounded-2xl p-4 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] grid grid-cols-2 gap-3"
+        >
           <div className="bg-surface-container-low/80 rounded-xl p-4 border border-white/5">
             <p className="font-label text-[10px] uppercase tracking-widest text-tertiary">
               Armor Class
@@ -474,8 +491,8 @@ export function CompanionPage() {
             </p>
             <p className="font-label text-[10px] text-tertiary mt-0.5">Will Save</p>
           </button>
-        </section>
-      </div>
+        </motion.section>
+      </motion.div>
 
       {/* Ability Scores Grid */}
       <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
