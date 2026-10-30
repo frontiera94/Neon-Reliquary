@@ -32,7 +32,6 @@ export function TacticalHUD() {
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [hpPopoverOpen, setHpPopoverOpen] = useState(false)
-  const [characterDropdownOpen, setCharacterDropdownOpen] = useState(false)
 
   // Character Cycling
   const idx = char ? characters.findIndex((c) => c.id === char.id) : -1
@@ -136,16 +135,7 @@ export function TacticalHUD() {
               NEON RELIQUARY
             </span>
             <div className="h-5 md:h-8 w-px bg-white/10 mx-1 shrink-0" />
-            <div
-              className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer group select-none min-w-0"
-              onClick={() => setCharacterDropdownOpen((prev) => !prev)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') setCharacterDropdownOpen((prev) => !prev)
-              }}
-              aria-label="Toggle character dropdown"
-            >
+            <div className="flex items-center gap-1.5 sm:gap-2.5 select-none min-w-0">
               <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg overflow-hidden flex-shrink-0">
                 <CharacterEmblem
                   characterId={char.id}
@@ -155,15 +145,8 @@ export function TacticalHUD() {
                 />
               </div>
               <div className="min-w-0">
-                <h1 className="font-headline text-xs sm:text-base leading-none text-white font-bold group-hover:text-primary transition-colors flex items-center gap-1">
-                  <span className="truncate max-w-[85px] sm:max-w-none">{char.name}</span>
-                  <span
-                    className={`material-symbols-outlined text-[13px] sm:text-xs text-tertiary group-hover:text-primary transition-transform duration-200 ${
-                      characterDropdownOpen ? 'rotate-180 text-primary' : ''
-                    }`}
-                  >
-                    expand_more
-                  </span>
+                <h1 className="font-headline text-xs sm:text-base leading-none text-white font-bold truncate max-w-[85px] sm:max-w-none">
+                  {char.name}
                 </h1>
                 <p className="font-label text-[8px] sm:text-xs tracking-wider sm:tracking-widest text-tertiary uppercase mt-0.5 truncate max-w-[85px] sm:max-w-none">
                   Level {char.level} {char.class}
@@ -553,13 +536,7 @@ export function TacticalHUD() {
               </div>
             )}
 
-            <CharacterDropdown
-              align="right"
-              variant="cockpit"
-              isOpen={characterDropdownOpen}
-              onToggle={() => setCharacterDropdownOpen((prev) => !prev)}
-              onClose={() => setCharacterDropdownOpen(false)}
-            />
+            <CharacterDropdown align="right" variant="cockpit" />
 
             <button
               onClick={() => setSettingsOpen(true)}
