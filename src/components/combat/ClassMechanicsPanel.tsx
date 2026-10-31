@@ -42,7 +42,6 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
   const openRoll = useDiceStore((s) => s.openRoll)
 
   const {
-    advanceCharacterTurn,
     setWildShape,
     setHeldSpellstrike,
     consumeSpellstrikeCharge,
@@ -61,7 +60,9 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
     applyDebilitatingInjury,
     setUnderhanded,
     spendResource,
+    spendPreparedSpell,
     recoverPreparedSpell,
+    toggleCondition,
   } = useSessionStore()
 
   // Local UI states
@@ -77,7 +78,6 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
   if (!session) return null
 
   const mechanics = session.classMechanics
-  const currentRound = session.currentRound ?? 1
 
   // Class Archetype checks
   const isDruid = char.id === 'noorie' || /druid/i.test(char.class)
@@ -107,18 +107,15 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
   const defensiveSacrifice = magusState?.defensiveCastingSacrifice ?? 0
   const arcanePoolActive = Boolean(
     magusState?.arcanePoolWeapon?.active ||
-    (magusState?.arcaneWeaponActive && (magusState?.arcaneWeaponRoundsLeft ?? 0) > 0)
+    (magusState?.arcaneWeaponActive && (magusState?.arcaneWeaponRoundsLeft ?? 0) > 0) ||
+    session.activeBuffIds.includes('arcane-pool-weapon')
   )
-  const arcanePoolRoundsLeft =
-    magusState?.arcanePoolWeapon?.remainingRounds ?? magusState?.arcaneWeaponRoundsLeft ?? 0
 
   // Bloodrager State
   const bloodragerState = mechanics?.bloodrager
   const isBloodraging = Boolean(bloodragerState?.isRaging ?? bloodragerState?.isBloodraging)
-  const roundsRaged = bloodragerState?.roundsRagedThisCombat ?? bloodragerState?.roundsCurrentRage ?? 0
   const fatigueCountdown = bloodragerState?.fatigueCountdown ?? bloodragerState?.fatigueRoundsLeft ?? 0
   const isFatigued = session.conditions.includes('fatigued') || fatigueCountdown > 0
-  const furiousFocusReady = !bloodragerState?.furiousFocusAppliedThisRound
   const bloodrageHpShift = calcBloodrageHpShift(char.level ?? 4)
   const exitSafety = isBloodraging
     ? checkBloodrageExitSafety(session.currentHp, char.level ?? 4, 4, char.abilities.con ?? 16)
@@ -128,7 +125,6 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
   const witchState = mechanics?.witch
   const witchHexDc = calcHexDc(char.level ?? 4, effectiveAbilities.mods.int)
   const activeHexes = witchState?.activeHexes ?? []
-  const cackleUsedThisRound = Boolean(witchState?.cackleUsedThisRound)
   const targetImmunities = Array.isArray(witchState?.immuneTargets)
     ? witchState.immuneTargets
     : Array.isArray(witchState?.targetImmunities)
@@ -160,10 +156,10 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
   // Summary badges for active effects
   const activeSummaryBadges: { label: string; color: 'primary' | 'secondary' | 'error' | 'amber' }[] = []
   if (isBloodraging) {
-    activeSummaryBadges.push({ label: `Ira di Sangue (${roundsRaged} r)`, color: 'error' })
+    activeSummaryBadges.push({ label: 'Ira di Sangue Attiva', color: 'error' })
   }
   if (isFatigued) {
-    activeSummaryBadges.push({ label: `Affaticato (${fatigueCountdown} r)`, color: 'amber' })
+    activeSummaryBadges.push({ label: 'Affaticato', color: 'amber' })
   }
   if (isWildShapeActive && activeWildShapePreset) {
     activeSummaryBadges.push({ label: `Wild Shape: ${activeWildShapePreset.name}`, color: 'primary' })
@@ -172,16 +168,16 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
     activeSummaryBadges.push({ label: `Spellstrike: ${heldSpellstrike.spellName} (${heldSpellstrike.chargesRemaining})`, color: 'secondary' })
   }
   if (arcanePoolActive) {
-    activeSummaryBadges.push({ label: `Arma Arcana +1 (${arcanePoolRoundsLeft} r)`, color: 'primary' })
+    activeSummaryBadges.push({ label: 'Arma Arcana +1', color: 'primary' })
   }
   if (activeHexes.length > 0) {
     activeSummaryBadges.push({ label: `${activeHexes.length} Fatture Attive`, color: 'secondary' })
   }
   if (kiDefenseRounds > 0) {
-    activeSummaryBadges.push({ label: 'Ki Defense +4 CA (1 r)', color: 'primary' })
+    activeSummaryBadges.push({ label: 'Ki Defense +4 CA', color: 'primary' })
   }
   if (kiSpeedRounds > 0) {
-    activeSummaryBadges.push({ label: 'Ki Speed +6m (1 r)', color: 'primary' })
+    activeSummaryBadges.push({ label: 'Ki Speed +6m', color: 'primary' })
   }
   if (kiExtraAttackActive) {
     activeSummaryBadges.push({ label: 'Ki Extra Flurry (+9/+9/+9)', color: 'secondary' })
@@ -198,46 +194,9 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
       aria-label="Class Mechanics Panel"
       className="rounded-2xl border border-white/10 bg-surface-container/80 p-3.5 sm:p-4 backdrop-blur-md shadow-[0_0_25px_rgba(0,0,0,0.4)] space-y-3"
     >
-      {/* Top Banner: Character info, Active Status Chips, and "Fine Turno PG" */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 border border-primary/30 text-primary">
-            <span className="material-symbols-outlined text-lg">
-              {isDruid ? 'pets' : isMagus ? 'electric_bolt' : isBloodrager ? 'local_fire_department' : isWitch ? 'auto_fix_high' : isMonk ? 'sports_martial_arts' : 'visibility'}
-            </span>
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h2 className="truncate font-headline text-base font-bold text-white">
-                {char.name}
-              </h2>
-              <span className="rounded-md border border-white/10 bg-surface-container-high px-1.5 py-0.5 font-label text-[10px] font-bold uppercase text-primary">
-                {char.class} {char.level}
-              </span>
-            </div>
-            <p className="font-label text-[11px] text-tertiary">
-              Round <span className="font-bold text-white tabular-nums">{currentRound}</span> di combattimento
-            </p>
-          </div>
-        </div>
-
-        {/* Unified Turn Button */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => advanceCharacterTurn(char.id, char)}
-            title="Avanza il round, scala le durate delle meccaniche attive e reimposta i poteri per-round"
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary/20 via-primary/30 to-secondary/25 hover:from-primary/30 hover:to-secondary/35 border border-primary/50 text-white font-label text-xs font-bold uppercase tracking-wider px-3.5 py-2 shadow-[0_0_15px_rgba(0,240,255,0.25)] hover:shadow-[0_0_22px_rgba(0,240,255,0.4)] transition-all active:scale-95 cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-base text-primary">skip_next</span>
-            <span>Fine Turno PG</span>
-          </button>
-        </div>
-      </div>
-
       {/* Active Badges Summary Bar */}
       {activeSummaryBadges.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+        <div className="flex flex-wrap items-center gap-1.5 pb-1 border-b border-white/10">
           <span className="font-label text-[10px] uppercase tracking-wider text-tertiary mr-1">
             Attivi:
           </span>
@@ -450,14 +409,23 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
                 </span>
                 {Object.keys(SPELLSTRIKE_SPELLS).map((spellId) => {
                   const def = SPELLSTRIKE_SPELLS[spellId]
+                  const prepTotal = session.preparedSpells?.[spellId] ?? 0
+                  const prepSpent = session.spentPreparedSpells?.[spellId] ?? 0
+                  const prepRemaining = Math.max(0, prepTotal - prepSpent)
                   return (
                     <button
                       key={spellId}
                       type="button"
-                      onClick={() => setHeldSpellstrike(char.id, buildHeldSpellstrike(spellId, char.level ?? 4))}
+                      onClick={() => {
+                        setHeldSpellstrike(char.id, buildHeldSpellstrike(spellId, char.level ?? 4))
+                        if (prepTotal > 0 && prepRemaining > 0) {
+                          spendPreparedSpell(char.id, spellId, prepTotal)
+                        }
+                      }}
                       className="rounded-md border border-secondary/30 bg-secondary/10 px-2 py-1 font-label text-[10px] font-bold text-secondary hover:bg-secondary/20 transition-colors cursor-pointer"
                     >
                       {def.name}
+                      {prepTotal > 0 ? ` (${prepRemaining}/${prepTotal})` : ''}
                     </button>
                   )
                 })}
@@ -513,17 +481,20 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
               <button
                 type="button"
                 onClick={() => {
-                  activateArcaneWeapon(char.id, 1)
-                  spendResource(char.id, 'arcane-pool', arcanePoolMax)
+                  if (arcanePoolActive) {
+                    activateArcaneWeapon(char.id, 0)
+                  } else {
+                    activateArcaneWeapon(char.id, 1)
+                    spendResource(char.id, 'arcane-pool', arcanePoolMax)
+                  }
                 }}
-                disabled={arcanePoolActive}
                 className={`rounded-lg border px-2.5 py-1 font-label text-[11px] font-bold uppercase transition-colors cursor-pointer ${
                   arcanePoolActive
-                    ? 'border-primary/40 bg-primary/15 text-primary'
+                    ? 'border-primary bg-primary/20 text-primary shadow-[0_0_10px_rgba(0,240,255,0.25)]'
                     : 'border-primary/30 bg-primary/10 text-primary hover:bg-primary/20'
                 }`}
               >
-                {arcanePoolActive ? `Arma Arcana +1 (${arcanePoolRoundsLeft} r)` : 'Potenzia Arma (+1, 10 Round)'}
+                {arcanePoolActive ? 'Arma Arcana +1 (Attiva · Disattiva)' : 'Potenzia Arma (+1)'}
               </button>
             </div>
 
@@ -599,10 +570,14 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
               {isBloodraging ? 'Termina Ira di Sangue' : '🔥 Entra in Ira di Sangue'}
             </button>
 
-            {isBloodraging && (
-              <span className="font-label text-xs text-white">
-                Round spesi: <strong className="text-error tabular-nums">{roundsRaged}</strong>
-              </span>
+            {isFatigued && !isBloodraging && (
+              <button
+                type="button"
+                onClick={() => toggleCondition(char.id, 'fatigued')}
+                className="rounded-lg border border-amber-500/40 bg-amber-500/15 px-3 py-1.5 font-label text-[11px] font-bold uppercase text-amber-300 hover:bg-amber-500/25 transition-colors cursor-pointer"
+              >
+                Rimuovi Affaticato
+              </button>
             )}
           </div>
 
@@ -637,16 +612,10 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
           {/* Furious Focus indicator */}
           <div className="flex items-center justify-between gap-2 pt-1 border-t border-white/10">
             <span className="font-label text-[11px] text-tertiary">
-              Furious Focus (1° attacco a 2M ignora -2 Attacco Possente):
+              Furious Focus (1° attacco a 2M ignora la penalità di Attacco Possente):
             </span>
-            <span
-              className={`font-label text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
-                furiousFocusReady
-                  ? 'border-primary/40 bg-primary/15 text-primary'
-                  : 'border-white/10 bg-surface-container text-tertiary'
-              }`}
-            >
-              {furiousFocusReady ? 'Pronto' : 'Usato questo round'}
+            <span className="font-label text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border border-primary/40 bg-primary/15 text-primary">
+              Attivo sul 1° Attacco
             </span>
           </div>
         </div>
@@ -717,15 +686,10 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
           <div className="flex items-center justify-between gap-2 pt-1 border-t border-white/10">
             <button
               type="button"
-              disabled={cackleUsedThisRound}
-              onClick={() => triggerCackle(char.id)}
-              className={`rounded-lg border px-3 py-1.5 font-label text-xs font-bold uppercase transition-all cursor-pointer ${
-                cackleUsedThisRound
-                  ? 'border-white/10 bg-surface-container text-tertiary opacity-50 cursor-not-allowed'
-                  : 'border-secondary/40 bg-secondary/20 text-secondary hover:bg-secondary/30 shadow-[0_0_12px_rgba(217,70,239,0.2)]'
-              }`}
+              onClick={() => triggerCackle(char.id, true)}
+              className="rounded-lg border border-secondary/40 bg-secondary/20 px-3 py-1.5 font-label text-xs font-bold uppercase text-secondary hover:bg-secondary/30 shadow-[0_0_12px_rgba(217,70,239,0.2)] transition-all cursor-pointer"
             >
-              {cackleUsedThisRound ? 'Cackle Già Usata Questo Round' : 'Cackle (+1 round a Evil Eye / Misfortune / Fortune)'}
+              Cackle (+1 round a Evil Eye / Misfortune / Fortune)
             </button>
           </div>
 
@@ -893,51 +857,81 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
             <button
               type="button"
               onClick={() => {
-                activateKiExtraAttack(char.id)
-                spendResource(char.id, 'ki-pool', kiPoolMax)
+                if (kiExtraAttackActive) {
+                  activateKiExtraAttack(char.id, false)
+                } else {
+                  activateKiExtraAttack(char.id, true)
+                  spendResource(char.id, 'ki-pool', kiPoolMax)
+                }
               }}
-              className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 p-2 hover:bg-primary/20 transition-colors cursor-pointer"
+              className={`flex items-center justify-between gap-2 rounded-lg border p-2 transition-colors cursor-pointer ${
+                kiExtraAttackActive
+                  ? 'border-primary bg-primary/25 shadow-[0_0_12px_rgba(0,240,255,0.25)]'
+                  : 'border-primary/30 bg-primary/10 hover:bg-primary/20'
+              }`}
             >
               <div className="text-left">
                 <span className="block font-headline text-xs font-bold text-white">Extra Flurry Attack</span>
-                <span className="block font-label text-[10px] text-tertiary">3° attacco (+9/+9/+9)</span>
+                <span className="block font-label text-[10px] text-tertiary">
+                  {kiExtraAttackActive ? 'Attivo nel Full Attack (Clicca per disattivare)' : '3° attacco (+9/+9/+9)'}
+                </span>
               </div>
               <span className="rounded bg-primary/20 px-1.5 py-0.5 font-label text-[10px] font-bold text-primary">
-                1 Ki
+                {kiExtraAttackActive ? 'ON' : '1 Ki'}
               </span>
             </button>
 
             <button
               type="button"
               onClick={() => {
-                activateKiDefense(char.id)
-                spendResource(char.id, 'ki-pool', kiPoolMax)
+                if (kiDefenseRounds > 0) {
+                  activateKiDefense(char.id, false)
+                } else {
+                  activateKiDefense(char.id, true)
+                  spendResource(char.id, 'ki-pool', kiPoolMax)
+                }
               }}
-              className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 p-2 hover:bg-primary/20 transition-colors cursor-pointer"
+              className={`flex items-center justify-between gap-2 rounded-lg border p-2 transition-colors cursor-pointer ${
+                kiDefenseRounds > 0
+                  ? 'border-primary bg-primary/25 shadow-[0_0_12px_rgba(0,240,255,0.25)]'
+                  : 'border-primary/30 bg-primary/10 hover:bg-primary/20'
+              }`}
             >
               <div className="text-left">
                 <span className="block font-headline text-xs font-bold text-white">Ki Defense (+4 CA)</span>
-                <span className="block font-label text-[10px] text-tertiary">+4 Schivare a Tot/Contatto/DMC</span>
+                <span className="block font-label text-[10px] text-tertiary">
+                  {kiDefenseRounds > 0 ? 'Attivo nell\'HUD (Clicca per disattivare)' : '+4 Schivare a Tot/Contatto/DMC'}
+                </span>
               </div>
               <span className="rounded bg-primary/20 px-1.5 py-0.5 font-label text-[10px] font-bold text-primary">
-                1 Ki
+                {kiDefenseRounds > 0 ? 'ON' : '1 Ki'}
               </span>
             </button>
 
             <button
               type="button"
               onClick={() => {
-                activateKiSpeed(char.id)
-                spendResource(char.id, 'ki-pool', kiPoolMax)
+                if (kiSpeedRounds > 0) {
+                  activateKiSpeed(char.id, false)
+                } else {
+                  activateKiSpeed(char.id, true)
+                  spendResource(char.id, 'ki-pool', kiPoolMax)
+                }
               }}
-              className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 p-2 hover:bg-primary/20 transition-colors cursor-pointer"
+              className={`flex items-center justify-between gap-2 rounded-lg border p-2 transition-colors cursor-pointer ${
+                kiSpeedRounds > 0
+                  ? 'border-primary bg-primary/25 shadow-[0_0_12px_rgba(0,240,255,0.25)]'
+                  : 'border-primary/30 bg-primary/10 hover:bg-primary/20'
+              }`}
             >
               <div className="text-left">
                 <span className="block font-headline text-xs font-bold text-white">Ki Speed (+6m)</span>
-                <span className="block font-label text-[10px] text-tertiary">+20 ft velocità per 1 round</span>
+                <span className="block font-label text-[10px] text-tertiary">
+                  {kiSpeedRounds > 0 ? 'Attivo (Clicca per disattivare)' : '+20 ft velocità'}
+                </span>
               </div>
               <span className="rounded bg-primary/20 px-1.5 py-0.5 font-label text-[10px] font-bold text-primary">
-                1 Ki
+                {kiSpeedRounds > 0 ? 'ON' : '1 Ki'}
               </span>
             </button>
 
@@ -972,7 +966,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
                 type="button"
                 onClick={() => {
                   if (stunningFistDeclared === 'stunned') {
-                    declareStunningFist(char.id, undefined)
+                    declareStunningFist(char.id, null)
                   } else {
                     declareStunningFist(char.id, 'stunned')
                     spendResource(char.id, 'stunning-fist', stunningFistMax)
@@ -990,7 +984,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
                 type="button"
                 onClick={() => {
                   if (stunningFistDeclared === 'fatigued') {
-                    declareStunningFist(char.id, undefined)
+                    declareStunningFist(char.id, null)
                   } else {
                     declareStunningFist(char.id, 'fatigued')
                     spendResource(char.id, 'stunning-fist', stunningFistMax)
@@ -1048,9 +1042,19 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
                 Debilitating Injury (Promemoria Bersaglio)
               </span>
               {debilitatingInjury && (debilitatingInjury.remainingRounds ?? 0) > 0 && (
-                <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-2 py-0.5 font-label text-[10px] font-bold text-amber-300">
-                  {debilitatingInjury.type ?? debilitatingInjury.mode} su {debilitatingInjury.targetName || 'Bersaglio'} (1 r)
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-2 py-0.5 font-label text-[10px] font-bold text-amber-300">
+                    {debilitatingInjury.type ?? debilitatingInjury.mode} su {debilitatingInjury.targetName || 'Bersaglio'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => applyDebilitatingInjury(char.id, null)}
+                    title="Rimuovi promemoria"
+                    className="text-tertiary hover:text-error transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-xs">close</span>
+                  </button>
+                </div>
               )}
             </div>
 
@@ -1100,22 +1104,33 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
             <span className="font-label text-[11px] text-tertiary">
               Underhanded (Danno furtivo massimizzato nel round di sorpresa):
             </span>
-            <button
-              type="button"
-              disabled={!underhandedAvailable}
-              onClick={() => {
-                openRoll({
-                  diceType: 6,
-                  count: 0,
-                  modifier: 18,
-                  label: 'Underhanded Maximized Sneak Attack (18 flat)',
-                })
-                setUnderhanded(char.id, false)
-              }}
-              className="rounded border border-secondary/40 bg-secondary/20 px-3 py-1 font-label text-xs font-bold uppercase text-secondary hover:bg-secondary/30 transition-colors cursor-pointer disabled:opacity-40"
-            >
-              18 Flat Sneak Damage
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                disabled={!underhandedAvailable}
+                onClick={() => {
+                  openRoll({
+                    diceType: 6,
+                    count: 0,
+                    modifier: 18,
+                    label: 'Underhanded Maximized Sneak Attack (18 flat)',
+                  })
+                  setUnderhanded(char.id, false)
+                }}
+                className="rounded border border-secondary/40 bg-secondary/20 px-3 py-1 font-label text-xs font-bold uppercase text-secondary hover:bg-secondary/30 transition-colors cursor-pointer disabled:opacity-40"
+              >
+                18 Flat Sneak Damage
+              </button>
+              {!underhandedAvailable && (
+                <button
+                  type="button"
+                  onClick={() => setUnderhanded(char.id, true)}
+                  className="rounded border border-white/10 bg-surface-container-high px-2 py-1 font-label text-[10px] text-tertiary hover:text-white cursor-pointer"
+                >
+                  Ripristina
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -60,7 +60,6 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     recoverPreparedSpell,
     setPreparedSpellSpent,
     spendResource,
-    consumeFuriousFocus,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
 
@@ -151,7 +150,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
   )
   const hasFuriousFocus = hasFeatNamed(char.feats, /furious focus/i)
   const isPowerAttackActive = activeBuffIds.includes('power-attack')
-  const isFirstAttackOfTurn = !session.classMechanics?.bloodrager?.furiousFocusAppliedThisRound
+  const isFirstAttackOfTurn = true
 
   // Resolve effective active weapons (Wild Shape natural attacks replace humanoid weapons;
   // Knam's Ring of Rat Fangs Bite is only unlocked while bloodraging)
@@ -237,9 +236,6 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
 
   return (
     <div className={embedded ? 'space-y-4' : 'space-y-4 px-4 py-4 md:px-8 md:py-6'}>
-      {/* Class Mechanics Panel with Unified Turn Progression ("Fine Turno PG") */}
-      <ClassMechanicsPanel char={char} effectiveAbilities={effectiveAbilities} />
-
       {/* Restrictions only appear when a condition actually limits actions. */}
       <ActionAlertBanner restrictions={restrictions} />
 
@@ -251,6 +247,11 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
       >
         {/* Primary column — what you do on your turn. */}
         <div className="space-y-4 xl:col-span-7">
+          {/* Class Mechanics Panel integrated in primary column */}
+          <motion.div variants={STAGGER_ITEM}>
+            <ClassMechanicsPanel char={char} effectiveAbilities={effectiveAbilities} />
+          </motion.div>
+
           <motion.section variants={STAGGER_ITEM} aria-labelledby="attacks-heading">
             <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
               <h2 id="attacks-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
@@ -331,9 +332,6 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                       if (weapon.type === 'ranged' && ammo !== undefined && ammo > 0) {
                         setAmmo(char.id, weapon.id, ammo - 1)
                       }
-                      if (attackIndex === 0 && furiousFocusBonus > 0) {
-                        consumeFuriousFocus(char.id)
-                      }
 
                       openRoll({
                         diceType: 20,
@@ -381,12 +379,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         followUpLabel: formatDamage(weapon.damageDice, offhandDmgBonus),
                       })
                     }}
-                    onFullAttackRoll={() => {
-                      if (furiousFocusBonus > 0) {
-                        consumeFuriousFocus(char.id)
-                      }
-                      setFullAttackWeapon(weapon)
-                    }}
+                    onFullAttackRoll={() => setFullAttackWeapon(weapon)}
                     onDamageRoll={() => {
                       const { count, sides, bonus } = parseDiceFormula(weapon.damageDice)
                       openRoll({
@@ -445,7 +438,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                 charLevel={char.level}
                 abilities={effectiveAbilities.scores}
                 baseAttackBonus={char.baseAttackBonus}
-                spellFailureChance={char.armorClass.spellFailureChance}
+                spellFailureChance={wildShapeView.armorClass.spellFailureChance}
                 feats={char.feats}
                 spellAvailability={spellAvailability}
                 defaultExpanded={false}

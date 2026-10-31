@@ -87,13 +87,13 @@ interface SessionStore {
   consumeFuriousFocus: (characterId: string) => void
   applyHex: (characterId: string, hex: Omit<ActiveHex, 'id'>) => void
   removeHex: (characterId: string, hexId: string) => void
-  useCackle: (characterId: string) => boolean
-  activateKiExtraAttack: (characterId: string) => void
-  activateKiDefense: (characterId: string) => void
-  activateKiSpeed: (characterId: string) => void
+  useCackle: (characterId: string, ignoreRoundLimit?: boolean) => boolean
+  activateKiExtraAttack: (characterId: string, active?: boolean) => void
+  activateKiDefense: (characterId: string, active?: boolean) => void
+  activateKiSpeed: (characterId: string, active?: boolean) => void
   useWholenessOfBody: (characterId: string, healingAmount?: number) => void
-  declareStunningFist: (characterId: string, condition?: 'stunned' | 'fatigued') => void
-  applyDebilitatingInjury: (characterId: string, type: DebilitatingInjuryType, targetName?: string) => void
+  declareStunningFist: (characterId: string, condition?: 'stunned' | 'fatigued' | null) => void
+  applyDebilitatingInjury: (characterId: string, type: DebilitatingInjuryType | null, targetName?: string) => void
   setUnderhanded: (characterId: string, ready: boolean) => void
 }
 
@@ -374,7 +374,23 @@ export const useSessionStore = create<SessionStore>()(
           }),
 
         toggleCondition: (id, condition) =>
-          update(id, (sess) => ({ conditions: toggleInList(sess.conditions, condition) })),
+          update(id, (sess) => {
+            const nextConditions = toggleInList(sess.conditions, condition)
+            if (condition === 'fatigued' && !nextConditions.includes('fatigued') && sess.classMechanics?.bloodrager) {
+              return {
+                conditions: nextConditions,
+                classMechanics: {
+                  ...sess.classMechanics,
+                  bloodrager: {
+                    ...sess.classMechanics.bloodrager,
+                    fatigueCountdown: 0,
+                    fatigueRoundsLeft: 0,
+                  },
+                },
+              }
+            }
+            return { conditions: nextConditions }
+          }),
 
         // ─── Spell preparation ─────────────────────────────────────────────────
 
@@ -780,9 +796,12 @@ export const useSessionStore = create<SessionStore>()(
             arcanePoolWeapon: null,
           }
           const arcaneBuffId = 'arcane-pool-weapon'
-          const activeBuffIds = current.activeBuffIds.includes(arcaneBuffId)
-            ? current.activeBuffIds
-            : [...current.activeBuffIds, arcaneBuffId]
+          const isActivating = bonus > 0
+          const activeBuffIds = isActivating
+            ? current.activeBuffIds.includes(arcaneBuffId)
+              ? current.activeBuffIds
+              : [...current.activeBuffIds, arcaneBuffId]
+            : current.activeBuffIds.filter((id) => id !== arcaneBuffId)
           return {
             sessions: {
               ...s.sessions,
@@ -793,10 +812,10 @@ export const useSessionStore = create<SessionStore>()(
                   ...mech,
                   magus: {
                     ...magus,
-                    arcanePoolWeapon: { active: true, bonus, remainingRounds: 10 },
-                    arcaneWeaponActive: true,
-                    arcaneWeaponRoundsLeft: 10,
-                    arcaneWeaponBonus: bonus,
+                    arcanePoolWeapon: isActivating ? { active: true, bonus, remainingRounds: 10 } : null,
+                    arcaneWeaponActive: isActivating,
+                    arcaneWeaponRoundsLeft: isActivating ? 10 : 0,
+                    arcaneWeaponBonus: isActivating ? bonus : 0,
                   },
                 },
               },
@@ -1018,12 +1037,12 @@ export const useSessionStore = create<SessionStore>()(
           }
         }),
 
-      useCackle: (characterId) => {
+      useCackle: (characterId, ignoreRoundLimit = false) => {
         let success = false
         set((s) => {
           const current = s.sessions[characterId] ?? defaultSession(characterId)
           const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
-          if (!mech.witch || mech.witch.cackleUsedThisRound) return s
+          if (!mech.witch || (!ignoreRoundLimit && mech.witch.cackleUsedThisRound)) return s
           success = true
           const updatedHexes = mech.witch.activeHexes.map((h) => {
             const isExtendable = h.isExtendableByCackle ?? h.isCackleable ?? h.cackleExtendable ?? (h.hexType !== 'slumber')
@@ -1044,7 +1063,7 @@ export const useSessionStore = create<SessionStore>()(
                   ...mech,
                   witch: {
                     ...mech.witch,
-                    cackleUsedThisRound: true,
+                    cackleUsedThisRound: !ignoreRoundLimit,
                     activeHexes: updatedHexes,
                   },
                 },
@@ -1055,7 +1074,7 @@ export const useSessionStore = create<SessionStore>()(
         return success
       },
 
-      activateKiExtraAttack: (characterId) =>
+      activateKiExtraAttack: (characterId, active = true) =>
         set((s) => {
           const current = s.sessions[characterId] ?? defaultSession(characterId)
           const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
@@ -1075,8 +1094,8 @@ export const useSessionStore = create<SessionStore>()(
                   ...mech,
                   monk: {
                     ...monk,
-                    kiExtraAttackActive: true,
-                    kiExtraAttack: true,
+                    kiExtraAttackActive: active,
+                    kiExtraAttack: active,
                   },
                 },
               },
@@ -1084,7 +1103,7 @@ export const useSessionStore = create<SessionStore>()(
           }
         }),
 
-      activateKiDefense: (characterId) =>
+      activateKiDefense: (characterId, active = true) =>
         set((s) => {
           const current = s.sessions[characterId] ?? defaultSession(characterId)
           const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
@@ -1100,7 +1119,7 @@ export const useSessionStore = create<SessionStore>()(
           const kiDefenseBuff: BuffToggle = {
             id: kiDefenseBuffId,
             name: 'Ki Defense',
-            active: true,
+            active,
             attackMod: 0,
             damageMod: 0,
             acMod: 4,
@@ -1112,9 +1131,11 @@ export const useSessionStore = create<SessionStore>()(
           const customBuffs = existingCustom.some((b) => b.id === kiDefenseBuffId)
             ? existingCustom.map((b) => (b.id === kiDefenseBuffId ? kiDefenseBuff : b))
             : [...existingCustom, kiDefenseBuff]
-          const activeBuffIds = current.activeBuffIds.includes(kiDefenseBuffId)
-            ? current.activeBuffIds
-            : [...current.activeBuffIds, kiDefenseBuffId]
+          const activeBuffIds = active
+            ? current.activeBuffIds.includes(kiDefenseBuffId)
+              ? current.activeBuffIds
+              : [...current.activeBuffIds, kiDefenseBuffId]
+            : current.activeBuffIds.filter((id) => id !== kiDefenseBuffId)
 
           return {
             sessions: {
@@ -1127,8 +1148,8 @@ export const useSessionStore = create<SessionStore>()(
                   ...mech,
                   monk: {
                     ...monk,
-                    kiDefenseRounds: 1,
-                    kiDefenseRoundsLeft: 1,
+                    kiDefenseRounds: active ? 1 : 0,
+                    kiDefenseRoundsLeft: active ? 1 : 0,
                   },
                 },
               },
@@ -1136,7 +1157,7 @@ export const useSessionStore = create<SessionStore>()(
           }
         }),
 
-      activateKiSpeed: (characterId) =>
+      activateKiSpeed: (characterId, active = true) =>
         set((s) => {
           const current = s.sessions[characterId] ?? defaultSession(characterId)
           const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
@@ -1156,8 +1177,8 @@ export const useSessionStore = create<SessionStore>()(
                   ...mech,
                   monk: {
                     ...monk,
-                    kiSpeedRounds: 1,
-                    kiSpeedRoundsLeft: 1,
+                    kiSpeedRounds: active ? 1 : 0,
+                    kiSpeedRoundsLeft: active ? 1 : 0,
                   },
                 },
               },
@@ -1190,8 +1211,8 @@ export const useSessionStore = create<SessionStore>()(
                   monk: {
                     ...monk,
                     stunningFistDeclared: condition,
-                    stunningFistActive: true,
-                    stunningFistCondition: condition,
+                    stunningFistActive: Boolean(condition),
+                    stunningFistCondition: condition ?? undefined,
                   },
                 },
               },
@@ -1217,14 +1238,16 @@ export const useSessionStore = create<SessionStore>()(
                   ...mech,
                   rogue: {
                     ...rogue,
-                    debilitatingInjury: {
-                      active: true,
-                      type,
-                      mode: type,
-                      remainingRounds: 1,
-                      roundsLeft: 1,
-                      targetName,
-                    },
+                    debilitatingInjury: type
+                      ? {
+                          active: true,
+                          type,
+                          mode: type,
+                          remainingRounds: 1,
+                          roundsLeft: 1,
+                          targetName,
+                        }
+                      : null,
                   },
                 },
               },

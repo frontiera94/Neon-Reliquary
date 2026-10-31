@@ -54,8 +54,8 @@ describe('ClassMechanicsPanel Component', () => {
     })
   })
 
-  // 1. Unified Turn Button
-  it('renders unified "Fine Turno PG" button and advances the round counter', () => {
+  // 1. Turnless UI verification (integrates with removal of round/turn tracker)
+  it('does not render round counters or Fine Turno PG button in turnless mode', () => {
     render(
       <ClassMechanicsPanel
         char={noorieChar}
@@ -63,12 +63,8 @@ describe('ClassMechanicsPanel Component', () => {
       />
     )
 
-    const turnButton = screen.getByRole('button', { name: /fine turno pg/i })
-    expect(turnButton).toBeInTheDocument()
-
-    expect(screen.getByText(/round/i)).toHaveTextContent('Round 1 di combattimento')
-    fireEvent.click(turnButton)
-    expect(screen.getByText(/round/i)).toHaveTextContent('Round 2 di combattimento')
+    expect(screen.queryByRole('button', { name: /fine turno pg/i })).not.toBeInTheDocument()
+    expect(screen.queryByText(/round .* di combattimento/i)).not.toBeInTheDocument()
   })
 
   // 2. Noorie (Druid)
@@ -98,7 +94,7 @@ describe('ClassMechanicsPanel Component', () => {
   })
 
   // 3. Shotrix (Magus)
-  it('renders Shotrix Spellstrike quick-arms and Spell Combat options', () => {
+  it('renders Shotrix Spellstrike quick-arms, Spell Combat, and toggleable Arcane Weapon', () => {
     render(
       <ClassMechanicsPanel
         char={shotrixChar}
@@ -115,14 +111,19 @@ describe('ClassMechanicsPanel Component', () => {
     expect(screen.getByText(/4d6/i)).toBeInTheDocument()
     expect(screen.getByText(/\+3 txc vs bersaglio in metallo/i)).toBeInTheDocument()
 
-    // Arcane Pool button
+    // Arcane Pool toggle button
     const arcaneBtn = screen.getByRole('button', { name: /potenzia arma/i })
     fireEvent.click(arcaneBtn)
     expect(screen.getAllByText(/arma arcana \+1/i).length).toBeGreaterThan(0)
+
+    // Toggle off manually without needing turns
+    const deactivateArcaneBtn = screen.getByRole('button', { name: /arma arcana \+1 \(attiva/i })
+    fireEvent.click(deactivateArcaneBtn)
+    expect(screen.getByRole('button', { name: /potenzia arma/i })).toBeInTheDocument()
   })
 
   // 4. Knam (Bloodrager)
-  it('renders Knam Bloodrage activation and handles lethal warning & fatigue', () => {
+  it('renders Knam Bloodrage activation, handles fatigue and allows 1-click fatigue removal', () => {
     render(
       <ClassMechanicsPanel
         char={knamChar}
@@ -142,12 +143,15 @@ describe('ClassMechanicsPanel Component', () => {
     const exitBtn = screen.getByRole('button', { name: /termina ira di sangue/i })
     fireEvent.click(exitBtn)
 
-    // Now fatigued
-    expect(screen.getByText(/affaticato/i)).toBeInTheDocument()
+    // Now fatigued, with 1-click removal button
+    const clearFatigueBtn = screen.getByRole('button', { name: /rimuovi affaticato/i })
+    expect(clearFatigueBtn).toBeInTheDocument()
+    fireEvent.click(clearFatigueBtn)
+    expect(screen.queryByRole('button', { name: /rimuovi affaticato/i })).not.toBeInTheDocument()
   })
 
   // 5. Mazikeen (Witch)
-  it('renders Mazikeen Hex Weave, DC 17, and Cackle button', () => {
+  it('renders Mazikeen Hex Weave, DC 17, and repeatable Cackle button', () => {
     render(
       <ClassMechanicsPanel
         char={mazikeenChar}
@@ -166,15 +170,17 @@ describe('ClassMechanicsPanel Component', () => {
 
     expect(screen.getByText(/goblin boss/i)).toBeInTheDocument()
     expect(screen.getByText(/-2 ac/i)).toBeInTheDocument()
+    expect(screen.getByText(/8 r/i)).toBeInTheDocument()
 
-    // Use Cackle
+    // Use Cackle (extends duration and remains clickable in turnless mode)
     const cackleBtn = screen.getByRole('button', { name: /cackle/i })
     fireEvent.click(cackleBtn)
-    expect(screen.getByText(/cackle già usata questo round/i)).toBeInTheDocument()
+    expect(screen.getByText(/9 r/i)).toBeInTheDocument()
+    expect(cackleBtn).not.toBeDisabled()
   })
 
   // 6. Agelmund (Monk)
-  it('renders Agelmund Ki Pool actions, Stunning Fist DC 14, and Wholeness of Body', () => {
+  it('renders Agelmund Ki Pool actions as on/off toggles, Stunning Fist DC 14, and Wholeness of Body', () => {
     render(
       <ClassMechanicsPanel
         char={agelmundChar}
@@ -184,16 +190,21 @@ describe('ClassMechanicsPanel Component', () => {
 
     expect(screen.getByText(/cd stunning fist: 14/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /extra flurry attack/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /ki defense/i })).toBeInTheDocument()
+    const kiDefBtn = screen.getByRole('button', { name: /ki defense/i })
+    expect(kiDefBtn).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /wholeness of body/i })).toBeInTheDocument()
 
     // Activate Ki Defense
-    fireEvent.click(screen.getByRole('button', { name: /ki defense/i }))
+    fireEvent.click(kiDefBtn)
     expect(screen.getByText(/ki defense \+4 ca/i)).toBeInTheDocument()
+
+    // Click again to toggle off
+    fireEvent.click(kiDefBtn)
+    expect(screen.queryByText(/attivo nell'hud/i)).not.toBeInTheDocument()
   })
 
   // 7. Mariano (Rogue)
-  it('renders Mariano Debilitating Injury badges and Underhanded button', () => {
+  it('renders Mariano Debilitating Injury badges and Underhanded button with restore', () => {
     render(
       <ClassMechanicsPanel
         char={marianoChar}
@@ -208,11 +219,16 @@ describe('ClassMechanicsPanel Component', () => {
     const applyInjuryBtn = screen.getByRole('button', { name: /applica promemoria/i })
     fireEvent.click(applyInjuryBtn)
 
-    expect(screen.getByText(/bewildered su bersaglio \(1 r\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/bewildered su bersaglio/i)).toBeInTheDocument()
 
     // Underhanded
     const underhandedBtn = screen.getByRole('button', { name: /18 flat sneak damage/i })
     fireEvent.click(underhandedBtn)
     expect(underhandedBtn).toBeDisabled()
+
+    // Restore Underhanded
+    const restoreBtn = screen.getByRole('button', { name: /ripristina/i })
+    fireEvent.click(restoreBtn)
+    expect(underhandedBtn).not.toBeDisabled()
   })
 })
