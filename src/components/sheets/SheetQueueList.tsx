@@ -5,6 +5,9 @@ export function SheetQueueList() {
   const {
     sheets,
     isLoading,
+    error,
+    uploadSuccessMessage,
+    clearMessages,
     fetchSheets,
     updateSheetStatus,
     deleteSheet,
@@ -15,8 +18,11 @@ export function SheetQueueList() {
   const [filter, setFilter] = useState<'all' | 'new' | 'processing' | 'archived'>('all')
 
   useEffect(() => {
-    void fetchSheets()
-  }, [fetchSheets])
+    if (sheets.length === 0) {
+      void fetchSheets()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const filteredSheets = sheets.filter((s) => {
     if (filter === 'all') return true
@@ -96,6 +102,44 @@ export function SheetQueueList() {
 
   return (
     <div className="space-y-4">
+      {uploadSuccessMessage && (
+        <div className="p-3 rounded-xl bg-primary/10 border border-primary/30 flex items-start justify-between gap-2.5">
+          <div className="flex items-start gap-2">
+            <span className="material-symbols-outlined text-primary text-sm flex-shrink-0 mt-0.5">
+              check_circle
+            </span>
+            <p className="font-label text-xs text-primary leading-relaxed">{uploadSuccessMessage}</p>
+          </div>
+          <button
+            type="button"
+            onClick={clearMessages}
+            aria-label="Chiudi messaggio"
+            className="text-primary/70 hover:text-primary transition-colors cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-sm">close</span>
+          </button>
+        </div>
+      )}
+
+      {error && (
+        <div className="p-3 rounded-xl bg-error/10 border border-error/30 flex items-start justify-between gap-2.5">
+          <div className="flex items-start gap-2">
+            <span className="material-symbols-outlined text-error text-sm flex-shrink-0 mt-0.5">
+              error
+            </span>
+            <p className="font-label text-xs text-error leading-relaxed">{error}</p>
+          </div>
+          <button
+            type="button"
+            onClick={clearMessages}
+            aria-label="Chiudi errore"
+            className="text-error/70 hover:text-error transition-colors cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-sm">close</span>
+          </button>
+        </div>
+      )}
+
       {/* Header controls: Refresh and Filter */}
       <div className="flex items-center justify-between gap-2 pb-2 border-b border-white/5">
         <div className="flex items-center gap-1 overflow-x-auto">
