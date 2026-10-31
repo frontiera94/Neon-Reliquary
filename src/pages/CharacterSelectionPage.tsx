@@ -5,6 +5,8 @@ import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { CloudSyncBadge } from '../components/sync/CloudSyncBadge'
 import { CharacterEmblem } from '../components/character/CharacterEmblem'
+import { SettingsPanel } from '../components/layout/SettingsPanel'
+import { useSheetQueueStore } from '../store/useSheetQueueStore'
 import { getCharacterLore, isPlaceholderPortrait } from '../lib/character-lore'
 import type { FullCharacter } from '../store/useCharacterStore'
 
@@ -20,6 +22,14 @@ export function CharacterSelectionPage() {
   const { characters, loadCharacter, removeCharacter, setActiveCharacter, activeCharacterId } = useCharacterStore()
   const { initSession } = useSessionStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  const newSheetsCount = useSheetQueueStore((s) => s.newCount())
+  const fetchSheets = useSheetQueueStore((s) => s.fetchSheets)
+
+  useEffect(() => {
+    void fetchSheets()
+  }, [fetchSheets])
 
   // Seed default roster
   useEffect(() => {
@@ -112,6 +122,24 @@ export function CharacterSelectionPage() {
             Pathfinder 1E Roster
           </span>
           <CloudSyncBadge compact={false} />
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Gestione Schede"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-primary/40 hover:bg-primary/10 text-tertiary hover:text-primary font-label text-xs uppercase tracking-wider transition-all cursor-pointer relative"
+            title="Archivio e Caricamento Schede"
+          >
+            <span className="material-symbols-outlined text-sm">folder_shared</span>
+            <span className="hidden sm:inline">Schede</span>
+            {newSheetsCount > 0 && (
+              <span
+                data-testid="sheets-notification-badge-roster"
+                className="w-4 h-4 rounded-full bg-primary text-black font-label text-[9px] font-black flex items-center justify-center shadow-[0_0_8px_rgba(0,240,255,0.6)] animate-pulse"
+              >
+                {newSheetsCount}
+              </span>
+            )}
+          </button>
         </div>
       </header>
 
@@ -406,6 +434,11 @@ export function CharacterSelectionPage() {
           </section>
         </div>
       </main>
+      <SettingsPanel
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        initialTab="sheets"
+      />
     </div>
   )
 }
