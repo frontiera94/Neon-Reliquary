@@ -13,9 +13,11 @@ import {
   calcEffectiveArmorClass,
   calcEffectiveSaves,
   calcDetailedAcBreakdowns,
+  calcEffectiveMaxHp,
   getActiveActionRestrictions,
   evaluateVitalStatus,
 } from '../lib/stat-calc'
+import { getWildShapeView } from '../lib/class-combat'
 import { ActionAlertBanner } from '../components/combat/ActionAlertBanner'
 import { BuffManagerModal } from '../components/combat/BuffManagerModal'
 import { DailyResourcePips } from '../components/combat/BuffResourceToggle'
@@ -74,7 +76,20 @@ export function StatusPage() {
   const allBuffs = [...char.buffs, ...(session.customBuffs ?? [])]
   const activeBuffs = allBuffs.filter((b) => session.activeBuffIds.includes(b.id))
 
-  const effectiveAbilities = calcEffectiveAbilities(char.abilities, session.conditions, activeBuffs)
+  const wildShapeView = getWildShapeView(char, session.classMechanics)
+  const hasUncannyDodge = Boolean(
+    char.classAbilities?.some((a) => /uncanny dodge/i.test(a.name)) ||
+    char.feats?.some((f) => /uncanny dodge/i.test(f.name))
+  )
+  const acOptions = { hasUncannyDodge }
+
+  const effectiveAbilities = calcEffectiveAbilities(wildShapeView.abilities, session.conditions, activeBuffs)
+  const baseDexMod = abilityMod(char.abilities.dex)
+  const effDexMod = effectiveAbilities.mods.dex
+  const baseConMod = abilityMod(char.abilities.con)
+  const effConMod = effectiveAbilities.mods.con
+  const effectiveMaxHp = calcEffectiveMaxHp(char.maxHp ?? 1, char.level ?? 1, baseConMod, effConMod)
+
   const effectiveSaves = calcEffectiveSaves(
     char.savingThrows,
     char.abilities,
@@ -83,17 +98,18 @@ export function StatusPage() {
     activeBuffs
   )
   const effectiveAc = calcEffectiveArmorClass(
-    char.armorClass,
-    abilityMod(char.abilities.dex),
-    effectiveAbilities.mods.dex,
+    wildShapeView.armorClass,
+    baseDexMod,
+    effDexMod,
     session.conditions,
-    activeBuffs
+    activeBuffs,
+    acOptions
   )
   const restrictions = getActiveActionRestrictions(session.conditions)
 
   const hp = session.currentHp
-  const maxHp = char.maxHp
-  const vitalStatus = evaluateVitalStatus(hp, char.abilities.con)
+  const maxHp = effectiveMaxHp
+  const vitalStatus = evaluateVitalStatus(hp, effectiveAbilities.scores.con)
 
   const spentByResource = (id: string) => session.spentResources[id] ?? 0
 
@@ -113,10 +129,11 @@ export function StatusPage() {
 
   const effectiveInit = char.initiativeBonus + effectiveAbilities.deltas.dex
   const detailedAc = calcDetailedAcBreakdowns(
-    char.armorClass,
-    effectiveAbilities.mods.dex,
+    wildShapeView.armorClass,
+    effDexMod,
     session.conditions,
-    activeBuffs
+    activeBuffs,
+    acOptions
   )
   const initBreakdown = [
     { label: 'Base Init', value: char.initiativeBonus },

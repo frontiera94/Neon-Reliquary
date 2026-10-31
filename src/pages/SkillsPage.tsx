@@ -4,6 +4,7 @@ import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { calcEffectiveAbilities, calcEffectiveSkills, getActiveActionRestrictions } from '../lib/stat-calc'
+import { getWildShapeView } from '../lib/class-combat'
 import { ActionAlertBanner } from '../components/combat/ActionAlertBanner'
 import type { EffectiveSkill } from '../lib/stat-calc'
 import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
@@ -21,17 +22,18 @@ export function SkillsPage() {
     if (!char || !session) return []
     const allBuffs = [...char.buffs, ...(session.customBuffs ?? [])]
     const activeBuffs = allBuffs.filter((b) => session.activeBuffIds.includes(b.id))
-    const effectiveAbilities = calcEffectiveAbilities(char.abilities, session.conditions, activeBuffs)
+    const wildShapeView = getWildShapeView(char, session.classMechanics)
+    const effectiveAbilities = calcEffectiveAbilities(wildShapeView.abilities, session.conditions, activeBuffs)
 
     const equippedItems = (char.inventory ?? []).filter((i) =>
       session.equippedItemIds ? session.equippedItemIds.includes(i.id) : i.equipped
     )
     const equippedAcp = equippedItems.reduce((sum, item) => sum + (item.armorCheckPenalty ?? 0), 0)
-    const acp = equippedAcp || (char.armorClass?.armorCheckPenalty ?? 0)
+    const acp = equippedAcp || (wildShapeView.armorClass?.armorCheckPenalty ?? char.armorClass?.armorCheckPenalty ?? 0)
 
     const calculated = calcEffectiveSkills(
       char.skills,
-      char.abilities,
+      wildShapeView.abilities,
       effectiveAbilities,
       session.conditions,
       acp
