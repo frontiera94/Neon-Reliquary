@@ -1,15 +1,33 @@
 import { useState, useRef } from 'react'
 import { useSheetQueueStore } from '../../store/useSheetQueueStore'
+import { useCharacterStore } from '../../store/useCharacterStore'
 
 interface SheetUploadFormProps {
   onSuccess?: () => void
 }
 
+const DEFAULT_CHARACTERS = [
+  'Agelmund',
+  'Knam',
+  'Mariano Cardamomo',
+  'Mazikeen Noctis',
+  'Noorie',
+  'Shotrix Blackburn',
+]
+
 export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
   const { uploadSheet, isUploading, error, uploadSuccessMessage, clearMessages } = useSheetQueueStore()
+  const storeCharacters = useCharacterStore((s) => s.characters)
 
-  const [characterName, setCharacterName] = useState('')
-  const [playerName, setPlayerName] = useState('')
+  const characterList = Array.from(
+    new Set([
+      ...storeCharacters.map((c) => c.name.trim()).filter(Boolean),
+      ...DEFAULT_CHARACTERS,
+    ])
+  ).sort((a, b) => a.localeCompare(b, 'it'))
+
+  const [selectedCharacter, setSelectedCharacter] = useState('')
+  const [customCharacterName, setCustomCharacterName] = useState('')
   const [notes, setNotes] = useState('')
   const [password, setPassword] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -44,12 +62,13 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
     e.preventDefault()
     setFileError(null)
 
-    if (!characterName.trim()) {
-      setFileError('Inserisci il nome del personaggio')
-      return
-    }
-    if (!playerName.trim()) {
-      setFileError('Inserisci il tuo nome (giocatore)')
+    const finalCharacterName =
+      selectedCharacter === '__other__'
+        ? customCharacterName.trim()
+        : selectedCharacter.trim()
+
+    if (!finalCharacterName) {
+      setFileError('Seleziona un personaggio dal menu a tendina')
       return
     }
     if (!selectedFile) {
@@ -62,8 +81,7 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
     }
 
     const res = await uploadSheet({
-      characterName: characterName.trim(),
-      playerName: playerName.trim(),
+      characterName: finalCharacterName,
       notes: notes.trim(),
       file: selectedFile,
       password,
@@ -71,8 +89,8 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
 
     if (res.ok) {
       // Clear form on success
-      setCharacterName('')
-      setPlayerName('')
+      setSelectedCharacter('')
+      setCustomCharacterName('')
       setNotes('')
       setPassword('')
       setSelectedFile(null)
@@ -84,7 +102,7 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} noValidate className="space-y-4">
       {/* Success banner */}
       {uploadSuccessMessage && (
         <div className="p-3 rounded-xl bg-primary/10 border border-primary/30 flex items-start gap-2.5">
@@ -105,37 +123,56 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
         </div>
       )}
 
-      {/* Character Name */}
+      {/* Character Dropdown */}
       <div>
-        <label className="block font-label text-[11px] text-tertiary uppercase tracking-wider mb-1.5">
-          Nome Personaggio <span className="text-primary">*</span>
+        <label
+          htmlFor="sheet-character-select"
+          className="block font-label text-[11px] text-tertiary uppercase tracking-wider mb-1.5"
+        >
+          Personaggio <span className="text-primary">*</span>
         </label>
-        <input
-          type="text"
-          value={characterName}
-          onChange={(e) => setCharacterName(e.target.value)}
-          placeholder="es. Agelmund"
-          required
-          maxLength={100}
-          className="w-full bg-surface-container-high/60 px-3.5 py-2.5 font-label text-xs text-on-surface placeholder:text-tertiary/40 rounded-xl border border-white/10 focus:border-primary/50 focus:outline-none focus:shadow-[0_0_12px_rgba(0,240,255,0.2)] transition-all"
-        />
+        <select
+          id="sheet-character-select"
+          value={selectedCharacter}
+          onChange={(e) => {
+            setSelectedCharacter(e.target.value)
+            setFileError(null)
+          }}
+          aria-label="Seleziona Personaggio"
+          className="w-full bg-surface-container-high/80 px-3.5 py-2.5 font-label text-xs text-on-surface rounded-xl border border-white/10 focus:border-primary/50 focus:outline-none focus:shadow-[0_0_12px_rgba(0,240,255,0.2)] transition-all cursor-pointer"
+        >
+          <option value="" disabled className="bg-surface-container text-tertiary">
+            -- Seleziona un personaggio --
+          </option>
+          {characterList.map((name) => (
+            <option key={name} value={name} className="bg-surface-container text-white">
+              {name}
+            </option>
+          ))}
+          <option value="__other__" className="bg-surface-container text-primary font-bold">
+            + Altro personaggio (personalizzato)...
+          </option>
+        </select>
       </div>
 
-      {/* Player Name */}
-      <div>
-        <label className="block font-label text-[11px] text-tertiary uppercase tracking-wider mb-1.5">
-          Nome Giocatore <span className="text-primary">*</span>
-        </label>
-        <input
-          type="text"
-          value={playerName}
-          onChange={(e) => setPlayerName(e.target.value)}
-          placeholder="es. Fabio"
-          required
-          maxLength={100}
-          className="w-full bg-surface-container-high/60 px-3.5 py-2.5 font-label text-xs text-on-surface placeholder:text-tertiary/40 rounded-xl border border-white/10 focus:border-primary/50 focus:outline-none focus:shadow-[0_0_12px_rgba(0,240,255,0.2)] transition-all"
-        />
-      </div>
+      {/* Custom Character Name if __other__ is selected */}
+      {selectedCharacter === '__other__' && (
+        <div>
+          <label className="block font-label text-[11px] text-tertiary uppercase tracking-wider mb-1.5">
+            Nome Nuovo Personaggio <span className="text-primary">*</span>
+          </label>
+          <input
+            type="text"
+            value={customCharacterName}
+            onChange={(e) => setCustomCharacterName(e.target.value)}
+            placeholder="es. Valerius"
+            required
+            maxLength={100}
+            autoFocus
+            className="w-full bg-surface-container-high/60 px-3.5 py-2.5 font-label text-xs text-on-surface placeholder:text-tertiary/40 rounded-xl border border-white/10 focus:border-primary/50 focus:outline-none focus:shadow-[0_0_12px_rgba(0,240,255,0.2)] transition-all"
+          />
+        </div>
+      )}
 
       {/* File Drop / Selector */}
       <div>

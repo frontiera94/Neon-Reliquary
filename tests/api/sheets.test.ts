@@ -177,6 +177,42 @@ describe('api/sheets serverless handler', () => {
     expect(telegramBody.text).toContain('Weapon Focus')
   })
 
+  it('allows upload without playerName (optional)', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({ ok: true })
+    const mock = createMockRes()
+
+    await handleSheetsRequest(
+      {
+        method: 'POST',
+        body: {
+          characterName: 'Knam',
+          fileName: 'Knam_sheet.pdf',
+          fileSize: 50000,
+          pdfBase64: Buffer.from('PDF_SAMPLE').toString('base64'),
+          password: DEFAULT_UPLOAD_PASSPHRASE,
+        },
+      },
+      mock.res,
+      {
+        env: {
+          TELEGRAM_BOT_TOKEN: 'bot12345',
+          TELEGRAM_CHAT_ID: 'chat67890',
+        },
+        fetchFn: mockFetch as unknown as typeof fetch,
+      }
+    )
+
+    expect(mock.getStatus()).toBe(201)
+    const json = mock.getJson() as { ok: boolean; sheet: { characterName: string; playerName: string } }
+    expect(json.ok).toBe(true)
+    expect(json.sheet.characterName).toBe('Knam')
+    expect(json.sheet.playerName).toBe('')
+
+    const [, fetchOpts] = mockFetch.mock.calls[0]
+    const telegramBody = JSON.parse(fetchOpts.body)
+    expect(telegramBody.text).not.toContain('Giocatore:')
+  })
+
   it('lists uploaded sheets and allows status updates and deletion', async () => {
     // 1. List sheets
     const listMock = createMockRes()

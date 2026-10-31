@@ -181,7 +181,7 @@ export async function sendTelegramNotification(
     '⚔️ <b>[Neon Reliquary] Nuova Scheda Caricata!</b>',
     '',
     `👤 <b>Personaggio:</b> ${safeChar}`,
-    `🎲 <b>Giocatore:</b> ${safePlayer}`,
+    safePlayer ? `🎲 <b>Giocatore:</b> ${safePlayer}` : null,
     safeNotes ? `📝 <b>Note:</b> ${safeNotes}` : null,
     `📄 <b>File:</b> <code>${safeFile}</code>`,
     '',
@@ -394,8 +394,8 @@ export async function handleSheetsRequest(
         res.status(400).json({ error: 'Nome personaggio obbligatorio (max 100 caratteri)' })
         return
       }
-      if (!playerName || playerName.length > 100) {
-        res.status(400).json({ error: 'Nome giocatore obbligatorio (max 100 caratteri)' })
+      if (playerName.length > 100) {
+        res.status(400).json({ error: 'Nome giocatore non può superare 100 caratteri' })
         return
       }
       if (!fileName.toLowerCase().endsWith('.pdf')) {

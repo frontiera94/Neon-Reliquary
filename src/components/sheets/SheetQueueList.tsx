@@ -224,8 +224,12 @@ export function SheetQueueList() {
                     {sheet.characterName}
                   </h4>
                   <div className="flex items-center gap-1.5 font-label text-[10px] text-tertiary mt-0.5">
-                    <span>di {sheet.playerName}</span>
-                    <span>•</span>
+                    {sheet.playerName ? (
+                      <>
+                        <span>di {sheet.playerName}</span>
+                        <span>•</span>
+                      </>
+                    ) : null}
                     <span>{formatDate(sheet.createdAt)}</span>
                   </div>
                 </div>
