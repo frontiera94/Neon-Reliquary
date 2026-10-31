@@ -63,6 +63,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
     spendPreparedSpell,
     recoverPreparedSpell,
     toggleCondition,
+    resetCombatRound,
   } = useSessionStore()
 
   // Local UI states
@@ -194,6 +195,25 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
       aria-label="Class Mechanics Panel"
       className="rounded-2xl border border-white/10 bg-surface-container/80 p-3.5 sm:p-4 backdrop-blur-md shadow-[0_0_25px_rgba(0,0,0,0.4)] space-y-3"
     >
+      {/* Panel Header & Reset Combat */}
+      <div className="flex items-center justify-between pb-2 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary text-base">psychology</span>
+          <h2 className="font-headline text-xs uppercase tracking-widest text-white font-bold">
+            Meccaniche di Classe
+          </h2>
+        </div>
+        <button
+          type="button"
+          onClick={() => resetCombatRound(char.id)}
+          title="Riporta il combattimento al Round 1 e azzera le azioni"
+          aria-label="Fine Scontro / Reset Round"
+          className="flex items-center gap-1.5 rounded-lg bg-surface-container-high border border-white/10 hover:border-amber-400/40 text-tertiary hover:text-amber-300 font-label text-[11px] uppercase tracking-wider px-2.5 py-1 transition-all active:scale-95 cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-xs">restart_alt</span>
+          <span>Fine Scontro / Reset</span>
+        </button>
+      </div>
       {/* Active Badges Summary Bar */}
       {activeSummaryBadges.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 pb-1 border-b border-white/10">

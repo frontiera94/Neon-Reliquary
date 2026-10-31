@@ -64,13 +64,18 @@ export function InventoryPage() {
     if (!session) return 0
     return allItems.reduce((acc, item) => {
       const qty = session.itemQuantities?.[item.id] ?? item.quantity
-      return acc + (item.weight ?? 0) * qty
+      const w = typeof item.weight === 'number' && !isNaN(item.weight) && item.weight > 0 ? item.weight : 0
+      return acc + w * qty
     }, 0)
   }, [allItems, session])
 
   const filteredItems = useMemo(() => {
     return allItems.filter((item) => {
-      if (selectedCategory !== 'all' && item.category !== selectedCategory) return false
+      if (selectedCategory === 'custom') {
+        if (!customItems.some((ci) => ci.id === item.id)) return false
+      } else if (selectedCategory !== 'all' && item.category !== selectedCategory) {
+        return false
+      }
       if (search) {
         const q = search.toLowerCase()
         return (
@@ -80,11 +85,11 @@ export function InventoryPage() {
       }
       return true
     })
-  }, [allItems, selectedCategory, search])
+  }, [allItems, customItems, selectedCategory, search])
 
   const itemsByCategory = useMemo(() => {
     return CATEGORY_ORDER
-      .filter((cat) => selectedCategory === 'all' || selectedCategory === cat)
+      .filter((cat) => selectedCategory === 'all' || selectedCategory === 'custom' || selectedCategory === cat)
       .map((cat) => ({
         cat,
         items: filteredItems.filter((i) => i.category === cat),
@@ -101,7 +106,9 @@ export function InventoryPage() {
   }
 
   const handleUseConsumable = (item: InventoryItem) => {
-    adjustItemQuantity(char.id, item.id, -1)
+    const currentQty = session.itemQuantities?.[item.id] ?? item.quantity
+    if (currentQty <= 0) return
+    adjustItemQuantity(char.id, item.id, -1, item.quantity)
     // Check if name or description contains a dice formula like 1d8+1 or 2d6
     const match = `${item.name} ${item.description || ''}`.match(/(\d+)d(\d+)(?:\s*([+-])\s*(\d+))?/i)
     if (match) {
@@ -222,6 +229,19 @@ export function InventoryPage() {
               </button>
             )
           })}
+          {customItems.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('custom')}
+              className={`px-3 py-1.5 rounded-xl font-label text-[11px] uppercase tracking-wider font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                selectedCategory === 'custom'
+                  ? 'bg-secondary text-white shadow-[0_0_12px_rgba(217,70,239,0.4)]'
+                  : 'bg-surface-container border border-white/10 text-tertiary hover:text-white'
+              }`}
+            >
+              Loot / Custom ({customItems.length})
+            </button>
+          )}
         </div>
       </div>
 
@@ -291,7 +311,7 @@ export function InventoryPage() {
                       item={item}
                       qty={qty}
                       isEquipped={isItemEquipped}
-                      onAdjust={(delta) => adjustItemQuantity(char.id, item.id, delta)}
+                      onAdjust={(delta) => adjustItemQuantity(char.id, item.id, delta, item.quantity)}
                       onToggleEquip={() => toggleItemEquipped(char.id, item.id)}
                       onUse={() => handleUseConsumable(item)}
                       onRemove={isCustom ? () => removeCustomItem(char.id, item.id) : undefined}
