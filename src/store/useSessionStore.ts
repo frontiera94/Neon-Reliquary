@@ -744,11 +744,18 @@ export const useSessionStore = create<SessionStore>()(
             defensiveCastingSacrifice: 0,
             arcanePoolWeapon: null,
           }
+          const spellCombatBuffId = 'spell-combat'
+          const activeBuffIds = active
+            ? current.activeBuffIds.includes(spellCombatBuffId)
+              ? current.activeBuffIds
+              : [...current.activeBuffIds, spellCombatBuffId]
+            : current.activeBuffIds.filter((id) => id !== spellCombatBuffId)
           return {
             sessions: {
               ...s.sessions,
               [characterId]: {
                 ...current,
+                activeBuffIds,
                 classMechanics: {
                   ...mech,
                   magus: {
@@ -772,11 +779,16 @@ export const useSessionStore = create<SessionStore>()(
             defensiveCastingSacrifice: 0,
             arcanePoolWeapon: null,
           }
+          const arcaneBuffId = 'arcane-pool-weapon'
+          const activeBuffIds = current.activeBuffIds.includes(arcaneBuffId)
+            ? current.activeBuffIds
+            : [...current.activeBuffIds, arcaneBuffId]
           return {
             sessions: {
               ...s.sessions,
               [characterId]: {
                 ...current,
+                activeBuffIds,
                 classMechanics: {
                   ...mech,
                   magus: {
@@ -931,11 +943,40 @@ export const useSessionStore = create<SessionStore>()(
             cackleUsedThisRound: false,
             activeHexes: [],
             immuneTargets: {},
+            targetImmunities: [],
           }
           const newHex: ActiveHex = {
             id: `hex-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
             ...hex,
           }
+          const isImmunityHex =
+            hex.hexType === 'misfortune' || hex.hexType === 'slumber' || hex.hexType === 'fortune'
+          const normTarget = hex.targetName.trim().toLowerCase()
+          const nextImmuneTargets =
+            isImmunityHex && normTarget
+              ? {
+                  ...(witch.immuneTargets ?? {}),
+                  [normTarget]: { hexType: hex.hexType, timestamp: Date.now() },
+                }
+              : (witch.immuneTargets ?? {})
+          const existingImmunities = witch.targetImmunities ?? []
+          const nextTargetImmunities =
+            isImmunityHex &&
+            normTarget &&
+            !existingImmunities.some(
+              (imm) =>
+                imm.hexType === hex.hexType &&
+                imm.targetName.trim().toLowerCase() === normTarget
+            )
+              ? [
+                  ...existingImmunities,
+                  {
+                    targetName: hex.targetName.trim(),
+                    hexType: hex.hexType,
+                    appliedAtTimestamp: Date.now(),
+                  },
+                ]
+              : existingImmunities
           return {
             sessions: {
               ...s.sessions,
@@ -946,6 +987,8 @@ export const useSessionStore = create<SessionStore>()(
                   witch: {
                     ...witch,
                     activeHexes: [...witch.activeHexes, newHex],
+                    immuneTargets: nextImmuneTargets,
+                    targetImmunities: nextTargetImmunities,
                   },
                 },
               },

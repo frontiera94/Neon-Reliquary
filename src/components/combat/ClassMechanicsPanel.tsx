@@ -14,7 +14,9 @@ import {
 import {
   calcHexDc,
   calcStunningFistDc,
+  calcBloodrageHpShift,
   checkBloodrageExitSafety,
+  isTargetImmuneToHex,
   FORTUNE_HEX_BUFF_ID,
 } from '../../lib/class-mechanics'
 import { parseDiceFormula } from '../../lib/dice-engine'
@@ -117,6 +119,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
   const fatigueCountdown = bloodragerState?.fatigueCountdown ?? bloodragerState?.fatigueRoundsLeft ?? 0
   const isFatigued = session.conditions.includes('fatigued') || fatigueCountdown > 0
   const furiousFocusReady = !bloodragerState?.furiousFocusAppliedThisRound
+  const bloodrageHpShift = calcBloodrageHpShift(char.level ?? 4)
   const exitSafety = isBloodraging
     ? checkBloodrageExitSafety(session.currentHp, char.level ?? 4, 4, char.abilities.con ?? 16)
     : null
@@ -126,6 +129,14 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
   const witchHexDc = calcHexDc(char.level ?? 4, effectiveAbilities.mods.int)
   const activeHexes = witchState?.activeHexes ?? []
   const cackleUsedThisRound = Boolean(witchState?.cackleUsedThisRound)
+  const targetImmunities = Array.isArray(witchState?.immuneTargets)
+    ? witchState.immuneTargets
+    : Array.isArray(witchState?.targetImmunities)
+    ? witchState.targetImmunities
+    : []
+  const currentHexTargetImmune =
+    hexTargetName.trim().length > 0 &&
+    isTargetImmuneToHex(hexTargetName.trim(), selectedHexType, targetImmunities)
 
   // Monk State
   const monkState = mechanics?.monk
@@ -134,6 +145,12 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
   const kiDefenseRounds = monkState?.kiDefenseRounds ?? monkState?.kiDefenseRoundsLeft ?? 0
   const kiSpeedRounds = monkState?.kiSpeedRounds ?? monkState?.kiSpeedRoundsLeft ?? 0
   const stunningFistDeclared = monkState?.stunningFistDeclared ?? monkState?.stunningFistCondition ?? null
+
+  // Dynamic daily resource totals from character JSON
+  const wildShapeMax = char.dailyResources?.find((r) => r.id === 'wild-shape')?.total ?? 1
+  const arcanePoolMax = char.dailyResources?.find((r) => r.id === 'arcane-pool')?.total ?? 5
+  const kiPoolMax = char.dailyResources?.find((r) => r.id === 'ki-pool')?.total ?? 6
+  const stunningFistMax = char.dailyResources?.find((r) => r.id === 'stunning-fist')?.total ?? 5
 
   // Rogue State
   const rogueState = mechanics?.rogue
@@ -329,7 +346,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
                   const preset = WILD_SHAPE_PRESETS[selectedWildShapePreset]
                   if (preset) {
                     setWildShape(char.id, preset)
-                    spendResource(char.id, 'wild-shape', 1)
+                    spendResource(char.id, 'wild-shape', wildShapeMax)
                   }
                 }}
                 className="rounded-lg border border-primary/40 bg-primary/20 px-3 py-1.5 font-label text-xs font-bold uppercase text-primary hover:bg-primary/30 transition-colors cursor-pointer"
@@ -354,7 +371,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
               </h3>
             </div>
             <span className="font-label text-[10px] uppercase text-tertiary">
-              Shotrix Blackburn · Lv 4
+              {char.name} · Lv {char.level ?? 4}
             </span>
           </div>
 
@@ -497,7 +514,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
                 type="button"
                 onClick={() => {
                   activateArcaneWeapon(char.id, 1)
-                  spendResource(char.id, 'arcane-pool', 6)
+                  spendResource(char.id, 'arcane-pool', arcanePoolMax)
                 }}
                 disabled={arcanePoolActive}
                 className={`rounded-lg border px-2.5 py-1 font-label text-[11px] font-bold uppercase transition-colors cursor-pointer ${
@@ -519,18 +536,21 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
                   .map(([spId]) => {
                     const sp = char.spells.find((s) => s.id === spId)
                     if (!sp) return null
+                    const cost = Math.max(1, sp.level)
                     return (
                       <button
                         key={spId}
                         type="button"
                         onClick={() => {
                           recoverPreparedSpell(char.id, spId)
-                          spendResource(char.id, 'arcane-pool', 6)
+                          for (let i = 0; i < cost; i++) {
+                            spendResource(char.id, 'arcane-pool', arcanePoolMax)
+                          }
                         }}
-                        title={`Riprepara ${sp.name} spendendo ${sp.level} punti Arcane Pool`}
+                        title={`Riprepara ${sp.name} spendendo ${cost} punti Arcane Pool`}
                         className="rounded border border-secondary/30 bg-secondary/10 px-2 py-0.5 font-label text-[10px] font-bold text-secondary hover:bg-secondary/20 cursor-pointer"
                       >
-                        {sp.name} ({sp.level} pt)
+                        {sp.name} ({cost} pt)
                       </button>
                     )
                   })}
@@ -553,7 +573,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
               </h3>
             </div>
             <span className="font-label text-[10px] uppercase text-tertiary">
-              Knam · Lv 4
+              {char.name} · Lv {char.level ?? 5}
             </span>
           </div>
 
@@ -590,7 +610,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
           {isBloodraging && (
             <div className="space-y-2 rounded-xl border border-error/40 bg-error/10 p-3">
               <p className="font-label text-[11px] text-white">
-                <strong>Bonus attivi:</strong> +4 FOR (+2 TxC, +2/3 Danni), +4 COS (+8 HP max/attuali, +2 Tempra), +2 Volontà, -2 CA, <strong>Portata 3m (Aberrante)</strong>.
+                <strong>Bonus attivi:</strong> +4 FOR (+2 TxC, +2/3 Danni), +4 COS (+{bloodrageHpShift} HP max/attuali, +2 Tempra), +2 Volontà, -2 CA, <strong>Portata 3m (Aberrante)</strong>.
               </p>
               <div className="flex items-center gap-2 pt-1 border-t border-error/20">
                 <span className="material-symbols-outlined text-secondary text-sm">pets</span>
@@ -786,6 +806,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
 
               <button
                 type="button"
+                disabled={currentHexTargetImmune}
                 onClick={() => {
                   const target = hexTargetName.trim() || (selectedHexType === 'fortune' ? 'Ally' : 'Target')
                   const duration = calcHexDuration(
@@ -825,11 +846,27 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
 
                   setHexTargetName('')
                 }}
-                className="rounded border border-secondary/40 bg-secondary/20 px-3 py-1 font-label text-xs font-bold uppercase text-secondary hover:bg-secondary/30 transition-colors cursor-pointer"
+                className="rounded border border-secondary/40 bg-secondary/20 px-3 py-1 font-label text-xs font-bold uppercase text-secondary hover:bg-secondary/30 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Applica Fattura
+                {currentHexTargetImmune ? 'Bersaglio Immune (24h)' : 'Applica Fattura'}
               </button>
             </div>
+
+            {targetImmunities.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1 pt-1.5 border-t border-white/10">
+                <span className="font-label text-[10px] uppercase text-tertiary mr-1">
+                  Immunità 24h:
+                </span>
+                {targetImmunities.map((imm, idx) => (
+                  <span
+                    key={`${imm.targetName}-${imm.hexType}-${idx}`}
+                    className="rounded border border-white/10 bg-surface-container-high px-1.5 py-0.5 font-label text-[10px] text-tertiary"
+                  >
+                    {imm.targetName} ({imm.hexType})
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -857,7 +894,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
               type="button"
               onClick={() => {
                 activateKiExtraAttack(char.id)
-                spendResource(char.id, 'ki-pool', 4)
+                spendResource(char.id, 'ki-pool', kiPoolMax)
               }}
               className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 p-2 hover:bg-primary/20 transition-colors cursor-pointer"
             >
@@ -874,7 +911,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
               type="button"
               onClick={() => {
                 activateKiDefense(char.id)
-                spendResource(char.id, 'ki-pool', 4)
+                spendResource(char.id, 'ki-pool', kiPoolMax)
               }}
               className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 p-2 hover:bg-primary/20 transition-colors cursor-pointer"
             >
@@ -891,7 +928,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
               type="button"
               onClick={() => {
                 activateKiSpeed(char.id)
-                spendResource(char.id, 'ki-pool', 4)
+                spendResource(char.id, 'ki-pool', kiPoolMax)
               }}
               className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 p-2 hover:bg-primary/20 transition-colors cursor-pointer"
             >
@@ -907,15 +944,19 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
             <button
               type="button"
               onClick={() => {
-                const rolled = Math.floor(Math.random() * 8) + 1 + 4
+                const monkLv = char.level ?? 4
+                const rolled = Math.floor(Math.random() * 8) + 1 + monkLv
                 triggerWholeness(char.id, rolled)
-                spendResource(char.id, 'ki-pool', 4)
+                spendResource(char.id, 'ki-pool', kiPoolMax)
+                spendResource(char.id, 'ki-pool', kiPoolMax)
               }}
               className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 p-2 hover:bg-primary/20 transition-colors cursor-pointer"
             >
               <div className="text-left">
                 <span className="block font-headline text-xs font-bold text-white">Wholeness of Body</span>
-                <span className="block font-label text-[10px] text-tertiary">Cura istantanea 1d8+4 HP</span>
+                <span className="block font-label text-[10px] text-tertiary">
+                  Cura istantanea 1d8+{char.level ?? 4} HP
+                </span>
               </div>
               <span className="rounded bg-primary/20 px-1.5 py-0.5 font-label text-[10px] font-bold text-primary">
                 2 Ki
@@ -930,8 +971,12 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
               <button
                 type="button"
                 onClick={() => {
-                  declareStunningFist(char.id, 'stunned')
-                  spendResource(char.id, 'stunning-fist', 4)
+                  if (stunningFistDeclared === 'stunned') {
+                    declareStunningFist(char.id, undefined)
+                  } else {
+                    declareStunningFist(char.id, 'stunned')
+                    spendResource(char.id, 'stunning-fist', stunningFistMax)
+                  }
                 }}
                 className={`rounded px-2 py-0.5 font-label text-[10px] font-bold cursor-pointer ${
                   stunningFistDeclared === 'stunned'
@@ -939,13 +984,17 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
                     : 'border border-white/10 bg-surface-container text-tertiary hover:text-white'
                 }`}
               >
-                Stunned (CD 14)
+                Stunned (CD {stunningFistDc})
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  declareStunningFist(char.id, 'fatigued')
-                  spendResource(char.id, 'stunning-fist', 4)
+                  if (stunningFistDeclared === 'fatigued') {
+                    declareStunningFist(char.id, undefined)
+                  } else {
+                    declareStunningFist(char.id, 'fatigued')
+                    spendResource(char.id, 'stunning-fist', stunningFistMax)
+                  }
                 }}
                 className={`rounded px-2 py-0.5 font-label text-[10px] font-bold cursor-pointer ${
                   stunningFistDeclared === 'fatigued'
@@ -953,7 +1002,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
                     : 'border border-white/10 bg-surface-container text-tertiary hover:text-white'
                 }`}
               >
-                Fatigued (CD 14)
+                Fatigued (CD {stunningFistDc})
               </button>
             </div>
 
