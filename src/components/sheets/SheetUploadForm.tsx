@@ -152,6 +152,16 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
         />
         <label
           htmlFor="sheet-pdf-upload-input"
+          onDragOver={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+          }}
+          onDrop={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            const droppedFile = e.dataTransfer?.files?.[0] ?? null
+            handleFileChange(droppedFile)
+          }}
           className={`flex flex-col items-center justify-center p-4 rounded-xl border border-dashed transition-all cursor-pointer ${
             selectedFile
               ? 'bg-primary/5 border-primary/40 shadow-[0_0_15px_rgba(0,240,255,0.1)]'

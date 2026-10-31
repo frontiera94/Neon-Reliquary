@@ -88,16 +88,56 @@ async function ensureSheetsSchema(sql: SqlTagFn, cacheKey?: string): Promise<voi
   }
 }
 
-function parseUrlParams(url?: string): { id?: string; download?: boolean } {
-  if (!url) return {}
-  try {
-    const parsed = new URL(url, 'http://localhost')
-    const id = parsed.searchParams.get('id') ?? undefined
-    const download = parsed.searchParams.get('download') === '1' || parsed.searchParams.get('download') === 'true'
-    return { id, download }
-  } catch {
-    return {}
+function parseRequestParams(req: ApiRequest): { id?: string; download?: boolean } {
+  const queryObj = (req as { query?: Record<string, string | string[] | undefined> }).query
+  let id: string | undefined
+  let download = false
+
+  if (queryObj) {
+    if (typeof queryObj.id === 'string') id = queryObj.id
+    if (queryObj.download === '1' || queryObj.download === 'true') download = true
   }
+
+  if (req.url) {
+    try {
+      const parsed = new URL(req.url, 'http://localhost')
+      if (!id) id = parsed.searchParams.get('id') ?? undefined
+      if (!download) {
+        download =
+          parsed.searchParams.get('download') === '1' ||
+          parsed.searchParams.get('download') === 'true'
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return { id, download }
+}
+
+function resolveBaseAppUrl(req: ApiRequest, env: Record<string, string | undefined>): string {
+  const custom = env.APP_BASE_URL?.trim().replace(/\/+$/, '')
+  if (custom) return custom
+
+  const forwardedHost = req.headers?.['x-forwarded-host']
+  const hostHeader = Array.isArray(forwardedHost)
+    ? forwardedHost[0]
+    : forwardedHost ?? (Array.isArray(req.headers?.host) ? req.headers?.host[0] : req.headers?.host)
+
+  if (hostHeader && typeof hostHeader === 'string' && !hostHeader.startsWith('localhost')) {
+    const protoHeader = req.headers?.['x-forwarded-proto']
+    const proto = Array.isArray(protoHeader) ? protoHeader[0] : protoHeader || 'https'
+    return `${proto}://${hostHeader}`
+  }
+
+  if (env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${env.VERCEL_PROJECT_PRODUCTION_URL.trim()}`
+  }
+  if (env.VERCEL_URL) {
+    return `https://${env.VERCEL_URL.trim()}`
+  }
+
+  return 'https://neon-reliquary.vercel.app'
 }
 
 export function getUploadPassphrase(env: Record<string, string | undefined> = process.env): string {
@@ -200,7 +240,7 @@ export async function handleSheetsRequest(
       }
     }
 
-    const { id: queryId, download: isDownload } = parseUrlParams((req as { url?: string }).url)
+    const { id: queryId, download: isDownload } = parseRequestParams(req)
 
     if (sql) {
       try {
@@ -240,10 +280,11 @@ export async function handleSheetsRequest(
           : record.pdf_data
 
         const pdfBuffer = Buffer.from(base64Data, 'base64')
+        const safeAsciiFilename = record.file_name.replace(/[^\x20-\x7E]/g, '_').replace(/["\\]/g, '_')
         res.setHeader?.('Content-Type', 'application/pdf')
         res.setHeader?.(
           'Content-Disposition',
-          `attachment; filename="${encodeURIComponent(record.file_name)}"`
+          `attachment; filename="${safeAsciiFilename}"; filename*=UTF-8''${encodeURIComponent(record.file_name)}`
         )
         res.setHeader?.('Content-Length', String(pdfBuffer.length))
 
@@ -398,12 +439,12 @@ export async function handleSheetsRequest(
         memorySheets.set(id, newRecord)
       }
 
-      // Telegram notification
+      // Telegram notification (awaited so Vercel serverless does not freeze before dispatch)
       const telegramConfig = getTelegramConfig(env)
-      const baseAppUrl = telegramConfig.baseUrl || 'https://neon-reliquary.vercel.app'
+      const baseAppUrl = resolveBaseAppUrl(req, env)
       const downloadUrl = `${baseAppUrl}/api/sheets?id=${id}&download=1`
 
-      sendTelegramNotification(
+      const telegramSent = await sendTelegramNotification(
         {
           characterName,
           playerName,
@@ -413,10 +454,12 @@ export async function handleSheetsRequest(
         },
         telegramConfig,
         options?.fetchFn ?? fetch
-      ).catch((err) => console.error('Telegram notification error:', err))
+      )
 
       res.status(201).json({
         ok: true,
+        telegramSent,
+        dbConfigured: Boolean(sql),
         sheet: {
           id,
           characterName,

@@ -124,11 +124,13 @@ export const useSheetQueueStore = create<SheetQueueStore>()((set, get) => ({
         }),
       })
 
-      let data: { ok?: boolean; error?: string; sheet?: UploadedSheet } = {}
+      let data: { ok?: boolean; error?: string; telegramSent?: boolean; sheet?: UploadedSheet } = {}
       if (typeof res.text === 'function') {
         const resText = await res.text()
         try {
-          data = resText ? (JSON.parse(resText) as { ok?: boolean; error?: string; sheet?: UploadedSheet }) : {}
+          data = resText
+            ? (JSON.parse(resText) as { ok?: boolean; error?: string; telegramSent?: boolean; sheet?: UploadedSheet })
+            : {}
         } catch {
           const errorMsg =
             res.status === 413
@@ -138,7 +140,7 @@ export const useSheetQueueStore = create<SheetQueueStore>()((set, get) => ({
           return { ok: false, error: errorMsg }
         }
       } else {
-        data = (await res.json()) as { ok?: boolean; error?: string; sheet?: UploadedSheet }
+        data = (await res.json()) as { ok?: boolean; error?: string; telegramSent?: boolean; sheet?: UploadedSheet }
       }
 
       if (!res.ok || !data.ok) {
@@ -147,19 +149,24 @@ export const useSheetQueueStore = create<SheetQueueStore>()((set, get) => ({
         return { ok: false, error: errorMsg }
       }
 
+      const telegramNote =
+        data.telegramSent === false
+          ? 'Scheda salvata in coda (notifica Telegram non inviata: verifica TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID).'
+          : 'Notifica Telegram inviata al Master.'
+
       if (data.sheet) {
         const newSheet = data.sheet
         set((state) => ({
           sheets: [newSheet, ...state.sheets.filter((s) => s.id !== newSheet.id)],
           isUploading: false,
-          uploadSuccessMessage: `Scheda "${characterName}" caricata con successo! Notifica Telegram inviata al Master.`,
+          uploadSuccessMessage: `Scheda "${characterName}" caricata con successo! ${telegramNote}`,
         }))
       } else {
         set({
           isUploading: false,
-          uploadSuccessMessage: `Scheda "${characterName}" caricata con successo!`,
+          uploadSuccessMessage: `Scheda "${characterName}" caricata con successo! ${telegramNote}`,
         })
-        get().fetchSheets()
+        void get().fetchSheets()
       }
 
       return { ok: true }
