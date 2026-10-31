@@ -23,7 +23,6 @@ import { FullAttackModal } from '../components/combat/FullAttackModal'
 import { CombatSpellsSection } from '../components/combat/CombatSpellsSection'
 import { ClassMechanicsPanel } from '../components/combat/ClassMechanicsPanel'
 import { WILD_SHAPE_PRESETS, type WildShapeFormId } from '../data/wild-shape-presets'
-import { ActionEconomyTracker } from '../components/combat/ActionEconomyTracker'
 import { DiceRollLog } from '../components/dice/DiceRollLog'
 import {
   getWildShapeView,
@@ -84,9 +83,6 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     declareStunningFist,
     toggleCondition,
     consumeFuriousFocus,
-    toggleRoundAction,
-    advanceCharacterTurn,
-    resetCombatRound,
     markRoundActionUsed,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
@@ -437,17 +433,6 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
             </motion.div>
           )}
 
-          {/* Action Economy Tracker */}
-          <motion.div variants={STAGGER_ITEM}>
-            <ActionEconomyTracker
-              compact
-              actionEconomy={session.actionEconomy}
-              currentRound={session.currentRound}
-              onToggleAction={(action) => toggleRoundAction(char.id, action)}
-              onNewTurn={() => advanceCharacterTurn(char.id, char)}
-              onResetRound={() => resetCombatRound(char.id)}
-            />
-          </motion.div>
 
           <motion.section variants={STAGGER_ITEM} aria-labelledby="attacks-heading">
             <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
