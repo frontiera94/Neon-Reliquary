@@ -13,6 +13,7 @@ import {
   checkBloodrageExitSafety,
 } from '../../lib/stat-calc'
 import { abilityMod } from '../../lib/dice-engine'
+import { getWildShapeView } from '../../lib/class-combat'
 import { CONDITION_INFO } from '../../lib/conditions'
 import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
 import { TacticalHpPopover } from './TacticalHpPopover'
@@ -60,11 +61,16 @@ export function TacticalHUD() {
     return allBuffs.filter((b) => session.activeBuffIds.includes(b.id))
   }, [char, session])
 
+  const wildShapeView = useMemo(() => {
+    if (!char) return null
+    return getWildShapeView(char, session?.classMechanics)
+  }, [char, session?.classMechanics])
+
   // Effective defensive stats calculations
   const effectiveAbilities = useMemo(() => {
-    if (!char) return null
-    return calcEffectiveAbilities(char.abilities, conditions, activeBuffs)
-  }, [char, conditions, activeBuffs])
+    if (!char || !wildShapeView) return null
+    return calcEffectiveAbilities(wildShapeView.abilities, conditions, activeBuffs)
+  }, [char, wildShapeView, conditions, activeBuffs])
 
   const baseDexMod = char ? abilityMod(char.abilities.dex) : 0
   const effDexMod = effectiveAbilities ? effectiveAbilities.mods.dex : baseDexMod
@@ -80,14 +86,14 @@ export function TacticalHUD() {
   const acOptions = useMemo(() => ({ hasUncannyDodge }), [hasUncannyDodge])
 
   const effectiveAc = useMemo(() => {
-    if (!char) return null
-    return calcEffectiveArmorClass(char.armorClass, baseDexMod, effDexMod, conditions, activeBuffs, acOptions)
-  }, [char, baseDexMod, effDexMod, conditions, activeBuffs, acOptions])
+    if (!char || !wildShapeView) return null
+    return calcEffectiveArmorClass(wildShapeView.armorClass, baseDexMod, effDexMod, conditions, activeBuffs, acOptions)
+  }, [char, wildShapeView, baseDexMod, effDexMod, conditions, activeBuffs, acOptions])
 
   const detailedAc = useMemo(() => {
-    if (!char) return null
-    return calcDetailedAcBreakdowns(char.armorClass, effDexMod, conditions, activeBuffs, acOptions)
-  }, [char, effDexMod, conditions, activeBuffs, acOptions])
+    if (!char || !wildShapeView) return null
+    return calcDetailedAcBreakdowns(wildShapeView.armorClass, effDexMod, conditions, activeBuffs, acOptions)
+  }, [char, wildShapeView, effDexMod, conditions, activeBuffs, acOptions])
 
   const effectiveSaves = useMemo(() => {
     if (!char || !effectiveAbilities) return null

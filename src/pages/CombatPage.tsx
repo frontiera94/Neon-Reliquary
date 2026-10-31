@@ -23,15 +23,20 @@ import { FullAttackModal } from '../components/combat/FullAttackModal'
 import { CombatSpellsSection } from '../components/combat/CombatSpellsSection'
 import { ClassMechanicsPanel } from '../components/combat/ClassMechanicsPanel'
 import {
+  getWildShapeView,
   getActiveWildShapePreset,
   buildWildShapeWeapons,
   calcHalflingDaggerCritConfirm,
+  calcSpellstrikeAttackBonus,
+  calcFuriousFocusBonus,
+  hasFeatNamed,
+  isTwoHandedWeapon,
 } from '../lib/class-combat'
 import { ContextualCombatFeatures, DefensiveBadges } from '../components/combat/ContextualCombatFeatures'
 import { DailyResourcePips } from '../components/combat/BuffResourceToggle'
 import { SpellUsePips } from '../components/spells/SpellUsePips'
 import { buffModifierTokens, modifierColor } from '../lib/buff-summary'
-import type { Weapon } from '../types/combat'
+import type { Weapon, BuffToggle } from '../types/combat'
 import type { DiceType } from '../types/dice'
 import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
@@ -55,6 +60,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     recoverPreparedSpell,
     setPreparedSpellSpent,
     spendResource,
+    consumeFuriousFocus,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
 
@@ -73,12 +79,43 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     return null
   }
 
-  const activeBuffIds = session.activeBuffIds
+  const virtualMechanicsBuffs: BuffToggle[] = []
+  const magusSacrifice = session.classMechanics?.magus?.defensiveCastingSacrifice ?? 0
+  if (session.classMechanics?.magus?.spellCombatActive && magusSacrifice > 0) {
+    virtualMechanicsBuffs.push({
+      id: 'magus-def-sacrifice',
+      name: 'Defensive Casting Sacrifice',
+      active: true,
+      attackMod: -magusSacrifice,
+      damageMod: 0,
+      acMod: 0,
+      meleeOnly: true,
+    })
+  }
+  const metalBonus = calcSpellstrikeAttackBonus(session.classMechanics?.magus?.heldSpellstrike)
+  if (metalBonus > 0) {
+    virtualMechanicsBuffs.push({
+      id: 'magus-metal-bonus',
+      name: 'Shocking Grasp (vs Metal)',
+      active: true,
+      attackMod: metalBonus,
+      damageMod: 0,
+      acMod: 0,
+      meleeOnly: true,
+    })
+  }
+
+  const activeBuffIds = [
+    ...session.activeBuffIds,
+    ...virtualMechanicsBuffs.map((b) => b.id),
+  ]
   const customBuffs = session.customBuffs ?? []
-  const allBuffs = [...char.buffs, ...customBuffs]
+  const allBuffs = [...char.buffs, ...customBuffs, ...virtualMechanicsBuffs]
+
+  const wildShapeView = getWildShapeView(char, session.classMechanics)
 
   const effectiveAbilities = calcEffectiveAbilities(
-    char.abilities,
+    wildShapeView.abilities,
     session.conditions,
     allBuffs.filter((b) => activeBuffIds.includes(b.id))
   )
@@ -108,12 +145,21 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     ? summonableSpells.flatMap((s) => s.summonOptions ?? []).find((o) => o.id === activeSummon.optionId) ?? null
     : null
 
-  // Resolve effective active weapons (Wild Shape natural attacks replace humanoid weapons)
+  const isBloodraging = Boolean(
+    session.classMechanics?.bloodrager?.isRaging ??
+    session.classMechanics?.bloodrager?.isBloodraging
+  )
+  const hasFuriousFocus = hasFeatNamed(char.feats, /furious focus/i)
+  const isPowerAttackActive = activeBuffIds.includes('power-attack')
+  const isFirstAttackOfTurn = !session.classMechanics?.bloodrager?.furiousFocusAppliedThisRound
+
+  // Resolve effective active weapons (Wild Shape natural attacks replace humanoid weapons;
+  // Knam's Ring of Rat Fangs Bite is only unlocked while bloodraging)
   const activeWildShapePreset = getActiveWildShapePreset(session.classMechanics)
   const isWildShapeActive = Boolean(activeWildShapePreset)
   const displayedWeapons: Weapon[] = isWildShapeActive && activeWildShapePreset
     ? buildWildShapeWeapons(activeWildShapePreset, char.baseAttackBonus[0] ?? 3, effectiveAbilities.mods.str)
-    : char.weapons
+    : char.weapons.filter((w) => isBloodraging || !/ring of rat fangs/i.test(w.name))
 
   const hasNaturalSpell = Boolean(
     char.feats?.some((f) => /natural spell/i.test(f.name)) ||
@@ -121,10 +167,6 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
   )
   const showWildShapeSpellWarning = isWildShapeActive && !hasNaturalSpell
 
-  const isBloodraging = Boolean(
-    session.classMechanics?.bloodrager?.isRaging ??
-    session.classMechanics?.bloodrager?.isBloodraging
-  )
   const biteWeapon = char.weapons.find((w) => /bite|morso/i.test(w.name))
   const secondaryBiteAttack =
     isBloodraging && biteWeapon && fullAttackWeapon && fullAttackWeapon.id !== biteWeapon.id
@@ -147,16 +189,38 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     ? calcHalflingDaggerCritConfirm(char.race, [fullAttackWeapon.name, ...(fullAttackWeapon.tags ?? [])])
     : 0
 
-  const fullAttackEffective = fullAttackWeapon
+  const fullAttackBaseEffective = fullAttackWeapon
     ? calcEffectiveWeaponStats(
         fullAttackWeapon,
-        char.abilities,
+        wildShapeView.abilities,
         effectiveAbilities,
         session.conditions,
         allBuffs,
         activeBuffIds
       )
     : null
+  const fullAttackFuriousBonus = fullAttackWeapon
+    ? calcFuriousFocusBonus(
+        hasFuriousFocus,
+        isPowerAttackActive,
+        isTwoHandedWeapon(fullAttackWeapon),
+        isFirstAttackOfTurn
+      )
+    : 0
+  const fullAttackEffective =
+    fullAttackBaseEffective && fullAttackFuriousBonus > 0
+      ? {
+          ...fullAttackBaseEffective,
+          attackBonus: [
+            (fullAttackBaseEffective.attackBonus[0] ?? 0) + fullAttackFuriousBonus,
+            ...fullAttackBaseEffective.attackBonus.slice(1),
+          ],
+          attackBreakdown: [
+            ...fullAttackBaseEffective.attackBreakdown,
+            { label: 'Furious Focus (1st Atk)', value: fullAttackFuriousBonus },
+          ],
+        }
+      : fullAttackBaseEffective
 
   // Companion overview — resolved dynamically through activeCompanionId
   const companions = char.companions ?? []
@@ -199,14 +263,34 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
 
             <div className="space-y-2.5">
               {displayedWeapons.map((weapon) => {
-                const effective = calcEffectiveWeaponStats(
+                const baseEffective = calcEffectiveWeaponStats(
                   weapon,
-                  char.abilities,
+                  wildShapeView.abilities,
                   effectiveAbilities,
                   session.conditions,
                   allBuffs,
                   activeBuffIds
                 )
+                const furiousFocusBonus = calcFuriousFocusBonus(
+                  hasFuriousFocus,
+                  isPowerAttackActive,
+                  isTwoHandedWeapon(weapon),
+                  isFirstAttackOfTurn
+                )
+                const effective =
+                  furiousFocusBonus > 0
+                    ? {
+                        ...baseEffective,
+                        attackBonus: [
+                          (baseEffective.attackBonus[0] ?? 0) + furiousFocusBonus,
+                          ...baseEffective.attackBonus.slice(1),
+                        ],
+                        attackBreakdown: [
+                          ...baseEffective.attackBreakdown,
+                          { label: 'Furious Focus (1st Atk)', value: furiousFocusBonus },
+                        ],
+                      }
+                    : baseEffective
                 const ammo =
                   weapon.type === 'ranged'
                     ? (session.ammo[weapon.id] ?? weapon.currentAmmo ?? weapon.maxAmmo ?? 0)
@@ -246,6 +330,9 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
 
                       if (weapon.type === 'ranged' && ammo !== undefined && ammo > 0) {
                         setAmmo(char.id, weapon.id, ammo - 1)
+                      }
+                      if (attackIndex === 0 && furiousFocusBonus > 0) {
+                        consumeFuriousFocus(char.id)
                       }
 
                       openRoll({
@@ -294,7 +381,12 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         followUpLabel: formatDamage(weapon.damageDice, offhandDmgBonus),
                       })
                     }}
-                    onFullAttackRoll={() => setFullAttackWeapon(weapon)}
+                    onFullAttackRoll={() => {
+                      if (furiousFocusBonus > 0) {
+                        consumeFuriousFocus(char.id)
+                      }
+                      setFullAttackWeapon(weapon)
+                    }}
                     onDamageRoll={() => {
                       const { count, sides, bonus } = parseDiceFormula(weapon.damageDice)
                       openRoll({
