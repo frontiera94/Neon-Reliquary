@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { SessionState, ActiveSummon } from '../types/session'
 import type { ConditionType, BuffToggle, ActionEconomyState } from '../types/combat'
-import type { CoinPurse } from '../types/inventory'
+import type { CoinPurse, InventoryItem } from '../types/inventory'
 import type { Spell } from '../types/resources'
 import type { FullCharacter } from './useCharacterStore'
 import type {
@@ -58,6 +58,8 @@ interface SessionStore {
   setAmmo: (characterId: string, weaponId: string, amount: number) => void
   setItemQuantity: (characterId: string, itemId: string, qty: number) => void
   adjustItemQuantity: (characterId: string, itemId: string, delta: number) => void
+  addCustomItem: (characterId: string, item: InventoryItem) => void
+  removeCustomItem: (characterId: string, itemId: string) => void
   setCoins: (characterId: string, coins: CoinPurse) => void
   adjustCoin: (characterId: string, denom: keyof CoinPurse, delta: number) => void
   setSummon: (characterId: string, summon: ActiveSummon) => void
@@ -69,6 +71,7 @@ interface SessionStore {
   toggleCompanionCondition: (characterId: string, companionId: string, condition: ConditionType) => void
   setActiveCompanion: (characterId: string, companionId: string) => void
   toggleRoundAction: (characterId: string, action: keyof ActionEconomyState) => void
+  markRoundActionUsed: (characterId: string, action: keyof ActionEconomyState) => void
   resetRoundActions: (characterId: string) => void
   nextRound: (characterId: string) => void
   resetCombatRound: (characterId: string) => void
@@ -126,6 +129,28 @@ export function computeNextActionEconomy(
   return updated
 }
 
+export function setActionUsedInEconomy(
+  current: ActionEconomyState,
+  action: keyof ActionEconomyState,
+  used = true
+): ActionEconomyState {
+  if (current[action] === used) return current
+  const updated: ActionEconomyState = { ...current, [action]: used }
+
+  if (action === 'fullRound') {
+    updated.standard = used
+    updated.move = used
+  } else if (action === 'standard' || action === 'move') {
+    if (!used) {
+      updated.fullRound = false
+    } else if (updated.standard && updated.move) {
+      updated.fullRound = true
+    }
+  }
+
+  return updated
+}
+
 const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurse, initialEquippedIds?: string[]): SessionState => ({
   characterId,
   currentHp: maxHp,
@@ -135,6 +160,7 @@ const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurs
   activeBuffIds: [],
   conditions: [],
   customBuffs: [],
+  customItems: [],
   preparedSpells: {},
   preparedSpellIds: [],
   spentPreparedSpells: {},
@@ -508,6 +534,26 @@ export const useSessionStore = create<SessionStore>()(
             }
           }),
 
+        addCustomItem: (id, item) =>
+          update(id, (sess) => {
+            const existing = sess.customItems ?? []
+            return {
+              customItems: [...existing, item],
+              itemQuantities: {
+                ...sess.itemQuantities,
+                [item.id]: sess.itemQuantities[item.id] ?? item.quantity,
+              },
+            }
+          }),
+
+        removeCustomItem: (id, itemId) =>
+          update(id, (sess) => {
+            const existing = sess.customItems ?? []
+            return {
+              customItems: existing.filter((i) => i.id !== itemId),
+            }
+          }),
+
         setCoins: (id, coins) => update(id, () => ({ coins })),
 
         adjustCoin: (id, denom, delta) =>
@@ -571,6 +617,11 @@ export const useSessionStore = create<SessionStore>()(
         toggleRoundAction: (charId, action) =>
           update(charId, (sess) => ({
             actionEconomy: computeNextActionEconomy(sess.actionEconomy ?? defaultActionEconomy(), action),
+          })),
+
+        markRoundActionUsed: (charId, action) =>
+          update(charId, (sess) => ({
+            actionEconomy: setActionUsedInEconomy(sess.actionEconomy ?? defaultActionEconomy(), action, true),
           })),
 
         // Kept as an alias of `nextRound` for backwards compatibility: clearing the
@@ -789,6 +840,7 @@ export const useSessionStore = create<SessionStore>()(
               [characterId]: {
                 ...current,
                 activeBuffIds,
+                actionEconomy: setActionUsedInEconomy(current.actionEconomy ?? defaultActionEconomy(), 'swift', true),
                 classMechanics: {
                   ...mech,
                   magus: {
@@ -1040,6 +1092,7 @@ export const useSessionStore = create<SessionStore>()(
               ...s.sessions,
               [characterId]: {
                 ...current,
+                actionEconomy: setActionUsedInEconomy(current.actionEconomy ?? defaultActionEconomy(), 'move', true),
                 classMechanics: {
                   ...mech,
                   witch: {
@@ -1071,6 +1124,7 @@ export const useSessionStore = create<SessionStore>()(
               ...s.sessions,
               [characterId]: {
                 ...current,
+                actionEconomy: setActionUsedInEconomy(current.actionEconomy ?? defaultActionEconomy(), 'swift', true),
                 classMechanics: {
                   ...mech,
                   monk: {
@@ -1123,6 +1177,7 @@ export const useSessionStore = create<SessionStore>()(
                 ...current,
                 customBuffs,
                 activeBuffIds,
+                actionEconomy: setActionUsedInEconomy(current.actionEconomy ?? defaultActionEconomy(), 'swift', true),
                 classMechanics: {
                   ...mech,
                   monk: {
@@ -1152,6 +1207,7 @@ export const useSessionStore = create<SessionStore>()(
               ...s.sessions,
               [characterId]: {
                 ...current,
+                actionEconomy: setActionUsedInEconomy(current.actionEconomy ?? defaultActionEconomy(), 'swift', true),
                 classMechanics: {
                   ...mech,
                   monk: {

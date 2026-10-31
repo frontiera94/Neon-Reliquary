@@ -43,6 +43,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
 
   const {
     advanceCharacterTurn,
+    resetCombatRound,
     setWildShape,
     setHeldSpellstrike,
     consumeSpellstrikeCharge,
@@ -221,8 +222,18 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
           </div>
         </div>
 
-        {/* Unified Turn Button */}
+        {/* Unified Turn & Reset Buttons */}
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => resetCombatRound(char.id)}
+            title="Riporta il combattimento al Round 1 e azzera le azioni"
+            aria-label="Fine Scontro / Reset Round"
+            className="flex items-center gap-1.5 rounded-xl bg-surface-container border border-white/10 hover:border-white/30 text-tertiary hover:text-white font-label text-xs uppercase tracking-wider px-2.5 py-2 transition-all active:scale-95 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-sm">restart_alt</span>
+            <span className="hidden sm:inline">Fine Scontro</span>
+          </button>
           <button
             type="button"
             onClick={() => advanceCharacterTurn(char.id, char)}

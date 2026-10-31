@@ -13,9 +13,11 @@ import {
   calcEffectiveArmorClass,
   calcEffectiveSaves,
   calcDetailedAcBreakdowns,
+  calcEffectiveMaxHp,
   getActiveActionRestrictions,
   evaluateVitalStatus,
 } from '../lib/stat-calc'
+import { getWildShapeView } from '../lib/class-combat'
 import { ActionAlertBanner } from '../components/combat/ActionAlertBanner'
 import { BuffManagerModal } from '../components/combat/BuffManagerModal'
 import { DailyResourcePips } from '../components/combat/BuffResourceToggle'
@@ -49,7 +51,8 @@ export function StatusPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
   const {
-    adjustHp,
+    applyDamage,
+    applyHealing,
     initSession,
     setNonlethal,
     setTempHp,
@@ -74,7 +77,20 @@ export function StatusPage() {
   const allBuffs = [...char.buffs, ...(session.customBuffs ?? [])]
   const activeBuffs = allBuffs.filter((b) => session.activeBuffIds.includes(b.id))
 
-  const effectiveAbilities = calcEffectiveAbilities(char.abilities, session.conditions, activeBuffs)
+  const wildShapeView = getWildShapeView(char, session.classMechanics)
+  const hasUncannyDodge = Boolean(
+    char.classAbilities?.some((a) => /uncanny dodge/i.test(a.name)) ||
+    char.feats?.some((f) => /uncanny dodge/i.test(f.name))
+  )
+  const acOptions = { hasUncannyDodge }
+
+  const effectiveAbilities = calcEffectiveAbilities(wildShapeView.abilities, session.conditions, activeBuffs)
+  const baseDexMod = abilityMod(char.abilities.dex)
+  const effDexMod = effectiveAbilities.mods.dex
+  const baseConMod = abilityMod(char.abilities.con)
+  const effConMod = effectiveAbilities.mods.con
+  const effectiveMaxHp = calcEffectiveMaxHp(char.maxHp ?? 1, char.level ?? 1, baseConMod, effConMod)
+
   const effectiveSaves = calcEffectiveSaves(
     char.savingThrows,
     char.abilities,
@@ -83,17 +99,18 @@ export function StatusPage() {
     activeBuffs
   )
   const effectiveAc = calcEffectiveArmorClass(
-    char.armorClass,
-    abilityMod(char.abilities.dex),
-    effectiveAbilities.mods.dex,
+    wildShapeView.armorClass,
+    baseDexMod,
+    effDexMod,
     session.conditions,
-    activeBuffs
+    activeBuffs,
+    acOptions
   )
   const restrictions = getActiveActionRestrictions(session.conditions)
 
   const hp = session.currentHp
-  const maxHp = char.maxHp
-  const vitalStatus = evaluateVitalStatus(hp, char.abilities.con)
+  const maxHp = effectiveMaxHp
+  const vitalStatus = evaluateVitalStatus(hp, effectiveAbilities.scores.con)
 
   const spentByResource = (id: string) => session.spentResources[id] ?? 0
 
@@ -113,10 +130,11 @@ export function StatusPage() {
 
   const effectiveInit = char.initiativeBonus + effectiveAbilities.deltas.dex
   const detailedAc = calcDetailedAcBreakdowns(
-    char.armorClass,
-    effectiveAbilities.mods.dex,
+    wildShapeView.armorClass,
+    effDexMod,
     session.conditions,
-    activeBuffs
+    activeBuffs,
+    acOptions
   )
   const initBreakdown = [
     { label: 'Base Init', value: char.initiativeBonus },
@@ -216,7 +234,7 @@ export function StatusPage() {
           </div>
           <div className="mt-8 flex items-center gap-3">
             <button
-              onClick={() => adjustHp(char.id, -hpDelta, maxHp)}
+              onClick={() => applyDamage(char.id, hpDelta, effectiveAbilities.scores.con)}
               className="px-5 py-3 bg-error-container text-on-error-container hover:brightness-125 transition-all active:scale-95 font-label text-sm uppercase tracking-widest rounded-xl cursor-pointer"
               aria-label="Decrease HP"
             >
@@ -230,7 +248,7 @@ export function StatusPage() {
               className="w-20 bg-surface-container-high text-on-surface font-label text-xl font-bold text-center py-3 rounded-xl border border-white/10 focus:border-primary focus:outline-none"
             />
             <button
-              onClick={() => adjustHp(char.id, hpDelta, maxHp)}
+              onClick={() => applyHealing(char.id, hpDelta, maxHp)}
               className="px-5 py-3 bg-primary-container text-on-primary-container hover:brightness-125 transition-all active:scale-95 font-label text-sm uppercase tracking-widest rounded-xl cursor-pointer"
               aria-label="Increase HP"
             >

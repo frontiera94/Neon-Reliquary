@@ -8,22 +8,37 @@ import { CRIT_HIT_SHAKE, FUMBLE_GLITCH_SHAKE, SNAPPY_SPRING } from '../../lib/mo
 
 export function DiceOverlayModal() {
   const { isOpen, isRolling, pendingRoll, lastResult, openRoll, setResult, close } = useDiceStore()
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isConfirmingRef = useRef(false)
   const [critConfirmed, setCritConfirmed] = useState<boolean | null>(null)
   const [confirmationResult, setConfirmationResult] = useState<number | null>(null)
 
+  const resolveRollImmediately = () => {
+    if (!pendingRoll) return
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+    const result = rollDice(pendingRoll)
+    if (isConfirmingRef.current) {
+      setCritConfirmed(result.naturalRolls[0] === 1 ? false : null)
+      setConfirmationResult(result.total)
+      isConfirmingRef.current = false
+    }
+    setResult(result)
+  }
+
   useEffect(() => {
     if (!isOpen || !pendingRoll) return
-    const timer = setTimeout(() => {
-      const result = rollDice(pendingRoll)
-      if (isConfirmingRef.current) {
-        setCritConfirmed(result.naturalRolls[0] === 1 ? false : null)
-        setConfirmationResult(result.total)
-        isConfirmingRef.current = false
-      }
-      setResult(result)
+    timerRef.current = setTimeout(() => {
+      resolveRollImmediately()
     }, 1200)
-    return () => clearTimeout(timer)
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
+    }
   }, [isOpen, pendingRoll, setResult])
 
   useEffect(() => {
@@ -82,9 +97,20 @@ export function DiceOverlayModal() {
             </div>
 
             {/* Content area */}
-            <div className="py-8 px-8 flex flex-col items-center min-h-[200px]">
+            <div
+              onClick={isRolling ? resolveRollImmediately : undefined}
+              className={`py-8 px-8 flex flex-col items-center min-h-[200px] ${
+                isRolling ? 'cursor-pointer select-none group/roller' : ''
+              }`}
+              title={isRolling ? "Clicca per completare il tiro immediatamente" : undefined}
+            >
               {isRolling ? (
-                <DiceRollingAnimation diceType={pendingRoll?.diceType ?? 20} />
+                <div className="flex flex-col items-center gap-2">
+                  <DiceRollingAnimation diceType={pendingRoll?.diceType ?? 20} />
+                  <span className="font-label text-[11px] text-tertiary/70 group-hover/roller:text-primary transition-colors animate-pulse mt-2">
+                    Clicca per saltare l'animazione
+                  </span>
+                </div>
               ) : lastResult ? (
                 <>
                   {/* Big result number */}
