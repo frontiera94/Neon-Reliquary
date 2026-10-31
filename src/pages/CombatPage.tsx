@@ -23,6 +23,8 @@ import { FullAttackModal } from '../components/combat/FullAttackModal'
 import { CombatSpellsSection } from '../components/combat/CombatSpellsSection'
 import { ClassMechanicsPanel } from '../components/combat/ClassMechanicsPanel'
 import { WILD_SHAPE_PRESETS, type WildShapeFormId } from '../data/wild-shape-presets'
+import { ActionEconomyTracker } from '../components/combat/ActionEconomyTracker'
+import { DiceRollLog } from '../components/dice/DiceRollLog'
 import {
   getWildShapeView,
   getActiveWildShapePreset,
@@ -81,6 +83,11 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     useWholenessOfBody: triggerWholenessOfBody,
     declareStunningFist,
     toggleCondition,
+    consumeFuriousFocus,
+    toggleRoundAction,
+    advanceCharacterTurn,
+    resetCombatRound,
+    markRoundActionUsed,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
 
@@ -430,6 +437,18 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
             </motion.div>
           )}
 
+          {/* Action Economy Tracker */}
+          <motion.div variants={STAGGER_ITEM}>
+            <ActionEconomyTracker
+              compact
+              actionEconomy={session.actionEconomy}
+              currentRound={session.currentRound}
+              onToggleAction={(action) => toggleRoundAction(char.id, action)}
+              onNewTurn={() => advanceCharacterTurn(char.id, char)}
+              onResetRound={() => resetCombatRound(char.id)}
+            />
+          </motion.div>
+
           <motion.section variants={STAGGER_ITEM} aria-labelledby="attacks-heading">
             <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
               <h2 id="attacks-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
@@ -592,6 +611,10 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                       if (weapon.type === 'ranged' && ammo !== undefined && ammo > 0) {
                         setAmmo(char.id, weapon.id, ammo - 1)
                       }
+                      if (attackIndex === 0 && furiousFocusBonus > 0) {
+                        consumeFuriousFocus(char.id)
+                      }
+                      markRoundActionUsed(char.id, 'standard')
 
                       openRoll({
                         diceType: 20,
@@ -624,6 +647,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         ],
                       }
 
+                      markRoundActionUsed(char.id, 'fullRound')
                       openRoll({
                         diceType: 20,
                         count: 1,
@@ -639,7 +663,13 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         followUpLabel: formatDamage(weapon.damageDice, offhandDmgBonus),
                       })
                     }}
-                    onFullAttackRoll={() => setFullAttackWeapon(weapon)}
+                    onFullAttackRoll={() => {
+                      if (furiousFocusBonus > 0) {
+                        consumeFuriousFocus(char.id)
+                      }
+                      markRoundActionUsed(char.id, 'fullRound')
+                      setFullAttackWeapon(weapon)
+                    }}
                     onDamageRoll={() => {
                       const { count, sides, bonus } = parseDiceFormula(weapon.damageDice)
                       openRoll({
@@ -703,9 +733,15 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                 spellAvailability={spellAvailability}
                 defaultExpanded={false}
                 openRoll={openRoll}
-                onSpendSlot={(lvl, max) => spendSpellSlot(char.id, lvl, max)}
+                onSpendSlot={(lvl, max) => {
+                  spendSpellSlot(char.id, lvl, max)
+                  markRoundActionUsed(char.id, 'standard')
+                }}
                 onRecoverSlot={(lvl) => recoverSpellSlot(char.id, lvl)}
-                onSpendPreparedSpell={(spellId, max) => spendPreparedSpell(char.id, spellId, max)}
+                onSpendPreparedSpell={(spellId, max) => {
+                  spendPreparedSpell(char.id, spellId, max)
+                  markRoundActionUsed(char.id, 'standard')
+                }}
                 onRecoverPreparedSpell={(spellId) => recoverPreparedSpell(char.id, spellId)}
                 onSpendResource={(resourceId, max) => spendResource(char.id, resourceId, max)}
                 allBuffs={allBuffs}
@@ -717,7 +753,13 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
           )}
 
           <motion.div variants={STAGGER_ITEM}>
-            <CombatManeuversPanel maneuversCalc={maneuversCalc} openRoll={openRoll} />
+            <CombatManeuversPanel
+              maneuversCalc={maneuversCalc}
+              openRoll={(roll) => {
+                markRoundActionUsed(char.id, 'standard')
+                openRoll(roll)
+              }}
+            />
           </motion.div>
 
           {/* Summoned ally */}
@@ -916,6 +958,10 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
 
         {/* Support column — state you need to read, not act on constantly. */}
         <aside className="space-y-4 xl:col-span-5">
+          <motion.div variants={STAGGER_ITEM}>
+            <DiceRollLog compact />
+          </motion.div>
+
           <motion.section
             variants={STAGGER_ITEM}
             aria-labelledby="buffs-heading"

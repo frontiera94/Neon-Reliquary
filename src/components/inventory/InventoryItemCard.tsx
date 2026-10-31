@@ -14,12 +14,16 @@ export function InventoryItemCard({
   isEquipped,
   onAdjust,
   onToggleEquip,
+  onUse,
+  onRemove,
 }: {
   item: InventoryItem
   qty: number
   isEquipped?: boolean
   onAdjust: (delta: number) => void
   onToggleEquip?: () => void
+  onUse?: () => void
+  onRemove?: () => void
 }) {
   const chipColor = categoryColors[item.category] ?? categoryColors.gear
   const isEquippable = Boolean(item.slot || item.category === 'weapon' || item.category === 'armor' || item.category === 'magic')
@@ -38,24 +42,37 @@ export function InventoryItemCard({
           <h3 className="font-headline text-base sm:text-lg font-bold text-white leading-tight">{item.name}</h3>
         </div>
 
-        {/* Quantity controls */}
-        <div className="flex items-center gap-1 flex-shrink-0 mt-1">
-          <button
-            onClick={() => onAdjust(-1)}
-            disabled={qty <= 0}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-tertiary hover:text-white hover:bg-white/10 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
-            aria-label={`Decrease ${item.name} quantity`}
-          >
-            <span className="material-symbols-outlined text-base">remove</span>
-          </button>
-          <span className="font-label text-sm sm:text-base text-white w-8 text-center font-bold">×{qty}</span>
-          <button
-            onClick={() => onAdjust(1)}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-tertiary hover:text-primary hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
-            aria-label={`Increase ${item.name} quantity`}
-          >
-            <span className="material-symbols-outlined text-base">add</span>
-          </button>
+        {/* Action & Quantity controls */}
+        <div className="flex items-center gap-2 flex-shrink-0 mt-1">
+          {item.category === 'consumable' && qty > 0 && onUse && (
+            <button
+              onClick={onUse}
+              className="flex items-center gap-1 px-2.5 py-1 bg-error/15 border border-error/40 hover:bg-error/30 text-white font-label text-xs uppercase tracking-wider font-bold rounded-xl transition-all active:scale-95 cursor-pointer shadow-[0_0_10px_rgba(255,75,96,0.2)]"
+              title={`Usa ${item.name}`}
+            >
+              <span className="material-symbols-outlined text-xs text-error">science</span>
+              <span>Usa</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => onAdjust(-1)}
+              disabled={qty <= 0}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-tertiary hover:text-white hover:bg-white/10 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+              aria-label={`Decrease ${item.name} quantity`}
+            >
+              <span className="material-symbols-outlined text-base">remove</span>
+            </button>
+            <span className="font-label text-sm sm:text-base text-white w-8 text-center font-bold">×{qty}</span>
+            <button
+              onClick={() => onAdjust(1)}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-tertiary hover:text-primary hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+              aria-label={`Increase ${item.name} quantity`}
+            >
+              <span className="material-symbols-outlined text-base">add</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -63,9 +80,14 @@ export function InventoryItemCard({
         <p className="font-body text-tertiary text-xs sm:text-sm leading-relaxed">{item.description}</p>
       )}
 
-      {isEquippable && (
+      {(isEquippable || item.weight !== undefined || onRemove) && (
         <div className="flex items-center justify-between pt-3 mt-auto border-t border-white/5">
           <div className="flex flex-wrap items-center gap-1.5">
+            {item.weight !== undefined && item.weight > 0 && (
+              <span className="font-label text-[10px] text-tertiary uppercase tracking-wider bg-white/5 px-2 py-0.5 rounded">
+                {item.weight} lbs
+              </span>
+            )}
             {item.slot && (
               <span className="font-label text-[10px] text-tertiary uppercase tracking-wider bg-white/5 px-2 py-0.5 rounded">
                 {item.slot}
@@ -87,21 +109,33 @@ export function InventoryItemCard({
               </span>
             )}
           </div>
-          {onToggleEquip && (
-            <button
-              onClick={onToggleEquip}
-              className={`px-3 py-1 rounded-xl text-xs font-label uppercase tracking-wider font-semibold transition-all cursor-pointer flex items-center gap-1.5 flex-shrink-0 ${
-                isEquipped
-                  ? 'bg-secondary/20 text-secondary border border-secondary/40 hover:bg-secondary/30'
-                  : 'bg-white/5 text-tertiary border border-white/10 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <span className="material-symbols-outlined text-sm">
-                {isEquipped ? 'check_circle' : 'radio_button_unchecked'}
-              </span>
-              {isEquipped ? 'Equipped' : 'Equip'}
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {onToggleEquip && isEquippable && (
+              <button
+                onClick={onToggleEquip}
+                className={`px-3 py-1 rounded-xl text-xs font-label uppercase tracking-wider font-semibold transition-all cursor-pointer flex items-center gap-1.5 flex-shrink-0 ${
+                  isEquipped
+                    ? 'bg-secondary/20 text-secondary border border-secondary/40 hover:bg-secondary/30'
+                    : 'bg-white/5 text-tertiary border border-white/10 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <span className="material-symbols-outlined text-sm">
+                  {isEquipped ? 'check_circle' : 'radio_button_unchecked'}
+                </span>
+                {isEquipped ? 'Equipped' : 'Equip'}
+              </button>
+            )}
+            {onRemove && (
+              <button
+                onClick={onRemove}
+                className="p-1.5 rounded-lg text-tertiary hover:text-error hover:bg-error/10 transition-colors cursor-pointer"
+                title={`Rimuovi ${item.name}`}
+                aria-label={`Rimuovi ${item.name}`}
+              >
+                <span className="material-symbols-outlined text-base">delete</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
