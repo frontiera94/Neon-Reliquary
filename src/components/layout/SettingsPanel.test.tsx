@@ -59,7 +59,7 @@ describe('SettingsPanel Tabs and Sheet Queue Integration', () => {
     fireEvent.click(uploadSubTabBtn)
 
     // Form inputs should now be visible
-    expect(screen.getByPlaceholderText(/es\. Agelmund/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Personaggio/i)).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/Password della campagna/i)).toBeInTheDocument()
   })
 })
