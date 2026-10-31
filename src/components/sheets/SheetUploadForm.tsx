@@ -31,8 +31,8 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
       return
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setFileError('La dimensione massima consentita è di 10 MB')
+    if (file.size > 3.2 * 1024 * 1024) {
+      setFileError('La dimensione massima consentita è di 3.2 MB')
       setSelectedFile(null)
       return
     }
@@ -140,7 +140,7 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
       {/* File Drop / Selector */}
       <div>
         <label className="block font-label text-[11px] text-tertiary uppercase tracking-wider mb-1.5">
-          Scheda PDF <span className="text-primary">* (max 10 MB)</span>
+          Scheda PDF <span className="text-primary">* (max 3.2 MB)</span>
         </label>
         <input
           ref={fileInputRef}
@@ -180,7 +180,7 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
                 Seleziona o trascina il file PDF
               </span>
               <span className="font-label text-[10px] text-tertiary/50 mt-0.5 block">
-                Solo PDF fino a 10 MB
+                Solo PDF fino a 3.2 MB
               </span>
             </div>
           )}

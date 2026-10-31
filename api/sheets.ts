@@ -1,7 +1,5 @@
 import { neon } from '@neondatabase/serverless'
-import { nanoid } from 'nanoid'
 import type { ApiRequest, ApiResponse, SqlTagFn } from './sessions'
-import { getDatabaseUrl } from './sessions'
 
 export type SheetStatus = 'new' | 'processing' | 'archived'
 
@@ -30,12 +28,43 @@ export interface UploadedSheetRecord {
   updated_at: string | number | Date
 }
 
-export const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024 // 10 MB
+// Vercel serverless request body limit is 4.5 MB.
+// A 3.2 MB file encoded in Base64 is ~4.26 MB, perfectly fitting within limits.
+export const MAX_PDF_SIZE_BYTES = 3.2 * 1024 * 1024
 export const DEFAULT_UPLOAD_PASSPHRASE = 'reliquary_secret'
+
+export function getDatabaseUrl(
+  env: Record<string, string | undefined> = process.env
+): string | null {
+  const raw =
+    env.DATABASE_URL ??
+    env.POSTGRES_URL ??
+    env.NEON_DATABASE_URL ??
+    ''
+  const trimmed = raw.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+function generateId(): string {
+  try {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID().replace(/-/g, '').slice(0, 12)
+    }
+  } catch {
+    // fallback
+  }
+  return Math.random().toString(36).slice(2, 14)
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
 
 // In-memory fallback for local development or when DATABASE_URL is not set
 const memorySheets = new Map<string, UploadedSheetRecord>()
-
 const ensuredUrls = new Set<string>()
 
 async function ensureSheetsSchema(sql: SqlTagFn, cacheKey?: string): Promise<void> {
@@ -102,15 +131,21 @@ export async function sendTelegramNotification(
     return false
   }
 
+  const safeChar = escapeHtml(params.characterName)
+  const safePlayer = escapeHtml(params.playerName)
+  const safeNotes = params.notes ? escapeHtml(params.notes) : ''
+  const safeFile = escapeHtml(params.fileName)
+  const safeUrl = params.downloadUrl
+
   const message = [
-    '⚔️ *[Neon Reliquary] Nuova Scheda Caricata!*',
+    '⚔️ <b>[Neon Reliquary] Nuova Scheda Caricata!</b>',
     '',
-    `👤 *Personaggio:* ${params.characterName}`,
-    `🎲 *Giocatore:* ${params.playerName}`,
-    params.notes ? `📝 *Note:* ${params.notes}` : null,
-    `📄 *File:* \`${params.fileName}\``,
+    `👤 <b>Personaggio:</b> ${safeChar}`,
+    `🎲 <b>Giocatore:</b> ${safePlayer}`,
+    safeNotes ? `📝 <b>Note:</b> ${safeNotes}` : null,
+    `📄 <b>File:</b> <code>${safeFile}</code>`,
     '',
-    `🔗 [Scarica Scheda dal Reliquiario](${params.downloadUrl})`,
+    `🔗 <a href="${safeUrl}">Scarica Scheda dal Reliquiario</a>`,
   ]
     .filter(Boolean)
     .join('\n')
@@ -122,7 +157,7 @@ export async function sendTelegramNotification(
       body: JSON.stringify({
         chat_id: config.chatId,
         text: message,
-        parse_mode: 'Markdown',
+        parse_mode: 'HTML',
       }),
     })
     return res.ok
@@ -151,14 +186,28 @@ export async function handleSheetsRequest(
   }
 
   const env = options?.env ?? process.env
-  const dbUrl = options?.sql ? 'injected' : getDatabaseUrl(env)
-  const sql: SqlTagFn | null = options?.sql ?? (dbUrl ? (neon(dbUrl) as unknown as SqlTagFn) : null)
-
-  const { id: queryId, download: isDownload } = parseUrlParams((req as { url?: string }).url)
 
   try {
+    const dbUrl = options?.sql ? 'injected' : getDatabaseUrl(env)
+    let sql: SqlTagFn | null = options?.sql ?? null
+
+    if (!sql && dbUrl) {
+      try {
+        sql = neon(dbUrl) as unknown as SqlTagFn
+      } catch (dbInitErr) {
+        console.warn('Neon connection initialization skipped, using fallback:', dbInitErr)
+        sql = null
+      }
+    }
+
+    const { id: queryId, download: isDownload } = parseUrlParams((req as { url?: string }).url)
+
     if (sql) {
-      await ensureSheetsSchema(sql, options?.sql ? undefined : dbUrl ?? undefined)
+      try {
+        await ensureSheetsSchema(sql, options?.sql ? undefined : dbUrl ?? undefined)
+      } catch (schemaErr) {
+        console.warn('Schema check warning, continuing:', schemaErr)
+      }
     }
 
     // --- GET /api/sheets ---
@@ -313,7 +362,7 @@ export async function handleSheetsRequest(
         return
       }
       if (fileSize <= 0 || fileSize > MAX_PDF_SIZE_BYTES) {
-        res.status(400).json({ error: 'La dimensione del file supera il limite massimo di 10 MB' })
+        res.status(400).json({ error: 'La dimensione del file supera il limite massimo di 3.2 MB' })
         return
       }
       if (!pdfBase64) {
@@ -321,7 +370,7 @@ export async function handleSheetsRequest(
         return
       }
 
-      const id = nanoid(12)
+      const id = generateId()
       const now = new Date()
 
       const newRecord: UploadedSheetRecord = {

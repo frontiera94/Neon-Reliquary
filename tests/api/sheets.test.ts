@@ -111,7 +111,7 @@ describe('api/sheets serverless handler', () => {
     expect((mock.getJson() as { error: string }).error).toContain('PDF')
   })
 
-  it('rejects POST upload if file exceeds 10 MB', async () => {
+  it('rejects POST upload if file exceeds max size limit', async () => {
     const mock = createMockRes()
     await handleSheetsRequest(
       {
@@ -130,7 +130,7 @@ describe('api/sheets serverless handler', () => {
     )
 
     expect(mock.getStatus()).toBe(400)
-    expect((mock.getJson() as { error: string }).error).toContain('10 MB')
+    expect((mock.getJson() as { error: string }).error).toContain('3.2 MB')
   })
 
   it('successfully creates a sheet upload, dispatches Telegram notification, and returns 201', async () => {

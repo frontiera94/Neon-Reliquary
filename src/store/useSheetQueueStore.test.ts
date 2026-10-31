@@ -75,6 +75,7 @@ describe('useSheetQueueStore', () => {
 
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
+      text: async () => JSON.stringify({ ok: true, sheet: newSheet }),
       json: async () => ({ ok: true, sheet: newSheet }),
     })
 

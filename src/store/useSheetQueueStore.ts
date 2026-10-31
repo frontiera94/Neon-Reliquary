@@ -80,7 +80,8 @@ export const useSheetQueueStore = create<SheetQueueStore>()((set, get) => ({
         headers: { Accept: 'application/json' },
       })
       if (!res.ok) {
-        throw new Error(`Errore durante il recupero delle schede (${res.status})`)
+        const text = await res.text().catch(() => '')
+        throw new Error(`Errore durante il recupero delle schede (${res.status}): ${text.slice(0, 80)}`)
       }
       const data = (await res.json()) as { ok: boolean; sheets: UploadedSheet[] }
       set({ sheets: data.sheets || [], isLoading: false })
@@ -101,8 +102,8 @@ export const useSheetQueueStore = create<SheetQueueStore>()((set, get) => ({
       return { ok: false, error: errMsg }
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      const errMsg = 'Il file supera la dimensione massima consentita di 10 MB'
+    if (file.size > 3.2 * 1024 * 1024) {
+      const errMsg = 'Il file supera la dimensione massima consentita di 3.2 MB (limite payload Vercel)'
       set({ isUploading: false, error: errMsg })
       return { ok: false, error: errMsg }
     }
@@ -123,7 +124,22 @@ export const useSheetQueueStore = create<SheetQueueStore>()((set, get) => ({
         }),
       })
 
-      const data = (await res.json()) as { ok?: boolean; error?: string; sheet?: UploadedSheet }
+      let data: { ok?: boolean; error?: string; sheet?: UploadedSheet } = {}
+      if (typeof res.text === 'function') {
+        const resText = await res.text()
+        try {
+          data = resText ? (JSON.parse(resText) as { ok?: boolean; error?: string; sheet?: UploadedSheet }) : {}
+        } catch {
+          const errorMsg =
+            res.status === 413
+              ? 'Il file è troppo grande per il server (limite 3.2 MB)'
+              : `Errore del server (${res.status}): ${resText.slice(0, 100) || 'Risposta non valida'}`
+          set({ isUploading: false, error: errorMsg })
+          return { ok: false, error: errorMsg }
+        }
+      } else {
+        data = (await res.json()) as { ok?: boolean; error?: string; sheet?: UploadedSheet }
+      }
 
       if (!res.ok || !data.ok) {
         const errorMsg = data.error || `Errore caricamento (${res.status})`
