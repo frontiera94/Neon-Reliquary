@@ -169,12 +169,21 @@ describe('api/sheets serverless handler', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(1)
     const [telegramUrl, fetchOpts] = mockFetch.mock.calls[0]
-    expect(telegramUrl).toContain('bot12345/sendMessage')
-    const telegramBody = JSON.parse(fetchOpts.body)
-    expect(telegramBody.chat_id).toBe('chat67890')
-    expect(telegramBody.text).toContain('Agelmund')
-    expect(telegramBody.text).toContain('Fabio')
-    expect(telegramBody.text).toContain('Weapon Focus')
+    expect(telegramUrl).toMatch(/bot12345\/(sendDocument|sendMessage)/)
+
+    if (fetchOpts.body instanceof FormData) {
+      expect(fetchOpts.body.get('chat_id')).toBe('chat67890')
+      const caption = fetchOpts.body.get('caption') as string
+      expect(caption).toContain('Agelmund')
+      expect(caption).toContain('Fabio')
+      expect(caption).toContain('Weapon Focus')
+    } else {
+      const telegramBody = JSON.parse(fetchOpts.body)
+      expect(telegramBody.chat_id).toBe('chat67890')
+      expect(telegramBody.text).toContain('Agelmund')
+      expect(telegramBody.text).toContain('Fabio')
+      expect(telegramBody.text).toContain('Weapon Focus')
+    }
   })
 
   it('allows upload without playerName (optional)', async () => {
@@ -209,8 +218,13 @@ describe('api/sheets serverless handler', () => {
     expect(json.sheet.playerName).toBe('')
 
     const [, fetchOpts] = mockFetch.mock.calls[0]
-    const telegramBody = JSON.parse(fetchOpts.body)
-    expect(telegramBody.text).not.toContain('Giocatore:')
+    if (fetchOpts.body instanceof FormData) {
+      const caption = fetchOpts.body.get('caption') as string
+      expect(caption).not.toContain('Giocatore:')
+    } else {
+      const telegramBody = JSON.parse(fetchOpts.body)
+      expect(telegramBody.text).not.toContain('Giocatore:')
+    }
   })
 
   it('lists uploaded sheets and allows status updates and deletion', async () => {
@@ -233,6 +247,16 @@ describe('api/sheets serverless handler', () => {
       )
       expect(downloadMock.getStatus()).toBe(200)
       expect(downloadMock.getHeaders()['Content-Type']).toBe('application/pdf')
+
+      // 2b. Download sheet without download=1 param (just id)
+      const directMock = createMockRes()
+      await handleSheetsRequest(
+        { method: 'GET', url: `/api/sheets?id=${uploadedId}` },
+        directMock.res,
+        { env: {} }
+      )
+      expect(directMock.getStatus()).toBe(200)
+      expect(directMock.getHeaders()['Content-Type']).toBe('application/pdf')
 
       // 3. Update status (PATCH)
       const patchMock = createMockRes()

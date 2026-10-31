@@ -94,22 +94,42 @@ function parseRequestParams(req: ApiRequest): { id?: string; download?: boolean 
   let download = false
 
   if (queryObj) {
-    if (typeof queryObj.id === 'string') id = queryObj.id
-    if (queryObj.download === '1' || queryObj.download === 'true') download = true
+    const rawId = Array.isArray(queryObj.id)
+      ? queryObj.id[0]
+      : queryObj.id ?? (Array.isArray(queryObj.sheetId) ? queryObj.sheetId[0] : queryObj.sheetId)
+    if (typeof rawId === 'string' && rawId.trim()) id = rawId.trim()
+
+    const rawDl = Array.isArray(queryObj.download) ? queryObj.download[0] : queryObj.download
+    if (rawDl === '1' || rawDl === 'true') download = true
   }
 
   if (req.url) {
     try {
       const parsed = new URL(req.url, 'http://localhost')
-      if (!id) id = parsed.searchParams.get('id') ?? undefined
+      if (!id) {
+        const rawParam = parsed.searchParams.get('id') ?? parsed.searchParams.get('sheetId')
+        if (rawParam && rawParam.trim()) id = rawParam.trim()
+      }
       if (!download) {
-        download =
-          parsed.searchParams.get('download') === '1' ||
-          parsed.searchParams.get('download') === 'true'
+        const dlVal = parsed.searchParams.get('download')
+        download = dlVal === '1' || dlVal === 'true'
+      }
+      // Support also pathname like /api/sheets/<id>
+      if (!id) {
+        const parts = parsed.pathname.split('/').filter(Boolean)
+        const lastPart = parts[parts.length - 1]
+        if (lastPart && lastPart !== 'sheets') {
+          id = lastPart.trim()
+        }
       }
     } catch {
       // ignore
     }
+  }
+
+  // If id is present on a GET request, assume sheet download/view intention
+  if (id) {
+    download = true
   }
 
   return { id, download }
@@ -159,10 +179,11 @@ export function getTelegramConfig(env: Record<string, string | undefined> = proc
 export async function sendTelegramNotification(
   params: {
     characterName: string
-    playerName: string
+    playerName?: string
     notes?: string
     fileName: string
     downloadUrl: string
+    pdfBase64?: string
   },
   config: { botToken: string | null; chatId: string | null },
   fetchFn: typeof fetch = fetch
@@ -172,10 +193,10 @@ export async function sendTelegramNotification(
   }
 
   const safeChar = escapeHtml(params.characterName)
-  const safePlayer = escapeHtml(params.playerName)
+  const safePlayer = params.playerName ? escapeHtml(params.playerName) : ''
   const safeNotes = params.notes ? escapeHtml(params.notes) : ''
   const safeFile = escapeHtml(params.fileName)
-  const safeUrl = params.downloadUrl
+  const safeUrl = escapeHtml(params.downloadUrl)
 
   const message = [
     '⚔️ <b>[Neon Reliquary] Nuova Scheda Caricata!</b>',
@@ -189,6 +210,36 @@ export async function sendTelegramNotification(
   ]
     .filter(Boolean)
     .join('\n')
+
+  // Try sendDocument first so Telegram attaches the real PDF file directly into chat
+  if (params.pdfBase64 && typeof FormData !== 'undefined' && typeof Blob !== 'undefined') {
+    try {
+      const rawBase64 = params.pdfBase64.includes(',')
+        ? params.pdfBase64.split(',')[1]
+        : params.pdfBase64
+      const pdfBuffer = Buffer.from(rawBase64, 'base64')
+      const blob = new Blob([pdfBuffer], { type: 'application/pdf' })
+
+      const formData = new FormData()
+      formData.append('chat_id', config.chatId)
+      formData.append('document', blob, params.fileName)
+      formData.append('caption', message)
+      formData.append('parse_mode', 'HTML')
+
+      const docRes = await fetchFn(
+        `https://api.telegram.org/bot${config.botToken}/sendDocument`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      )
+      if (docRes.ok) {
+        return true
+      }
+    } catch {
+      // Fall through to sendMessage fallback
+    }
+  }
 
   try {
     const res = await fetchFn(`https://api.telegram.org/bot${config.botToken}/sendMessage`, {
@@ -240,7 +291,7 @@ export async function handleSheetsRequest(
       }
     }
 
-    const { id: queryId, download: isDownload } = parseRequestParams(req)
+    const { id: queryId } = parseRequestParams(req)
 
     if (sql) {
       try {
@@ -252,8 +303,8 @@ export async function handleSheetsRequest(
 
     // --- GET /api/sheets ---
     if (req.method === 'GET') {
-      // 1. Download specific PDF
-      if (queryId && isDownload) {
+      // 1. Download/view specific PDF if id is specified
+      if (queryId) {
         let record: UploadedSheetRecord | undefined
 
         if (sql) {
@@ -271,6 +322,48 @@ export async function handleSheetsRequest(
         }
 
         if (!record) {
+          const isHtmlRequest =
+            req.headers?.accept && String(req.headers.accept).includes('text/html')
+
+          if (isHtmlRequest) {
+            res.setHeader?.('Content-Type', 'text/html; charset=utf-8')
+            const statusObj = res.status(404) as {
+              send?: (body: string) => void
+              json: (p: unknown) => void
+            }
+            const htmlMessage = `<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <title>Scheda non trovata - Neon Reliquary</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { background: #0a0e17; color: #e2e8f0; font-family: ui-sans-serif, system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; box-sizing: border-box; }
+    .card { background: #131a29; border: 1px solid rgba(0, 240, 255, 0.2); box-shadow: 0 0 30px rgba(0, 240, 255, 0.08); border-radius: 1rem; padding: 2.5rem 2rem; max-width: 440px; text-align: center; }
+    h1 { color: #ff3366; font-size: 1.5rem; margin-top: 0; margin-bottom: 0.75rem; font-weight: 700; letter-spacing: 0.05em; }
+    p { color: #94a3b8; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; }
+    a { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: #00f0ff; color: #000; text-decoration: none; border-radius: 0.75rem; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s; }
+    a:hover { box-shadow: 0 0 20px rgba(0, 240, 255, 0.5); transform: translateY(-1px); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Scheda non trovata (404)</h1>
+    <p>La scheda richiesta non esiste nel database oppure appartiene a una sessione precedente rimossa dall'archivio.</p>
+    <a href="/">Torna a Neon Reliquary</a>
+  </div>
+</body>
+</html>`
+            if (typeof statusObj.send === 'function') {
+              statusObj.send(htmlMessage)
+            } else if (typeof (res as unknown as { end: (d: string) => void }).end === 'function') {
+              ;(res as unknown as { end: (d: string) => void }).end(htmlMessage)
+            } else {
+              statusObj.json({ error: 'Scheda non trovata' })
+            }
+            return
+          }
+
           res.status(404).json({ error: 'Scheda non trovata' })
           return
         }
@@ -284,7 +377,7 @@ export async function handleSheetsRequest(
         res.setHeader?.('Content-Type', 'application/pdf')
         res.setHeader?.(
           'Content-Disposition',
-          `attachment; filename="${safeAsciiFilename}"; filename*=UTF-8''${encodeURIComponent(record.file_name)}`
+          `inline; filename="${safeAsciiFilename}"; filename*=UTF-8''${encodeURIComponent(record.file_name)}`
         )
         res.setHeader?.('Content-Length', String(pdfBuffer.length))
 
@@ -451,6 +544,7 @@ export async function handleSheetsRequest(
           notes,
           fileName,
           downloadUrl,
+          pdfBase64,
         },
         telegramConfig,
         options?.fetchFn ?? fetch
