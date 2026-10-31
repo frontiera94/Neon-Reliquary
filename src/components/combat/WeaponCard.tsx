@@ -3,6 +3,34 @@ import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
 import type { Weapon } from '../../types/combat'
 import type { EffectiveWeaponCalculated } from '../../lib/stat-calc'
 
+export interface SpellstrikeRider {
+  spellName: string
+  chargesRemaining: number
+  chargesMax: number
+  damageDice: string
+  damageType?: string
+  hasMetalBonusToggle?: boolean
+  metalBonusActive?: boolean
+  onToggleMetalBonus?: (active: boolean) => void
+  onDischarge?: () => void
+  onClear?: () => void
+}
+
+export interface QuickSpellstrikeArm {
+  availableSpells: Array<{ id: string; name: string; preparedRemaining?: number; preparedTotal?: number }>
+  onArm: (spellId: string) => void
+}
+
+export interface StunningFistRider {
+  dc: number
+  declared: 'stunned' | 'fatigued' | null
+  onToggle: (condition: 'stunned' | 'fatigued' | null) => void
+}
+
+export interface JabbingStyleRider {
+  onRoll: () => void
+}
+
 export function WeaponCard({
   weapon,
   effective,
@@ -13,6 +41,10 @@ export function WeaponCard({
   hasteActive,
   sneakAttackDice,
   extraDiceLabel,
+  spellstrikeRider,
+  quickSpellstrikeArm,
+  stunningFistRider,
+  jabbingStyleRider,
   onAttackRoll,
   onOffhandRoll,
   onDamageRoll,
@@ -29,6 +61,10 @@ export function WeaponCard({
   hasteActive?: boolean
   sneakAttackDice?: string
   extraDiceLabel?: string
+  spellstrikeRider?: SpellstrikeRider
+  quickSpellstrikeArm?: QuickSpellstrikeArm
+  stunningFistRider?: StunningFistRider
+  jabbingStyleRider?: JabbingStyleRider
   onAttackRoll: (attackIndex?: number) => void
   onOffhandRoll: () => void
   onDamageRoll: () => void
@@ -235,6 +271,125 @@ export function WeaponCard({
             </button>
           )}
         </div>
+
+        {/* Magus Spellstrike held charge rider */}
+        {spellstrikeRider && (
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-secondary/40 bg-secondary/15 p-2 shadow-[0_0_12px_rgba(217,70,239,0.2)]">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-secondary text-base">electric_bolt</span>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-headline text-xs font-bold text-white">
+                    Spellstrike: {spellstrikeRider.spellName}
+                  </span>
+                  <span className="rounded-full border border-secondary/40 bg-secondary/20 px-1.5 py-0.2 font-label text-[9px] font-bold text-secondary">
+                    {spellstrikeRider.chargesRemaining}/{spellstrikeRider.chargesMax} cariche
+                  </span>
+                </div>
+                <span className="font-label text-[10px] text-tertiary">
+                  +{spellstrikeRider.damageDice} {spellstrikeRider.damageType ? `(${spellstrikeRider.damageType})` : ''}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {spellstrikeRider.hasMetalBonusToggle && (
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(spellstrikeRider.metalBonusActive)}
+                    onChange={(e) => spellstrikeRider.onToggleMetalBonus?.(e.target.checked)}
+                    className="rounded border-white/20 text-secondary focus:ring-0"
+                  />
+                  <span className="font-label text-[10px] text-secondary font-bold">
+                    +3 vs Metallo
+                  </span>
+                </label>
+              )}
+              {spellstrikeRider.onDischarge && (
+                <button
+                  type="button"
+                  onClick={spellstrikeRider.onDischarge}
+                  className="rounded-lg border border-secondary/40 bg-secondary/25 px-2.5 py-1 font-label text-[10px] font-bold text-secondary hover:bg-secondary/35 transition-colors cursor-pointer"
+                >
+                  Tira & Scarica
+                </button>
+              )}
+              {spellstrikeRider.onClear && (
+                <button
+                  type="button"
+                  onClick={spellstrikeRider.onClear}
+                  className="text-tertiary hover:text-white p-1 cursor-pointer"
+                  title="Annulla Spellstrike"
+                >
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Quick Spellstrike Arm (when no charge is held on a melee weapon) */}
+        {!spellstrikeRider && quickSpellstrikeArm && quickSpellstrikeArm.availableSpells.length > 0 && isMelee && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 rounded-lg border border-white/10 bg-surface-container/60 px-2 py-1.5">
+            <span className="flex items-center gap-1 font-label text-[9px] uppercase tracking-wider text-secondary font-bold">
+              <span className="material-symbols-outlined text-xs">electric_bolt</span>
+              Carica Spellstrike:
+            </span>
+            {quickSpellstrikeArm.availableSpells.map((sp) => (
+              <button
+                key={sp.id}
+                type="button"
+                onClick={() => quickSpellstrikeArm.onArm(sp.id)}
+                className="rounded border border-secondary/30 bg-secondary/10 px-1.5 py-0.5 font-label text-[9px] font-bold text-secondary hover:bg-secondary/25 transition-colors cursor-pointer"
+              >
+                {sp.name}
+                {sp.preparedTotal ? ` (${sp.preparedRemaining}/${sp.preparedTotal})` : ''}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Monk Stunning Fist & Jabbing Style riders */}
+        {(stunningFistRider || jabbingStyleRider) && (
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/10 p-2">
+            {stunningFistRider && (
+              <div className="flex items-center gap-1.5">
+                <span className="font-label text-[10px] font-bold uppercase text-primary">Stunning Fist:</span>
+                <button
+                  type="button"
+                  onClick={() => stunningFistRider.onToggle(stunningFistRider.declared === 'stunned' ? null : 'stunned')}
+                  className={`rounded px-2 py-0.5 font-label text-[10px] font-bold cursor-pointer transition-colors ${
+                    stunningFistRider.declared === 'stunned'
+                      ? 'border border-primary bg-primary text-black shadow-[0_0_8px_rgba(0,240,255,0.4)]'
+                      : 'border border-white/10 bg-surface-container text-tertiary hover:text-white'
+                  }`}
+                >
+                  Stunned (CD {stunningFistRider.dc})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => stunningFistRider.onToggle(stunningFistRider.declared === 'fatigued' ? null : 'fatigued')}
+                  className={`rounded px-2 py-0.5 font-label text-[10px] font-bold cursor-pointer transition-colors ${
+                    stunningFistRider.declared === 'fatigued'
+                      ? 'border border-primary bg-primary text-black shadow-[0_0_8px_rgba(0,240,255,0.4)]'
+                      : 'border border-white/10 bg-surface-container text-tertiary hover:text-white'
+                  }`}
+                >
+                  Fatigued (CD {stunningFistRider.dc})
+                </button>
+              </div>
+            )}
+            {jabbingStyleRider && (
+              <button
+                type="button"
+                onClick={jabbingStyleRider.onRoll}
+                className="rounded border border-secondary/30 bg-secondary/20 px-2 py-0.5 font-label text-[10px] font-bold text-secondary hover:bg-secondary/30 transition-colors cursor-pointer"
+              >
+                +1d6 Jabbing Style
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Full attack routine */}
         {hasMultipleAttacks && onFullAttackRoll && (

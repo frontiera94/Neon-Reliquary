@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react'
 import { useCharacterStore, type FullCharacter } from '../../store/useCharacterStore'
 import { useSessionStore } from '../../store/useSessionStore'
 import { useInspectorStore } from '../../store/useInspectorStore'
+import { useDiceStore } from '../../store/useDiceStore'
 import type { SessionState } from '../../types/session'
 import type { InspectorItem } from '../../types/inspector'
+import type { DebilitatingInjuryType } from '../../types/class-mechanics'
 import {
   ACTION_ECONOMY_LABEL,
   categorizeFeatures,
@@ -92,8 +94,13 @@ export function ContextualCombatFeatures({
   const storeSession = useSessionStore((s) => (character ? s.getSession(character.id) : null))
   const session = sessionProp ?? storeSession
   const openInspector = useInspectorStore((s) => s.openInspector)
+  const openRoll = useDiceStore((s) => s.openRoll)
   const spendResource = useSessionStore((s) => s.spendResource)
   const setResourceSpent = useSessionStore((s) => s.setResourceSpent)
+  const applyDebilitatingInjury = useSessionStore((s) => s.applyDebilitatingInjury)
+  const setUnderhanded = useSessionStore((s) => s.setUnderhanded)
+  const [debInjuryMode, setDebInjuryMode] = useState<DebilitatingInjuryType>('bewildered')
+  const [debInjuryTarget, setDebInjuryTarget] = useState('')
 
   const features = useMemo(() => {
     if (!character || !session) return []
@@ -116,6 +123,11 @@ export function ContextualCombatFeatures({
   }, [features, maxPassive])
 
   if (!character || !session || features.length === 0) return null
+
+  const isRogue = character ? (character.id === 'mariano-cardamomo' || /rogue/i.test(character.class)) : false
+  const rogueState = session?.classMechanics?.rogue
+  const debilitatingInjury = rogueState?.debilitatingInjury
+  const underhandedAvailable = rogueState?.underhandedAvailable ?? true
 
   const summary = GROUP_ORDER.map((actionType) => {
     const count = groups[actionType]?.length ?? 0
@@ -259,6 +271,118 @@ export function ContextualCombatFeatures({
           )
         })}
       </div>
+      )}
+
+      {/* Rogue Special Tactics (Debilitating Injury & Underhanded) */}
+      {isRogue && (
+        <div className="space-y-2.5 rounded-xl border border-secondary/30 bg-surface-container-high/60 p-3 mt-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-secondary text-sm">visibility</span>
+              <span className="font-headline text-xs font-bold text-white uppercase tracking-wider">
+                Unchained Rogue Tactics
+              </span>
+            </div>
+            <span className="font-label text-[10px] font-bold text-primary">
+              +3 Favored Class Crit Confirm Daggers
+            </span>
+          </div>
+
+          {/* Debilitating Injury Target Badges */}
+          <div className="space-y-1.5 rounded-lg border border-white/10 bg-surface-container/70 p-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-headline text-[11px] font-bold text-white uppercase tracking-wider">
+                Debilitating Injury (Promemoria)
+              </span>
+              {debilitatingInjury && (debilitatingInjury.remainingRounds ?? 0) > 0 && (
+                <div className="flex items-center gap-1">
+                  <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-2 py-0.2 font-label text-[10px] font-bold text-amber-300">
+                    {debilitatingInjury.type ?? debilitatingInjury.mode} su {debilitatingInjury.targetName || 'Bersaglio'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => applyDebilitatingInjury(character.id, null)}
+                    title="Rimuovi promemoria"
+                    className="text-tertiary hover:text-error transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-xs">close</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1">
+              {(['bewildered', 'disoriented', 'hampered'] as DebilitatingInjuryType[]).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setDebInjuryMode(mode)}
+                  className={`rounded px-2 py-0.5 font-label text-[10px] font-bold uppercase transition-all cursor-pointer ${
+                    debInjuryMode === mode
+                      ? 'border border-amber-500 bg-amber-500 text-black'
+                      : 'border border-white/10 bg-surface-container-high text-tertiary hover:text-white'
+                  }`}
+                >
+                  {mode === 'bewildered' ? 'Bewildered (-2/-4 CA)' : mode === 'disoriented' ? 'Disoriented (-2/-4 TxC)' : 'Hampered (1/2 Vel)'}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-1.5 pt-1">
+              <input
+                type="text"
+                placeholder="Nome Bersaglio"
+                value={debInjuryTarget}
+                onChange={(e) => setDebInjuryTarget(e.target.value)}
+                className="rounded border border-white/10 bg-surface-container-high px-2 py-0.5 font-label text-xs text-white focus:border-secondary focus:outline-none flex-1 max-w-[160px]"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  applyDebilitatingInjury(character.id, debInjuryMode, debInjuryTarget.trim() || 'Bersaglio')
+                  setDebInjuryTarget('')
+                }}
+                className="rounded border border-amber-500/40 bg-amber-500/20 px-2 py-0.5 font-label text-[10px] font-bold uppercase text-amber-300 hover:bg-amber-500/30 transition-colors cursor-pointer"
+              >
+                Applica
+              </button>
+            </div>
+          </div>
+
+          {/* Underhanded 1-click */}
+          <div className="flex items-center justify-between gap-2 pt-1 border-t border-white/10">
+            <span className="font-label text-[10px] text-tertiary">
+              Underhanded (Danno furtivo massimizzato):
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={!underhandedAvailable}
+                onClick={() => {
+                  openRoll({
+                    diceType: 6,
+                    count: 0,
+                    modifier: 18,
+                    label: 'Underhanded Maximized Sneak Attack (18 flat)',
+                  })
+                  setUnderhanded(character.id, false)
+                }}
+                className="rounded border border-secondary/40 bg-secondary/20 px-2 py-0.5 font-label text-[10px] font-bold uppercase text-secondary hover:bg-secondary/30 transition-colors cursor-pointer disabled:opacity-40"
+              >
+                18 Flat Sneak
+              </button>
+              {!underhandedAvailable && (
+                <button
+                  type="button"
+                  onClick={() => setUnderhanded(character.id, true)}
+                  className="rounded border border-white/10 bg-surface-container-high px-1.5 py-0.5 font-label text-[9px] text-tertiary hover:text-white cursor-pointer"
+                >
+                  Ripristina
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </section>
   )

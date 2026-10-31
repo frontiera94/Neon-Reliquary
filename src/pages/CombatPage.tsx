@@ -22,6 +22,7 @@ import { CombatManeuversPanel } from '../components/combat/CombatManeuversPanel'
 import { FullAttackModal } from '../components/combat/FullAttackModal'
 import { CombatSpellsSection } from '../components/combat/CombatSpellsSection'
 import { ClassMechanicsPanel } from '../components/combat/ClassMechanicsPanel'
+import { WILD_SHAPE_PRESETS, type WildShapeFormId } from '../data/wild-shape-presets'
 import {
   getWildShapeView,
   getActiveWildShapePreset,
@@ -31,7 +32,14 @@ import {
   calcFuriousFocusBonus,
   hasFeatNamed,
   isTwoHandedWeapon,
+  SPELLSTRIKE_SPELLS,
+  buildHeldSpellstrike,
 } from '../lib/class-combat'
+import {
+  calcBloodrageHpShift,
+  checkBloodrageExitSafety,
+  calcStunningFistDc,
+} from '../lib/class-mechanics'
 import { ContextualCombatFeatures, DefensiveBadges } from '../components/combat/ContextualCombatFeatures'
 import { DailyResourcePips } from '../components/combat/BuffResourceToggle'
 import { SpellUsePips } from '../components/spells/SpellUsePips'
@@ -60,11 +68,25 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     recoverPreparedSpell,
     setPreparedSpellSpent,
     spendResource,
+    setWildShape,
+    setHeldSpellstrike,
+    consumeSpellstrikeCharge,
+    setSpellCombat,
+    activateArcaneWeapon,
+    enterBloodrage,
+    exitBloodrage,
+    activateKiExtraAttack,
+    activateKiDefense,
+    activateKiSpeed,
+    useWholenessOfBody: triggerWholenessOfBody,
+    declareStunningFist,
+    toggleCondition,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
 
   const [showBuffModal, setShowBuffModal] = useState(false)
   const [fullAttackWeapon, setFullAttackWeapon] = useState<Weapon | null>(null)
+  const [selectedWildShapePreset, setSelectedWildShapePreset] = useState<WildShapeFormId>('wolf')
 
   if (!char) {
     return (
@@ -77,6 +99,11 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     initSession(char.id, char.maxHp)
     return null
   }
+
+  const isDruid = char.id === 'noorie' || /druid/i.test(char.class)
+  const isMagus = char.id === 'shotrix-blackburn' || /magus/i.test(char.class)
+  const isWitch = char.id === 'mazikeen-noctis' || /witch/i.test(char.class)
+  const isMonk = char.id === 'agelmund' || /monk/i.test(char.class)
 
   const virtualMechanicsBuffs: BuffToggle[] = []
   const magusSacrifice = session.classMechanics?.magus?.defensiveCastingSacrifice ?? 0
@@ -104,12 +131,75 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     })
   }
 
+  // Magus native Spell Combat & Arcane Pool fallback if not in sheet buffs
+  if (isMagus) {
+    if (!char.buffs.some((b) => b.id === 'spell-combat')) {
+      virtualMechanicsBuffs.push({
+        id: 'spell-combat',
+        name: 'Spell Combat (-2 TxC)',
+        active: Boolean(session.classMechanics?.magus?.spellCombatActive),
+        attackMod: -2,
+        damageMod: 0,
+        acMod: 0,
+        color: 'secondary',
+      })
+    }
+  }
+
+  // Monk native Ki toggles
+  if (isMonk) {
+    const monkMech = session.classMechanics?.monk
+    const kiExtraActive = Boolean(monkMech?.kiExtraAttackActive ?? monkMech?.kiExtraAttack)
+    const kiDefRounds = monkMech?.kiDefenseRounds ?? monkMech?.kiDefenseRoundsLeft ?? 0
+    const kiSpdRounds = monkMech?.kiSpeedRounds ?? monkMech?.kiSpeedRoundsLeft ?? 0
+
+    virtualMechanicsBuffs.push({
+      id: 'ki-extra-flurry',
+      name: 'Ki Extra Flurry (+9/+9/+9)',
+      active: kiExtraActive,
+      attackMod: 0,
+      damageMod: 0,
+      acMod: 0,
+      duration: '1 round',
+      color: 'secondary',
+    })
+    virtualMechanicsBuffs.push({
+      id: 'ki-defense',
+      name: 'Ki Defense (+4 CA Dodge)',
+      active: kiDefRounds > 0,
+      attackMod: 0,
+      damageMod: 0,
+      acMod: 4,
+      acType: 'dodge',
+      duration: '1 round',
+      color: 'primary',
+    })
+    virtualMechanicsBuffs.push({
+      id: 'ki-speed',
+      name: 'Ki Speed (+6m / +20 ft)',
+      active: kiSpdRounds > 0,
+      attackMod: 0,
+      damageMod: 0,
+      acMod: 0,
+      duration: '1 round',
+      color: 'primary',
+    })
+  }
+
   const activeBuffIds = [
     ...session.activeBuffIds,
-    ...virtualMechanicsBuffs.map((b) => b.id),
+    ...virtualMechanicsBuffs.filter((b) => b.active).map((b) => b.id),
   ]
   const customBuffs = session.customBuffs ?? []
-  const allBuffs = [...char.buffs, ...customBuffs, ...virtualMechanicsBuffs]
+  const combinedBuffs = [...char.buffs, ...customBuffs, ...virtualMechanicsBuffs]
+  const buffSeen = new Set<string>()
+  const allBuffs: BuffToggle[] = []
+  for (const b of combinedBuffs) {
+    if (!buffSeen.has(b.id)) {
+      buffSeen.add(b.id)
+      allBuffs.push(b)
+    }
+  }
 
   const wildShapeView = getWildShapeView(char, session.classMechanics)
 
@@ -118,6 +208,101 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     session.conditions,
     allBuffs.filter((b) => activeBuffIds.includes(b.id))
   )
+
+  // Bloodrager mechanics
+  const bloodragerState = session.classMechanics?.bloodrager
+  const isBloodraging = Boolean(
+    bloodragerState?.isRaging ?? bloodragerState?.isBloodraging
+  )
+  const fatigueCountdown = bloodragerState?.fatigueCountdown ?? bloodragerState?.fatigueRoundsLeft ?? 0
+  const isFatigued = session.conditions.includes('fatigued') || fatigueCountdown > 0
+  const bloodrageHpShift = calcBloodrageHpShift(char.level ?? 4)
+  const exitSafety = isBloodraging
+    ? checkBloodrageExitSafety(session.currentHp, char.level ?? 4, 4, char.abilities.con ?? 16)
+    : null
+
+  // Magus mechanics
+  const magusState = session.classMechanics?.magus
+  const heldSpellstrike = magusState?.heldSpellstrike
+  const isSpellCombatActive = Boolean(magusState?.spellCombatActive)
+  const arcanePoolActive = Boolean(
+    magusState?.arcanePoolWeapon?.active ||
+    (magusState?.arcaneWeaponActive && (magusState?.arcaneWeaponRoundsLeft ?? 0) > 0) ||
+    session.activeBuffIds.includes('arcane-pool-weapon')
+  )
+  const arcanePoolMax = char.dailyResources?.find((r) => r.id === 'arcane-pool')?.total ?? 5
+
+  // Monk mechanics
+  const monkState = session.classMechanics?.monk
+  const stunningFistDc = calcStunningFistDc(char.level ?? 4, effectiveAbilities.mods.wis)
+  const kiExtraAttackActive = Boolean(monkState?.kiExtraAttackActive ?? monkState?.kiExtraAttack)
+  const kiDefenseRounds = monkState?.kiDefenseRounds ?? monkState?.kiDefenseRoundsLeft ?? 0
+  const kiSpeedRounds = monkState?.kiSpeedRounds ?? monkState?.kiSpeedRoundsLeft ?? 0
+  const stunningFistDeclared = monkState?.stunningFistDeclared ?? (monkState?.stunningFistActive ? (monkState?.stunningFistCondition ?? 'stunned') : null)
+  const kiPoolMax = char.dailyResources?.find((r) => r.id === 'ki-pool')?.total ?? 6
+
+  // Druid mechanics
+  const wildShapeMax = char.dailyResources?.find((r) => r.id === 'wild-shape')?.total ?? 1
+
+  // Native Buff Toggle Handler
+  const handleToggleBuff = (buffId: string) => {
+    if (buffId === 'bloodrage') {
+      if (isBloodraging) {
+        exitBloodrage(char.id, char)
+      } else {
+        enterBloodrage(char.id, char)
+      }
+      return
+    }
+    if (buffId === 'arcane-pool-weapon' || buffId === 'arcane-weapon') {
+      const nextActive = !arcanePoolActive
+      if (nextActive) {
+        activateArcaneWeapon(char.id, 1)
+        spendResource(char.id, 'arcane-pool', arcanePoolMax)
+      } else {
+        activateArcaneWeapon(char.id, 0)
+      }
+      toggleBuff(char.id, buffId)
+      return
+    }
+    if (buffId === 'spell-combat') {
+      const nextActive = !isSpellCombatActive
+      setSpellCombat(char.id, nextActive, magusSacrifice)
+      toggleBuff(char.id, buffId)
+      return
+    }
+    if (buffId === 'ki-defense') {
+      const nextActive = kiDefenseRounds <= 0
+      if (nextActive) {
+        activateKiDefense(char.id, true)
+        spendResource(char.id, 'ki-pool', kiPoolMax)
+      } else {
+        activateKiDefense(char.id, false)
+      }
+      return
+    }
+    if (buffId === 'ki-extra-flurry') {
+      const nextActive = !kiExtraAttackActive
+      if (nextActive) {
+        activateKiExtraAttack(char.id, true)
+        spendResource(char.id, 'ki-pool', kiPoolMax)
+      } else {
+        activateKiExtraAttack(char.id, false)
+      }
+      return
+    }
+    if (buffId === 'ki-speed') {
+      const nextActive = kiSpeedRounds <= 0
+      if (nextActive) {
+        activateKiSpeed(char.id, true)
+        spendResource(char.id, 'ki-pool', kiPoolMax)
+      } else {
+        activateKiSpeed(char.id, false)
+      }
+      return
+    }
+    toggleBuff(char.id, buffId)
+  }
 
   const restrictions = getActiveActionRestrictions(session.conditions)
   const spellAvailability = getSpellAvailability(char, session)
@@ -144,10 +329,6 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     ? summonableSpells.flatMap((s) => s.summonOptions ?? []).find((o) => o.id === activeSummon.optionId) ?? null
     : null
 
-  const isBloodraging = Boolean(
-    session.classMechanics?.bloodrager?.isRaging ??
-    session.classMechanics?.bloodrager?.isBloodraging
-  )
   const hasFuriousFocus = hasFeatNamed(char.feats, /furious focus/i)
   const isPowerAttackActive = activeBuffIds.includes('power-attack')
   const isFirstAttackOfTurn = true
@@ -178,11 +359,6 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
           critMultiplier: biteWeapon.critMultiplier ?? 2,
         }
       : undefined
-
-  const kiExtraAttackActive = Boolean(
-    session.classMechanics?.monk?.kiExtraAttackActive ??
-    session.classMechanics?.monk?.kiExtraAttack
-  )
 
   const daggerCritConfirmBonus = fullAttackWeapon
     ? calcHalflingDaggerCritConfirm(char.race, [fullAttackWeapon.name, ...(fullAttackWeapon.tags ?? [])])
@@ -247,10 +423,12 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
       >
         {/* Primary column — what you do on your turn. */}
         <div className="space-y-4 xl:col-span-7">
-          {/* Class Mechanics Panel integrated in primary column */}
-          <motion.div variants={STAGGER_ITEM}>
-            <ClassMechanicsPanel char={char} effectiveAbilities={effectiveAbilities} />
-          </motion.div>
+          {/* For Witch, Hex Weave Tracker & Cackle is her core combat engine mounted directly here */}
+          {isWitch && (
+            <motion.div variants={STAGGER_ITEM}>
+              <ClassMechanicsPanel char={char} effectiveAbilities={effectiveAbilities} />
+            </motion.div>
+          )}
 
           <motion.section variants={STAGGER_ITEM} aria-labelledby="attacks-heading">
             <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
@@ -308,6 +486,88 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                     hasteActive={hasteActive}
                     sneakAttackDice={effective.extraDamageDice}
                     extraDiceLabel={effective.extraDiceLabel ?? 'Extra Dmg'}
+                    spellstrikeRider={
+                      isMagus && heldSpellstrike && weapon.type === 'melee'
+                        ? {
+                            spellName: heldSpellstrike.spellName,
+                            chargesRemaining: heldSpellstrike.chargesRemaining,
+                            chargesMax: heldSpellstrike.chargesMax,
+                            damageDice: heldSpellstrike.damageDice,
+                            damageType: heldSpellstrike.damageType,
+                            hasMetalBonusToggle: heldSpellstrike.hasMetalBonusToggle,
+                            metalBonusActive: heldSpellstrike.metalBonusActive,
+                            onToggleMetalBonus: (active) =>
+                              setHeldSpellstrike(char.id, {
+                                ...heldSpellstrike,
+                                metalBonusActive: active,
+                              }),
+                            onDischarge: () => {
+                              const { count, sides } = parseDiceFormula(heldSpellstrike.damageDice)
+                              openRoll({
+                                diceType: sides as DiceType,
+                                count,
+                                modifier: 0,
+                                label: `${heldSpellstrike.spellName} Spellstrike Damage`,
+                              })
+                              consumeSpellstrikeCharge(char.id)
+                            },
+                            onClear: () => setHeldSpellstrike(char.id, null),
+                          }
+                        : undefined
+                    }
+                    quickSpellstrikeArm={
+                      isMagus && !heldSpellstrike && weapon.type === 'melee'
+                        ? {
+                            availableSpells: Object.keys(SPELLSTRIKE_SPELLS).map((spId) => {
+                              const def = SPELLSTRIKE_SPELLS[spId]
+                              const prepTotal = session.preparedSpells?.[spId] ?? 0
+                              const prepSpent = session.spentPreparedSpells?.[spId] ?? 0
+                              return {
+                                id: spId,
+                                name: def.name,
+                                preparedTotal: prepTotal > 0 ? prepTotal : undefined,
+                                preparedRemaining: prepTotal > 0 ? Math.max(0, prepTotal - prepSpent) : undefined,
+                              }
+                            }),
+                            onArm: (spId) => {
+                              setHeldSpellstrike(char.id, buildHeldSpellstrike(spId, char.level ?? 4))
+                              const prepTotal = session.preparedSpells?.[spId] ?? 0
+                              const prepSpent = session.spentPreparedSpells?.[spId] ?? 0
+                              if (prepTotal > 0 && prepTotal - prepSpent > 0) {
+                                spendPreparedSpell(char.id, spId, prepTotal)
+                              }
+                            },
+                          }
+                        : undefined
+                    }
+                    stunningFistRider={
+                      isMonk && /unarmed|colpo senz'armi/i.test(weapon.name)
+                        ? {
+                            dc: stunningFistDc,
+                            declared: stunningFistDeclared,
+                            onToggle: (cond) => {
+                              declareStunningFist(char.id, cond)
+                              if (cond) {
+                                spendResource(char.id, 'stunning-fist', 5)
+                              }
+                            },
+                          }
+                        : undefined
+                    }
+                    jabbingStyleRider={
+                      isMonk && /unarmed|colpo senz'armi/i.test(weapon.name)
+                        ? {
+                            onRoll: () => {
+                              openRoll({
+                                diceType: 6,
+                                count: 1,
+                                modifier: 0,
+                                label: 'Jabbing Style Bonus Damage',
+                              })
+                            },
+                          }
+                        : undefined
+                    }
                     onAttackRoll={(attackIndex = 0) => {
                       const bonus = effective.attackBonus[attackIndex] ?? effective.attackBonus[0]
                       const label =
@@ -450,7 +710,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                 onSpendResource={(resourceId, max) => spendResource(char.id, resourceId, max)}
                 allBuffs={allBuffs}
                 activeBuffIds={activeBuffIds}
-                onToggleBuff={(buffId) => toggleBuff(char.id, buffId)}
+                onToggleBuff={(buffId) => handleToggleBuff(buffId)}
                 onAddCustomBuff={(buff) => addCustomBuff(char.id, buff)}
               />
             </motion.div>
@@ -679,6 +939,66 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
               </button>
             </div>
 
+            {/* Druid Wild Shape native activator & active form chip */}
+            {isDruid && (
+              <div className="mt-3">
+                {isWildShapeActive && activeWildShapePreset ? (
+                  <div className="rounded-xl border border-primary/40 bg-primary/10 p-2.5 shadow-[0_0_12px_rgba(0,240,255,0.15)]">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="material-symbols-outlined text-primary text-base">nature</span>
+                        <span className="font-label text-xs font-bold text-white truncate">
+                          Wild Shape: {activeWildShapePreset.name} ({activeWildShapePreset.size})
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setWildShape(char.id, null)}
+                        className="rounded border border-white/20 bg-surface-container px-2 py-0.5 font-label text-[10px] font-bold text-white hover:bg-white/10 transition-colors cursor-pointer flex-shrink-0"
+                      >
+                        Ritorna Umanoide
+                      </button>
+                    </div>
+                    <p className="mt-1 font-label text-[10px] text-tertiary">
+                      Vel {activeWildShapePreset.speed} ft · CA Nat +{activeWildShapePreset.naturalArmorBonus}
+                      {activeWildShapePreset.strBonus ? ` · +${activeWildShapePreset.strBonus} FOR` : ''}
+                      {activeWildShapePreset.dexBonus ? ` · +${activeWildShapePreset.dexBonus} DES` : ''}
+                      {' · Sensi: '}{activeWildShapePreset.senses.join(', ')}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-surface-container/60 p-2">
+                    <span className="material-symbols-outlined text-primary text-base flex-shrink-0">nature</span>
+                    <select
+                      aria-label="Preset Wild Shape"
+                      value={selectedWildShapePreset}
+                      onChange={(e) => setSelectedWildShapePreset(e.target.value as WildShapeFormId)}
+                      className="flex-1 min-w-0 rounded border border-white/10 bg-surface-container-high px-2 py-1 font-label text-[11px] text-white focus:outline-none"
+                    >
+                      {Object.values(WILD_SHAPE_PRESETS).map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.size} · +{p.strBonus ?? 0} FOR, +{p.naturalArmorBonus} CA)
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const preset = WILD_SHAPE_PRESETS[selectedWildShapePreset]
+                        if (preset) {
+                          setWildShape(char.id, preset)
+                          spendResource(char.id, 'wild-shape', wildShapeMax)
+                        }
+                      }}
+                      className="rounded border border-primary/40 bg-primary/20 px-2.5 py-1 font-label text-[10px] font-bold uppercase text-primary hover:bg-primary/30 transition-colors cursor-pointer flex-shrink-0"
+                    >
+                      Attiva
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="mt-3 space-y-1.5">
               {allBuffs.map((buff) => {
                 const isActive = activeBuffIds.includes(buff.id)
@@ -688,75 +1008,145 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                 const tokens = buffModifierTokens(buff)
 
                 return (
-                  <button
-                    key={buff.id}
-                    onClick={() => toggleBuff(char.id, buff.id)}
-                    aria-pressed={isActive}
-                    title={isActive ? `Disable ${buff.name}` : `Enable ${buff.name}`}
-                    className="flex w-full items-center gap-2.5 rounded-xl border bg-surface-container/80 px-2.5 py-2 text-left backdrop-blur-sm transition-all hover:bg-surface-container-high active:scale-[0.99] cursor-pointer"
-                    style={
-                      isActive
-                        ? {
-                            borderColor: hex,
-                            backgroundColor: `${hex}14`,
-                            boxShadow: `0 0 16px ${hex}35`,
-                          }
-                        : { borderColor: 'rgba(255,255,255,0.07)' }
-                    }
-                  >
-                    <span
-                      className="h-1.5 w-1.5 flex-shrink-0 rounded-full transition-all"
+                  <div key={buff.id} className="space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleBuff(buff.id)}
+                      aria-pressed={isActive}
+                      title={isActive ? `Disable ${buff.name}` : `Enable ${buff.name}`}
+                      className="flex w-full items-center gap-2.5 rounded-xl border bg-surface-container/80 px-2.5 py-2 text-left backdrop-blur-sm transition-all hover:bg-surface-container-high active:scale-[0.99] cursor-pointer"
                       style={
                         isActive
-                          ? { backgroundColor: hex, boxShadow: `0 0 8px ${hex}` }
-                          : { backgroundColor: 'rgba(255,255,255,0.18)' }
+                          ? {
+                              borderColor: hex,
+                              backgroundColor: `${hex}14`,
+                              boxShadow: `0 0 16px ${hex}35`,
+                            }
+                          : { borderColor: 'rgba(255,255,255,0.07)' }
                       }
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className="block truncate font-label text-[11px] font-bold tracking-wide"
-                        style={{ color: isActive ? hex : 'rgba(241,245,249,0.72)' }}
-                      >
-                        {buff.name}
-                      </span>
-                      {tokens.length > 0 && (
-                        <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                          {tokens.map((token, index) => (
-                            <span key={`${token.label}-${index}`} className="contents">
-                              {index > 0 && <span className="font-label text-[10px] text-tertiary/40">|</span>}
-                              <span className={`font-label text-[10px] tabular-nums ${isActive ? `font-bold ${modifierColor(token.value)}` : 'text-tertiary/50'}`}>
-                                {token.value !== null ? `${token.value > 0 ? '+' : ''}${token.value} ${token.label}` : `+${token.label}`}
-                              </span>
-                            </span>
-                          ))}
-                        </span>
-                      )}
-                      <span className="sr-only">
-                        {[
-                          buff.attackMod !== 0 ? `${buff.attackMod > 0 ? '+' : ''}${buff.attackMod} Att` : '',
-                          buff.damageMod !== 0 ? `${buff.damageMod > 0 ? '+' : ''}${buff.damageMod} Dmg` : '',
-                          buff.acMod !== 0 ? `${buff.acMod > 0 ? '+' : ''}${buff.acMod} AC` : '',
-                          buff.extraDamageDice ? `+${buff.extraDamageDice}` : '',
-                          ...(typeof buff.saveMod === 'number' && buff.saveMod !== 0
-                            ? [`${buff.saveMod > 0 ? '+' : ''}${buff.saveMod} Saves`]
-                            : typeof buff.saveMod === 'object' && buff.saveMod !== null
-                              ? Object.entries(buff.saveMod)
-                                  .filter(([, v]) => v !== undefined && v !== 0)
-                                  .map(([k, v]) => `${(v as number) > 0 ? '+' : ''}${v} ${k === 'fort' ? 'Fort' : k === 'ref' ? 'Ref' : k === 'will' ? 'Will' : k}`)
-                              : []),
-                          buff.meleeOnly ? 'Melee only' : '',
-                        ]
-                          .filter(Boolean)
-                          .join(' / ')}
-                      </span>
-                    </span>
-                    <span
-                      className="flex-shrink-0 font-label text-[10px] font-bold uppercase tracking-wider"
-                      style={{ color: isActive ? hex : 'rgba(255,255,255,0.32)' }}
                     >
-                      {isActive ? 'On' : 'Off'}
-                    </span>
-                  </button>
+                      <span
+                        className="h-1.5 w-1.5 flex-shrink-0 rounded-full transition-all"
+                        style={
+                          isActive
+                            ? { backgroundColor: hex, boxShadow: `0 0 8px ${hex}` }
+                            : { backgroundColor: 'rgba(255,255,255,0.18)' }
+                        }
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className="block truncate font-label text-[11px] font-bold tracking-wide"
+                          style={{ color: isActive ? hex : 'rgba(241,245,249,0.72)' }}
+                        >
+                          {buff.name}
+                        </span>
+                        {tokens.length > 0 && (
+                          <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                            {tokens.map((token, index) => (
+                              <span key={`${token.label}-${index}`} className="contents">
+                                {index > 0 && <span className="font-label text-[10px] text-tertiary/40">|</span>}
+                                <span className={`font-label text-[10px] tabular-nums ${isActive ? `font-bold ${modifierColor(token.value)}` : 'text-tertiary/50'}`}>
+                                  {token.value !== null ? `${token.value > 0 ? '+' : ''}${token.value} ${token.label}` : `+${token.label}`}
+                                </span>
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                        <span className="sr-only">
+                          {[
+                            buff.attackMod !== 0 ? `${buff.attackMod > 0 ? '+' : ''}${buff.attackMod} Att` : '',
+                            buff.damageMod !== 0 ? `${buff.damageMod > 0 ? '+' : ''}${buff.damageMod} Dmg` : '',
+                            buff.acMod !== 0 ? `${buff.acMod > 0 ? '+' : ''}${buff.acMod} AC` : '',
+                            buff.extraDamageDice ? `+${buff.extraDamageDice}` : '',
+                            ...(typeof buff.saveMod === 'number' && buff.saveMod !== 0
+                              ? [`${buff.saveMod > 0 ? '+' : ''}${buff.saveMod} Saves`]
+                              : typeof buff.saveMod === 'object' && buff.saveMod !== null
+                                ? Object.entries(buff.saveMod)
+                                    .filter(([, v]) => v !== undefined && v !== 0)
+                                    .map(([k, v]) => `${(v as number) > 0 ? '+' : ''}${v} ${k === 'fort' ? 'Fort' : k === 'ref' ? 'Ref' : k === 'will' ? 'Will' : k}`)
+                                : []),
+                            buff.meleeOnly ? 'Melee only' : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' / ')}
+                        </span>
+                      </span>
+                      <span
+                        className="flex-shrink-0 font-label text-[10px] font-bold uppercase tracking-wider"
+                        style={{ color: isActive ? hex : 'rgba(255,255,255,0.32)' }}
+                      >
+                        {isActive ? 'On' : 'Off'}
+                      </span>
+                    </button>
+
+                    {/* Bloodrage active perks & lethal exit alert */}
+                    {buff.id === 'bloodrage' && isBloodraging && (
+                      <div className="space-y-1.5 rounded-xl border border-error/40 bg-error/10 p-2 text-[10px] font-label">
+                        <p className="text-white">
+                          <strong>Bonus attivi:</strong> +4 FOR, +4 COS (+{bloodrageHpShift} HP max/attuali), +2 Tempra/Volontà, -2 CA, <strong>Portata 3m (Aberrante)</strong>.
+                        </p>
+                        <div className="flex items-center gap-1.5 text-secondary font-bold">
+                          <span className="material-symbols-outlined text-xs">pets</span>
+                          <span>Morso (Ring of Rat Fangs) sbloccato come attacco secondario a -5 (0.5x FOR)!</span>
+                        </div>
+                        {exitSafety && exitSafety.severity !== 'none' && (
+                          <div
+                            className={`rounded border p-1.5 font-bold animate-pulse ${
+                              exitSafety.severity === 'danger'
+                                ? 'border-error bg-error/20 text-error'
+                                : 'border-amber-500/50 bg-amber-950/60 text-amber-300'
+                            }`}
+                          >
+                            ⚠️ {exitSafety.message}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Bloodrage fatigue indicator & 1-click removal */}
+                    {buff.id === 'bloodrage' && isFatigued && !isBloodraging && (
+                      <div className="flex items-center justify-between rounded-lg border border-amber-500/40 bg-amber-500/15 p-2 font-label text-[10px]">
+                        <span className="text-amber-300 font-bold">
+                          Affaticato: impossibile rientrare in Ira
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleCondition(char.id, 'fatigued')}
+                          className="rounded border border-amber-500/50 bg-amber-500/20 px-2 py-0.5 font-bold uppercase text-amber-200 hover:bg-amber-500/30 transition-colors cursor-pointer"
+                        >
+                          Rimuovi Affaticato
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Magus Spell Combat defensive casting slider */}
+                    {buff.id === 'spell-combat' && isSpellCombatActive && (
+                      <div className="space-y-1 rounded-xl border border-secondary/30 bg-secondary/10 p-2 font-label">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="text-secondary font-bold">Sacrificio Difensivo:</span>
+                          <span className="text-tertiary">
+                            -{2 + magusSacrifice} TxC / +{magusSacrifice} Conc
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {[0, 1, 2, 3, 4].map((pts) => (
+                            <button
+                              key={pts}
+                              type="button"
+                              onClick={() => setSpellCombat(char.id, true, pts)}
+                              className={`flex-1 rounded py-0.5 text-[10px] font-bold transition-all cursor-pointer ${
+                                magusSacrifice === pts
+                                  ? 'border border-secondary bg-secondary text-black'
+                                  : 'border border-white/10 bg-surface-container-high text-tertiary hover:text-white'
+                              }`}
+                            >
+                              -{pts}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )
               })}
             </div>
@@ -770,6 +1160,23 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                     resource={resource}
                     spent={session.spentResources[resource.id] ?? 0}
                     compact
+                    extraAction={
+                      isMonk && resource.id === 'ki-pool' ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const rolled = Math.floor(Math.random() * 8) + 1 + (char.level ?? 4)
+                            triggerWholenessOfBody(char.id, rolled)
+                            spendResource(char.id, 'ki-pool', kiPoolMax)
+                            spendResource(char.id, 'ki-pool', kiPoolMax)
+                          }}
+                          className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 font-label text-[9px] font-bold text-primary hover:bg-primary/20 transition-colors cursor-pointer"
+                          title={`Cura 1d8+${char.level ?? 4} HP spendendo 2 Ki`}
+                        >
+                          Wholeness (2 Ki)
+                        </button>
+                      ) : undefined
+                    }
                   />
                 ))}
               </div>
@@ -812,6 +1219,35 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                           onSetSpent={(amount) => setPreparedSpellSpent(char.id, item.id, amount)}
                         />
                       ))}
+
+                      {/* Magus Spell Recall */}
+                      {isMagus && char.dailyResources.some((r) => r.id === 'arcane-pool') && spellAvailability.activeSpellUses.some((u) => u.spent > 0) && (
+                        <div className="flex flex-wrap items-center gap-1 pt-1 border-t border-white/5">
+                          <span className="font-label text-[9px] uppercase tracking-wider text-secondary font-bold">Recall:</span>
+                          {spellAvailability.activeSpellUses
+                            .filter((u) => u.spent > 0)
+                            .map((spUse) => {
+                              const sp = char.spells.find((s) => s.id === spUse.id)
+                              const cost = Math.max(1, sp?.level ?? 1)
+                              return (
+                                <button
+                                  key={`recall-${spUse.id}`}
+                                  type="button"
+                                  onClick={() => {
+                                    recoverPreparedSpell(char.id, spUse.id)
+                                    for (let i = 0; i < cost; i++) {
+                                      spendResource(char.id, 'arcane-pool', arcanePoolMax)
+                                    }
+                                  }}
+                                  title={`Riprepara ${spUse.name} spendendo ${cost} pt Arcane Pool`}
+                                  className="rounded border border-secondary/30 bg-secondary/15 px-1.5 py-0.5 font-label text-[9px] font-bold text-secondary hover:bg-secondary/25 transition-colors cursor-pointer"
+                                >
+                                  {spUse.name} ({cost} pt)
+                                </button>
+                              )
+                            })}
+                        </div>
+                      )}
                       {spellAvailability.levels
                         .filter((lvl) => (lvl.unpreparedCount ?? 0) > 0)
                         .map((lvl) => (
