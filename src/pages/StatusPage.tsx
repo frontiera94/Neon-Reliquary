@@ -51,7 +51,8 @@ export function StatusPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
   const {
-    adjustHp,
+    applyDamage,
+    applyHealing,
     initSession,
     setNonlethal,
     setTempHp,
@@ -233,7 +234,7 @@ export function StatusPage() {
           </div>
           <div className="mt-8 flex items-center gap-3">
             <button
-              onClick={() => adjustHp(char.id, -hpDelta, maxHp)}
+              onClick={() => applyDamage(char.id, hpDelta, effectiveAbilities.scores.con)}
               className="px-5 py-3 bg-error-container text-on-error-container hover:brightness-125 transition-all active:scale-95 font-label text-sm uppercase tracking-widest rounded-xl cursor-pointer"
               aria-label="Decrease HP"
             >
@@ -247,7 +248,7 @@ export function StatusPage() {
               className="w-20 bg-surface-container-high text-on-surface font-label text-xl font-bold text-center py-3 rounded-xl border border-white/10 focus:border-primary focus:outline-none"
             />
             <button
-              onClick={() => adjustHp(char.id, hpDelta, maxHp)}
+              onClick={() => applyHealing(char.id, hpDelta, maxHp)}
               className="px-5 py-3 bg-primary-container text-on-primary-container hover:brightness-125 transition-all active:scale-95 font-label text-sm uppercase tracking-widest rounded-xl cursor-pointer"
               aria-label="Increase HP"
             >

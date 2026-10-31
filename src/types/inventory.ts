@@ -13,6 +13,7 @@ export interface InventoryItem {
   description: string
   category: ItemCategory
   quantity: number
+  weight?: number
   equipped?: boolean
   slot?: EquipmentSlot
   armorBonus?: number

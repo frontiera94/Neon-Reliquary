@@ -15,6 +15,7 @@ export function SkillsPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
   const openRoll = useDiceStore((s) => s.openRoll)
+  const setResult = useDiceStore((s) => s.setResult)
   const [search, setSearch] = useState('')
   const [trainedOnly, setTrainedOnly] = useState(false)
 
@@ -136,6 +137,21 @@ export function SkillsPage() {
                       breakdown: skill.breakdown,
                     })
                   }
+                  onTake10={() =>
+                    setResult({
+                      id: crypto.randomUUID(),
+                      label: `${skill.name} (Take 10)`,
+                      diceType: 20,
+                      naturalRolls: [10],
+                      modifier: skill.effectiveTotal,
+                      total: 10 + skill.effectiveTotal,
+                      isCriticalThreat: false,
+                      isCriticalConfirmed: false,
+                      formula: `10 + ${skill.effectiveTotal} = ${10 + skill.effectiveTotal}`,
+                      timestamp: Date.now(),
+                      breakdown: [{ label: 'Take 10', value: 10 }, ...(skill.breakdown ?? [])],
+                    })
+                  }
                 />
               </motion.div>
             ))}
@@ -156,6 +172,21 @@ export function SkillsPage() {
                         breakdown: skill.breakdown,
                       })
                     }
+                    onTake10={() =>
+                      setResult({
+                        id: crypto.randomUUID(),
+                        label: `${skill.name} (Take 10)`,
+                        diceType: 20,
+                        naturalRolls: [10],
+                        modifier: skill.effectiveTotal,
+                        total: 10 + skill.effectiveTotal,
+                        isCriticalThreat: false,
+                        isCriticalConfirmed: false,
+                        formula: `10 + ${skill.effectiveTotal} = ${10 + skill.effectiveTotal}`,
+                        timestamp: Date.now(),
+                        breakdown: [{ label: 'Take 10', value: 10 }, ...(skill.breakdown ?? [])],
+                      })
+                    }
                   />
                 </motion.div>
               ))}
@@ -171,16 +202,26 @@ function SkillRow({
   skill,
   total,
   onRoll,
+  onTake10,
 }: {
   skill: EffectiveSkill
   total: number
   onRoll: () => void
+  onTake10: () => void
 }) {
   return (
-    <button
+    <div
       onClick={onRoll}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onRoll()
+        }
+      }}
       aria-label={`Roll ${skill.name}`}
-      className="w-full bg-surface-container/90 backdrop-blur-sm flex items-center justify-between p-4 gap-4 rounded-xl border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] hover:bg-surface-container-high transition-all active:scale-[0.99] text-left cursor-pointer group"
+      className="w-full bg-surface-container/90 backdrop-blur-sm flex items-center justify-between p-4 gap-3 sm:gap-4 rounded-xl border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] hover:bg-surface-container-high transition-all active:scale-[0.99] text-left cursor-pointer group"
     >
       {/* Left: name + meta */}
       <div className="flex items-center gap-3.5 flex-1 min-w-0">
@@ -209,12 +250,30 @@ function SkillRow({
         </div>
       </div>
 
-      {/* Bonus */}
-      <div className="w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center bg-gradient-to-r from-primary to-primary-container text-black font-black shadow-[0_0_15px_rgba(0,240,255,0.3)] group-hover:shadow-[0_0_25px_rgba(0,240,255,0.5)] transition-all">
-        <span className="font-label text-2xl sm:text-3xl font-black">
+      {/* Take 10 Badge & Action */}
+      <button
+        type="button"
+        aria-label={`Take 10 on ${skill.name}`}
+        onClick={(e) => {
+          e.stopPropagation()
+          onTake10()
+        }}
+        title={`Take 10 on ${skill.name} = ${10 + total}`}
+        className="px-2.5 py-1.5 rounded-lg bg-surface-container-high border border-white/10 hover:border-secondary/50 text-tertiary hover:text-white text-[11px] font-label font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 flex-shrink-0 hover:bg-secondary/20 shadow-sm"
+      >
+        <span className="material-symbols-outlined text-xs text-secondary">check_circle</span>
+        <span>Take 10: <strong className="text-white font-bold">{10 + total}</strong></span>
+      </button>
+
+      {/* Bonus Box */}
+      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex-shrink-0 flex flex-col items-center justify-center bg-gradient-to-r from-primary to-primary-container text-black font-black shadow-[0_0_15px_rgba(0,240,255,0.3)] group-hover:shadow-[0_0_25px_rgba(0,240,255,0.5)] transition-all">
+        <span className="font-label text-xl sm:text-2xl font-black leading-none">
           {total >= 0 ? `+${total}` : total}
         </span>
+        <span className="font-label text-[9px] uppercase tracking-wider font-bold opacity-80 mt-0.5">
+          Roll
+        </span>
       </div>
-    </button>
+    </div>
   )
 }
