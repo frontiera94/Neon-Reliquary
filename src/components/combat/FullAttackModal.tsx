@@ -15,9 +15,12 @@ export interface AttackResult {
   isNat20: boolean
   isHaste?: boolean
   isOffhand?: boolean
+  isSecondary?: boolean
+  damageOverride?: { dice: string; bonus: number }
   critConfirmation?: {
     naturalRoll: number
     total: number
+    critConfirmBonus?: number
   }
 }
 
@@ -29,11 +32,21 @@ interface FullAttackModalProps {
   twfActive: boolean
   offhandPenalty: number
   hasteActive?: boolean
+  kiExtraAttackActive?: boolean
+  secondaryAttack?: {
+    name: string
+    bonus: number
+    damageDice: string
+    damageBonus: number
+    critRange?: number
+    critMultiplier?: number
+  }
+  critConfirmBonus?: number
   sneakAttackDice?: string
   extraDiceLabel?: string
   animated?: boolean
   rollDuration?: number
-  onRollDamage: (label: string, bonus: number, isCritical?: boolean) => void
+  onRollDamage: (label: string, bonus: number, isCritical?: boolean, damageDiceOverride?: string) => void
   onRollExtraDice?: () => void
 }
 
@@ -46,19 +59,45 @@ function generateAttackResults(
   effective: EffectiveWeaponCalculated,
   twfActive: boolean,
   offhandPenalty: number,
-  hasteActive: boolean = false
+  hasteActive: boolean = false,
+  options?: {
+    kiExtraAttackActive?: boolean
+    secondaryAttack?: {
+      name: string
+      bonus: number
+      damageDice: string
+      damageBonus: number
+      critRange?: number
+      critMultiplier?: number
+    }
+  }
 ): AttackResult[] {
-  const attacks: { label: string; bonus: number; isHaste?: boolean; isOffhand?: boolean }[] =
-    effective.attackBonus.map((bonus, i) => ({
-      label: `${i + 1}° Attack`,
-      bonus,
-    }))
+  const attacks: {
+    label: string
+    bonus: number
+    critRange?: number
+    critMultiplier?: number
+    isHaste?: boolean
+    isOffhand?: boolean
+    isSecondary?: boolean
+    damageOverride?: { dice: string; bonus: number }
+  }[] = effective.attackBonus.map((bonus, i) => ({
+    label: `${i + 1}° Attack`,
+    bonus,
+  }))
 
   if (hasteActive) {
     attacks.splice(1, 0, {
       label: 'Haste Attack',
       bonus: effective.attackBonus[0] ?? 0,
       isHaste: true,
+    })
+  }
+
+  if (options?.kiExtraAttackActive) {
+    attacks.push({
+      label: 'Ki Flurry Attack',
+      bonus: effective.attackBonus[0] ?? 0,
     })
   }
 
@@ -70,12 +109,27 @@ function generateAttackResults(
     })
   }
 
+  if (options?.secondaryAttack) {
+    attacks.push({
+      label: options.secondaryAttack.name,
+      bonus: options.secondaryAttack.bonus,
+      critRange: options.secondaryAttack.critRange,
+      critMultiplier: options.secondaryAttack.critMultiplier,
+      isSecondary: true,
+      damageOverride: {
+        dice: options.secondaryAttack.damageDice,
+        bonus: options.secondaryAttack.damageBonus,
+      },
+    })
+  }
+
   return attacks.map((atk, index) => {
     const nat = getRandomD20()
     const total = nat + atk.bonus
     const isNat1 = nat === 1
     const isNat20 = nat === 20
-    const isCrit = !isNat1 && nat >= weapon.critRange
+    const critRange = atk.critRange ?? weapon.critRange
+    const isCrit = !isNat1 && nat >= critRange
     return {
       index,
       label: atk.label,
@@ -87,6 +141,8 @@ function generateAttackResults(
       isNat20,
       isHaste: atk.isHaste,
       isOffhand: atk.isOffhand,
+      isSecondary: atk.isSecondary,
+      damageOverride: atk.damageOverride,
     }
   })
 }
@@ -99,6 +155,9 @@ export function FullAttackModal({
   twfActive,
   offhandPenalty,
   hasteActive,
+  kiExtraAttackActive,
+  secondaryAttack,
+  critConfirmBonus = 0,
   sneakAttackDice,
   extraDiceLabel,
   animated,
@@ -113,7 +172,10 @@ export function FullAttackModal({
     hasteActive ?? effective.hasteActive ?? effective.activeBuffNames?.some((b) => /haste/i.test(b)) ?? false
 
   const [results, setResults] = useState<AttackResult[]>(() =>
-    generateAttackResults(weapon, effective, twfActive, offhandPenalty, isHaste)
+    generateAttackResults(weapon, effective, twfActive, offhandPenalty, isHaste, {
+      kiExtraAttackActive,
+      secondaryAttack,
+    })
   )
 
   const [revealedCount, setRevealedCount] = useState<number>(() => (isAnimated ? 0 : 999))
@@ -127,7 +189,12 @@ export function FullAttackModal({
   if (isOpen !== prevOpen) {
     setPrevOpen(isOpen)
     if (isOpen) {
-      setResults(generateAttackResults(weapon, effective, twfActive, offhandPenalty, isHaste))
+      setResults(
+        generateAttackResults(weapon, effective, twfActive, offhandPenalty, isHaste, {
+          kiExtraAttackActive,
+          secondaryAttack,
+        })
+      )
       setRevealedCount(isAnimated ? 0 : 999)
       setIsPaused(false)
       setConfirmingIndex(null)
@@ -135,20 +202,25 @@ export function FullAttackModal({
   }
 
   const rollSequence = useCallback(() => {
-    setResults(generateAttackResults(weapon, effective, twfActive, offhandPenalty, isHaste))
+    setResults(
+      generateAttackResults(weapon, effective, twfActive, offhandPenalty, isHaste, {
+        kiExtraAttackActive,
+        secondaryAttack,
+      })
+    )
     setRevealedCount(isAnimated ? 0 : 999)
     setIsPaused(false)
     setConfirmingIndex(null)
-  }, [weapon, effective, twfActive, offhandPenalty, isHaste, isAnimated])
+  }, [weapon, effective, twfActive, offhandPenalty, isHaste, isAnimated, kiExtraAttackActive, secondaryAttack, setResults, setRevealedCount, setIsPaused, setConfirmingIndex])
 
   const handleSkipAnimation = useCallback(() => {
     setRevealedCount(results.length)
     setIsPaused(false)
-  }, [results.length])
+  }, [results.length, setRevealedCount, setIsPaused])
 
   const handleStepNext = useCallback(() => {
     setRevealedCount((prev) => Math.min(prev + 1, results.length))
-  }, [results.length])
+  }, [results.length, setRevealedCount])
 
   // Sequential roll timer & rapid cycling ticker
   useEffect(() => {
@@ -181,9 +253,11 @@ export function FullAttackModal({
     const atk = results[index]
     if (!atk) return
 
+    const confBonus = atk.bonus + (critConfirmBonus ?? 0)
+
     if (!isAnimated) {
       const confNat = getRandomD20()
-      const confTotal = confNat + atk.bonus
+      const confTotal = confNat + confBonus
       setResults((prev) =>
         prev.map((r, i) =>
           i === index
@@ -192,6 +266,7 @@ export function FullAttackModal({
                 critConfirmation: {
                   naturalRoll: confNat,
                   total: confTotal,
+                  critConfirmBonus: critConfirmBonus ?? 0,
                 },
               }
             : r
@@ -203,7 +278,7 @@ export function FullAttackModal({
     setConfirmingIndex(index)
     confirmTimeoutRef.current = setTimeout(() => {
       const confNat = getRandomD20()
-      const confTotal = confNat + atk.bonus
+      const confTotal = confNat + confBonus
       setResults((prev) =>
         prev.map((r, i) =>
           i === index
@@ -212,6 +287,7 @@ export function FullAttackModal({
                 critConfirmation: {
                   naturalRoll: confNat,
                   total: confTotal,
+                  critConfirmBonus: critConfirmBonus ?? 0,
                 },
               }
             : r
@@ -600,7 +676,8 @@ export function FullAttackModal({
                               <span>Confirm Roll: {r.critConfirmation.total}</span>
                             </span>
                             <span className="text-xs font-label text-tertiary">
-                              (d20: {r.critConfirmation.naturalRoll} {r.bonus >= 0 ? `+ ${r.bonus}` : `- ${Math.abs(r.bonus)}`})
+                              (d20: {r.critConfirmation.naturalRoll} {r.bonus >= 0 ? `+ ${r.bonus}` : `- ${Math.abs(r.bonus)}`}
+                              {r.critConfirmation.critConfirmBonus ? ` + ${r.critConfirmation.critConfirmBonus} Favored Class` : ''})
                             </span>
                           </div>
                         )}
@@ -637,26 +714,30 @@ export function FullAttackModal({
                         {isCritConfirmed ? (
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <button
-                              onClick={() =>
-                                onRollDamage(
-                                  `${weapon.name} (${r.label}) Dmg`,
-                                  totalDmgMod,
-                                  true
-                                )
-                              }
+                              onClick={() => {
+                                const label = `${r.isSecondary ? r.label : weapon.name} (${r.label}) Dmg`
+                                const bonus = r.damageOverride ? r.damageOverride.bonus : totalDmgMod
+                                if (r.damageOverride?.dice) {
+                                  onRollDamage(label, bonus, true, r.damageOverride.dice)
+                                } else {
+                                  onRollDamage(label, bonus, true)
+                                }
+                              }}
                               className="w-full sm:w-auto px-3 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 bg-secondary/25 hover:bg-secondary/35 border border-secondary text-secondary shadow-[0_0_12px_rgba(217,70,239,0.3)] hover:shadow-[0_0_18px_rgba(217,70,239,0.5)]"
                             >
                               <span className="material-symbols-outlined text-xs">swords</span>
                               <span>Roll Crit Dmg (x{weapon.critMultiplier})</span>
                             </button>
                             <button
-                              onClick={() =>
-                                onRollDamage(
-                                  `${weapon.name} (${r.label}) Dmg`,
-                                  totalDmgMod,
-                                  false
-                                )
-                              }
+                              onClick={() => {
+                                const label = `${r.isSecondary ? r.label : weapon.name} (${r.label}) Dmg`
+                                const bonus = r.damageOverride ? r.damageOverride.bonus : totalDmgMod
+                                if (r.damageOverride?.dice) {
+                                  onRollDamage(label, bonus, false, r.damageOverride.dice)
+                                } else {
+                                  onRollDamage(label, bonus, false)
+                                }
+                              }}
                               className="w-full sm:w-auto px-3 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 bg-surface-container-high hover:bg-surface-container-highest border border-white/10 hover:border-primary/40 text-primary"
                             >
                               <span className="material-symbols-outlined text-xs">swords</span>
@@ -665,17 +746,19 @@ export function FullAttackModal({
                           </div>
                         ) : (
                           <button
-                            onClick={() =>
-                              onRollDamage(
-                                `${weapon.name} (${r.label}) Dmg`,
-                                totalDmgMod,
-                                false
-                              )
-                            }
+                            onClick={() => {
+                              const label = `${r.isSecondary ? r.label : weapon.name} (${r.label}) Dmg`
+                              const bonus = r.damageOverride ? r.damageOverride.bonus : totalDmgMod
+                              if (r.damageOverride?.dice) {
+                                onRollDamage(label, bonus, false, r.damageOverride.dice)
+                              } else {
+                                onRollDamage(label, bonus, false)
+                              }
+                            }}
                             className="w-full sm:w-auto px-3.5 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary hover:shadow-[0_0_12px_rgba(0,240,255,0.25)]"
                           >
                             <span className="material-symbols-outlined text-xs">swords</span>
-                            <span>Roll Dmg ({weapon.damageDice}{totalDmgMod >= 0 ? `+${totalDmgMod}` : totalDmgMod})</span>
+                            <span>Roll Dmg ({r.damageOverride ? r.damageOverride.dice : weapon.damageDice}{(r.damageOverride ? r.damageOverride.bonus : totalDmgMod) >= 0 ? `+${r.damageOverride ? r.damageOverride.bonus : totalDmgMod}` : (r.damageOverride ? r.damageOverride.bonus : totalDmgMod)})</span>
                           </button>
                         )}
                       </div>

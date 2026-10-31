@@ -4,6 +4,24 @@ import type { SessionState, ActiveSummon } from '../types/session'
 import type { ConditionType, BuffToggle, ActionEconomyState } from '../types/combat'
 import type { CoinPurse } from '../types/inventory'
 import type { Spell } from '../types/resources'
+import type { FullCharacter } from './useCharacterStore'
+import type {
+  WildShapePreset,
+  HeldSpellstrike,
+  ActiveHex,
+  DebilitatingInjuryType,
+} from '../types/class-mechanics'
+import {
+  createDefaultClassMechanics,
+  normalizeClassMechanics,
+  resetClassMechanicsOnLongRest,
+} from '../types/class-mechanics'
+import {
+  advanceTurnMechanics,
+  calcBloodrageHpShift,
+  calcFatigueRounds,
+  checkBloodrageExitSafety,
+} from '../lib/class-mechanics'
 import { spellToBuff } from '../lib/spell-buffs'
 import { expandPreparedSpells, normalizePreparedSpells } from '../lib/spell-availability'
 
@@ -58,6 +76,25 @@ interface SessionStore {
   initSession: (characterId: string, maxHp: number, startingCoins?: CoinPurse, initialEquippedIds?: string[]) => void
   hydrateSessions: (incoming: Record<string, SessionState>) => void
   longRest: (characterId: string, maxHp: number) => void
+  advanceCharacterTurn: (characterId: string, character: FullCharacter) => void
+  setWildShape: (characterId: string, preset: WildShapePreset | null) => void
+  setHeldSpellstrike: (characterId: string, spellstrike: HeldSpellstrike | null) => void
+  consumeSpellstrikeCharge: (characterId: string) => void
+  setSpellCombat: (characterId: string, active: boolean, sacrifice?: number) => void
+  activateArcaneWeapon: (characterId: string, bonus?: number) => void
+  enterBloodrage: (characterId: string, character: FullCharacter) => void
+  exitBloodrage: (characterId: string, character: FullCharacter) => { isLethal: boolean; remainingHp: number }
+  consumeFuriousFocus: (characterId: string) => void
+  applyHex: (characterId: string, hex: Omit<ActiveHex, 'id'>) => void
+  removeHex: (characterId: string, hexId: string) => void
+  useCackle: (characterId: string) => boolean
+  activateKiExtraAttack: (characterId: string) => void
+  activateKiDefense: (characterId: string) => void
+  activateKiSpeed: (characterId: string) => void
+  useWholenessOfBody: (characterId: string, healingAmount?: number) => void
+  declareStunningFist: (characterId: string, condition?: 'stunned' | 'fatigued') => void
+  applyDebilitatingInjury: (characterId: string, type: DebilitatingInjuryType, targetName?: string) => void
+  setUnderhanded: (characterId: string, ready: boolean) => void
 }
 
 export const defaultActionEconomy = (): ActionEconomyState => ({
@@ -112,6 +149,7 @@ const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurs
   companionConditions: {},
   actionEconomy: defaultActionEconomy(),
   currentRound: 1,
+  classMechanics: createDefaultClassMechanics(characterId),
 })
 
 /** Drops keys whose value is `undefined`/`null` so they cannot shadow defaults when spread. */
@@ -150,6 +188,7 @@ export function normalizePersistedSession(sess: SessionState): SessionState {
     preparedSpells,
     preparedSpellIds: expandPreparedSpells(preparedSpells),
     spentPreparedSpells,
+    classMechanics: normalizeClassMechanics(sess.classMechanics, sess.characterId),
   }
 }
 
@@ -592,9 +631,590 @@ export const useSessionStore = create<SessionStore>()(
               companionConditions: {},
               actionEconomy: defaultActionEconomy(),
               currentRound: 1,
+              classMechanics: resetClassMechanicsOnLongRest(current.classMechanics, id),
             }),
             maxHp
           ),
+
+      advanceCharacterTurn: (characterId, character) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const nextSession = advanceTurnMechanics(current, character)
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: nextSession,
+            },
+          }
+        }),
+
+      setWildShape: (characterId, preset) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          const druid = mech.druid ?? {
+            active: false,
+            formId: null,
+            meldedArmor: false,
+            hasNaturalSpellFeat: false,
+          }
+          const updatedDruid = {
+            ...druid,
+            active: Boolean(preset),
+            formId: preset ? preset.id : null,
+            activeForm: preset,
+            wildShapeActive: Boolean(preset),
+            currentFormId: preset ? preset.id : null,
+          }
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  druid: updatedDruid,
+                  wildShape: updatedDruid,
+                },
+              },
+            },
+          }
+        }),
+
+      setHeldSpellstrike: (characterId, spellstrike) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          const magus = mech.magus ?? {
+            heldSpellstrike: null,
+            spellCombatActive: false,
+            defensiveCastingSacrifice: 0,
+            arcanePoolWeapon: null,
+          }
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  magus: {
+                    ...magus,
+                    heldSpellstrike: spellstrike,
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      consumeSpellstrikeCharge: (characterId) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          if (!mech.magus?.heldSpellstrike) return s
+          const curCharges = mech.magus.heldSpellstrike.chargesRemaining
+          const nextCharges = curCharges - 1
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  magus: {
+                    ...mech.magus,
+                    heldSpellstrike: nextCharges > 0
+                      ? { ...mech.magus.heldSpellstrike, chargesRemaining: nextCharges }
+                      : null,
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      setSpellCombat: (characterId, active, sacrifice = 0) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          const magus = mech.magus ?? {
+            heldSpellstrike: null,
+            spellCombatActive: false,
+            defensiveCastingSacrifice: 0,
+            arcanePoolWeapon: null,
+          }
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  magus: {
+                    ...magus,
+                    spellCombatActive: active,
+                    defensiveCastingSacrifice: Math.max(0, Math.min(4, sacrifice)),
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      activateArcaneWeapon: (characterId, bonus = 1) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          const magus = mech.magus ?? {
+            heldSpellstrike: null,
+            spellCombatActive: false,
+            defensiveCastingSacrifice: 0,
+            arcanePoolWeapon: null,
+          }
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  magus: {
+                    ...magus,
+                    arcanePoolWeapon: { active: true, bonus, remainingRounds: 10 },
+                    arcaneWeaponActive: true,
+                    arcaneWeaponRoundsLeft: 10,
+                    arcaneWeaponBonus: bonus,
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      enterBloodrage: (characterId, character) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          const bloodrager = mech.bloodrager ?? {
+            isRaging: false,
+            roundsRagedThisCombat: 0,
+            fatigueCountdown: 0,
+            aberrantReachActive: false,
+            staggeringStrikeUsesRemaining: 5,
+            furiousFocusAppliedThisRound: false,
+          }
+
+          if (bloodrager.isRaging || bloodrager.isBloodraging) {
+            return s
+          }
+
+          const hpGain = calcBloodrageHpShift(character.level ?? 4)
+          const bloodrageBuff = character.buffs?.find((b) => /bloodrage|ira/i.test(`${b.id} ${b.name}`))
+          const activeBuffIds = bloodrageBuff && !current.activeBuffIds.includes(bloodrageBuff.id)
+            ? [...current.activeBuffIds, bloodrageBuff.id]
+            : current.activeBuffIds
+
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                currentHp: current.currentHp + hpGain,
+                activeBuffIds,
+                classMechanics: {
+                  ...mech,
+                  bloodrager: {
+                    ...bloodrager,
+                    isRaging: true,
+                    isBloodraging: true,
+                    roundsRagedThisCombat: 0,
+                    roundsCurrentRage: 0,
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      exitBloodrage: (characterId, character) => {
+        let result = { isLethal: false, remainingHp: 0 }
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          const bloodrager = mech.bloodrager ?? {
+            isRaging: false,
+            roundsRagedThisCombat: 0,
+            fatigueCountdown: 0,
+            aberrantReachActive: false,
+            staggeringStrikeUsesRemaining: 5,
+            furiousFocusAppliedThisRound: false,
+          }
+
+          if (!bloodrager.isRaging && !bloodrager.isBloodraging) {
+            result = { isLethal: false, remainingHp: current.currentHp }
+            return s
+          }
+
+          const conScore = character.abilities?.con ?? 16
+          const safety = checkBloodrageExitSafety(current.currentHp, character.level ?? 4, 4, conScore)
+          const hpLoss = calcBloodrageHpShift(character.level ?? 4)
+          const remainingHp = Math.max(-conScore, current.currentHp - hpLoss)
+          result = { isLethal: safety.isLethal, remainingHp }
+
+          const roundsRaged = bloodrager.roundsRagedThisCombat ?? bloodrager.roundsCurrentRage ?? 1
+          const fatigue = calcFatigueRounds(roundsRaged)
+          const nextConditions = current.conditions.includes('fatigued')
+            ? current.conditions
+            : [...current.conditions, 'fatigued' as ConditionType]
+
+          const bloodrageBuff = character.buffs?.find((b) => /bloodrage|ira/i.test(`${b.id} ${b.name}`))
+          const activeBuffIds = current.activeBuffIds.filter(
+            (id) => (!bloodrageBuff || id !== bloodrageBuff.id) && !/bloodrage|ira/i.test(id)
+          )
+
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                currentHp: remainingHp,
+                conditions: nextConditions,
+                activeBuffIds,
+                classMechanics: {
+                  ...mech,
+                  bloodrager: {
+                    ...bloodrager,
+                    isRaging: false,
+                    isBloodraging: false,
+                    roundsRagedThisCombat: 0,
+                    roundsCurrentRage: 0,
+                    fatigueCountdown: fatigue,
+                    fatigueRoundsLeft: fatigue,
+                  },
+                },
+              },
+            },
+          }
+        })
+        return result
+      },
+
+      consumeFuriousFocus: (characterId) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          if (!mech.bloodrager) return s
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  bloodrager: {
+                    ...mech.bloodrager,
+                    furiousFocusAppliedThisRound: true,
+                    furiousFocusReady: false,
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      applyHex: (characterId, hex) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          const witch = mech.witch ?? {
+            cackleUsedThisRound: false,
+            activeHexes: [],
+            immuneTargets: {},
+          }
+          const newHex: ActiveHex = {
+            id: `hex-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            ...hex,
+          }
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  witch: {
+                    ...witch,
+                    activeHexes: [...witch.activeHexes, newHex],
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      removeHex: (characterId, hexId) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          if (!mech.witch) return s
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  witch: {
+                    ...mech.witch,
+                    activeHexes: mech.witch.activeHexes.filter((h) => h.id !== hexId),
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      useCackle: (characterId) => {
+        let success = false
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          if (!mech.witch || mech.witch.cackleUsedThisRound) return s
+          success = true
+          const updatedHexes = mech.witch.activeHexes.map((h) => {
+            const isExtendable = h.isExtendableByCackle ?? h.isCackleable ?? h.cackleExtendable ?? (h.hexType !== 'slumber')
+            if (!isExtendable) return h
+            const curDur = h.remainingRounds ?? h.durationRounds ?? 1
+            return {
+              ...h,
+              remainingRounds: curDur + 1,
+              durationRounds: curDur + 1,
+            }
+          })
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  witch: {
+                    ...mech.witch,
+                    cackleUsedThisRound: true,
+                    activeHexes: updatedHexes,
+                  },
+                },
+              },
+            },
+          }
+        })
+        return success
+      },
+
+      activateKiExtraAttack: (characterId) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          const monk = mech.monk ?? {
+            kiDefenseRounds: 0,
+            kiSpeedRounds: 0,
+            kiExtraAttackActive: false,
+            stunningFistDeclared: null,
+            jabbingStyleActive: false,
+          }
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  monk: {
+                    ...monk,
+                    kiExtraAttackActive: true,
+                    kiExtraAttack: true,
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      activateKiDefense: (characterId) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          const monk = mech.monk ?? {
+            kiDefenseRounds: 0,
+            kiSpeedRounds: 0,
+            kiExtraAttackActive: false,
+            stunningFistDeclared: null,
+            jabbingStyleActive: false,
+          }
+          const kiDefenseBuffId = 'ki-defense'
+          const existingCustom = current.customBuffs ?? []
+          const kiDefenseBuff: BuffToggle = {
+            id: kiDefenseBuffId,
+            name: 'Ki Defense',
+            active: true,
+            attackMod: 0,
+            damageMod: 0,
+            acMod: 4,
+            acType: 'dodge',
+            color: 'primary',
+            isCustom: true,
+            duration: '1 round',
+          }
+          const customBuffs = existingCustom.some((b) => b.id === kiDefenseBuffId)
+            ? existingCustom.map((b) => (b.id === kiDefenseBuffId ? kiDefenseBuff : b))
+            : [...existingCustom, kiDefenseBuff]
+          const activeBuffIds = current.activeBuffIds.includes(kiDefenseBuffId)
+            ? current.activeBuffIds
+            : [...current.activeBuffIds, kiDefenseBuffId]
+
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                customBuffs,
+                activeBuffIds,
+                classMechanics: {
+                  ...mech,
+                  monk: {
+                    ...monk,
+                    kiDefenseRounds: 1,
+                    kiDefenseRoundsLeft: 1,
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      activateKiSpeed: (characterId) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          const monk = mech.monk ?? {
+            kiDefenseRounds: 0,
+            kiSpeedRounds: 0,
+            kiExtraAttackActive: false,
+            stunningFistDeclared: null,
+            jabbingStyleActive: false,
+          }
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  monk: {
+                    ...monk,
+                    kiSpeedRounds: 1,
+                    kiSpeedRoundsLeft: 1,
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      useWholenessOfBody: (characterId, healingAmount = 8) => {
+        get().applyHealing(characterId, healingAmount)
+      },
+
+      declareStunningFist: (characterId, condition = 'stunned') =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          const monk = mech.monk ?? {
+            kiDefenseRounds: 0,
+            kiSpeedRounds: 0,
+            kiExtraAttackActive: false,
+            stunningFistDeclared: null,
+            jabbingStyleActive: false,
+          }
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  monk: {
+                    ...monk,
+                    stunningFistDeclared: condition,
+                    stunningFistActive: true,
+                    stunningFistCondition: condition,
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      applyDebilitatingInjury: (characterId, type, targetName) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          const rogue = mech.rogue ?? {
+            debilitatingInjury: null,
+            underhandedAvailable: true,
+            halflingDaggerCritBonusActive: true,
+          }
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  rogue: {
+                    ...rogue,
+                    debilitatingInjury: {
+                      active: true,
+                      type,
+                      mode: type,
+                      remainingRounds: 1,
+                      roundsLeft: 1,
+                      targetName,
+                    },
+                  },
+                },
+              },
+            },
+          }
+        }),
+
+      setUnderhanded: (characterId, ready) =>
+        set((s) => {
+          const current = s.sessions[characterId] ?? defaultSession(characterId)
+          const mech = current.classMechanics ?? createDefaultClassMechanics(characterId)
+          const rogue = mech.rogue ?? {
+            debilitatingInjury: null,
+            underhandedAvailable: true,
+            halflingDaggerCritBonusActive: true,
+          }
+          return {
+            sessions: {
+              ...s.sessions,
+              [characterId]: {
+                ...current,
+                classMechanics: {
+                  ...mech,
+                  rogue: {
+                    ...rogue,
+                    underhandedAvailable: ready,
+                    underhandedReady: ready,
+                  },
+                },
+              },
+            },
+          }
+        }),
       }
     },
     {

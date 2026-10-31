@@ -7,9 +7,58 @@ import type {
   CombatManeuversCalculated,
   CombatManeuverType,
   ManeuverDetail,
+  AcBonusType,
 } from '../types/combat'
 import type { DailyResource, Spell } from '../types/resources'
 import { abilityMod } from './dice-engine'
+
+export interface WildShapeAcParams {
+  active?: boolean
+  wildShapeActive?: boolean
+  formSize?: 'Small' | 'Medium' | 'small' | 'medium'
+  naturalArmorBonus?: number
+  formNaturalArmor?: number
+  sizeBonus?: number
+  hasWildArmor?: boolean
+  retainsArmor?: boolean
+  isWildArmor?: boolean
+  isWildShield?: boolean
+  retainsShield?: boolean
+  hasWildShield?: boolean
+  shieldSpellFailureChance?: number
+  shieldArmorCheckPenalty?: number
+  armorSpellFailureChance?: number
+  armorArmorCheckPenalty?: number
+}
+
+export interface BloodrageExitSafety {
+  hpAfterExit: number
+  projectedHp: number
+  isLethal: boolean
+  isInstantDeath: boolean
+  isUnconscious: boolean
+  severity: 'none' | 'warning' | 'danger'
+  message?: string
+}
+
+export interface ArmorClassOptions {
+  hasUncannyDodge?: boolean
+}
+
+/**
+ * Classifies an active buff's AC modification according to PF1e bonus types.
+ */
+export function classifyAcBonusType(buff: BuffToggle): AcBonusType {
+  if (buff.acType) return buff.acType
+  const text = `${buff.id} ${buff.name}`.toLowerCase()
+  if (/deflection|shield of faith/i.test(text)) return 'deflection'
+  if (/barkskin|natural armor/i.test(text)) return 'natural'
+  if (/\bdodge\b|ki[- ]defense/i.test(text)) return 'dodge'
+  if (/\bsize\b/i.test(text)) return 'size'
+  if (/\barmor\b|mage[- ]armor|bracers of armor/i.test(text)) return 'armor'
+  if (/\bshield\b/i.test(text)) return 'shield'
+  return 'other'
+}
 
 export type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
 
@@ -230,34 +279,45 @@ export function calcEffectiveSaves(
 }
 
 /**
- * Calculates effective AC (Normal, Touch, Flat-Footed) taking into account conditions and buffs.
+ * Calculates effective AC (Normal, Touch, Flat-Footed) taking into account conditions,
+ * buffs, and bonus categories according to Pathfinder 1e rules.
+ *
+ * - Natural armor bonuses apply to Total and Flat-Footed AC, but NOT Touch AC.
+ * - Dodge bonuses apply to Total and Touch AC (and CMD), but NOT Flat-Footed AC
+ *   unless the character possesses Uncanny Dodge and is not immobilized/losing DEX.
+ * - Size bonuses apply to Total, Touch, and Flat-Footed AC.
+ * - Deflection bonuses apply to Total, Touch, and Flat-Footed AC.
+ * - Armor / Shield bonuses apply to Total and Flat-Footed AC, but NOT Touch AC.
+ * - Untyped / other buffs apply to Total, Touch, and Flat-Footed AC.
  */
 export function calcEffectiveArmorClass(
   baseAc: ArmorClass,
   baseDexMod: number,
   effectiveDexMod: number,
   conditions: ConditionType[],
-  activeBuffs: BuffToggle[]
+  activeBuffs: BuffToggle[],
+  options?: ArmorClassOptions
 ): EffectiveArmorClass {
   const breakdown: { label: string; value: number }[] = [{ label: 'Base AC', value: baseAc.total }]
   const notes: string[] = []
 
   let total = baseAc.total
   let touch = baseAc.touch
-  let flatFooted = baseAc.flatFooted
 
-  // DEX shift
+  // DEX shift for total and touch
   const dexDelta = effectiveDexMod - baseDexMod
   if (dexDelta !== 0) {
     total += dexDelta
     touch += dexDelta
-    // Negative DEX modifiers penalize Flat-Footed AC in PF1e; positive DEX is ignored when flat-footed.
-    flatFooted += Math.min(0, effectiveDexMod) - Math.min(0, baseDexMod)
     breakdown.push({ label: 'DEX Shift', value: dexDelta })
   }
 
   // Loss of DEX to AC (blinded, stunned, paralyzed)
-  const losesDex = conditions.includes('blinded') || conditions.includes('stunned') || conditions.includes('paralyzed')
+  const losesDex =
+    conditions.includes('blinded') ||
+    conditions.includes('stunned') ||
+    conditions.includes('paralyzed')
+
   if (losesDex && effectiveDexMod > 0) {
     total -= effectiveDexMod
     touch -= effectiveDexMod
@@ -268,27 +328,84 @@ export function calcEffectiveArmorClass(
   if (conditions.includes('blinded')) {
     total -= 2
     touch -= 2
-    flatFooted -= 2
     breakdown.push({ label: 'Blinded', value: -2 })
   }
   if (conditions.includes('stunned')) {
     total -= 2
     touch -= 2
-    flatFooted -= 2
     breakdown.push({ label: 'Stunned', value: -2 })
   }
   if (conditions.includes('prone')) {
     notes.push('-4 AC vs melee / +4 AC vs ranged (Prone)')
   }
 
-  // Active buffs
-  const totalBuffAc = activeBuffs.reduce((sum, b) => sum + (b.acMod || 0), 0)
-  if (totalBuffAc !== 0) {
-    total += totalBuffAc
-    touch += totalBuffAc
-    flatFooted += totalBuffAc
-    for (const b of activeBuffs) {
-      if (b.acMod) breakdown.push({ label: b.name, value: b.acMod })
+  // Uncanny Dodge flat-footed DEX retention
+  const retainsDexOnFlatFooted = Boolean(options?.hasUncannyDodge && !losesDex)
+
+  // Compute base flat-footed without Dex:
+  // Detect if baseAc.flatFooted already incorporated positive DEX bonus (e.g. Mariano or Knam with Uncanny Dodge in base sheet)
+  const baseDexBonus = baseAc.dexBonus ?? 0
+  const baseIncludesDex =
+    baseDexBonus > 0 && baseAc.flatFooted > baseAc.total - baseDexBonus
+  const baseDexInFlatFooted = baseIncludesDex
+    ? Math.min(baseDexBonus, baseAc.flatFooted - (baseAc.total - baseDexBonus))
+    : 0
+  const baseFlatFootedWithoutDex = baseAc.flatFooted - baseDexInFlatFooted
+
+  // In PF1e, flat-footed AC retains DEX if Uncanny Dodge is active and not denied;
+  // otherwise, DEX penalties (< 0) always apply to flat-footed AC.
+  const dexContribution = retainsDexOnFlatFooted
+    ? effectiveDexMod
+    : Math.min(0, effectiveDexMod)
+
+  let flatFooted = baseFlatFootedWithoutDex + dexContribution
+
+  // Condition penalties to flat-footed
+  if (conditions.includes('blinded')) {
+    flatFooted -= 2
+  }
+  if (conditions.includes('stunned')) {
+    flatFooted -= 2
+  }
+
+  // Active buffs categorized by AC bonus type
+  for (const buff of activeBuffs) {
+    const acMod = buff.acMod || 0
+    if (acMod === 0) continue
+
+    const acType = classifyAcBonusType(buff)
+    breakdown.push({ label: buff.name, value: acMod })
+
+    switch (acType) {
+      case 'natural':
+      case 'armor':
+      case 'shield':
+        total += acMod
+        flatFooted += acMod
+        // Does NOT apply to Touch AC
+        break
+
+      case 'dodge':
+        if (losesDex && acMod > 0) {
+          notes.push(`${buff.name} (Dodge bonus negated while DEX denied)`)
+        } else {
+          total += acMod
+          touch += acMod
+          if (retainsDexOnFlatFooted) {
+            flatFooted += acMod
+          }
+        }
+        break
+
+      case 'size':
+      case 'deflection':
+      case 'other':
+      case 'untyped':
+      default:
+        total += acMod
+        touch += acMod
+        flatFooted += acMod
+        break
     }
   }
 
@@ -324,7 +441,11 @@ export function calcEffectiveWeaponStats(
 
   // Ability modifier shifts
   if (weapon.type === 'melee') {
-    const isTwoHanded = weapon.tags?.some((t) => /2-handed|two-handed/i.test(t)) ?? false
+    // Natural attacks scale Strength damage: sole attack 1.5x, secondary attack 0.5x.
+    const isHalfStr = weapon.tags?.includes('half-str') ?? false
+    const isOneAndHalfStr =
+      (weapon.tags?.some((t) => /2-handed|two-handed|one-and-half-str/i.test(t)) ?? false) && !isHalfStr
+    const strDmgMultiplier = isHalfStr ? 0.5 : isOneAndHalfStr ? 1.5 : 1
     const baseStrMod = abilityMod(baseAbilities.str)
     const effStrMod = effectiveAbilities.mods.str
 
@@ -334,18 +455,13 @@ export function calcEffectiveWeaponStats(
       attackBreakdown.push({ label: 'STR Mod', value: strAttDelta })
     }
 
-    const baseStrDmg = isTwoHanded
-      ? (baseStrMod > 0 ? Math.floor(baseStrMod * 1.5) : baseStrMod)
-      : baseStrMod
-    const effStrDmg = isTwoHanded
-      ? (effStrMod > 0 ? Math.floor(effStrMod * 1.5) : effStrMod)
-      : effStrMod
-    const strDmgDelta = effStrDmg - baseStrDmg
+    const scaleStr = (mod: number) => (mod > 0 ? Math.floor(mod * strDmgMultiplier) : mod)
+    const strDmgDelta = scaleStr(effStrMod) - scaleStr(baseStrMod)
 
     if (strDmgDelta !== 0) {
       totalDmgMod += strDmgDelta
       damageBreakdown.push({
-        label: isTwoHanded ? 'STR Mod (1.5x)' : 'STR Mod',
+        label: strDmgMultiplier === 1 ? 'STR Mod' : `STR Mod (${strDmgMultiplier}x)`,
         value: strDmgDelta,
       })
     }
@@ -649,6 +765,29 @@ export function calcCombatManeuvers(
   // Dodge feat to CMD
   if (featNames.some((f) => /\bdodge\b/i.test(f))) {
     breakdownCmd.push({ label: 'Dodge Feat', value: 1 })
+  }
+
+  // Active deflection buffs to CMD (PF1e: Deflection bonuses to AC apply to CMD)
+  for (const b of activeBuffs) {
+    if (b.acMod > 0 && classifyAcBonusType(b) === 'deflection') {
+      breakdownCmd.push({ label: `${b.name} (Deflection)`, value: b.acMod })
+    }
+  }
+
+  // Active dodge bonuses to CMD (PF1e: Dodge bonuses to AC apply to CMD)
+  if (!losesDex) {
+    for (const b of activeBuffs) {
+      if (b.acMod > 0 && classifyAcBonusType(b) === 'dodge') {
+        breakdownCmd.push({ label: `${b.name} (Dodge)`, value: b.acMod })
+      }
+    }
+  }
+
+  // AC penalties to CMD (PF1e CRB p. 199: Any penalties to a creature's AC also apply to its CMD)
+  for (const b of activeBuffs) {
+    if (b.acMod < 0) {
+      breakdownCmd.push({ label: `${b.name} (AC Penalty)`, value: b.acMod })
+    }
   }
 
   // Conditions on CMB
@@ -1023,17 +1162,27 @@ export function isSpellBuffCandidate(spell: Spell): boolean {
 }
 
 /**
- * Helper to compute detailed component breakdowns for AC categories.
+ * Helper to compute detailed component breakdowns for AC categories with bonus type filtering.
  */
 export function calcDetailedAcBreakdowns(
   baseAc: ArmorClass,
   effectiveDexMod: number,
   conditions: ConditionType[],
-  activeBuffs: BuffToggle[]
-) {
-  const losesDex = conditions.includes('blinded') || conditions.includes('stunned') || conditions.includes('paralyzed')
+  activeBuffs: BuffToggle[],
+  options?: ArmorClassOptions
+): {
+  totalBreakdown: { label: string; value: number }[]
+  touchBreakdown: { label: string; value: number }[]
+  flatFootedBreakdown: { label: string; value: number }[]
+} {
+  const losesDex =
+    conditions.includes('blinded') ||
+    conditions.includes('stunned') ||
+    conditions.includes('paralyzed')
 
-  // Total AC Breakdown
+  const retainsDexOnFlatFooted = Boolean(options?.hasUncannyDodge && !losesDex)
+
+  // 1. Total AC Breakdown
   const totalBreakdown: { label: string; value: number }[] = [
     { label: 'Base', value: 10 },
   ]
@@ -1054,10 +1203,15 @@ export function calcDetailedAcBreakdowns(
   if (conditions.includes('blinded')) totalBreakdown.push({ label: 'Blinded', value: -2 })
   if (conditions.includes('stunned')) totalBreakdown.push({ label: 'Stunned', value: -2 })
   for (const buff of activeBuffs) {
-    if (buff.acMod) totalBreakdown.push({ label: buff.name, value: buff.acMod })
+    if (!buff.acMod) continue
+    const acType = classifyAcBonusType(buff)
+    if (acType === 'dodge' && losesDex && buff.acMod > 0) {
+      continue
+    }
+    totalBreakdown.push({ label: buff.name, value: buff.acMod })
   }
 
-  // Touch AC Breakdown
+  // 2. Touch AC Breakdown
   const touchBreakdown: { label: string; value: number }[] = [
     { label: 'Base', value: 10 },
   ]
@@ -1071,24 +1225,212 @@ export function calcDetailedAcBreakdowns(
   if (conditions.includes('blinded')) touchBreakdown.push({ label: 'Blinded', value: -2 })
   if (conditions.includes('stunned')) touchBreakdown.push({ label: 'Stunned', value: -2 })
   for (const buff of activeBuffs) {
-    if (buff.acMod) touchBreakdown.push({ label: buff.name, value: buff.acMod })
+    if (!buff.acMod) continue
+    const acType = classifyAcBonusType(buff)
+    // Natural, Armor, and Shield bonuses do NOT apply to Touch AC
+    if (acType === 'natural' || acType === 'armor' || acType === 'shield') continue
+    if (acType === 'dodge' && losesDex && buff.acMod > 0) continue
+    touchBreakdown.push({ label: buff.name, value: buff.acMod })
   }
 
-  // Flat-Footed AC Breakdown
+  // 3. Flat-Footed AC Breakdown
   const flatFootedBreakdown: { label: string; value: number }[] = [
     { label: 'Base', value: 10 },
   ]
   if (baseAc.armorBonus > 0) flatFootedBreakdown.push({ label: 'Armor', value: baseAc.armorBonus })
   if (baseAc.shieldBonus > 0) flatFootedBreakdown.push({ label: 'Shield', value: baseAc.shieldBonus })
-  if (effectiveDexMod < 0) flatFootedBreakdown.push({ label: 'DEX Penalty', value: effectiveDexMod })
+  if (effectiveDexMod < 0) {
+    flatFootedBreakdown.push({ label: 'DEX Penalty', value: effectiveDexMod })
+  } else if (retainsDexOnFlatFooted && effectiveDexMod > 0) {
+    flatFootedBreakdown.push({ label: 'DEX (Uncanny Dodge)', value: effectiveDexMod })
+  }
   if (baseAc.naturalArmor > 0) flatFootedBreakdown.push({ label: 'Natural Armor', value: baseAc.naturalArmor })
   if (baseAc.deflection > 0) flatFootedBreakdown.push({ label: 'Deflection', value: baseAc.deflection })
   if (baseAc.misc !== 0) flatFootedBreakdown.push({ label: 'Misc', value: baseAc.misc })
   if (conditions.includes('blinded')) flatFootedBreakdown.push({ label: 'Blinded', value: -2 })
   if (conditions.includes('stunned')) flatFootedBreakdown.push({ label: 'Stunned', value: -2 })
   for (const buff of activeBuffs) {
-    if (buff.acMod) flatFootedBreakdown.push({ label: buff.name, value: buff.acMod })
+    if (!buff.acMod) continue
+    const acType = classifyAcBonusType(buff)
+    if (acType === 'dodge') {
+      if (retainsDexOnFlatFooted) {
+        flatFootedBreakdown.push({ label: `${buff.name} (Uncanny Dodge)`, value: buff.acMod })
+      }
+      continue
+    }
+    flatFootedBreakdown.push({ label: buff.name, value: buff.acMod })
   }
 
   return { totalBreakdown, touchBreakdown, flatFootedBreakdown }
+}
+
+/**
+ * Resolves effective base armor class for polymorph/wild shape transformations.
+ * Melds non-Wild armor and shields (zeroing armorBonus, shieldBonus, spellFailureChance,
+ * and armorCheckPenalty) before applying beast shape size and natural armor bonuses.
+ */
+export function resolveEffectiveArmorBase(
+  baseAc: ArmorClass,
+  params: WildShapeAcParams
+): ArmorClass {
+  const isActive = Boolean(params.active ?? params.wildShapeActive ?? false)
+  if (!isActive) {
+    return baseAc
+  }
+
+  const retainsArmor = Boolean(params.retainsArmor || params.isWildArmor || params.hasWildArmor)
+  const retainsShield = Boolean(params.isWildShield || params.retainsShield || params.hasWildShield)
+
+  const armorBonus = retainsArmor ? baseAc.armorBonus : 0
+  const shieldBonus = retainsShield ? baseAc.shieldBonus : 0
+
+  let spellFailureChance = 0
+  let armorCheckPenalty = 0
+
+  if (retainsArmor && retainsShield) {
+    spellFailureChance = baseAc.spellFailureChance
+    armorCheckPenalty = baseAc.armorCheckPenalty ?? 0
+  } else if (retainsShield && !retainsArmor) {
+    if (params.shieldSpellFailureChance !== undefined) {
+      spellFailureChance = params.shieldSpellFailureChance
+    } else if (baseAc.shieldBonus > 0) {
+      const defaultShieldAsf = baseAc.shieldBonus >= 4 ? 50 : baseAc.shieldBonus === 2 ? 15 : 5
+      spellFailureChance = Math.min(baseAc.spellFailureChance, defaultShieldAsf)
+    } else {
+      spellFailureChance = 0
+    }
+
+    if (params.shieldArmorCheckPenalty !== undefined) {
+      armorCheckPenalty = params.shieldArmorCheckPenalty
+    } else if (baseAc.shieldBonus > 0) {
+      const defaultShieldAcp = baseAc.shieldBonus >= 4 ? -10 : baseAc.shieldBonus === 2 ? -2 : -1
+      armorCheckPenalty = Math.max(baseAc.armorCheckPenalty ?? 0, defaultShieldAcp)
+    } else {
+      armorCheckPenalty = 0
+    }
+  } else if (retainsArmor && !retainsShield) {
+    if (params.armorSpellFailureChance !== undefined) {
+      spellFailureChance = params.armorSpellFailureChance
+    } else if (baseAc.shieldBonus > 0) {
+      const defaultShieldAsf = baseAc.shieldBonus >= 4 ? 50 : baseAc.shieldBonus === 2 ? 15 : 5
+      spellFailureChance = Math.max(0, baseAc.spellFailureChance - defaultShieldAsf)
+    } else {
+      spellFailureChance = baseAc.spellFailureChance
+    }
+
+    if (params.armorArmorCheckPenalty !== undefined) {
+      armorCheckPenalty = params.armorArmorCheckPenalty
+    } else if (baseAc.shieldBonus > 0) {
+      const defaultShieldAcp = baseAc.shieldBonus >= 4 ? -10 : baseAc.shieldBonus === 2 ? -2 : -1
+      armorCheckPenalty = Math.min(0, (baseAc.armorCheckPenalty ?? 0) - defaultShieldAcp)
+    } else {
+      armorCheckPenalty = baseAc.armorCheckPenalty ?? 0
+    }
+  }
+
+  const formNat = params.naturalArmorBonus ?? params.formNaturalArmor ?? 0
+  const naturalArmor = (baseAc.naturalArmor || 0) + formNat
+
+  const normalizedSize = (params.formSize ?? '').toLowerCase()
+  const formSizeBonus = params.sizeBonus ?? (normalizedSize === 'small' ? 1 : 0)
+
+  const dexBonus = baseAc.dexBonus ?? 0
+  const deflection = baseAc.deflection ?? 0
+  const misc = (baseAc.misc ?? 0) + formSizeBonus
+
+  const total = 10 + armorBonus + shieldBonus + dexBonus + naturalArmor + deflection + misc
+  const touch = 10 + dexBonus + deflection + misc
+  const flatFooted = 10 + armorBonus + shieldBonus + naturalArmor + deflection + misc + (dexBonus < 0 ? dexBonus : 0)
+
+  return {
+    ...baseAc,
+    total,
+    touch,
+    flatFooted,
+    armorBonus,
+    shieldBonus,
+    dexBonus,
+    naturalArmor,
+    deflection,
+    misc,
+    spellFailureChance,
+    armorCheckPenalty,
+  }
+}
+
+/**
+ * Calculates effective maximum hit points when Constitution modifier shifts (e.g. Bloodrage).
+ * In PF1e, every +1 CON mod grants +1 HP per level (Hit Die).
+ */
+export function calcEffectiveMaxHp(
+  baseMaxHp: number,
+  level: number,
+  baseConMod: number,
+  effectiveConMod: number
+): number {
+  const delta = effectiveConMod - baseConMod
+  return Math.max(1, baseMaxHp + delta * Math.max(1, level))
+}
+
+/**
+ * Evaluates whether exiting Bloodrage (or rage) will result in unconsciousness, dying,
+ * or immediate character death ("Sudden Barbarian Death Syndrome").
+ */
+export function checkBloodrageExitSafety(
+  currentHp: number,
+  level: number,
+  rageConBonus = 4,
+  baseConScore = 10
+): BloodrageExitSafety {
+  const conModGain = Math.floor(rageConBonus / 2)
+  const hpLossOnExit = conModGain * Math.max(1, level)
+  const hpAfterExit = currentHp - hpLossOnExit
+
+  const isInstantDeath = hpAfterExit <= -baseConScore
+  const isUnconscious = hpAfterExit <= 0
+
+  if (isInstantDeath) {
+    return {
+      hpAfterExit,
+      projectedHp: hpAfterExit,
+      isLethal: true,
+      isInstantDeath: true,
+      isUnconscious: true,
+      severity: 'danger',
+      message: `ALLERTA MORTALE: Uscire dall'ira ridurrà gli HP a ${hpAfterExit} (morte immediata a -${baseConScore} CON)!`,
+    }
+  }
+
+  if (isUnconscious) {
+    return {
+      hpAfterExit,
+      projectedHp: hpAfterExit,
+      isLethal: true,
+      isInstantDeath: false,
+      isUnconscious: true,
+      severity: 'danger',
+      message: `PERICOLO: Uscire dall'ira ridurrà gli HP a ${hpAfterExit} (${hpAfterExit === 0 ? 'inabile' : 'morente'})!`,
+    }
+  }
+
+  return {
+    hpAfterExit,
+    projectedHp: hpAfterExit,
+    isLethal: false,
+    isInstantDeath: false,
+    isUnconscious: false,
+    severity: 'none',
+  }
+}
+
+/**
+ * Alias supporting evaluateBloodrageExitRisk(currentHp, conScore, level, rageConBonus)
+ */
+export function evaluateBloodrageExitRisk(
+  currentHp: number,
+  baseConScore = 10,
+  level = 4,
+  rageConBonus = 4
+): BloodrageExitSafety {
+  return checkBloodrageExitSafety(currentHp, level, rageConBonus, baseConScore)
 }

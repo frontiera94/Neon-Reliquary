@@ -1,5 +1,6 @@
 import type { ConditionType, BuffToggle, ActionEconomyState } from './combat'
 import type { CoinPurse } from './inventory'
+import type { ClassMechanicsState } from './class-mechanics'
 
 export interface ActiveSummon {
   spellId: string
@@ -34,4 +35,5 @@ export interface SessionState {
   activeCompanionId?: string
   actionEconomy?: ActionEconomyState
   currentRound?: number
+  classMechanics?: ClassMechanicsState
 }
