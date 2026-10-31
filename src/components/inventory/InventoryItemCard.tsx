@@ -35,7 +35,7 @@ export function InventoryItemCard({
           <span className={`text-[10px] font-label uppercase tracking-widest px-2.5 py-0.5 rounded-full border self-start ${chipColor}`}>
             {item.category}
           </span>
-          <h3 className="font-headline text-xl font-bold text-white leading-tight">{item.name}</h3>
+          <h3 className="font-headline text-base sm:text-lg font-bold text-white leading-tight">{item.name}</h3>
         </div>
 
         {/* Quantity controls */}
@@ -48,7 +48,7 @@ export function InventoryItemCard({
           >
             <span className="material-symbols-outlined text-base">remove</span>
           </button>
-          <span className="font-label text-base text-white w-8 text-center font-bold">×{qty}</span>
+          <span className="font-label text-sm sm:text-base text-white w-8 text-center font-bold">×{qty}</span>
           <button
             onClick={() => onAdjust(1)}
             className="w-8 h-8 rounded-xl flex items-center justify-center text-tertiary hover:text-primary hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
@@ -60,7 +60,7 @@ export function InventoryItemCard({
       </div>
 
       {item.description && (
-        <p className="font-body text-tertiary text-sm leading-relaxed">{item.description}</p>
+        <p className="font-body text-tertiary text-xs sm:text-sm leading-relaxed">{item.description}</p>
       )}
 
       {isEquippable && (

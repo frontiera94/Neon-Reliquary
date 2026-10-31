@@ -1,9 +1,11 @@
+import { useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { useSessionStore } from '../../store/useSessionStore'
 import type { BuffToggle } from '../../types/combat'
 import type { DailyResource } from '../../types/resources'
 import { summarizeBuffModifiers, buffModifierTokens, modifierColor } from '../../lib/buff-summary'
 import { resolveBuffResource } from '../../lib/stat-calc'
-import { useMemo } from 'react'
+import { TACTICAL_SPRING, SNAPPY_SPRING } from '../../lib/motion-presets'
 
 export interface DailyResourcePipsProps {
   characterId: string
@@ -60,22 +62,26 @@ export function DailyResourcePips({ characterId, resource, spent, compact = fals
         {Array.from({ length: resource.total }).map((_, index) => {
           const isSpent = index < spent
           return (
-            <button
+            <motion.button
               key={index}
               type="button"
               onClick={() => handleClick(index)}
+              whileTap={{ scale: 0.88 }}
               aria-label={`${isSpent ? 'Recover' : 'Spend'} ${resource.name} ${index + 1} of ${resource.total}`}
               aria-pressed={isSpent}
               className="min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
             >
-              <span
+              <motion.span
+                layout
+                animate={{ scale: isSpent ? 0.95 : 1 }}
+                transition={SNAPPY_SPRING}
                 className={`block transition-all group-hover:scale-110 ${
                   isSpent
                     ? 'w-2.5 h-2.5 rounded-full border border-white/20 bg-surface-container-highest'
                     : 'w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(0,240,255,0.55)]'
                 }`}
               />
-            </button>
+            </motion.button>
           )
         })}
       </div>
@@ -117,12 +123,15 @@ export function BuffResourceToggle({
 
   return (
     <div className="relative">
-      <button
+      <motion.button
         type="button"
         data-buff-id={buff.id}
         data-buff-active={isActive ? 'true' : 'false'}
         onClick={onToggle}
-        className="w-full flex items-start justify-between gap-3 p-4 border rounded-xl transition-all cursor-pointer text-left bg-surface-container/90 backdrop-blur-sm hover:bg-surface-container-high active:scale-[0.995] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+        whileHover={{ scale: 1.006 }}
+        whileTap={{ scale: 0.985 }}
+        transition={TACTICAL_SPRING}
+        className="w-full flex items-start justify-between gap-3 p-4 border rounded-xl transition-all cursor-pointer text-left bg-surface-container/90 backdrop-blur-sm hover:bg-surface-container-high focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
         style={
           isActive
             ? {
@@ -134,8 +143,10 @@ export function BuffResourceToggle({
         }
       >
         <div className="flex items-start gap-3 min-w-0">
-          <div
-            className="mt-1 w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all"
+          <motion.div
+            animate={{ scale: isActive ? [0.8, 1.25, 1] : 1 }}
+            transition={SNAPPY_SPRING}
+            className="mt-1 w-2.5 h-2.5 rounded-full flex-shrink-0 transition-colors"
             style={
               isActive
                 ? { backgroundColor: hex, boxShadow: `0 0 8px ${hex}` }
@@ -182,7 +193,7 @@ export function BuffResourceToggle({
         >
           {isActive ? 'ON' : 'OFF'}
         </span>
-      </button>
+      </motion.button>
 
       {(linked.length > 0 || onInspect) && (
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2 px-1">

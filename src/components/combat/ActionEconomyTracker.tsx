@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import type { ActionEconomyState } from '../../types/combat'
 import { defaultActionEconomy, computeNextActionEconomy } from '../../store/useSessionStore'
+import { SNAPPY_SPRING } from '../../lib/motion-presets'
 
 export interface ActionEconomyTrackerProps {
   actionEconomy?: ActionEconomyState
@@ -125,9 +127,18 @@ export function ActionEconomyTracker({
           <div className="order-1 flex items-center gap-2.5 pr-3 md:border-r md:border-white/10">
             <span
               data-testid="round-counter"
-              className="font-label text-xs font-bold uppercase tracking-wider text-white"
+              className="font-label text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1"
             >
-              Round <span className="text-primary">{currentRound}</span>
+              Round{' '}
+              <motion.span
+                key={currentRound}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={SNAPPY_SPRING}
+                className="text-primary inline-block"
+              >
+                {currentRound}
+              </motion.span>
             </span>
             <span className="font-label text-[10px] text-tertiary">
               {spentCount === 0 ? 'All actions ready' : `${5 - spentCount}/5 ready`}
@@ -136,24 +147,26 @@ export function ActionEconomyTracker({
 
           {/* Turn controls: same row as the round on small screens */}
           <div className="order-2 ml-auto flex items-center gap-1.5 md:order-3 md:ml-0">
-            <button
+            <motion.button
               type="button"
               onClick={handleResetRound}
+              whileTap={{ scale: 0.92 }}
               aria-label="Reset Round"
               title="Reset combat to Round 1"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-surface-container-high text-tertiary transition-colors hover:border-amber-400/40 hover:text-amber-300 active:scale-95 cursor-pointer"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-surface-container-high text-tertiary transition-colors hover:border-amber-400/40 hover:text-amber-300 cursor-pointer"
             >
               <span className="material-symbols-outlined text-base">restart_alt</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               type="button"
               onClick={handleNewTurn}
+              whileTap={{ scale: 0.95 }}
               title="Reset actions and advance to the next round"
-              className="flex min-h-[40px] items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/15 px-3 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider text-primary transition-all hover:bg-primary/25 hover:text-white active:scale-95 cursor-pointer"
+              className="flex min-h-[40px] items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/15 px-3 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider text-primary transition-all hover:bg-primary/25 hover:text-white cursor-pointer"
             >
               <span className="material-symbols-outlined text-base">refresh</span>
               <span>New Turn</span>
-            </button>
+            </motion.button>
           </div>
 
           {/* Action slots: 3-up grid on phones, inline row on desktop */}
@@ -161,13 +174,14 @@ export function ActionEconomyTracker({
             {actions.map((act) => {
               const isSpent = Boolean(economy[act.key])
               return (
-                <button
+                <motion.button
                   key={act.key}
                   type="button"
                   onClick={() => handleToggle(act.key)}
+                  whileTap={{ scale: 0.96 }}
                   aria-pressed={isSpent}
                   title={`${act.label}: ${act.sublabel}`}
-                  className={`group flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider transition-all active:scale-[0.97] md:justify-start md:px-2.5 ${
+                  className={`group flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border px-2 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider transition-all md:justify-start md:px-2.5 cursor-pointer ${
                     isSpent
                       ? 'border-white/5 bg-surface-container-lowest/50 text-tertiary/50 line-through'
                       : 'border-white/10 bg-surface-container-high text-on-surface hover:border-primary/40 hover:text-primary'
@@ -178,11 +192,10 @@ export function ActionEconomyTracker({
                       isSpent ? 'text-tertiary/40' : 'text-primary'
                     }`}
                   >
-                    {isSpent ? 'check' : act.icon}
+                    {act.icon}
                   </span>
-                  <span>{act.label}</span>
-                  <span className="sr-only">{isSpent ? 'Spent' : 'Ready'}</span>
-                </button>
+                  <span className="truncate">{act.label}</span>
+                </motion.button>
               )
             })}
           </div>
@@ -192,11 +205,14 @@ export function ActionEconomyTracker({
   }
 
   return (
-    <div className="bg-surface-container/90 backdrop-blur-sm p-5 rounded-2xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.35)] space-y-4">
-      {/* Header bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-1 border-b border-white/5">
+    <section
+      aria-label="Round action economy"
+      className="p-5 rounded-2xl bg-surface-container/90 backdrop-blur-sm border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.35)] flex flex-col gap-4"
+    >
+      {/* Tracker Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shadow-[0_0_12px_rgba(0,240,255,0.2)]">
+          <div className="w-10 h-10 rounded-xl bg-surface-container-high border border-white/10 flex items-center justify-center text-primary">
             <span className="material-symbols-outlined text-xl">hourglass_empty</span>
           </div>
           <div>
@@ -214,7 +230,16 @@ export function ActionEconomyTracker({
                   data-testid="round-counter"
                   className="font-headline text-xs font-black tracking-wider text-white"
                 >
-                  Round <span className="text-primary font-bold">{currentRound}</span>
+                  Round{' '}
+                  <motion.span
+                    key={currentRound}
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={SNAPPY_SPRING}
+                    className="text-primary font-bold inline-block"
+                  >
+                    {currentRound}
+                  </motion.span>
                 </span>
               </div>
             </div>
@@ -229,26 +254,28 @@ export function ActionEconomyTracker({
         {/* Action Controls */}
         <div className="flex items-center gap-2">
           {/* Reset Combat button */}
-          <button
+          <motion.button
             type="button"
             onClick={handleResetRound}
-            className="px-2.5 py-1.5 rounded-xl bg-surface-container-high hover:bg-white/10 border border-white/10 hover:border-amber-400/40 text-tertiary hover:text-amber-300 font-label text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-[0_0_10px_rgba(0,0,0,0.2)]"
+            whileTap={{ scale: 0.92 }}
+            className="px-2.5 py-1.5 rounded-xl bg-surface-container-high hover:bg-white/10 border border-white/10 hover:border-amber-400/40 text-tertiary hover:text-amber-300 font-label text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-[0_0_10px_rgba(0,0,0,0.2)]"
             title="Reset combat to Round 1"
           >
             <span className="material-symbols-outlined text-sm">restart_alt</span>
             <span>Reset Round</span>
-          </button>
+          </motion.button>
 
           {/* New Turn button */}
-          <button
+          <motion.button
             type="button"
             onClick={handleNewTurn}
-            className="px-3.5 py-1.5 rounded-xl bg-primary/15 hover:bg-primary/25 border border-primary/40 hover:border-primary text-primary hover:text-white font-label text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-[0_0_12px_rgba(0,240,255,0.2)] hover:shadow-[0_0_18px_rgba(0,240,255,0.4)]"
+            whileTap={{ scale: 0.95 }}
+            className="px-3.5 py-1.5 rounded-xl bg-primary/15 hover:bg-primary/25 border border-primary/40 hover:border-primary text-primary hover:text-white font-label text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-[0_0_12px_rgba(0,240,255,0.2)] hover:shadow-[0_0_18px_rgba(0,240,255,0.4)]"
             title="Reset actions and advance to next round"
           >
             <span className="material-symbols-outlined text-sm">refresh</span>
             <span>New Turn</span>
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -281,77 +308,63 @@ export function ActionEconomyTracker({
               ? 'text-amber-400'
               : 'text-primary'
 
-          const badgeReadyStyle =
+          const readyBadgeColor =
             act.glowColor === 'magenta'
-              ? 'bg-secondary/15 text-secondary border-secondary/40 shadow-[0_0_8px_rgba(217,70,239,0.25)]'
+              ? 'bg-secondary/15 text-secondary border border-secondary/30'
               : act.glowColor === 'amber'
-              ? 'bg-amber-400/15 text-amber-300 border-amber-400/40 shadow-[0_0_8px_rgba(251,191,36,0.25)]'
-              : 'bg-primary/15 text-primary border-primary/40 shadow-[0_0_8px_rgba(0,240,255,0.25)]'
+              ? 'bg-amber-400/15 text-amber-300 border border-amber-400/30'
+              : 'bg-primary/15 text-primary border border-primary/30'
 
           return (
-            <button
+            <motion.button
               key={act.key}
               type="button"
               onClick={() => handleToggle(act.key)}
-              className={`p-3.5 rounded-xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden group active:scale-95 ${
+              whileHover={{ scale: 1.015 }}
+              whileTap={{ scale: 0.97 }}
+              aria-pressed={isSpent}
+              className={`p-3.5 rounded-xl border flex flex-col justify-between text-left transition-all cursor-pointer select-none ${
                 isSpent
-                  ? 'bg-surface-container-lowest/60 border-white/5 opacity-60 hover:opacity-85 hover:border-white/20'
-                  : `bg-surface-container-high/90 ${readyBorder} ${hoverGlow} hover:scale-[1.02]`
+                  ? 'bg-surface-container-lowest/60 border-white/5 opacity-60'
+                  : `bg-surface-container-high ${readyBorder} ${hoverGlow}`
               }`}
             >
-              {/* Top row with icon & status */}
-              <div className="flex items-center justify-between mb-2.5">
-                <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                    isSpent ? 'bg-white/5' : 'bg-surface-container-highest border border-white/10'
-                  }`}
-                >
-                  <span className={`material-symbols-outlined text-lg ${iconColor}`}>
-                    {act.icon}
-                  </span>
-                </div>
-
+              <div className="flex items-start justify-between w-full mb-3">
+                <span className={`material-symbols-outlined text-2xl ${iconColor}`}>
+                  {act.icon}
+                </span>
                 <span
-                  className={`text-[9px] font-label uppercase tracking-widest px-2.5 py-0.5 rounded-full font-bold border transition-all flex items-center gap-1 ${
+                  className={`font-label text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
                     isSpent
-                      ? 'bg-error/10 text-error border-error/30'
-                      : badgeReadyStyle
+                      ? 'bg-white/5 text-tertiary border border-white/5'
+                      : readyBadgeColor
                   }`}
                 >
-                  {!isSpent && <span className="w-1.5 h-1.5 rounded-full bg-current" />}
                   {isSpent ? 'Spent' : 'Ready'}
                 </span>
               </div>
 
-              {/* Title & description */}
               <div>
-                <div className="flex items-center gap-1.5">
-                  <p
-                    className={`font-headline text-xs font-bold uppercase tracking-wider transition-colors ${
-                      isSpent ? 'text-tertiary line-through' : 'text-white'
-                    }`}
-                  >
-                    {act.label}
-                  </p>
-                  {act.badgeSub && !isSpent && (
-                    <span className="text-[8px] font-mono text-amber-400/80 px-1 py-0.2 rounded bg-amber-400/10 border border-amber-400/20">
-                      2-in-1
-                    </span>
-                  )}
-                </div>
                 <p
-                  className={`font-label text-[9px] truncate mt-0.5 transition-colors ${
-                    isSpent ? 'text-tertiary/60' : 'text-tertiary'
+                  className={`font-headline text-sm font-bold tracking-wide ${
+                    isSpent ? 'text-tertiary line-through' : 'text-white'
                   }`}
                 >
+                  {act.label}
+                </p>
+                <p className="font-label text-[10px] text-tertiary mt-0.5 line-clamp-1">
                   {act.sublabel}
                 </p>
+                {act.badgeSub && (
+                  <span className="inline-block mt-1 font-label text-[9px] text-amber-400/80 bg-amber-400/10 px-1.5 py-0.2 rounded border border-amber-400/20">
+                    {act.badgeSub}
+                  </span>
+                )}
               </div>
-            </button>
+            </motion.button>
           )
         })}
       </div>
-    </div>
+    </section>
   )
 }
-

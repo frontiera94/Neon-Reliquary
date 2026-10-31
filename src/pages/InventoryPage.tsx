@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import type { ItemCategory, CoinPurse } from '../types/inventory'
 import { InventoryItemCard } from '../components/inventory/InventoryItemCard'
 import { CoinPurseWidget } from '../components/inventory/CoinPurseWidget'
 import { EquipmentSlotGrid } from '../components/inventory/EquipmentSlotGrid'
+import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
 const CATEGORY_ORDER: ItemCategory[] = ['weapon', 'armor', 'consumable', 'gear', 'magic']
 const CATEGORY_LABELS: Record<ItemCategory, string> = {
@@ -45,23 +47,28 @@ export function InventoryPage() {
     .filter(({ items }) => items.length > 0)
 
   return (
-    <div className="p-6 md:p-12 lg:p-16">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
       {/* Header */}
-      <div className="max-w-5xl mx-auto mb-12">
-        <h1 className="font-headline text-5xl md:text-7xl font-bold text-on-surface mb-4 tracking-tighter uppercase">
+      <div>
+        <h1 className="font-headline text-2xl sm:text-3xl font-black text-on-surface mb-1.5 tracking-tight uppercase">
           Inventory & <span className="text-secondary neon-glow-accent">Gear</span>
         </h1>
-        <div className="h-1 w-24 bg-gradient-to-r from-primary to-secondary rounded-full mb-8" />
-        <p className="font-body text-tertiary text-lg max-w-2xl leading-relaxed">
-          Equipment carried by {char.name}.
+        <div className="h-1 w-20 bg-gradient-to-r from-primary to-secondary rounded-full mb-3" />
+        <p className="font-label text-xs sm:text-sm text-tertiary tracking-wide">
+          Equipment carried by <span className="text-white font-medium">{char.name}</span>.
         </p>
       </div>
 
-      <div className="max-w-5xl mx-auto space-y-12">
+      <motion.div
+        variants={STAGGER_CONTAINER}
+        initial="initial"
+        animate="animate"
+        className="space-y-8"
+      >
         {/* Equipment slot grid */}
-        <section>
-          <div className="flex items-center gap-4 mb-6">
-            <h2 className="font-headline text-2xl text-white font-bold uppercase tracking-tight">Equipment</h2>
+        <motion.section variants={STAGGER_ITEM}>
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">Equipment</h2>
             <div className="flex-1 h-px bg-white/10" />
           </div>
           <EquipmentSlotGrid
@@ -69,32 +76,32 @@ export function InventoryPage() {
             equippedIds={session.equippedItemIds}
             onUnequip={(itemId) => toggleItemEquipped(char.id, itemId)}
           />
-        </section>
+        </motion.section>
 
         {/* Coin purse */}
-        <section>
-          <div className="flex items-center gap-4 mb-6">
-            <h2 className="font-headline text-2xl text-white font-bold uppercase tracking-tight">Coin Purse</h2>
+        <motion.section variants={STAGGER_ITEM}>
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">Coin Purse</h2>
             <div className="flex-1 h-px bg-white/10" />
           </div>
           <CoinPurseWidget
             coins={coins}
             onAdjust={(denom, delta) => adjustCoin(char.id, denom, delta)}
           />
-        </section>
+        </motion.section>
 
         {/* Item categories */}
         {itemsByCategory.length === 0 ? (
           <p className="font-body text-tertiary italic">No items in inventory.</p>
         ) : (
           itemsByCategory.map(({ cat, items }) => (
-            <section key={cat}>
-              <div className="flex items-center gap-4 mb-6">
-                <h2 className="font-headline text-2xl text-white font-bold uppercase tracking-tight">
+            <motion.section variants={STAGGER_ITEM} key={cat}>
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">
                   {CATEGORY_LABELS[cat]}
                 </h2>
                 <div className="flex-1 h-px bg-white/10" />
-                <span className="font-label text-xs text-primary/80 bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                <span className="font-label text-[10px] text-primary/80 bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider font-semibold">
                   {items.length} item{items.length !== 1 ? 's' : ''}
                 </span>
               </div>
@@ -116,10 +123,10 @@ export function InventoryPage() {
                   )
                 })}
               </div>
-            </section>
+            </motion.section>
           ))
         )}
-      </div>
+      </motion.div>
     </div>
   )
 }

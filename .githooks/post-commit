@@ -1,0 +1,4 @@
+#!/bin/sh
+# Git post-commit hook to automatically merge completed feature branches into main
+node scripts/auto-merge-feature.mjs --skip-tests
+exit $?

@@ -1,45 +1,23 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { useInspectorStore } from '../store/useInspectorStore'
-import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
-import { deriveBuffFromSpell, findMatchingBuffForSpell, isSpellBuffCandidate, calcEffectiveAbilities } from '../lib/stat-calc'
+import { parseDiceFormula } from '../lib/dice-engine'
+import {
+  deriveBuffFromSpell,
+  findMatchingBuffForSpell,
+  isSpellBuffCandidate,
+  calcEffectiveAbilities,
+  calcConcentrationBonus,
+  getSpellFocusBonus,
+} from '../lib/stat-calc'
 import { getSpellAvailability } from '../lib/spell-availability'
 import { spellInspectorItem } from '../lib/inspector-items'
 import { SpellUsePips } from '../components/spells/SpellUsePips'
 import type { Spell, SpellAttackType } from '../types/resources'
-import type { AbilityScore } from '../types/character'
-
-function getSpellFocusBonus(school: string, feats: { id?: string; name: string }[]): number {
-  if (!school || !feats.length) return 0
-  const schoolLower = school.toLowerCase()
-  let bonus = 0
-  for (const f of feats) {
-    const nameLower = f.name.toLowerCase()
-    if (nameLower.includes('spell focus') && nameLower.includes(schoolLower)) {
-      if (nameLower.includes('greater')) {
-        bonus = Math.max(bonus, 2)
-      } else {
-        bonus = Math.max(bonus, 1)
-      }
-    }
-  }
-  return bonus
-}
-
-function concentrationMod(charClass: string, level: number, abilities: AbilityScore): number {
-  const cls = charClass.toLowerCase()
-  let abilMod: number
-  if (/wizard|magus|witch|alchemist|investigator|arcanist|rogue/.test(cls)) {
-    abilMod = abilityMod(abilities.int)
-  } else if (/sorcerer|bard|oracle|summoner|skald|bloodrager/.test(cls)) {
-    abilMod = abilityMod(abilities.cha)
-  } else {
-    abilMod = abilityMod(abilities.wis)
-  }
-  return level + abilMod
-}
+import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
 export function SpellsPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
@@ -70,9 +48,9 @@ export function SpellsPage() {
   )
 
   if (!char.spells || char.spells.length === 0) return (
-    <div className="p-8">
-      <h1 className="font-headline text-5xl font-bold text-on-surface mb-4">The Repository</h1>
-      <p className="text-tertiary font-label">This character has no spellcasting ability.</p>
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+      <h1 className="font-headline text-2xl sm:text-3xl font-black text-white mb-2 tracking-tight uppercase">The Repository</h1>
+      <p className="text-tertiary font-label text-xs sm:text-sm">This character has no spellcasting ability.</p>
     </div>
   )
 
@@ -95,9 +73,9 @@ export function SpellsPage() {
   const isPreparedCaster = availability.profile.mode === 'prepared'
 
   const arcaneFailure = char.armorClass.spellFailureChance ?? 0
-  const concMod = concentrationMod(char.class, char.level, effectiveAbilities.scores)
+  const concMod = calcConcentrationBonus(char.level, availability.castingMod)
   const hasCombatCasting = char.feats.some((f) => /combat casting/i.test(f.name))
-  const defensiveConcMod = concMod + (hasCombatCasting ? 4 : 0)
+  const defensiveConcMod = calcConcentrationBonus(char.level, availability.castingMod, hasCombatCasting ? 4 : 0)
 
   const bab = char.baseAttackBonus[0] ?? 0
   const dexMod = effectiveAbilities.mods.dex
@@ -139,7 +117,7 @@ export function SpellsPage() {
     const match = findMatchingBuffForSpell(spell, allBuffs)
     const buffId = match?.id ?? `spell-buff-${spell.id}`
     if (session.activeBuffIds.includes(buffId)) {
-      if (match) toggleBuff(char.id, match.id)
+      toggleBuff(char.id, buffId)
       return
     }
     if (!consumeCastCost(spell)) return
@@ -153,9 +131,10 @@ export function SpellsPage() {
   }
 
   const inspectSpell = (spell: Spell) => {
+    const spellFocusBonus = getSpellFocusBonus(spell.school, char.feats)
     openInspector(
       spellInspectorItem(spell, {
-        dc: availability.spellDc(spell),
+        dc: availability.spellDc(spell, spellFocusBonus),
         tags: [
           ...(isSpellBuffActive(spell) ? ['Buff Active'] : []),
           ...(isAlwaysPrepared(spell) ? ['Always Prepared'] : []),
@@ -181,15 +160,20 @@ export function SpellsPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 lg:p-12">
+    <motion.div
+      variants={STAGGER_CONTAINER}
+      initial="initial"
+      animate="animate"
+      className="p-4 md:p-8 max-w-6xl mx-auto space-y-6"
+    >
       {/* Header */}
-      <header className="mb-10">
+      <header className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
-            <h1 className="font-headline text-5xl font-bold text-white mb-2 tracking-tight">
+            <h1 className="font-headline text-2xl sm:text-3xl font-black text-white mb-1.5 tracking-tight uppercase">
               The Repository
             </h1>
-            <p className="text-tertiary font-label uppercase text-sm tracking-[0.2em]">
+            <p className="text-tertiary font-label text-xs sm:text-sm tracking-wide">
               {isSpontaneous
                 ? `Spontaneous caster · ${availability.knownCount} known · ${availability.remainingSlots} slots remaining`
                 : isPreparedCaster
@@ -244,7 +228,7 @@ export function SpellsPage() {
       {isPreparedCaster ? (
         <section className="mb-8 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.06)]">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
+            <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary neon-glow-accent">
               Active Spell Uses
             </h2>
             <div className="flex flex-wrap items-center gap-2">
@@ -302,7 +286,7 @@ export function SpellsPage() {
       ) : isSpontaneous && availability.levels.some((level) => level.total > 0) ? (
         <section className="mb-8 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.06)]">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
+            <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary neon-glow-accent">
               Spell Slots
             </h2>
             <span className="font-label text-[10px] text-tertiary uppercase tracking-wider tabular-nums">
@@ -332,7 +316,7 @@ export function SpellsPage() {
       ) : availability.activeSpellUses.length > 0 ? (
         <section className="mb-8 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.06)]">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
+            <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary neon-glow-accent">
               Active Spell Uses
             </h2>
           </div>
@@ -406,9 +390,9 @@ export function SpellsPage() {
           const preparedCapacity = levelInfo?.preparedCapacity ?? 0
 
           return (
-            <div key={lvl} className="mb-8">
+            <motion.div variants={STAGGER_ITEM} key={lvl} className="mb-8">
               <div className="flex items-center gap-4 mb-3">
-                <h3 className="font-label text-xs uppercase tracking-[0.2em] text-primary font-bold tabular-nums">
+                <h3 className="font-headline text-sm sm:text-base font-bold uppercase tracking-wider text-primary tabular-nums">
                   Level {lvl}
                   {isPreparedCaster && slotMax > 0
                     ? ` · Prepared: ${levelPreparedCount}/${preparedCapacity}`
@@ -522,10 +506,10 @@ export function SpellsPage() {
                   )
                 })}
               </div>
-            </div>
+            </motion.div>
           )
         })}
-    </div>
+    </motion.div>
   )
 }
 
@@ -637,12 +621,12 @@ function SpellRow({
                 event.preventDefault()
                 onInspect?.()
               }}
-              className={`font-headline font-bold text-left cursor-pointer hover:underline underline-offset-4 ${isPrepared ? 'text-primary' : isBuffActive ? 'text-secondary' : 'text-white'}`}
+              className={`font-headline text-base sm:text-lg font-bold text-left cursor-pointer hover:underline underline-offset-4 ${isPrepared ? 'text-primary' : isBuffActive ? 'text-secondary' : 'text-white'}`}
             >
               {spell.name}
             </button>
             {isBuffActive && (
-              <span className="font-label text-[9px] text-white font-bold bg-secondary px-2 py-0.5 rounded-full uppercase tracking-widest">
+              <span className="font-label text-[10px] text-white font-bold bg-secondary px-2 py-0.5 rounded-full uppercase tracking-widest">
                 Buff Active
               </span>
             )}
@@ -651,7 +635,7 @@ function SpellRow({
                 className="flex items-center gap-1.5 bg-primary/20 border border-primary/40 rounded-full px-2 py-0.5"
                 onClick={(e) => e.stopPropagation()}
               >
-                <span className="font-label text-[9px] text-primary font-bold uppercase tracking-widest">
+                <span className="font-label text-[10px] text-primary font-bold uppercase tracking-widest">
                   Prepared {preparedCount > 1 ? `x${preparedCount}` : ''}
                 </span>
                 {onRemovePrepare && (

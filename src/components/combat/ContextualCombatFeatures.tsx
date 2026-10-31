@@ -147,7 +147,7 @@ export function ContextualCombatFeatures({
         }`}
       >
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-          <h3 className="font-headline text-base font-bold text-white">
+          <h3 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
             Combat Features
           </h3>
           <span className="font-label text-[10px] tabular-nums text-tertiary">
@@ -176,7 +176,7 @@ export function ContextualCombatFeatures({
           return (
             <div key={actionType}>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="font-label text-[9px] uppercase tracking-[0.18em] text-primary font-bold">
+                <span className="font-label text-[10px] uppercase tracking-[0.18em] text-primary font-bold">
                   {ACTION_ECONOMY_LABEL[actionType]}
                 </span>
                 <div className="flex-1 h-px bg-white/5" />
@@ -223,7 +223,7 @@ export function ContextualCombatFeatures({
 
                       <div className="flex items-center justify-between gap-2 mt-auto">
                         <span
-                          className={`font-label text-[9px] uppercase tracking-wider px-1.5 py-0.5 border rounded ${
+                          className={`font-label text-[10px] uppercase tracking-wider px-1.5 py-0.5 border rounded ${
                             feature.actionType === 'passive'
                               ? 'border-white/10 text-tertiary'
                               : 'border-primary/30 text-primary bg-primary/10'
@@ -248,7 +248,7 @@ export function ContextualCombatFeatures({
                             {feature.remainingUses}/{feature.maxUses}
                           </button>
                         ) : feature.isDefensive ? (
-                          <span className="font-label text-[9px] text-[#00daf3] uppercase tracking-wider">Defensive</span>
+                          <span className="font-label text-[10px] text-[#00daf3] uppercase tracking-wider">Defensive</span>
                         ) : null}
                       </div>
                     </div>
@@ -302,7 +302,7 @@ export function DefensiveBadges({
                 tags: ['Defensive', badge.stat],
               })
             }
-            className={`min-h-[44px] px-2.5 py-1 rounded-lg border font-label text-[9px] uppercase tracking-wider font-bold cursor-pointer transition-all hover:brightness-125 ${
+            className={`min-h-[44px] px-2.5 py-1 rounded-lg border font-label text-[10px] uppercase tracking-wider font-bold cursor-pointer transition-all hover:brightness-125 ${
               tone === 'primary'
                 ? 'border-primary/40 bg-primary/10 text-primary'
                 : 'border-secondary/40 bg-secondary/10 text-secondary'

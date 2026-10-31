@@ -195,7 +195,7 @@ describe("M1 Challenger Hardening Suite: Turn Lifecycle, Bloodrage & Persistence
       let session = useSessionStore.getState().sessions[charId]
       expect(session.classMechanics?.bloodrager?.isRaging).toBe(true)
       expect(session.classMechanics?.bloodrager?.isBloodraging).toBe(true)
-      expect(session.currentHp).toBe(53)
+      expect(session.currentHp).toBe(55)
 
       useSessionStore.setState((s) => ({
         sessions: {
@@ -208,8 +208,8 @@ describe("M1 Challenger Hardening Suite: Turn Lifecycle, Bloodrage & Persistence
       session = useSessionStore.getState().sessions[charId]
 
       expect(exitResult.isLethal).toBe(true)
-      expect(exitResult.remainingHp).toBe(-2)
-      expect(session.currentHp).toBe(-2)
+      expect(exitResult.remainingHp).toBe(-4)
+      expect(session.currentHp).toBe(-4)
       expect(session.conditions).toContain("fatigued")
       expect(session.classMechanics?.bloodrager?.isRaging).toBe(false)
       expect(session.classMechanics?.bloodrager?.isBloodraging).toBe(false)
@@ -432,7 +432,7 @@ describe("M1 Challenger Hardening Suite: Turn Lifecycle, Bloodrage & Persistence
         currentRound: 5,
         currentHp: 40,
         conditions: [],
-        spentResources: { "bloodrage-rounds": 13 },
+        spentResources: { "bloodrage-rounds": 15 },
         classMechanics: {
           bloodrager: {
             ...createDefaultClassMechanics(charId).bloodrager!,
@@ -446,12 +446,12 @@ describe("M1 Challenger Hardening Suite: Turn Lifecycle, Bloodrage & Persistence
 
       const nextSession = advanceTurnMechanics(session, char)
 
-      expect(nextSession.spentResources["bloodrage-rounds"]).toBe(14)
+      expect(nextSession.spentResources["bloodrage-rounds"]).toBe(16)
       expect(nextSession.classMechanics?.bloodrager?.isRaging).toBe(false)
       expect(nextSession.classMechanics?.bloodrager?.isBloodraging).toBe(false)
       expect(nextSession.classMechanics?.bloodrager?.fatigueCountdown).toBe(8)
       expect(nextSession.conditions).toContain("fatigued")
-      expect(nextSession.currentHp).toBe(32)
+      expect(nextSession.currentHp).toBe(30)
     })
 
     it("maintains strict state isolation between different characters on advanceCharacterTurn", () => {

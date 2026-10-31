@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Weapon } from '../../types/combat'
 import type { EffectiveWeaponCalculated } from '../../lib/stat-calc'
-import { parseDiceFormula } from '../../lib/dice-engine'
+import { parseDiceFormula, rollDie } from '../../lib/dice-engine'
 
 export interface AttackResult {
   index: number
@@ -51,9 +51,7 @@ interface FullAttackModalProps {
 }
 
 function getRandomD20(): number {
-  const arr = new Uint32Array(1)
-  crypto.getRandomValues(arr)
-  return (arr[0] % 20) + 1
+  return rollDie(20)
 }
 
 function generateAttackResults(

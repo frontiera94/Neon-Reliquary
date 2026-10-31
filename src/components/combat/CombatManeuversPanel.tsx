@@ -60,7 +60,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-headline text-base font-bold text-white">
+              <h3 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
                 Maneuvers & Tactics (CMB / CMD)
               </h3>
               <span
@@ -313,20 +313,20 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h4 className="font-headline text-sm font-bold text-white group-hover:text-secondary transition-colors">
+                        <h4 className="font-headline text-base sm:text-lg font-bold text-white group-hover:text-secondary transition-colors">
                           {m.name}
                         </h4>
                       </div>
                       {hasFeat ? (
                         <span
-                          className="text-[9px] font-label font-bold px-2 py-0.5 rounded-lg bg-secondary/15 text-secondary border border-secondary/30 uppercase tracking-widest shadow-[0_0_8px_rgba(217,70,239,0.2)] flex-shrink-0"
+                          className="text-[10px] font-label font-bold px-2 py-0.5 rounded-lg bg-secondary/15 text-secondary border border-secondary/30 uppercase tracking-widest shadow-[0_0_8px_rgba(217,70,239,0.2)] flex-shrink-0"
                           title={m.featApplied ?? 'Improved Feat applied'}
                         >
                           No AoO
                         </span>
                       ) : (
                         <span
-                          className="text-[9px] font-label px-2 py-0.5 rounded-lg bg-white/5 text-tertiary border border-white/10 uppercase tracking-widest flex-shrink-0"
+                          className="text-[10px] font-label px-2 py-0.5 rounded-lg bg-white/5 text-tertiary border border-white/10 uppercase tracking-widest flex-shrink-0"
                           title="Provokes Attack of Opportunity without Improved feat"
                         >
                           Provokes

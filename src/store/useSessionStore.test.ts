@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useSessionStore } from './useSessionStore'
+import { useSessionStore, normalizePersistedSession } from './useSessionStore'
 
 // Helper: reset to a clean slate before every test
 function resetStore() {
@@ -545,5 +545,118 @@ describe('companion management', () => {
   it('setActiveCompanion sets active companion id', () => {
     useSessionStore.getState().setActiveCompanion(CHAR, COMP_ID)
     expect(useSessionStore.getState().getSession(CHAR).activeCompanionId).toBe(COMP_ID)
+  })
+})
+
+// ─── Atomic Damage, Healing, Normalization & No-op Preservation ──────────────
+
+describe('applyDamage & applyHealing', () => {
+  beforeEach(() => {
+    resetStore()
+    useSessionStore.getState().initSession(CHAR, MAX_HP)
+  })
+
+  it('applyDamage absorbs tempHp first and reduces currentHp with remainder', () => {
+    useSessionStore.getState().setTempHp(CHAR, 8)
+    useSessionStore.getState().applyDamage(CHAR, 12, 14)
+    const sess = useSessionStore.getState().getSession(CHAR)
+    expect(sess.tempHp).toBe(0)
+    expect(sess.currentHp).toBe(26)
+  })
+
+  it('applyDamage clamps currentHp at negative CON score', () => {
+    useSessionStore.getState().applyDamage(CHAR, 100, 14)
+    expect(useSessionStore.getState().getSession(CHAR).currentHp).toBe(-14)
+  })
+
+  it('applyDamage is a no-op when damage <= 0', () => {
+    const before = useSessionStore.getState()
+    useSessionStore.getState().applyDamage(CHAR, 0, 14)
+    useSessionStore.getState().applyDamage(CHAR, -5, 14)
+    expect(useSessionStore.getState()).toBe(before)
+  })
+
+  it('applyHealing clears nonlethalDamage first and caps currentHp at maxHp', () => {
+    useSessionStore.getState().setHp(CHAR, 20)
+    useSessionStore.getState().setNonlethal(CHAR, 6)
+    useSessionStore.getState().applyHealing(CHAR, 10, MAX_HP)
+    const sess = useSessionStore.getState().getSession(CHAR)
+    expect(sess.nonlethalDamage).toBe(0)
+    expect(sess.currentHp).toBe(24)
+  })
+
+  it('applyHealing caps currentHp at maxHp', () => {
+    useSessionStore.getState().setHp(CHAR, 25)
+    useSessionStore.getState().applyHealing(CHAR, 20, MAX_HP)
+    expect(useSessionStore.getState().getSession(CHAR).currentHp).toBe(MAX_HP)
+  })
+
+  it('applyHealing is a no-op when healing <= 0', () => {
+    const before = useSessionStore.getState()
+    useSessionStore.getState().applyHealing(CHAR, 0, MAX_HP)
+    expect(useSessionStore.getState()).toBe(before)
+  })
+})
+
+describe('normalizePersistedSession, toggleSpellBuff & no-op state preservation', () => {
+  beforeEach(() => {
+    resetStore()
+    useSessionStore.getState().initSession(CHAR, MAX_HP)
+  })
+
+  it('normalizePersistedSession backfills missing arrays and strips legacy spells-* keys', () => {
+    const legacy = {
+      characterId: CHAR,
+      currentHp: 18,
+      spentResources: { rage: 2, 'spells-1': 3, 'spells-2': 1 },
+      preparedSpellIds: ['shield', 'shield'],
+    } as unknown as ReturnType<typeof useSessionStore.getState>['sessions'][string]
+
+    const normalized = normalizePersistedSession(legacy)
+    expect(normalized.spentResources).toEqual({ rage: 2 })
+    expect(normalized.preparedSpells).toEqual({ shield: 2 })
+    expect(normalized.preparedSpellIds).toEqual(['shield', 'shield'])
+    expect(normalized.activeBuffIds).toEqual([])
+    expect(normalized.conditions).toEqual([])
+    expect(normalized.activeSummon).toBeNull()
+  })
+
+  it('toggleSpellBuff creates custom spell buff on first call and toggles active state', () => {
+    const spell = {
+      id: 'shield-of-faith',
+      name: 'Shield of Faith',
+      level: 1,
+      school: 'Abjuration',
+      castingTime: '1 standard action',
+      range: 'Touch',
+      duration: '1 min./level',
+      description: 'Grants +2 deflection bonus to AC.',
+      spellResistance: true,
+      components: 'V, S, DF',
+    }
+    useSessionStore.getState().toggleSpellBuff(CHAR, spell)
+    let sess = useSessionStore.getState().getSession(CHAR)
+    expect(sess.activeBuffIds).toContain('spell-buff-shield-of-faith')
+    expect(sess.customBuffs?.some((b) => b.id === 'spell-buff-shield-of-faith' && b.spellId === 'shield-of-faith')).toBe(true)
+
+    useSessionStore.getState().toggleSpellBuff(CHAR, spell)
+    sess = useSessionStore.getState().getSession(CHAR)
+    expect(sess.activeBuffIds).not.toContain('spell-buff-shield-of-faith')
+  })
+
+  it('preserves store state reference on no-op resource spend or recovery', () => {
+    useSessionStore.getState().spendResource(CHAR, 'rage', 1)
+    const afterFirstSpend = useSessionStore.getState()
+    useSessionStore.getState().spendResource(CHAR, 'rage', 1)
+    expect(useSessionStore.getState()).toBe(afterFirstSpend)
+
+    useSessionStore.getState().recoverResource(CHAR, 'rage')
+    const afterRecoverToZero = useSessionStore.getState()
+    useSessionStore.getState().recoverResource(CHAR, 'rage')
+    expect(useSessionStore.getState()).toBe(afterRecoverToZero)
+
+    const beforeNoSlotPrepare = useSessionStore.getState()
+    useSessionStore.getState().toggleSpellPrepared(CHAR, 'fireball', 3, 0)
+    expect(useSessionStore.getState()).toBe(beforeNoSlotPrepare)
   })
 })

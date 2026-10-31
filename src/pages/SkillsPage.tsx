@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { calcEffectiveAbilities, calcEffectiveSkills, getActiveActionRestrictions } from '../lib/stat-calc'
 import { ActionAlertBanner } from '../components/combat/ActionAlertBanner'
 import type { EffectiveSkill } from '../lib/stat-calc'
+import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
 const ABILITY_SHORT = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' }
 
@@ -63,17 +65,17 @@ export function SkillsPage() {
   const restrictions = session ? getActiveActionRestrictions(session.conditions) : []
 
   return (
-    <div className="p-4 md:p-8 lg:p-12">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
       {restrictions.length > 0 && <ActionAlertBanner restrictions={restrictions} />}
 
       {/* Header */}
-      <header className="mb-10">
+      <header className="mb-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="font-headline text-5xl font-bold text-white mb-2 tracking-tight">
+            <h1 className="font-headline text-2xl sm:text-3xl font-black text-white mb-1.5 tracking-tight uppercase">
               Grimoire Skills
             </h1>
-            <p className="text-tertiary font-label uppercase text-sm tracking-[0.2em]">
+            <p className="text-tertiary font-label text-xs sm:text-sm tracking-wide">
               Mechanical Proficiencies & Dynamic Calculations
             </p>
           </div>
@@ -107,34 +109,20 @@ export function SkillsPage() {
 
       {/* Skills Grid */}
       {effectiveSkills.length === 0 ? (
-        <div className="py-16 text-center text-tertiary font-label text-sm uppercase tracking-widest">
+        <div className="py-16 text-center text-tertiary font-label text-xs uppercase tracking-widest">
           No skills found
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+        <motion.div
+          variants={STAGGER_CONTAINER}
+          initial="initial"
+          animate="animate"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start"
+        >
           <div className="flex flex-col gap-4">
             {leftSkills.map((skill) => (
-              <SkillRow
-                key={skill.id}
-                skill={skill}
-                total={skill.effectiveTotal}
-                onRoll={() =>
-                  openRoll({
-                    diceType: 20,
-                    count: 1,
-                    modifier: skill.effectiveTotal,
-                    label: `${skill.name} Check`,
-                    breakdown: skill.breakdown,
-                  })
-                }
-              />
-            ))}
-          </div>
-          {rightSkills.length > 0 && (
-            <div className="flex flex-col gap-4">
-              {rightSkills.map((skill) => (
+              <motion.div key={skill.id} variants={STAGGER_ITEM}>
                 <SkillRow
-                  key={skill.id}
                   skill={skill}
                   total={skill.effectiveTotal}
                   onRoll={() =>
@@ -147,10 +135,31 @@ export function SkillsPage() {
                     })
                   }
                 />
+              </motion.div>
+            ))}
+          </div>
+          {rightSkills.length > 0 && (
+            <div className="flex flex-col gap-4">
+              {rightSkills.map((skill) => (
+                <motion.div key={skill.id} variants={STAGGER_ITEM}>
+                  <SkillRow
+                    skill={skill}
+                    total={skill.effectiveTotal}
+                    onRoll={() =>
+                      openRoll({
+                        diceType: 20,
+                        count: 1,
+                        modifier: skill.effectiveTotal,
+                        label: `${skill.name} Check`,
+                        breakdown: skill.breakdown,
+                      })
+                    }
+                  />
+                </motion.div>
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
       )}
     </div>
   )
@@ -179,7 +188,7 @@ function SkillRow({
           }`}
         />
         <div className="min-w-0">
-          <p className="font-headline font-bold text-white group-hover:text-primary truncate leading-tight transition-colors">
+          <p className="font-headline text-base sm:text-lg font-bold text-white group-hover:text-primary truncate leading-tight transition-colors">
             {skill.name}
           </p>
           <div className="flex items-center gap-2 mt-1">
@@ -200,7 +209,7 @@ function SkillRow({
 
       {/* Bonus */}
       <div className="w-16 h-16 rounded-xl flex-shrink-0 flex items-center justify-center bg-gradient-to-r from-primary to-primary-container text-black font-black shadow-[0_0_15px_rgba(0,240,255,0.3)] group-hover:shadow-[0_0_25px_rgba(0,240,255,0.5)] transition-all">
-        <span className="font-label text-2xl">
+        <span className="font-label text-2xl sm:text-3xl font-black">
           {total >= 0 ? `+${total}` : total}
         </span>
       </div>

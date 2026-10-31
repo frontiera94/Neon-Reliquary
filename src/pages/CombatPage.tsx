@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
@@ -28,9 +29,11 @@ import {
 } from '../lib/class-combat'
 import { ContextualCombatFeatures, DefensiveBadges } from '../components/combat/ContextualCombatFeatures'
 import { DailyResourcePips } from '../components/combat/BuffResourceToggle'
+import { SpellUsePips } from '../components/spells/SpellUsePips'
 import { buffModifierTokens, modifierColor } from '../lib/buff-summary'
 import type { Weapon } from '../types/combat'
 import type { DiceType } from '../types/dice'
+import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
 export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
   const char = useCharacterStore((s) => s.activeCharacter())
@@ -47,8 +50,10 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     adjustCompanionHp,
     spendSpellSlot,
     recoverSpellSlot,
+    setSpellSlotSpent,
     spendPreparedSpell,
     recoverPreparedSpell,
+    setPreparedSpellSpent,
     spendResource,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
@@ -174,12 +179,17 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
       {/* Restrictions only appear when a condition actually limits actions. */}
       <ActionAlertBanner restrictions={restrictions} />
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12 xl:items-start">
+      <motion.div
+        variants={STAGGER_CONTAINER}
+        initial="initial"
+        animate="animate"
+        className="grid grid-cols-1 gap-4 xl:grid-cols-12 xl:items-start"
+      >
         {/* Primary column — what you do on your turn. */}
         <div className="space-y-4 xl:col-span-7">
-          <section aria-labelledby="attacks-heading">
+          <motion.section variants={STAGGER_ITEM} aria-labelledby="attacks-heading">
             <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <h2 id="attacks-heading" className="font-headline text-lg font-bold text-white">
+              <h2 id="attacks-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
                 Attacks
               </h2>
               <span className="font-label text-[10px] uppercase tracking-wider text-tertiary">
@@ -315,7 +325,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                 )
               })}
             </div>
-          </section>
+          </motion.section>
 
           {/* Wild Shape verbal/somatic spell warning banner */}
           {showWildShapeSpellWarning && (
@@ -329,44 +339,48 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
 
           {/* Spellbook stays folded: the page is about resolving the turn. */}
           {char.spells && char.spells.length > 0 && (
-            <CombatSpellsSection
-              spells={char.spells}
-              spellSlots={char.spellSlots}
-              preparedSpellIds={session.preparedSpellIds}
-              preparedSpells={session.preparedSpells}
-              spentPreparedSpells={session.spentPreparedSpells}
-              spentSpellSlots={session.spentSpellSlots}
-              spentResources={session.spentResources}
-              dailyResources={char.dailyResources}
-              charClass={char.class}
-              charLevel={char.level}
-              abilities={effectiveAbilities.scores}
-              baseAttackBonus={char.baseAttackBonus}
-              spellFailureChance={char.armorClass.spellFailureChance}
-              feats={char.feats}
-              spellAvailability={spellAvailability}
-              defaultExpanded={false}
-              openRoll={openRoll}
-              onSpendSlot={(lvl, max) => spendSpellSlot(char.id, lvl, max)}
-              onRecoverSlot={(lvl) => recoverSpellSlot(char.id, lvl)}
-              onSpendPreparedSpell={(spellId, max) => spendPreparedSpell(char.id, spellId, max)}
-              onRecoverPreparedSpell={(spellId) => recoverPreparedSpell(char.id, spellId)}
-              onSpendResource={(resourceId, max) => spendResource(char.id, resourceId, max)}
-              allBuffs={allBuffs}
-              activeBuffIds={activeBuffIds}
-              onToggleBuff={(buffId) => toggleBuff(char.id, buffId)}
-              onAddCustomBuff={(buff) => addCustomBuff(char.id, buff)}
-            />
+            <motion.div variants={STAGGER_ITEM}>
+              <CombatSpellsSection
+                spells={char.spells}
+                spellSlots={char.spellSlots}
+                preparedSpellIds={session.preparedSpellIds}
+                preparedSpells={session.preparedSpells}
+                spentPreparedSpells={session.spentPreparedSpells}
+                spentSpellSlots={session.spentSpellSlots}
+                spentResources={session.spentResources}
+                dailyResources={char.dailyResources}
+                charClass={char.class}
+                charLevel={char.level}
+                abilities={effectiveAbilities.scores}
+                baseAttackBonus={char.baseAttackBonus}
+                spellFailureChance={char.armorClass.spellFailureChance}
+                feats={char.feats}
+                spellAvailability={spellAvailability}
+                defaultExpanded={false}
+                openRoll={openRoll}
+                onSpendSlot={(lvl, max) => spendSpellSlot(char.id, lvl, max)}
+                onRecoverSlot={(lvl) => recoverSpellSlot(char.id, lvl)}
+                onSpendPreparedSpell={(spellId, max) => spendPreparedSpell(char.id, spellId, max)}
+                onRecoverPreparedSpell={(spellId) => recoverPreparedSpell(char.id, spellId)}
+                onSpendResource={(resourceId, max) => spendResource(char.id, resourceId, max)}
+                allBuffs={allBuffs}
+                activeBuffIds={activeBuffIds}
+                onToggleBuff={(buffId) => toggleBuff(char.id, buffId)}
+                onAddCustomBuff={(buff) => addCustomBuff(char.id, buff)}
+              />
+            </motion.div>
           )}
 
-          <CombatManeuversPanel maneuversCalc={maneuversCalc} openRoll={openRoll} />
+          <motion.div variants={STAGGER_ITEM}>
+            <CombatManeuversPanel maneuversCalc={maneuversCalc} openRoll={openRoll} />
+          </motion.div>
 
           {/* Summoned ally */}
           {activeSummonOption && activeSummon && (
-            <section aria-labelledby="summon-heading" className="space-y-2">
+            <motion.section variants={STAGGER_ITEM} aria-labelledby="summon-heading" className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-baseline gap-2">
-                  <h2 id="summon-heading" className="font-headline text-base font-bold text-white">
+                  <h2 id="summon-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
                     Summoned ally
                   </h2>
                   <span className="font-label text-[10px] uppercase tracking-wider text-primary">
@@ -381,16 +395,16 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                 onDismiss={() => clearSummon(char.id)}
                 openRoll={openRoll}
               />
-            </section>
+            </motion.section>
           )}
 
           {/* Companion — one compact row plus its attacks and quick selection. */}
           {companion && (
-            <section aria-labelledby="companion-heading">
+            <motion.section variants={STAGGER_ITEM} aria-labelledby="companion-heading">
               <div className="mb-2 flex flex-wrap items-end justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex items-baseline gap-2">
-                    <h2 id="companion-heading" className="font-headline text-base font-bold text-white">
+                    <h2 id="companion-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
                       Companion
                     </h2>
                     <span className="font-label text-[10px] text-tertiary">{companion.name}</span>
@@ -450,7 +464,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         {companionConditions.map((cond) => (
                           <span
                             key={cond}
-                            className="rounded-full border border-error/40 bg-error/20 px-1.5 py-0.2 font-label text-[9px] font-bold uppercase tracking-wider text-error"
+                            className="rounded-full border border-error/40 bg-error/20 px-1.5 py-0.2 font-label text-[10px] font-bold uppercase tracking-wider text-error"
                           >
                             {cond}
                           </span>
@@ -551,19 +565,20 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                   </div>
                 )}
               </div>
-            </section>
+            </motion.section>
           )}
         </div>
 
         {/* Support column — state you need to read, not act on constantly. */}
         <aside className="space-y-4 xl:col-span-5">
-          <section
+          <motion.section
+            variants={STAGGER_ITEM}
             aria-labelledby="buffs-heading"
             className="rounded-2xl border border-white/10 bg-surface-container/70 p-4 backdrop-blur-sm"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <h2 id="buffs-heading" className="font-headline text-base font-bold text-white">
+                <h2 id="buffs-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
                   Buffs & Effects
                 </h2>
                 <span className="font-label text-[10px] text-tertiary">
@@ -623,8 +638,8 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                           {tokens.map((token, index) => (
                             <span key={`${token.label}-${index}`} className="contents">
-                              {index > 0 && <span className="font-label text-[8px] text-tertiary/40">|</span>}
-                              <span className={`font-label text-[9px] tabular-nums ${isActive ? `font-bold ${modifierColor(token.value)}` : 'text-tertiary/50'}`}>
+                              {index > 0 && <span className="font-label text-[10px] text-tertiary/40">|</span>}
+                              <span className={`font-label text-[10px] tabular-nums ${isActive ? `font-bold ${modifierColor(token.value)}` : 'text-tertiary/50'}`}>
                                 {token.value !== null ? `${token.value > 0 ? '+' : ''}${token.value} ${token.label}` : `+${token.label}`}
                               </span>
                             </span>
@@ -651,7 +666,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                       </span>
                     </span>
                     <span
-                      className="flex-shrink-0 font-label text-[9px] font-bold uppercase tracking-wider"
+                      className="flex-shrink-0 font-label text-[10px] font-bold uppercase tracking-wider"
                       style={{ color: isActive ? hex : 'rgba(255,255,255,0.32)' }}
                     >
                       {isActive ? 'On' : 'Off'}
@@ -675,8 +690,99 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
               </div>
             )}
 
+            {/* Active Spell Uses / Slots in Buffs & Effects */}
+            {char.spells && char.spells.length > 0 && (
+              <div className="mt-3 space-y-1.5 border-t border-white/5 pt-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-label text-[10px] uppercase tracking-wider text-secondary font-bold">
+                    {spellAvailability.profile.mode === 'prepared' ? 'Prepared Spells' : 'Spell Slots'}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-label text-[10px] text-tertiary tabular-nums">
+                      {spellAvailability.remainingSlots}/{spellAvailability.totalSlots}
+                    </span>
+                    <Link
+                      to="/spells"
+                      className="font-label text-[10px] text-primary hover:underline uppercase tracking-wider flex items-center gap-0.5"
+                      title="Manage prepared spells in Repository"
+                    >
+                      <span>Spells</span>
+                      <span className="material-symbols-outlined text-[11px] leading-none">arrow_forward</span>
+                    </Link>
+                  </div>
+                </div>
+
+                {spellAvailability.profile.mode === 'prepared' ? (
+                  spellAvailability.activeSpellUses.length > 0 ? (
+                    <div className="space-y-1">
+                      {spellAvailability.activeSpellUses.map((item) => (
+                        <SpellUsePips
+                          key={item.id}
+                          label={item.name}
+                          prefix={item.prefix}
+                          total={item.total}
+                          spent={item.spent}
+                          compact
+                          onSpend={() => spendPreparedSpell(char.id, item.id, item.total)}
+                          onSetSpent={(amount) => setPreparedSpellSpent(char.id, item.id, amount)}
+                        />
+                      ))}
+                      {spellAvailability.levels
+                        .filter((lvl) => (lvl.unpreparedCount ?? 0) > 0)
+                        .map((lvl) => (
+                          <div
+                            key={`unprep-${lvl.level}`}
+                            className="flex items-center justify-between text-tertiary/60 font-label text-[10px] uppercase tracking-wider px-1 py-0.5"
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <span className="px-1 py-0.5 rounded bg-white/5 border border-white/5 text-[10px] font-bold">
+                                L{lvl.level}
+                              </span>
+                              <span>{lvl.unpreparedCount} Unprepared Slot{lvl.unpreparedCount > 1 ? 's' : ''}</span>
+                            </span>
+                            <Link
+                              to="/spells"
+                              className="text-primary hover:underline text-[10px] capitalize"
+                            >
+                              prepare +
+                            </Link>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between px-1 py-1 text-tertiary/60 font-label text-[10px]">
+                      <span>{spellAvailability.totalSlots} slots free to prepare</span>
+                      <Link
+                        to="/spells"
+                        className="text-primary hover:underline font-bold uppercase text-[10px]"
+                      >
+                        Prepare Spells →
+                      </Link>
+                    </div>
+                  )
+                ) : (
+                  <div className="space-y-1">
+                    {spellAvailability.levels
+                      .filter((level) => level.total > 0)
+                      .map((level) => (
+                        <SpellUsePips
+                          key={`slot-lvl-${level.level}`}
+                          label={`Level ${level.level}`}
+                          prefix="SLOT"
+                          total={level.total}
+                          spent={level.spent}
+                          compact
+                          onSpend={() => spendSpellSlot(char.id, level.level, level.total)}
+                          onSetSpent={(amount) => setSpellSlotSpent(char.id, level.level, amount)}
+                        />
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <DefensiveBadges compact />
-          </section>
+          </motion.section>
 
           <ContextualCombatFeatures collapsible defaultCollapsed compact />
 
@@ -694,7 +800,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
             />
           )}
         </aside>
-      </div>
+      </motion.div>
 
       {/* Full Attack Routine Modal */}
       {fullAttackWeapon && fullAttackEffective && (

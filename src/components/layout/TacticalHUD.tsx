@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCharacterStore } from '../../store/useCharacterStore'
 import { useSessionStore } from '../../store/useSessionStore'
 import { useDiceStore } from '../../store/useDiceStore'
+import { useSheetQueueStore } from '../../store/useSheetQueueStore'
 import {
   calcEffectiveAbilities,
   calcEffectiveArmorClass,
@@ -18,6 +19,9 @@ import { TacticalHpPopover } from './TacticalHpPopover'
 import { SettingsPanel } from './SettingsPanel'
 import { CloudSyncBadge } from '../sync/CloudSyncBadge'
 import { useInspectorStore } from '../../store/useInspectorStore'
+import { CharacterDropdown } from '../character/CharacterDropdown'
+import { CharacterEmblem } from '../character/CharacterEmblem'
+import { getCharacterLore } from '../../lib/character-lore'
 
 export function TacticalHUD() {
   const navigate = useNavigate()
@@ -31,6 +35,13 @@ export function TacticalHUD() {
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [hpPopoverOpen, setHpPopoverOpen] = useState(false)
+
+  const newSheetsCount = useSheetQueueStore((s) => s.newCount())
+  const fetchSheets = useSheetQueueStore((s) => s.fetchSheets)
+
+  useEffect(() => {
+    void fetchSheets()
+  }, [fetchSheets])
 
   // Character Cycling
   const idx = char ? characters.findIndex((c) => c.id === char.id) : -1
@@ -86,25 +97,43 @@ export function TacticalHUD() {
   // If no character is active, render fallback TopBar
   if (!char) {
     return (
-      <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-surface/90 border-b border-white/[0.08] px-6 py-4 flex justify-between items-center" style={{ boxShadow: '0 4px 24px -6px rgba(0,240,255,0.1)' }}>
-        <span
-          className="text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft"
-          onClick={() => navigate('/characters')}
-        >
-          NEON RELIQUARY
-        </span>
-        <span className="font-label text-xs text-tertiary">No Active Character</span>
-        <div className="flex items-center gap-4">
-          <CloudSyncBadge />
-          <button
-            onClick={() => navigate('/characters')}
-            className="flex items-center gap-2 px-4 py-2 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-sm rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+      <>
+        <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-surface/90 border-b border-white/[0.08] px-6 py-4 flex justify-between items-center" style={{ boxShadow: '0 4px 24px -6px rgba(0,240,255,0.1)' }}>
+          <span
+            className="text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft"
+            onClick={() => navigate('/')}
           >
-            <span className="material-symbols-outlined text-sm text-primary">account_circle</span>
-            <span>Character Switcher</span>
-          </button>
-        </div>
-      </header>
+            NEON RELIQUARY
+          </span>
+          <span className="font-label text-xs text-tertiary">No Active Character</span>
+          <div className="flex items-center gap-4">
+            <CloudSyncBadge />
+            <button
+              onClick={() => navigate('/characters')}
+              className="flex items-center gap-2 px-4 py-2 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-sm rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-sm text-primary">account_circle</span>
+              <span>Character Switcher</span>
+            </button>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Settings"
+              className="p-1.5 text-tertiary hover:text-primary transition-all duration-300 rounded-lg hover:bg-white/5 cursor-pointer relative"
+            >
+              <span className="material-symbols-outlined text-base md:text-lg">settings</span>
+              {newSheetsCount > 0 && (
+                <span
+                  data-testid="sheets-notification-badge"
+                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-black font-label text-[9px] font-black flex items-center justify-center shadow-[0_0_8px_rgba(0,240,255,0.6)] animate-pulse"
+                >
+                  {newSheetsCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </header>
+        <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      </>
     )
   }
 
@@ -150,16 +179,28 @@ export function TacticalHUD() {
           <div className="col-start-1 row-start-1 flex flex-shrink-0 items-center gap-3">
             <span
               className="text-xl md:text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft select-none"
-              onClick={() => navigate('/characters')}
+              onClick={() => navigate('/')}
             >
               NEON RELIQUARY
             </span>
-            <div className="hidden md:block h-8 w-px bg-white/10 mx-1" />
-            <div className="hidden xl:block">
-              <h1 className="font-headline text-base leading-none text-white font-bold">{char.name}</h1>
-              <p className="font-label text-xs tracking-widest text-tertiary uppercase mt-0.5">
-                Level {char.level} {char.class}
-              </p>
+            <div className="h-5 md:h-8 w-px bg-white/10 mx-1 shrink-0" />
+            <div className="flex items-center gap-1.5 sm:gap-2.5 select-none min-w-0">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg overflow-hidden flex-shrink-0">
+                <CharacterEmblem
+                  characterId={char.id}
+                  lore={getCharacterLore(char.id)}
+                  variant="avatar"
+                  className="w-full h-full"
+                />
+              </div>
+              <div className="min-w-0">
+                <h1 className="font-headline text-xs sm:text-base leading-none text-white font-bold truncate max-w-[85px] sm:max-w-none">
+                  {char.name}
+                </h1>
+                <p className="font-label text-[8px] sm:text-xs tracking-wider sm:tracking-widest text-tertiary uppercase mt-0.5 truncate max-w-[85px] sm:max-w-none">
+                  Level {char.level} {char.class}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -556,20 +597,22 @@ export function TacticalHUD() {
               </div>
             )}
 
-            <button
-              onClick={() => navigate('/characters')}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-xs rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_20px_rgba(0,240,255,0.25)] transition-all duration-300 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-sm text-primary">account_circle</span>
-              <span className="hidden xl:inline">Character Switcher</span>
-            </button>
+            <CharacterDropdown align="right" variant="cockpit" />
 
             <button
               onClick={() => setSettingsOpen(true)}
               aria-label="Settings"
-              className="p-1.5 text-tertiary hover:text-primary transition-all duration-300 rounded-lg hover:bg-white/5 cursor-pointer"
+              className="p-1.5 text-tertiary hover:text-primary transition-all duration-300 rounded-lg hover:bg-white/5 cursor-pointer relative"
             >
               <span className="material-symbols-outlined text-base md:text-lg">settings</span>
+              {newSheetsCount > 0 && (
+                <span
+                  data-testid="sheets-notification-badge"
+                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-black font-label text-[9px] font-black flex items-center justify-center shadow-[0_0_8px_rgba(0,240,255,0.6)] animate-pulse"
+                >
+                  {newSheetsCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
