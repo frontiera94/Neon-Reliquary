@@ -227,7 +227,15 @@ export function DiceOverlayModal() {
                           onClick={() => {
                             if (!pendingRoll) return
                             isConfirmingRef.current = true
-                            openRoll({ ...pendingRoll, label: `Confirm: ${pendingRoll.label}` })
+                            const bonus = pendingRoll.critConfirmationBonus ?? 0
+                            openRoll({
+                              ...pendingRoll,
+                              modifier: pendingRoll.modifier + bonus,
+                              breakdown: bonus > 0
+                                ? [...(pendingRoll.breakdown ?? []), { label: 'Crit Confirm Bonus', value: bonus }]
+                                : pendingRoll.breakdown,
+                              label: `Confirm: ${pendingRoll.label}`,
+                            })
                           }}
                         >
                           <span className="material-symbols-outlined text-base">verified</span>

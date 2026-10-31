@@ -20,6 +20,12 @@ import { BuffManagerModal } from '../components/combat/BuffManagerModal'
 import { CombatManeuversPanel } from '../components/combat/CombatManeuversPanel'
 import { FullAttackModal } from '../components/combat/FullAttackModal'
 import { CombatSpellsSection } from '../components/combat/CombatSpellsSection'
+import { ClassMechanicsPanel } from '../components/combat/ClassMechanicsPanel'
+import {
+  getActiveWildShapePreset,
+  buildWildShapeWeapons,
+  calcHalflingDaggerCritConfirm,
+} from '../lib/class-combat'
 import { ContextualCombatFeatures, DefensiveBadges } from '../components/combat/ContextualCombatFeatures'
 import { DailyResourcePips } from '../components/combat/BuffResourceToggle'
 import { buffModifierTokens, modifierColor } from '../lib/buff-summary'
@@ -97,6 +103,45 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     ? summonableSpells.flatMap((s) => s.summonOptions ?? []).find((o) => o.id === activeSummon.optionId) ?? null
     : null
 
+  // Resolve effective active weapons (Wild Shape natural attacks replace humanoid weapons)
+  const activeWildShapePreset = getActiveWildShapePreset(session.classMechanics)
+  const isWildShapeActive = Boolean(activeWildShapePreset)
+  const displayedWeapons: Weapon[] = isWildShapeActive && activeWildShapePreset
+    ? buildWildShapeWeapons(activeWildShapePreset, char.baseAttackBonus[0] ?? 3, effectiveAbilities.mods.str)
+    : char.weapons
+
+  const hasNaturalSpell = Boolean(
+    char.feats?.some((f) => /natural spell/i.test(f.name)) ||
+    char.classAbilities?.some((a) => /natural spell/i.test(a.name))
+  )
+  const showWildShapeSpellWarning = isWildShapeActive && !hasNaturalSpell
+
+  const isBloodraging = Boolean(
+    session.classMechanics?.bloodrager?.isRaging ??
+    session.classMechanics?.bloodrager?.isBloodraging
+  )
+  const biteWeapon = char.weapons.find((w) => /bite|morso/i.test(w.name))
+  const secondaryBiteAttack =
+    isBloodraging && biteWeapon && fullAttackWeapon && fullAttackWeapon.id !== biteWeapon.id
+      ? {
+          name: `${biteWeapon.name} (Secondary)`,
+          bonus: (char.baseAttackBonus[0] ?? 4) - 5 + effectiveAbilities.mods.str,
+          damageDice: biteWeapon.damageDice || '1d4',
+          damageBonus: Math.floor(effectiveAbilities.mods.str * 0.5),
+          critRange: biteWeapon.critRange ?? 20,
+          critMultiplier: biteWeapon.critMultiplier ?? 2,
+        }
+      : undefined
+
+  const kiExtraAttackActive = Boolean(
+    session.classMechanics?.monk?.kiExtraAttackActive ??
+    session.classMechanics?.monk?.kiExtraAttack
+  )
+
+  const daggerCritConfirmBonus = fullAttackWeapon
+    ? calcHalflingDaggerCritConfirm(char.race, [fullAttackWeapon.name, ...(fullAttackWeapon.tags ?? [])])
+    : 0
+
   const fullAttackEffective = fullAttackWeapon
     ? calcEffectiveWeaponStats(
         fullAttackWeapon,
@@ -123,6 +168,9 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
 
   return (
     <div className={embedded ? 'space-y-4' : 'space-y-4 px-4 py-4 md:px-8 md:py-6'}>
+      {/* Class Mechanics Panel with Unified Turn Progression ("Fine Turno PG") */}
+      <ClassMechanicsPanel char={char} effectiveAbilities={effectiveAbilities} />
+
       {/* Restrictions only appear when a condition actually limits actions. */}
       <ActionAlertBanner restrictions={restrictions} />
 
@@ -135,12 +183,12 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                 Attacks
               </h2>
               <span className="font-label text-[10px] uppercase tracking-wider text-tertiary">
-                {char.weapons.length} equipped
+                {displayedWeapons.length} {isWildShapeActive ? 'natural' : 'equipped'}
               </span>
             </div>
 
             <div className="space-y-2.5">
-              {char.weapons.map((weapon) => {
+              {displayedWeapons.map((weapon) => {
                 const effective = calcEffectiveWeaponStats(
                   weapon,
                   char.abilities,
@@ -172,6 +220,11 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                           ? `${weapon.name} ${attackIndex + 1}° Attack`
                           : `${weapon.name} Attack`
 
+                      const critConfirmBonus = calcHalflingDaggerCritConfirm(char.race, [
+                        weapon.name,
+                        ...(weapon.tags ?? []),
+                      ])
+
                       const { count: dmgCount, sides: dmgSides, bonus: dmgBonus } = parseDiceFormula(weapon.damageDice)
                       const followUpRoll = {
                         diceType: dmgSides as DiceType,
@@ -192,6 +245,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         label,
                         critRange: weapon.critRange,
                         critMultiplier: weapon.critMultiplier,
+                        critConfirmationBonus: critConfirmBonus || undefined,
                         breakdown: effective.attackBreakdown,
                         followUpRoll,
                         followUpLabel: formatDamage(weapon.damageDice, effective.damageBonus),
@@ -262,6 +316,16 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
               })}
             </div>
           </section>
+
+          {/* Wild Shape verbal/somatic spell warning banner */}
+          {showWildShapeSpellWarning && (
+            <div className="flex items-center gap-2.5 rounded-xl border border-amber-500/40 bg-amber-950/40 p-3 text-amber-300 font-label text-xs shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+              <span className="material-symbols-outlined text-amber-400 text-lg flex-shrink-0">warning</span>
+              <span>
+                <strong>Wild Shape Attiva:</strong> Non puoi lanciare incantesimi con componenti Verbali o Somatiche senza il talento <em>Natural Spell</em>!
+              </span>
+            </div>
+          )}
 
           {/* Spellbook stays folded: the page is about resolving the turn. */}
           {char.spells && char.spells.length > 0 && (
@@ -642,18 +706,22 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
           twfActive={twfActive}
           offhandPenalty={offhandPenalty}
           hasteActive={hasteActive}
+          kiExtraAttackActive={kiExtraAttackActive}
+          secondaryAttack={secondaryBiteAttack}
+          critConfirmBonus={daggerCritConfirmBonus}
           sneakAttackDice={fullAttackEffective.extraDamageDice}
           extraDiceLabel={fullAttackEffective.extraDiceLabel ?? 'Extra Dmg'}
           animated={true}
-          onRollDamage={(dmgLabel, dmgMod, isCritical) => {
-            const { count, sides } = parseDiceFormula(fullAttackWeapon.damageDice)
-            const finalCount = isCritical ? count * fullAttackWeapon.critMultiplier : count
-            const finalMod = isCritical ? dmgMod * fullAttackWeapon.critMultiplier : dmgMod
+          onRollDamage={(dmgLabel, dmgMod, isCritical, diceOverride) => {
+            const { count, sides } = parseDiceFormula(diceOverride || fullAttackWeapon.damageDice)
+            const mult = isCritical ? (fullAttackWeapon.critMultiplier ?? 2) : 1
+            const finalCount = count * mult
+            const finalMod = dmgMod * mult
             openRoll({
-              diceType: sides,
+              diceType: sides as DiceType,
               count: finalCount,
               modifier: finalMod,
-              label: isCritical ? `${dmgLabel} [CRIT x${fullAttackWeapon.critMultiplier}]` : dmgLabel,
+              label: isCritical ? `${dmgLabel} [CRIT x${mult}]` : dmgLabel,
             })
           }}
           onRollExtraDice={

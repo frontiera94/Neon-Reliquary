@@ -7,6 +7,7 @@ export interface DiceRoll {
   label: string
   critRange?: number
   critMultiplier?: number
+  critConfirmationBonus?: number
   breakdown?: { label: string; value: number }[]
   followUpRoll?: DiceRoll
   followUpLabel?: string

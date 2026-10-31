@@ -205,24 +205,6 @@
       "extraDamageDice": "1d6",
       "meleeOnly": true,
       "color": "primary"
-    },
-    {
-      "id": "ki-extra-attack",
-      "name": "Ki: Extra Flurry Attack (1 pt)",
-      "active": false,
-      "attackMod": 0,
-      "damageMod": 0,
-      "acMod": 0,
-      "color": "secondary"
-    },
-    {
-      "id": "stunning-fist-active",
-      "name": "Stunning Fist (DC 14 Fort or stunned)",
-      "active": false,
-      "attackMod": 0,
-      "damageMod": 0,
-      "acMod": 0,
-      "color": "error"
     }
   ],
   "dailyResources": [

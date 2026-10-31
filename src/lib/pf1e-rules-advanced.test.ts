@@ -142,7 +142,7 @@ describe('Pathfinder 1e Advanced Rules & Cascading Engine', () => {
 
       const result = calcEffectiveArmorClass(baseAc, 2, 2, [], [shieldSpell])
       expect(result.total).toBe(22)
-      expect(result.touch).toBe(16)
+      expect(result.touch).toBe(12) // Shield bonus does not apply to Touch AC
       expect(result.flatFooted).toBe(20)
     })
   })

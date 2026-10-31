@@ -8,6 +8,8 @@ import {
   calcEffectiveArmorClass,
   calcEffectiveSaves,
   calcDetailedAcBreakdowns,
+  calcEffectiveMaxHp,
+  checkBloodrageExitSafety,
 } from '../../lib/stat-calc'
 import { abilityMod } from '../../lib/dice-engine'
 import { CONDITION_INFO } from '../../lib/conditions'
@@ -56,15 +58,25 @@ export function TacticalHUD() {
   const baseDexMod = char ? abilityMod(char.abilities.dex) : 0
   const effDexMod = effectiveAbilities ? effectiveAbilities.mods.dex : baseDexMod
 
+  const hasUncannyDodge = useMemo(() => {
+    if (!char) return false
+    return Boolean(
+      char.classAbilities?.some((a) => /uncanny dodge/i.test(a.name)) ||
+      char.feats?.some((f) => /uncanny dodge/i.test(f.name))
+    )
+  }, [char])
+
+  const acOptions = useMemo(() => ({ hasUncannyDodge }), [hasUncannyDodge])
+
   const effectiveAc = useMemo(() => {
     if (!char) return null
-    return calcEffectiveArmorClass(char.armorClass, baseDexMod, effDexMod, conditions, activeBuffs)
-  }, [char, baseDexMod, effDexMod, conditions, activeBuffs])
+    return calcEffectiveArmorClass(char.armorClass, baseDexMod, effDexMod, conditions, activeBuffs, acOptions)
+  }, [char, baseDexMod, effDexMod, conditions, activeBuffs, acOptions])
 
   const detailedAc = useMemo(() => {
     if (!char) return null
-    return calcDetailedAcBreakdowns(char.armorClass, effDexMod, conditions, activeBuffs)
-  }, [char, effDexMod, conditions, activeBuffs])
+    return calcDetailedAcBreakdowns(char.armorClass, effDexMod, conditions, activeBuffs, acOptions)
+  }, [char, effDexMod, conditions, activeBuffs, acOptions])
 
   const effectiveSaves = useMemo(() => {
     if (!char || !effectiveAbilities) return null
@@ -98,10 +110,21 @@ export function TacticalHUD() {
 
   // Multi-track HP math
   const hp = session?.currentHp ?? 0
-  const maxHp = char.maxHp ?? 1
+  const conScore = char.abilities.con ?? 10
+  const baseConMod = abilityMod(char.abilities.con)
+  const effConMod = effectiveAbilities ? effectiveAbilities.mods.con : baseConMod
+  const effectiveMaxHp = calcEffectiveMaxHp(char.maxHp ?? 1, char.level ?? 1, baseConMod, effConMod)
+  const maxHp = effectiveMaxHp
   const tempHp = session?.tempHp ?? 0
   const nonlethalDamage = session?.nonlethalDamage ?? 0
-  const conScore = char.abilities.con ?? 10
+
+  const isBloodraging = Boolean(
+    session?.classMechanics?.bloodrager?.isRaging ??
+    session?.classMechanics?.bloodrager?.isBloodraging
+  )
+  const exitSafety = isBloodraging
+    ? checkBloodrageExitSafety(hp, char.level ?? 4, 4, conScore)
+    : null
 
   const scaleMax = Math.max(maxHp, Math.max(0, hp) + tempHp)
   const pctCurrent = Math.max(0, Math.min(100, (Math.max(0, hp) / scaleMax) * 100))
@@ -244,6 +267,18 @@ export function TacticalHUD() {
                     {isStaggered && (
                       <span className="font-label text-[10px] font-bold uppercase text-amber-300 bg-amber-950/60 border border-amber-500/30 px-1.5 py-0.2 rounded">
                         STAGGERED
+                      </span>
+                    )}
+                    {exitSafety && exitSafety.severity !== 'none' && (
+                      <span
+                        title={exitSafety.message}
+                        className={`font-label text-[10px] font-black uppercase px-1.5 py-0.2 rounded animate-pulse cursor-help ${
+                          exitSafety.severity === 'danger'
+                            ? 'text-error bg-error/20 border border-error/50'
+                            : 'text-amber-400 bg-amber-950/60 border border-amber-500/30'
+                        }`}
+                      >
+                        {exitSafety.isInstantDeath ? 'RAGE: LETHAL' : 'RAGE: RISK'}
                       </span>
                     )}
                   </div>
