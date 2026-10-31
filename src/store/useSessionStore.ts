@@ -57,7 +57,7 @@ interface SessionStore {
   setPreparedSpellSpent: (characterId: string, spellId: string, amount: number) => void
   setAmmo: (characterId: string, weaponId: string, amount: number) => void
   setItemQuantity: (characterId: string, itemId: string, qty: number) => void
-  adjustItemQuantity: (characterId: string, itemId: string, delta: number) => void
+  adjustItemQuantity: (characterId: string, itemId: string, delta: number, defaultQty?: number) => void
   addCustomItem: (characterId: string, item: InventoryItem) => void
   removeCustomItem: (characterId: string, itemId: string) => void
   setCoins: (characterId: string, coins: CoinPurse) => void
@@ -542,9 +542,9 @@ export const useSessionStore = create<SessionStore>()(
             itemQuantities: { ...sess.itemQuantities, [itemId]: Math.max(0, qty) },
           })),
 
-        adjustItemQuantity: (id, itemId, delta) =>
+        adjustItemQuantity: (id, itemId, delta, defaultQty = 0) =>
           update(id, (sess) => {
-            const current = sess.itemQuantities[itemId] ?? 0
+            const current = sess.itemQuantities[itemId] ?? defaultQty
             return {
               itemQuantities: { ...sess.itemQuantities, [itemId]: Math.max(0, current + delta) },
             }
@@ -565,8 +565,12 @@ export const useSessionStore = create<SessionStore>()(
         removeCustomItem: (id, itemId) =>
           update(id, (sess) => {
             const existing = sess.customItems ?? []
+            const nextQuantities = { ...sess.itemQuantities }
+            delete nextQuantities[itemId]
             return {
               customItems: existing.filter((i) => i.id !== itemId),
+              itemQuantities: nextQuantities,
+              equippedItemIds: (sess.equippedItemIds ?? []).filter((i) => i !== itemId),
             }
           }),
 
@@ -859,7 +863,9 @@ export const useSessionStore = create<SessionStore>()(
               [characterId]: {
                 ...current,
                 activeBuffIds,
-                actionEconomy: setActionUsedInEconomy(current.actionEconomy ?? defaultActionEconomy(), 'swift', true),
+                actionEconomy: isActivating
+                  ? setActionUsedInEconomy(current.actionEconomy ?? defaultActionEconomy(), 'swift', true)
+                  : (current.actionEconomy ?? defaultActionEconomy()),
                 classMechanics: {
                   ...mech,
                   magus: {
@@ -1143,7 +1149,9 @@ export const useSessionStore = create<SessionStore>()(
               ...s.sessions,
               [characterId]: {
                 ...current,
-                actionEconomy: setActionUsedInEconomy(current.actionEconomy ?? defaultActionEconomy(), 'swift', true),
+                actionEconomy: active
+                  ? setActionUsedInEconomy(current.actionEconomy ?? defaultActionEconomy(), 'swift', true)
+                  : (current.actionEconomy ?? defaultActionEconomy()),
                 classMechanics: {
                   ...mech,
                   monk: {
@@ -1198,7 +1206,9 @@ export const useSessionStore = create<SessionStore>()(
                 ...current,
                 customBuffs,
                 activeBuffIds,
-                actionEconomy: setActionUsedInEconomy(current.actionEconomy ?? defaultActionEconomy(), 'swift', true),
+                actionEconomy: active
+                  ? setActionUsedInEconomy(current.actionEconomy ?? defaultActionEconomy(), 'swift', true)
+                  : (current.actionEconomy ?? defaultActionEconomy()),
                 classMechanics: {
                   ...mech,
                   monk: {
@@ -1228,7 +1238,9 @@ export const useSessionStore = create<SessionStore>()(
               ...s.sessions,
               [characterId]: {
                 ...current,
-                actionEconomy: setActionUsedInEconomy(current.actionEconomy ?? defaultActionEconomy(), 'swift', true),
+                actionEconomy: active
+                  ? setActionUsedInEconomy(current.actionEconomy ?? defaultActionEconomy(), 'swift', true)
+                  : (current.actionEconomy ?? defaultActionEconomy()),
                 classMechanics: {
                   ...mech,
                   monk: {

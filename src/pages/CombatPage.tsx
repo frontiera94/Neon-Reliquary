@@ -387,6 +387,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         ],
                       }
 
+                      markRoundActionUsed(char.id, 'fullRound')
                       openRoll({
                         diceType: 20,
                         count: 1,
@@ -492,7 +493,13 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
           )}
 
           <motion.div variants={STAGGER_ITEM}>
-            <CombatManeuversPanel maneuversCalc={maneuversCalc} openRoll={openRoll} />
+            <CombatManeuversPanel
+              maneuversCalc={maneuversCalc}
+              openRoll={(roll) => {
+                markRoundActionUsed(char.id, 'standard')
+                openRoll(roll)
+              }}
+            />
           </motion.div>
 
           {/* Summoned ally */}

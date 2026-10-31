@@ -179,4 +179,63 @@ describe('InventoryPage', () => {
 
     expect(screen.queryByText('Antitoxin')).not.toBeInTheDocument()
   })
+
+  it('adjusts baseline item quantity correctly from uninitialized session state (does not drop to 0 or 1)', () => {
+    // Clear itemQuantities map so it simulates a fresh un-persisted session
+    useSessionStore.setState({
+      sessions: {
+        'inv-test-char': {
+          ...useSessionStore.getState().getSession('inv-test-char'),
+          itemQuantities: {},
+        },
+      },
+    })
+
+    render(<InventoryPage />)
+
+    // Potion has default quantity 3. Clicking "Usa" should decrement to 2, not drop to 0!
+    const useBtn = screen.getByRole('button', { name: /usa/i })
+    fireEvent.click(useBtn)
+
+    const sess = useSessionStore.getState().getSession('inv-test-char')
+    expect(sess.itemQuantities['potion-clw']).toBe(2)
+
+    // Backpack has default quantity 1. Clicking "+" should increment to 2, not jump to 1 from 0!
+    const incBtn = screen.getByRole('button', { name: /increase adventurer backpack quantity/i })
+    fireEvent.click(incBtn)
+    expect(useSessionStore.getState().getSession('inv-test-char').itemQuantities['backpack']).toBe(2)
+  })
+
+  it('filters specifically by custom loot when Loot / Custom filter pill is selected', () => {
+    useSessionStore.setState({
+      sessions: {
+        'inv-test-char': {
+          ...useSessionStore.getState().getSession('inv-test-char'),
+          customItems: [
+            {
+              id: 'custom-scroll-1',
+              name: 'Scroll of Fireball',
+              description: 'A magical scroll',
+              category: 'consumable',
+              quantity: 1,
+            },
+          ],
+        },
+      },
+    })
+
+    render(<InventoryPage />)
+
+    // Custom pill should be visible
+    const customPill = screen.getByRole('button', { name: /loot \/ custom/i })
+    expect(customPill).toBeInTheDocument()
+
+    // Click custom pill
+    fireEvent.click(customPill)
+
+    // Only custom item should be displayed
+    expect(screen.getByText('Scroll of Fireball')).toBeInTheDocument()
+    expect(screen.queryByText('Masterwork Dagger')).not.toBeInTheDocument()
+    expect(screen.queryByText('Potion of Cure Light Wounds (1d8+1)')).not.toBeInTheDocument()
+  })
 })
