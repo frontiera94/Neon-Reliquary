@@ -12,13 +12,14 @@ export interface DailyResourcePipsProps {
   resource: DailyResource
   spent: number
   compact?: boolean
+  extraAction?: React.ReactNode
 }
 
 /**
  * Touch-friendly daily-resource tracker. Each pip has a full 44x44 hit area
  * with a smaller visual core, so it remains usable on mobile.
  */
-export function DailyResourcePips({ characterId, resource, spent, compact = false }: DailyResourcePipsProps) {
+export function DailyResourcePips({ characterId, resource, spent, compact = false, extraAction }: DailyResourcePipsProps) {
   const setResourceSpent = useSessionStore((s) => s.setResourceSpent)
   const spendResource = useSessionStore((s) => s.spendResource)
   const remaining = Math.max(0, resource.total - spent)
@@ -88,6 +89,11 @@ export function DailyResourcePips({ characterId, resource, spent, compact = fals
       <span className="font-label text-[10px] font-bold tabular-nums text-on-surface-variant ml-1">
         {remaining}/{resource.total}
       </span>
+      {extraAction && (
+        <div className="ml-auto flex items-center">
+          {extraAction}
+        </div>
+      )}
     </div>
   )
 }
