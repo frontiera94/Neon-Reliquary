@@ -16,7 +16,7 @@ export interface UploadedSheet {
 
 export interface UploadSheetParams {
   characterName: string
-  playerName: string
+  playerName?: string
   notes?: string
   file: File
   password: string
@@ -115,7 +115,7 @@ export const useSheetQueueStore = create<SheetQueueStore>()((set, get) => ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           characterName: characterName.trim(),
-          playerName: playerName.trim(),
+          playerName: playerName?.trim() || '',
           notes: notes?.trim() || '',
           fileName: file.name,
           fileSize: file.size,
