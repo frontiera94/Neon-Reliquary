@@ -33,6 +33,9 @@ interface FullAttackModalProps {
   offhandPenalty: number
   hasteActive?: boolean
   kiExtraAttackActive?: boolean
+  onToggleKiExtraAttack?: () => void
+  kiRemaining?: number
+  kiMax?: number
   secondaryAttack?: {
     name: string
     bonus: number
@@ -156,6 +159,9 @@ export function FullAttackModal({
   offhandPenalty,
   hasteActive,
   kiExtraAttackActive,
+  onToggleKiExtraAttack,
+  kiRemaining,
+  kiMax,
   secondaryAttack,
   critConfirmBonus = 0,
   sneakAttackDice,
@@ -188,6 +194,22 @@ export function FullAttackModal({
   const [prevOpen, setPrevOpen] = useState(isOpen)
   if (isOpen !== prevOpen) {
     setPrevOpen(isOpen)
+    if (isOpen) {
+      setResults(
+        generateAttackResults(weapon, effective, twfActive, offhandPenalty, isHaste, {
+          kiExtraAttackActive,
+          secondaryAttack,
+        })
+      )
+      setRevealedCount(isAnimated ? 0 : 999)
+      setIsPaused(false)
+      setConfirmingIndex(null)
+    }
+  }
+
+  const [prevKi, setPrevKi] = useState(kiExtraAttackActive)
+  if (kiExtraAttackActive !== prevKi) {
+    setPrevKi(kiExtraAttackActive)
     if (isOpen) {
       setResults(
         generateAttackResults(weapon, effective, twfActive, offhandPenalty, isHaste, {
@@ -338,6 +360,38 @@ export function FullAttackModal({
                       <span className="material-symbols-outlined text-[12px]">bolt</span>
                       Haste Active
                     </span>
+                  )}
+                  {kiExtraAttackActive && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-secondary/20 text-secondary border border-secondary/40 text-[10px] font-label font-bold uppercase tracking-wider shadow-[0_0_8px_rgba(217,70,239,0.25)] flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[12px]">sports_martial_arts</span>
+                      Ki Flurry Active
+                    </span>
+                  )}
+                  {onToggleKiExtraAttack && (
+                    <button
+                      type="button"
+                      onClick={onToggleKiExtraAttack}
+                      disabled={!kiExtraAttackActive && (kiRemaining !== undefined && kiRemaining <= 0)}
+                      title={
+                        kiExtraAttackActive
+                          ? 'Ki Flurry attivo (1 Ki speso). Clicca per disattivare.'
+                          : kiRemaining !== undefined && kiRemaining <= 0
+                          ? 'Punti Ki esauriti'
+                          : 'Spendi 1 Ki per un attacco extra nella raffica'
+                      }
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-label font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 ${
+                        kiExtraAttackActive
+                          ? 'bg-secondary text-black shadow-[0_0_10px_rgba(217,70,239,0.4)]'
+                          : 'bg-secondary/15 text-secondary border border-secondary/30 hover:bg-secondary/25 disabled:opacity-40 disabled:cursor-not-allowed'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[12px]">sports_martial_arts</span>
+                      <span>
+                        {kiExtraAttackActive
+                          ? 'Ki Flurry (ON)'
+                          : `+1 Ki Flurry${kiRemaining !== undefined && kiMax !== undefined ? ` (${kiRemaining}/${kiMax})` : ''}`}
+                      </span>
+                    </button>
                   )}
                   <span className="font-label text-xs text-tertiary">
                     Crit: {weapon.critRange < 20 ? `${weapon.critRange}-20` : '20'}/x{weapon.critMultiplier}
@@ -527,6 +581,12 @@ export function FullAttackModal({
                             <h4 className="font-headline text-base font-bold text-white truncate">
                               {r.label}
                             </h4>
+                            {r.label === 'Ki Flurry Attack' && (
+                              <span className="px-2 py-0.5 rounded-full bg-secondary/20 text-secondary border border-secondary/40 text-[10px] font-label font-bold uppercase tracking-wider flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[11px]">sports_martial_arts</span>
+                                Ki Flurry
+                              </span>
+                            )}
                             <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/40 text-[10px] font-label font-bold uppercase tracking-wider animate-pulse">
                               Rolling...
                             </span>
@@ -628,6 +688,12 @@ export function FullAttackModal({
                           <h4 className="font-headline text-base font-bold text-white truncate">
                             {r.label}
                           </h4>
+                          {r.label === 'Ki Flurry Attack' && (
+                            <span className="px-2 py-0.5 rounded-full bg-secondary/20 text-secondary border border-secondary/40 text-[10px] font-label font-bold uppercase tracking-wider flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[11px]">sports_martial_arts</span>
+                              Ki Flurry
+                            </span>
+                          )}
                           {r.isCritThreat && (
                             <span className="px-2 py-0.5 rounded-full bg-secondary text-black font-label text-[10px] font-black uppercase tracking-wider shadow-[0_0_10px_#d946ef] animate-pulse">
                               Crit Threat!
