@@ -32,6 +32,15 @@ export interface JabbingStyleRider {
   onRoll: () => void
 }
 
+export interface KiFlurryRider {
+  active: boolean
+  bonus: number
+  kiRemaining: number
+  kiMax: number
+  onToggle: (active: boolean) => void
+  onRollKiAttack?: () => void
+}
+
 export function WeaponCard({
   weapon,
   effective,
@@ -46,6 +55,7 @@ export function WeaponCard({
   quickSpellstrikeArm,
   stunningFistRider,
   jabbingStyleRider,
+  kiFlurryRider,
   onAttackRoll,
   onOffhandRoll,
   onDamageRoll,
@@ -66,6 +76,7 @@ export function WeaponCard({
   quickSpellstrikeArm?: QuickSpellstrikeArm
   stunningFistRider?: StunningFistRider
   jabbingStyleRider?: JabbingStyleRider
+  kiFlurryRider?: KiFlurryRider
   onAttackRoll: (attackIndex?: number) => void
   onOffhandRoll: () => void
   onDamageRoll: () => void
@@ -76,9 +87,10 @@ export function WeaponCard({
   const { t } = useTranslation()
   const isHaste = hasteActive ?? effective.hasteActive ?? effective.activeBuffNames?.some((b) => /haste/i.test(b)) ?? false
   const isMelee = weapon.type === 'melee'
+  const isKiFlurry = Boolean(kiFlurryRider?.active)
   const showOffhand = twfActive && isMelee
   const offhandBonus = effective.attackBonus[0] + offhandPenalty
-  const hasMultipleAttacks = effective.attackBonus.length > 1 || showOffhand || isHaste
+  const hasMultipleAttacks = effective.attackBonus.length > 1 || showOffhand || isHaste || isKiFlurry
   const damageText = formatDamage(weapon.damageDice, effective.damageBonus)
   const critText = `${weapon.critRange < 20 ? `${weapon.critRange}-20` : '20'} / x${weapon.critMultiplier}`
 
@@ -212,6 +224,25 @@ export function WeaponCard({
                   {formatAttackBonus(effective.attackBonus)}
                 </span>
               </StatBreakdownTooltip>
+            </button>
+          )}
+
+          {/* Ki Extra Flurry Attack button (when active) */}
+          {isKiFlurry && kiFlurryRider && (
+            <button
+              type="button"
+              onClick={kiFlurryRider.onRollKiAttack ?? (() => onAttackRoll(effective.attackBonus.length))}
+              title={`Roll Ki Flurry extra attack (${kiFlurryRider.bonus >= 0 ? `+${kiFlurryRider.bonus}` : kiFlurryRider.bonus})`}
+              aria-label={`Roll Ki Flurry extra attack (${kiFlurryRider.bonus >= 0 ? `+${kiFlurryRider.bonus}` : kiFlurryRider.bonus})`}
+              className={`${actionClass} min-w-[84px] border-secondary/50 bg-secondary/15 text-white hover:border-secondary hover:bg-secondary/25 shadow-[0_0_12px_rgba(217,70,239,0.3)]`}
+            >
+              <span className="flex items-center gap-1 font-label text-[9px] uppercase tracking-wider text-secondary font-bold">
+                <span className="material-symbols-outlined text-[11px]" aria-hidden="true">sports_martial_arts</span>
+                Ki Flurry
+              </span>
+              <span className="font-label text-lg font-black tabular-nums text-white">
+                {kiFlurryRider.bonus >= 0 ? `+${kiFlurryRider.bonus}` : kiFlurryRider.bonus}
+              </span>
             </button>
           )}
 
@@ -351,36 +382,69 @@ export function WeaponCard({
           </div>
         )}
 
-        {/* Monk Stunning Fist & Jabbing Style riders */}
-        {(stunningFistRider || jabbingStyleRider) && (
+        {/* Monk Stunning Fist, Ki Flurry & Jabbing Style riders */}
+        {(stunningFistRider || jabbingStyleRider || kiFlurryRider) && (
           <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/10 p-2">
-            {stunningFistRider && (
-              <div className="flex items-center gap-1.5">
-                <span className="font-label text-[10px] font-bold uppercase text-primary">Stunning Fist:</span>
-                <button
-                  type="button"
-                  onClick={() => stunningFistRider.onToggle(stunningFistRider.declared === 'stunned' ? null : 'stunned')}
-                  className={`rounded px-2 py-0.5 font-label text-[10px] font-bold cursor-pointer transition-colors ${
-                    stunningFistRider.declared === 'stunned'
-                      ? 'border border-primary bg-primary text-black shadow-[0_0_8px_rgba(0,240,255,0.4)]'
-                      : 'border border-white/10 bg-surface-container text-tertiary hover:text-white'
-                  }`}
-                >
-                  Stunned (CD {stunningFistRider.dc})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => stunningFistRider.onToggle(stunningFistRider.declared === 'fatigued' ? null : 'fatigued')}
-                  className={`rounded px-2 py-0.5 font-label text-[10px] font-bold cursor-pointer transition-colors ${
-                    stunningFistRider.declared === 'fatigued'
-                      ? 'border border-primary bg-primary text-black shadow-[0_0_8px_rgba(0,240,255,0.4)]'
-                      : 'border border-white/10 bg-surface-container text-tertiary hover:text-white'
-                  }`}
-                >
-                  Fatigued (CD {stunningFistRider.dc})
-                </button>
-              </div>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {stunningFistRider && (
+                <div className="flex items-center gap-1.5">
+                  <span className="font-label text-[10px] font-bold uppercase text-primary">Stunning Fist:</span>
+                  <button
+                    type="button"
+                    onClick={() => stunningFistRider.onToggle(stunningFistRider.declared === 'stunned' ? null : 'stunned')}
+                    className={`rounded px-2 py-0.5 font-label text-[10px] font-bold cursor-pointer transition-colors ${
+                      stunningFistRider.declared === 'stunned'
+                        ? 'border border-primary bg-primary text-black shadow-[0_0_8px_rgba(0,240,255,0.4)]'
+                        : 'border border-white/10 bg-surface-container text-tertiary hover:text-white'
+                    }`}
+                  >
+                    Stunned (CD {stunningFistRider.dc})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => stunningFistRider.onToggle(stunningFistRider.declared === 'fatigued' ? null : 'fatigued')}
+                    className={`rounded px-2 py-0.5 font-label text-[10px] font-bold cursor-pointer transition-colors ${
+                      stunningFistRider.declared === 'fatigued'
+                        ? 'border border-primary bg-primary text-black shadow-[0_0_8px_rgba(0,240,255,0.4)]'
+                        : 'border border-white/10 bg-surface-container text-tertiary hover:text-white'
+                    }`}
+                  >
+                    Fatigued (CD {stunningFistRider.dc})
+                  </button>
+                </div>
+              )}
+
+              {kiFlurryRider && (
+                <div className="flex items-center gap-1.5">
+                  <span className="font-label text-[10px] font-bold uppercase text-secondary">Ki Flurry:</span>
+                  <button
+                    type="button"
+                    onClick={() => kiFlurryRider.onToggle(!kiFlurryRider.active)}
+                    disabled={!kiFlurryRider.active && kiFlurryRider.kiRemaining <= 0}
+                    title={
+                      kiFlurryRider.active
+                        ? 'Ki Extra Flurry attivo (1 Ki consumato, +1 attacco aggiunto). Clicca per disattivare.'
+                        : kiFlurryRider.kiRemaining <= 0
+                        ? 'Punti Ki esauriti'
+                        : 'Spendi 1 Ki per un attacco extra nella raffica (Azione Veloce)'
+                    }
+                    className={`flex items-center gap-1 rounded px-2 py-0.5 font-label text-[10px] font-bold cursor-pointer transition-all ${
+                      kiFlurryRider.active
+                        ? 'border border-secondary bg-secondary text-black shadow-[0_0_8px_rgba(217,70,239,0.5)]'
+                        : 'border border-secondary/30 bg-secondary/10 text-secondary hover:bg-secondary/20 disabled:opacity-40 disabled:cursor-not-allowed'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-xs">sports_martial_arts</span>
+                    <span>
+                      {kiFlurryRider.active
+                        ? 'Extra Attacco ATTIVO'
+                        : `+1 Attacco (1 Ki · ${kiFlurryRider.kiRemaining}/${kiFlurryRider.kiMax})`}
+                    </span>
+                  </button>
+                </div>
+              )}
+            </div>
+
             {jabbingStyleRider && (
               <button
                 type="button"
@@ -405,6 +469,7 @@ export function WeaponCard({
               <span>
                 Full Attack Routine ({formatAttackBonus(effective.attackBonus)}
                 {isHaste ? ` + Haste (${effective.attackBonus[0] >= 0 ? `+${effective.attackBonus[0]}` : effective.attackBonus[0]})` : ''}
+                {isKiFlurry && kiFlurryRider ? ` + Ki Flurry (${kiFlurryRider.bonus >= 0 ? `+${kiFlurryRider.bonus}` : kiFlurryRider.bonus})` : ''}
                 {showOffhand ? ` / Off ${offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus}` : ''})
               </span>
             </span>

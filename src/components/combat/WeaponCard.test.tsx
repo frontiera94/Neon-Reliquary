@@ -164,4 +164,76 @@ describe('WeaponCard component', () => {
     fireEvent.click(sneakBtn!)
     expect(onSneakAttackRoll).toHaveBeenCalled()
   })
+
+  it('renders Ki Flurry rider toggle and adds Ki Flurry attack button and routine label when active', () => {
+    const onToggle = vi.fn()
+    const onRollKiAttack = vi.fn()
+    const onFullAttackRoll = vi.fn()
+
+    // 1. Inactive Ki Flurry
+    const { rerender } = render(
+      <WeaponCard
+        weapon={meleeWeapon}
+        effective={{ ...effectiveMelee, attackBonus: [10, 10] }}
+        twfActive={false}
+        offhandPenalty={0}
+        kiFlurryRider={{
+          active: false,
+          bonus: 10,
+          kiRemaining: 6,
+          kiMax: 6,
+          onToggle,
+          onRollKiAttack,
+        }}
+        onAttackRoll={vi.fn()}
+        onOffhandRoll={vi.fn()}
+        onDamageRoll={vi.fn()}
+        onFullAttackRoll={onFullAttackRoll}
+      />
+    )
+
+    expect(screen.getByText(/ki flurry:/i)).toBeInTheDocument()
+    const toggleBtn = screen.getByRole('button', { name: /\+1 attacco \(1 ki · 6\/6\)/i })
+    expect(toggleBtn).toBeInTheDocument()
+    fireEvent.click(toggleBtn)
+    expect(onToggle).toHaveBeenCalledWith(true)
+
+    // Ki Flurry button should not be present in attack pod when inactive
+    expect(screen.queryByTitle(/roll ki flurry extra attack/i)).not.toBeInTheDocument()
+
+    // 2. Active Ki Flurry
+    rerender(
+      <WeaponCard
+        weapon={meleeWeapon}
+        effective={{ ...effectiveMelee, attackBonus: [10, 10] }}
+        twfActive={false}
+        offhandPenalty={0}
+        kiFlurryRider={{
+          active: true,
+          bonus: 10,
+          kiRemaining: 5,
+          kiMax: 6,
+          onToggle,
+          onRollKiAttack,
+        }}
+        onAttackRoll={vi.fn()}
+        onOffhandRoll={vi.fn()}
+        onDamageRoll={vi.fn()}
+        onFullAttackRoll={onFullAttackRoll}
+      />
+    )
+
+    // Active state button in monk strip
+    expect(screen.getByRole('button', { name: /extra attacco attivo/i })).toBeInTheDocument()
+
+    // Attack button in attack pod
+    const kiAtkBtn = screen.getByRole('button', { name: /roll ki flurry extra attack/i })
+    expect(kiAtkBtn).toBeInTheDocument()
+    expect(kiAtkBtn).toHaveTextContent('+10')
+    fireEvent.click(kiAtkBtn)
+    expect(onRollKiAttack).toHaveBeenCalled()
+
+    // Full attack routine label should include Ki Flurry
+    expect(screen.getByText(/\+ ki flurry \(\+10\)/i)).toBeInTheDocument()
+  })
 })

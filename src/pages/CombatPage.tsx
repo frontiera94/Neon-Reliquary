@@ -69,6 +69,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     recoverPreparedSpell,
     setPreparedSpellSpent,
     spendResource,
+    recoverResource,
     setWildShape,
     setHeldSpellstrike,
     consumeSpellstrikeCharge,
@@ -155,10 +156,15 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     const kiExtraActive = Boolean(monkMech?.kiExtraAttackActive ?? monkMech?.kiExtraAttack)
     const kiDefRounds = monkMech?.kiDefenseRounds ?? monkMech?.kiDefenseRoundsLeft ?? 0
     const kiSpdRounds = monkMech?.kiSpeedRounds ?? monkMech?.kiSpeedRoundsLeft ?? 0
+    const monkFlurryWeapon = char.weapons?.find(
+      (w) => /unarmed|colpo senz'armi/i.test(w.name) || w.tags?.includes('Flurry of Blows')
+    )
+    const monkFlurryBonus = monkFlurryWeapon?.attackBonus?.[0] ?? 10
+    const monkFlurryLabel = `+${monkFlurryBonus}/+${monkFlurryBonus}/+${monkFlurryBonus}`
 
     virtualMechanicsBuffs.push({
       id: 'ki-extra-flurry',
-      name: 'Ki Extra Flurry (+9/+9/+9)',
+      name: `Ki Extra Flurry (${monkFlurryLabel})`,
       active: kiExtraActive,
       attackMod: 0,
       damageMod: 0,
@@ -287,10 +293,14 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     if (buffId === 'ki-extra-flurry') {
       const nextActive = !kiExtraAttackActive
       if (nextActive) {
-        activateKiExtraAttack(char.id, true)
-        spendResource(char.id, 'ki-pool', kiPoolMax)
+        const kiRemaining = kiPoolMax - (session.spentResources['ki-pool'] ?? 0)
+        if (kiRemaining > 0) {
+          activateKiExtraAttack(char.id, true)
+          spendResource(char.id, 'ki-pool', kiPoolMax)
+        }
       } else {
         activateKiExtraAttack(char.id, false)
+        recoverResource(char.id, 'ki-pool')
       }
       return
     }
@@ -567,6 +577,40 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                                 count: 1,
                                 modifier: 0,
                                 label: 'Jabbing Style Bonus Damage',
+                              })
+                            },
+                          }
+                        : undefined
+                    }
+                    kiFlurryRider={
+                      isMonk && (/unarmed|colpo senz'armi/i.test(weapon.name) || weapon.tags?.includes('Flurry of Blows'))
+                        ? {
+                            active: kiExtraAttackActive,
+                            bonus: effective.attackBonus[0] ?? 0,
+                            kiRemaining: Math.max(0, kiPoolMax - (session.spentResources['ki-pool'] ?? 0)),
+                            kiMax: kiPoolMax,
+                            onToggle: () => handleToggleBuff('ki-extra-flurry'),
+                            onRollKiAttack: () => {
+                              const bonus = effective.attackBonus[0] ?? 0
+                              const { count: dmgCount, sides: dmgSides, bonus: dmgBonus } = parseDiceFormula(weapon.damageDice)
+                              const followUpRoll = {
+                                diceType: dmgSides as DiceType,
+                                count: dmgCount,
+                                modifier: effective.damageBonus + dmgBonus,
+                                label: `${weapon.name} Damage (Ki Flurry)`,
+                                breakdown: effective.damageBreakdown,
+                              }
+                              markRoundActionUsed(char.id, 'fullRound')
+                              openRoll({
+                                diceType: 20,
+                                count: 1,
+                                modifier: bonus,
+                                label: `${weapon.name} Ki Flurry Attack`,
+                                critRange: weapon.critRange,
+                                critMultiplier: weapon.critMultiplier,
+                                breakdown: effective.attackBreakdown,
+                                followUpRoll,
+                                followUpLabel: formatDamage(weapon.damageDice, effective.damageBonus),
                               })
                             },
                           }
@@ -1388,6 +1432,9 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
           offhandPenalty={offhandPenalty}
           hasteActive={hasteActive}
           kiExtraAttackActive={kiExtraAttackActive}
+          onToggleKiExtraAttack={isMonk ? () => handleToggleBuff('ki-extra-flurry') : undefined}
+          kiRemaining={isMonk ? Math.max(0, kiPoolMax - (session.spentResources['ki-pool'] ?? 0)) : undefined}
+          kiMax={isMonk ? kiPoolMax : undefined}
           secondaryAttack={secondaryBiteAttack}
           critConfirmBonus={daggerCritConfirmBonus}
           sneakAttackDice={fullAttackEffective.extraDamageDice}

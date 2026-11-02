@@ -152,6 +152,25 @@ describe('Option A: Native Class Mechanics Integration', () => {
 
     // Jabbing Style +1d6 button
     expect(screen.getByRole('button', { name: /\+1d6 jabbing style/i })).toBeInTheDocument()
+
+    // Ki Extra Flurry button on Unarmed Strike card
+    const kiFlurryToggle = screen.getByRole('button', { name: /\+1 attacco \(1 ki/i })
+    expect(kiFlurryToggle).toBeInTheDocument()
+    fireEvent.click(kiFlurryToggle)
+
+    // Ki-pool spent increased by 1 and kiExtraAttackActive is true
+    expect(useSessionStore.getState().getSession('agelmund').spentResources['ki-pool']).toBe(4)
+    expect(useSessionStore.getState().getSession('agelmund').classMechanics?.monk?.kiExtraAttackActive).toBe(true)
+
+    // Ki Flurry button in attack pod and in full attack routine label
+    expect(screen.getByRole('button', { name: /roll ki flurry extra attack/i })).toBeInTheDocument()
+    expect(screen.getByText(/\+ ki flurry \(\+9\)/i)).toBeInTheDocument()
+
+    // Deactivate Ki Flurry by clicking again: recovers the spent point
+    const activeKiToggle = screen.getByRole('button', { name: /extra attacco attivo/i })
+    fireEvent.click(activeKiToggle)
+    expect(useSessionStore.getState().getSession('agelmund').spentResources['ki-pool']).toBe(3)
+    expect(useSessionStore.getState().getSession('agelmund').classMechanics?.monk?.kiExtraAttackActive).toBe(false)
   })
 
   // 4. Shotrix (Magus) native integration on WeaponCard and Spell Combat

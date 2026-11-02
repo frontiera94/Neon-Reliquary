@@ -60,6 +60,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
     applyDebilitatingInjury,
     setUnderhanded,
     spendResource,
+    recoverResource,
     spendPreparedSpell,
     recoverPreparedSpell,
     toggleCondition,
@@ -151,6 +152,12 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
   const kiRemaining = kiPoolMax - kiPoolSpent
   const stunningFistMax = char.dailyResources?.find((r) => r.id === 'stunning-fist')?.total ?? 5
 
+  const monkFlurryWeapon = char.weapons?.find(
+    (w) => /unarmed|colpo senz'armi/i.test(w.name) || w.tags?.includes('Flurry of Blows')
+  )
+  const monkFlurryBonus = monkFlurryWeapon?.attackBonus?.[0] ?? 10
+  const monkFlurryLabel = `+${monkFlurryBonus}/+${monkFlurryBonus}/+${monkFlurryBonus}`
+
   // Rogue State
   const rogueState = mechanics?.rogue
   const debilitatingInjury = rogueState?.debilitatingInjury
@@ -183,7 +190,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
     activeSummaryBadges.push({ label: 'Ki Speed +6m', color: 'primary' })
   }
   if (kiExtraAttackActive) {
-    activeSummaryBadges.push({ label: 'Ki Extra Flurry (+9/+9/+9)', color: 'secondary' })
+    activeSummaryBadges.push({ label: `Ki Extra Flurry (${monkFlurryLabel})`, color: 'secondary' })
   }
   if (debilitatingInjury && (debilitatingInjury.remainingRounds ?? debilitatingInjury.roundsLeft ?? 0) > 0) {
     activeSummaryBadges.push({
@@ -881,21 +888,26 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
               onClick={() => {
                 if (kiExtraAttackActive) {
                   activateKiExtraAttack(char.id, false)
+                  recoverResource(char.id, 'ki-pool')
                 } else {
-                  activateKiExtraAttack(char.id, true)
-                  spendResource(char.id, 'ki-pool', kiPoolMax)
+                  const kiRemaining = kiPoolMax - (session.spentResources['ki-pool'] ?? 0)
+                  if (kiRemaining > 0) {
+                    activateKiExtraAttack(char.id, true)
+                    spendResource(char.id, 'ki-pool', kiPoolMax)
+                  }
                 }
               }}
+              disabled={!kiExtraAttackActive && (kiPoolMax - (session.spentResources['ki-pool'] ?? 0) <= 0)}
               className={`flex items-center justify-between gap-2 rounded-lg border p-2 transition-colors cursor-pointer ${
                 kiExtraAttackActive
                   ? 'border-primary bg-primary/25 shadow-[0_0_12px_rgba(0,240,255,0.25)]'
-                  : 'border-primary/30 bg-primary/10 hover:bg-primary/20'
+                  : 'border-primary/30 bg-primary/10 hover:bg-primary/20 disabled:opacity-40 disabled:cursor-not-allowed'
               }`}
             >
               <div className="text-left">
                 <span className="block font-headline text-xs font-bold text-white">Extra Flurry Attack</span>
                 <span className="block font-label text-[10px] text-tertiary">
-                  {kiExtraAttackActive ? 'Attivo nel Full Attack (Clicca per disattivare)' : '3° attacco (+9/+9/+9)'}
+                  {kiExtraAttackActive ? 'Attivo nel Full Attack (Clicca per disattivare)' : `3° attacco (${monkFlurryLabel})`}
                 </span>
               </div>
               <span className="rounded bg-primary/20 px-1.5 py-0.5 font-label text-[10px] font-bold text-primary">
