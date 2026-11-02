@@ -43,6 +43,10 @@ export const PAGE_VARIANTS: Variants = {
       duration: 0.18,
       ease: [0.16, 1, 0.3, 1],
     },
+    transitionEnd: {
+      filter: 'none',
+      transform: 'none',
+    },
   },
   exit: {
     opacity: 0,
