@@ -19,6 +19,7 @@ import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
 import { TacticalHpPopover } from './TacticalHpPopover'
 import { SettingsPanel } from './SettingsPanel'
 import { CloudSyncBadge } from '../sync/CloudSyncBadge'
+import { LanguageToggle } from './LanguageToggle'
 import { useInspectorStore } from '../../store/useInspectorStore'
 import { CharacterDropdown } from '../character/CharacterDropdown'
 import { CharacterEmblem } from '../character/CharacterEmblem'
@@ -583,6 +584,7 @@ export function TacticalHUD() {
 
           {/* Right Cockpit: Cycler & Switcher & Settings */}
           <div className="col-start-2 row-start-1 flex flex-shrink-0 items-center gap-2 justify-self-end md:gap-3">
+            <LanguageToggle />
             <CloudSyncBadge />
             {characters.length >= 2 && (
               <div className="flex items-center gap-1">

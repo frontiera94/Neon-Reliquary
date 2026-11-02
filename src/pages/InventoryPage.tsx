@@ -9,6 +9,7 @@ import { InventoryItemCard } from '../components/inventory/InventoryItemCard'
 import { CoinPurseWidget } from '../components/inventory/CoinPurseWidget'
 import { EquipmentSlotGrid } from '../components/inventory/EquipmentSlotGrid'
 import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
+import { useTranslation } from '../lib/i18n'
 
 const CATEGORY_ORDER: ItemCategory[] = ['weapon', 'armor', 'consumable', 'gear', 'magic']
 const CATEGORY_LABELS: Record<ItemCategory, string> = {
@@ -20,6 +21,7 @@ const CATEGORY_LABELS: Record<ItemCategory, string> = {
 }
 
 export function InventoryPage() {
+  const { t, language } = useTranslation()
   const char = useCharacterStore((s) => s.activeCharacter())
   const {
     getSession,
@@ -434,13 +436,13 @@ export function InventoryPage() {
                     onClick={() => setShowAddModal(false)}
                     className="px-4 py-2 rounded-xl border border-white/10 text-tertiary hover:text-white font-label text-xs uppercase tracking-wider cursor-pointer"
                   >
-                    Annulla
+                    {language === 'it' ? 'Annulla' : 'Cancel'}
                   </button>
                   <button
                     type="submit"
                     className="px-4 py-2 rounded-xl bg-primary text-black font-label text-xs font-bold uppercase tracking-wider hover:brightness-110 shadow-[0_0_15px_rgba(0,240,255,0.4)] cursor-pointer"
                   >
-                    Salva Loot
+                    {t('inventory.saveLoot')}
                   </button>
                 </div>
               </form>

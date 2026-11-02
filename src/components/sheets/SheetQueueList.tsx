@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useSheetQueueStore, type SheetStatus, type UploadedSheet } from '../../store/useSheetQueueStore'
+import { useTranslation } from '../../lib/i18n'
 
 export function SheetQueueList() {
+  const { t, language } = useTranslation()
   const {
     sheets,
     isLoading,
@@ -38,7 +40,7 @@ export function SheetQueueList() {
   const formatDate = (ms: number): string => {
     try {
       const d = new Date(ms)
-      return d.toLocaleDateString('it-IT', {
+      return d.toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', {
         day: '2-digit',
         month: 'short',
         hour: '2-digit',
@@ -58,19 +60,19 @@ export function SheetQueueList() {
   const renderStatusBadge = (sheet: UploadedSheet) => {
     const statusConfig: Record<SheetStatus, { label: string; bg: string; text: string; border: string }> = {
       new: {
-        label: 'Nuova',
+        label: t('sheets.statusNew'),
         bg: 'bg-primary/15',
         text: 'text-primary',
         border: 'border-primary/40',
       },
       processing: {
-        label: 'In lavorazione',
+        label: t('sheets.statusProcessing'),
         bg: 'bg-secondary/15',
         text: 'text-secondary',
         border: 'border-secondary/40',
       },
       archived: {
-        label: 'Archiviata',
+        label: t('sheets.statusArchived'),
         bg: 'bg-white/5',
         text: 'text-tertiary',
         border: 'border-white/10',
@@ -89,12 +91,12 @@ export function SheetQueueList() {
         <select
           value={sheet.status}
           onChange={(e) => void updateSheetStatus(sheet.id, e.target.value as SheetStatus)}
-          aria-label={`Cambia stato scheda ${sheet.characterName}`}
+          aria-label={t('sheets.changeStatusAria', { name: sheet.characterName })}
           className="bg-surface-container-high/80 text-[10px] font-label text-tertiary rounded-lg border border-white/10 py-0.5 px-1 focus:outline-none focus:border-primary/50 cursor-pointer"
         >
-          <option value="new">Nuova</option>
-          <option value="processing">In lavorazione</option>
-          <option value="archived">Archiviata</option>
+          <option value="new">{t('sheets.statusNew')}</option>
+          <option value="processing">{t('sheets.statusProcessing')}</option>
+          <option value="archived">{t('sheets.statusArchived')}</option>
         </select>
       </div>
     )
@@ -113,7 +115,7 @@ export function SheetQueueList() {
           <button
             type="button"
             onClick={clearMessages}
-            aria-label="Chiudi messaggio"
+            aria-label={t('sheets.closeMsg')}
             className="text-primary/70 hover:text-primary transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm">close</span>
@@ -132,7 +134,7 @@ export function SheetQueueList() {
           <button
             type="button"
             onClick={clearMessages}
-            aria-label="Chiudi errore"
+            aria-label={t('sheets.closeErr')}
             className="text-error/70 hover:text-error transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm">close</span>
@@ -149,10 +151,10 @@ export function SheetQueueList() {
                 ? sheets.length
                 : sheets.filter((s) => s.status === key).length
             const labelMap: Record<string, string> = {
-              all: 'Tutte',
-              new: 'Nuove',
-              processing: 'In corso',
-              archived: 'Archivio',
+              all: t('sheets.all'),
+              new: t('sheets.new'),
+              processing: t('sheets.processing'),
+              archived: t('sheets.archived'),
             }
             return (
               <button
@@ -175,8 +177,8 @@ export function SheetQueueList() {
           type="button"
           onClick={() => void fetchSheets()}
           disabled={isLoading}
-          title="Aggiorna lista"
-          aria-label="Aggiorna lista"
+          title={t('sheets.refreshList')}
+          aria-label={t('sheets.refreshList')}
           className="text-tertiary hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-white/5 flex-shrink-0 cursor-pointer"
         >
           <span
@@ -193,7 +195,7 @@ export function SheetQueueList() {
       {isLoading && sheets.length === 0 ? (
         <div className="py-8 text-center">
           <div className="inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2" />
-          <p className="font-label text-xs text-tertiary/70">Caricamento archivio schede...</p>
+          <p className="font-label text-xs text-tertiary/70">{t('sheets.loadingArchive')}</p>
         </div>
       ) : filteredSheets.length === 0 ? (
         <div className="py-8 text-center px-4 rounded-xl border border-white/5 bg-surface-container-high/20">
@@ -202,8 +204,8 @@ export function SheetQueueList() {
           </span>
           <p className="font-label text-xs text-tertiary/70">
             {filter === 'all'
-              ? 'Nessuna scheda presente in coda'
-              : `Nessuna scheda con stato "${filter}"`}
+              ? t('sheets.noSheets')
+              : t('sheets.noSheetsStatus', { status: filter })}
           </p>
         </div>
       ) : (
@@ -226,7 +228,7 @@ export function SheetQueueList() {
                   <div className="flex items-center gap-1.5 font-label text-[10px] text-tertiary mt-0.5">
                     {sheet.playerName ? (
                       <>
-                        <span>di {sheet.playerName}</span>
+                        <span>{t('sheets.byPlayer', { name: sheet.playerName })}</span>
                         <span>•</span>
                       </>
                     ) : null}
@@ -260,7 +262,7 @@ export function SheetQueueList() {
                     type="button"
                     onClick={() => downloadSheet(sheet.id, sheet.fileName)}
                     className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 font-label text-[10px] uppercase tracking-wider font-bold transition-all cursor-pointer"
-                    title="Scarica file PDF originale"
+                    title={t('sheets.downloadPdf')}
                   >
                     <span className="material-symbols-outlined text-xs">download</span>
                     <span>PDF</span>
@@ -271,8 +273,8 @@ export function SheetQueueList() {
                     disabled={deletingId === sheet.id}
                     onClick={() => void handleDelete(sheet.id)}
                     className="p-1 rounded-lg text-tertiary hover:text-error hover:bg-error/10 transition-colors cursor-pointer"
-                    title="Elimina scheda dalla coda"
-                    aria-label={`Elimina scheda ${sheet.characterName}`}
+                    title={t('sheets.deleteSheetTitle')}
+                    aria-label={t('sheets.deleteSheetAria', { name: sheet.characterName })}
                   >
                     <span className="material-symbols-outlined text-sm">
                       {deletingId === sheet.id ? 'sync' : 'delete'}

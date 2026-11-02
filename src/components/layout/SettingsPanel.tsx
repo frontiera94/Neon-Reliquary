@@ -7,6 +7,8 @@ import { useSheetQueueStore } from '../../store/useSheetQueueStore'
 import { syncSessionsNow } from '../../lib/session-sync'
 import { SheetUploadForm } from '../sheets/SheetUploadForm'
 import { SheetQueueList } from '../sheets/SheetQueueList'
+import { LanguageToggle } from './LanguageToggle'
+import { useTranslation } from '../../lib/i18n'
 import type { DiceType } from '../../types/dice'
 
 const DICE_TYPES: DiceType[] = [4, 6, 8, 10, 12, 20, 100]
@@ -18,6 +20,7 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: SettingsPanelProps) {
+  const { t, language } = useTranslation()
   const { history, clearHistory, openRoll } = useDiceStore()
   const clearChat = useChatStore((s) => s.clearChat)
   const chats = useChatStore((s) => s.chats)
@@ -69,19 +72,19 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0 bg-surface-container-high/40">
           <div className="flex items-center gap-2">
             <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
-              Settings
+              {t('settings.title')}
             </h2>
           </div>
           <button
             onClick={onClose}
             className="text-tertiary hover:text-primary transition-colors p-1 rounded-lg hover:bg-white/5 cursor-pointer"
-            aria-label="Chiudi"
+            aria-label={t('settings.close')}
           >
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        {/* Tab switcher: Strumenti vs Coda Schede */}
+        {/* Tab switcher: Tools vs Sheet Queue */}
         <div className="px-6 py-3 border-b border-white/10 flex items-center gap-2 bg-surface-container/50 flex-shrink-0">
           <button
             type="button"
@@ -93,7 +96,7 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
             }`}
           >
             <span className="material-symbols-outlined text-sm">casino</span>
-            <span>Strumenti</span>
+            <span>{t('settings.tools')}</span>
           </button>
 
           <button
@@ -106,7 +109,7 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
             }`}
           >
             <span className="material-symbols-outlined text-sm">folder_shared</span>
-            <span>Coda Schede</span>
+            <span>{t('settings.sheetQueue')}</span>
             {newSheetsCount > 0 && (
               <span
                 data-testid="settings-sheets-badge"
@@ -121,7 +124,7 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
         {/* Tab Content */}
         {activeTab === 'sheets' ? (
           <div className="flex-1 flex flex-col min-h-0">
-            {/* Sub-view toggle: Archivio vs Invia */}
+            {/* Sub-view toggle: Archive vs Upload */}
             <div className="px-6 py-3 flex items-center gap-2 border-b border-white/5 bg-surface-container-high/20 flex-shrink-0">
               <button
                 type="button"
@@ -133,7 +136,7 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
                 }`}
               >
                 <span className="material-symbols-outlined text-xs">inventory_2</span>
-                <span>Archivio Coda</span>
+                <span>{t('settings.queueArchive')}</span>
               </button>
 
               <button
@@ -146,7 +149,7 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
                 }`}
               >
                 <span className="material-symbols-outlined text-xs">upload_file</span>
-                <span>Carica Nuova Scheda</span>
+                <span>{t('settings.uploadNewSheet')}</span>
               </button>
             </div>
 
@@ -161,6 +164,20 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto">
+            {/* Language Selector */}
+            <div className="px-6 py-4 border-b border-white/10 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-label text-xs text-secondary uppercase tracking-widest block font-bold">
+                    {t('settings.language')}
+                  </span>
+                  <span className="font-label text-[10px] text-tertiary/70 mt-0.5 block">
+                    {t('settings.languageDesc')}
+                  </span>
+                </div>
+              </div>
+              <LanguageToggle variant="full" />
+            </div>
             {/* Freeform Dice Roller */}
             <div className="px-6 py-4 border-b border-white/10 space-y-3">
               <span className="font-label text-xs text-tertiary uppercase tracking-widest">Custom Roll</span>
@@ -233,16 +250,16 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
               <div className="px-6 py-4 flex items-center justify-between border-b border-white/10">
                 <div>
                   <span className="font-label text-xs text-tertiary uppercase tracking-widest block">
-                    Neon Cloud Save
+                    {t('settings.syncCloud')}
                   </span>
                   <span className="font-label text-[10px] text-tertiary/70 mt-0.5 block">
                     {syncStatus === 'synced' && lastSyncedAt
-                      ? `Salvato alle ${new Date(lastSyncedAt).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
+                      ? `${t('settings.lastSynced')} ${new Date(lastSyncedAt).toLocaleTimeString(language === 'it' ? 'it-IT' : 'en-US', { hour: '2-digit', minute: '2-digit' })}`
                       : syncStatus === 'syncing' || syncStatus === 'loading'
-                      ? 'Sincronizzazione in corso...'
+                      ? t('settings.syncing')
                       : syncStatus === 'unconfigured'
-                      ? 'Solo locale (DATABASE_URL assente)'
-                      : 'Offline — salvato in locale'}
+                      ? (language === 'it' ? 'Solo locale (DATABASE_URL assente)' : 'Local only (DATABASE_URL missing)')
+                      : (language === 'it' ? 'Offline — salvato in locale' : 'Offline — saved locally')}
                   </span>
                 </div>
                 {syncStatus !== 'unconfigured' && (
@@ -253,7 +270,7 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
                     }}
                     className="font-label text-[10px] uppercase tracking-widest text-primary hover:text-white transition-colors cursor-pointer"
                   >
-                    Sincronizza
+                    {t('settings.syncNow')}
                   </button>
                 )}
               </div>
@@ -269,7 +286,7 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
                   onClick={() => clearChat(activeCharacterId)}
                   className="font-label text-[10px] uppercase tracking-widest text-tertiary hover:text-error transition-colors cursor-pointer"
                 >
-                  Cancella
+                  {language === 'it' ? 'Cancella' : 'Clear'}
                 </button>
               )}
             </div>
@@ -294,21 +311,21 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
             <div>
               <div className="px-6 py-4 flex items-center justify-between border-b border-white/10">
                 <span className="font-label text-xs text-tertiary uppercase tracking-widest">
-                  Roll History ({history.length})
+                  {t('settings.diceRollLog')} ({history.length})
                 </span>
                 {history.length > 0 && (
                   <button
                     onClick={clearHistory}
                     className="font-label text-[10px] uppercase tracking-widest text-tertiary hover:text-error transition-colors cursor-pointer"
                   >
-                    Clear
+                    {t('settings.clearRollHistory')}
                   </button>
                 )}
               </div>
 
               {history.length === 0 ? (
                 <div className="px-6 py-10 text-center">
-                  <p className="font-label text-xs text-tertiary/50 uppercase tracking-widest">No rolls yet</p>
+                  <p className="font-label text-xs text-tertiary/50 uppercase tracking-widest">{t('settings.noRolls')}</p>
                 </div>
               ) : (
                 <ul className="divide-y divide-white/5">
