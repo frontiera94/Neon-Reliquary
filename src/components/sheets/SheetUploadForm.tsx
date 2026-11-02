@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { useSheetQueueStore } from '../../store/useSheetQueueStore'
 import { useCharacterStore } from '../../store/useCharacterStore'
+import { useTranslation } from '../../lib/i18n'
 
 interface SheetUploadFormProps {
   onSuccess?: () => void
@@ -16,6 +17,7 @@ const DEFAULT_CHARACTERS = [
 ]
 
 export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
+  const { t, language } = useTranslation()
   const { uploadSheet, isUploading, error, uploadSuccessMessage, clearMessages } = useSheetQueueStore()
   const storeCharacters = useCharacterStore((s) => s.characters)
 
@@ -24,7 +26,7 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
       ...storeCharacters.map((c) => c.name.trim()).filter(Boolean),
       ...DEFAULT_CHARACTERS,
     ])
-  ).sort((a, b) => a.localeCompare(b, 'it'))
+  ).sort((a, b) => a.localeCompare(b, language === 'it' ? 'it' : 'en'))
 
   const [selectedCharacter, setSelectedCharacter] = useState('')
   const [customCharacterName, setCustomCharacterName] = useState('')
@@ -44,13 +46,13 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
     }
 
     if (!file.name.toLowerCase().endsWith('.pdf')) {
-      setFileError('Solo file con estensione .pdf sono accettati')
+      setFileError(t('sheets.errPdfOnly'))
       setSelectedFile(null)
       return
     }
 
     if (file.size > 3.2 * 1024 * 1024) {
-      setFileError('La dimensione massima consentita è di 3.2 MB')
+      setFileError(t('sheets.errMaxSize'))
       setSelectedFile(null)
       return
     }
@@ -68,15 +70,15 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
         : selectedCharacter.trim()
 
     if (!finalCharacterName) {
-      setFileError('Seleziona un personaggio dal menu a tendina')
+      setFileError(t('sheets.errSelectChar'))
       return
     }
     if (!selectedFile) {
-      setFileError('Seleziona il file PDF della scheda')
+      setFileError(t('sheets.errSelectFile'))
       return
     }
     if (!password) {
-      setFileError('Inserisci la password di caricamento')
+      setFileError(t('sheets.errPassword'))
       return
     }
 
@@ -129,7 +131,7 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
           htmlFor="sheet-character-select"
           className="block font-label text-[11px] text-tertiary uppercase tracking-wider mb-1.5"
         >
-          Personaggio <span className="text-primary">*</span>
+          {t('sheets.character')} <span className="text-primary">*</span>
         </label>
         <select
           id="sheet-character-select"
@@ -138,11 +140,11 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
             setSelectedCharacter(e.target.value)
             setFileError(null)
           }}
-          aria-label="Seleziona Personaggio"
+          aria-label={t('sheets.selectCharacter')}
           className="w-full bg-surface-container-high/80 px-3.5 py-2.5 font-label text-xs text-on-surface rounded-xl border border-white/10 focus:border-primary/50 focus:outline-none focus:shadow-[0_0_12px_rgba(0,240,255,0.2)] transition-all cursor-pointer"
         >
           <option value="" disabled className="bg-surface-container text-tertiary">
-            -- Seleziona un personaggio --
+            {t('sheets.selectCharacter')}
           </option>
           {characterList.map((name) => (
             <option key={name} value={name} className="bg-surface-container text-white">
@@ -150,7 +152,7 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
             </option>
           ))}
           <option value="__other__" className="bg-surface-container text-primary font-bold">
-            + Altro personaggio (personalizzato)...
+            {t('sheets.otherCharacter')}
           </option>
         </select>
       </div>
@@ -159,13 +161,13 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
       {selectedCharacter === '__other__' && (
         <div>
           <label className="block font-label text-[11px] text-tertiary uppercase tracking-wider mb-1.5">
-            Nome Nuovo Personaggio <span className="text-primary">*</span>
+            {t('sheets.character')} <span className="text-primary">*</span>
           </label>
           <input
             type="text"
             value={customCharacterName}
             onChange={(e) => setCustomCharacterName(e.target.value)}
-            placeholder="es. Valerius"
+            placeholder={t('sheets.customCharacterPlaceholder')}
             required
             maxLength={100}
             autoFocus
@@ -177,7 +179,7 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
       {/* File Drop / Selector */}
       <div>
         <label className="block font-label text-[11px] text-tertiary uppercase tracking-wider mb-1.5">
-          Scheda PDF <span className="text-primary">* (max 3.2 MB)</span>
+          {t('sheets.pdfSheetLabel')} <span className="text-primary">{t('sheets.maxSizeNotice')}</span>
         </label>
         <input
           ref={fileInputRef}
@@ -218,16 +220,16 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
                 {selectedFile.name}
               </span>
               <span className="font-label text-[10px] text-tertiary/80 mt-0.5 block">
-                {(selectedFile.size / 1024).toFixed(1)} KB (clicca per cambiare)
+                {(selectedFile.size / 1024).toFixed(1)} KB ({t('sheets.pdfClickSelect')})
               </span>
             </div>
           ) : (
             <div className="text-center">
               <span className="font-label text-xs text-tertiary/90 block">
-                Seleziona o trascina il file PDF
+                {t('sheets.pdfDragDrop')}
               </span>
               <span className="font-label text-[10px] text-tertiary/50 mt-0.5 block">
-                Solo PDF fino a 3.2 MB
+                {t('sheets.errMaxSize')}
               </span>
             </div>
           )}
@@ -237,12 +239,12 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
       {/* Notes / Details */}
       <div>
         <label className="block font-label text-[11px] text-tertiary uppercase tracking-wider mb-1.5">
-          Note o Modifiche (opzionale)
+          {t('sheets.notesLabel')}
         </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="es. Salito a livello 5, preso feat Weapon Focus, modificati HP"
+          placeholder={t('sheets.notesPlaceholder')}
           rows={2}
           maxLength={500}
           className="w-full bg-surface-container-high/60 px-3.5 py-2 font-label text-xs text-on-surface placeholder:text-tertiary/40 rounded-xl border border-white/10 focus:border-primary/50 focus:outline-none focus:shadow-[0_0_12px_rgba(0,240,255,0.2)] transition-all resize-none"
@@ -252,19 +254,19 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
       {/* Passphrase */}
       <div>
         <label className="block font-label text-[11px] text-tertiary uppercase tracking-wider mb-1.5">
-          Password Caricamento <span className="text-primary">*</span>
+          {t('sheets.passphraseLabel')} <span className="text-primary">*</span>
         </label>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password della campagna"
+          placeholder={t('sheets.passphrasePlaceholder')}
           required
           autoComplete="off"
           className="w-full bg-surface-container-high/60 px-3.5 py-2.5 font-label text-xs text-on-surface placeholder:text-tertiary/40 rounded-xl border border-white/10 focus:border-primary/50 focus:outline-none focus:shadow-[0_0_12px_rgba(0,240,255,0.2)] transition-all"
         />
         <span className="font-label text-[10px] text-tertiary/60 mt-1 block">
-          Richiesta ad ogni invio per sicurezza del gruppo
+          {language === 'it' ? 'Richiesta ad ogni invio per sicurezza del gruppo' : 'Required on every submission for group security'}
         </span>
       </div>
 
@@ -277,12 +279,12 @@ export function SheetUploadForm({ onSuccess }: SheetUploadFormProps) {
         {isUploading ? (
           <>
             <span className="inline-block w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-            <span>Invio in corso...</span>
+            <span>{t('sheets.uploading')}</span>
           </>
         ) : (
           <>
             <span className="material-symbols-outlined text-base">send</span>
-            <span>Carica Scheda e Notifica Master</span>
+            <span>{t('sheets.submitBtn')}</span>
           </>
         )}
       </button>

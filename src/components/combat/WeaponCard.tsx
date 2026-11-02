@@ -1,5 +1,6 @@
 import { formatAttackBonus, formatDamage } from '../../lib/combat-calc'
 import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
+import { useTranslation } from '../../lib/i18n'
 import type { Weapon } from '../../types/combat'
 import type { EffectiveWeaponCalculated } from '../../lib/stat-calc'
 
@@ -72,6 +73,7 @@ export function WeaponCard({
   onAmmoChange?: (v: number) => void
   onFullAttackRoll?: () => void
 }) {
+  const { t } = useTranslation()
   const isHaste = hasteActive ?? effective.hasteActive ?? effective.activeBuffNames?.some((b) => /haste/i.test(b)) ?? false
   const isMelee = weapon.type === 'melee'
   const showOffhand = twfActive && isMelee
@@ -301,7 +303,7 @@ export function WeaponCard({
                     className="rounded border-white/20 text-secondary focus:ring-0"
                   />
                   <span className="font-label text-[10px] text-secondary font-bold">
-                    +3 vs Metallo
+                    {t('combat.vsMetal')}
                   </span>
                 </label>
               )}
@@ -311,7 +313,7 @@ export function WeaponCard({
                   onClick={spellstrikeRider.onDischarge}
                   className="rounded-lg border border-secondary/40 bg-secondary/25 px-2.5 py-1 font-label text-[10px] font-bold text-secondary hover:bg-secondary/35 transition-colors cursor-pointer"
                 >
-                  Tira & Scarica
+                  {t('combat.rollAndDischarge')}
                 </button>
               )}
               {spellstrikeRider.onClear && (
@@ -319,7 +321,7 @@ export function WeaponCard({
                   type="button"
                   onClick={spellstrikeRider.onClear}
                   className="text-tertiary hover:text-white p-1 cursor-pointer"
-                  title="Annulla Spellstrike"
+                  title={t('combat.cancelSpellstrike')}
                 >
                   <span className="material-symbols-outlined text-sm">close</span>
                 </button>

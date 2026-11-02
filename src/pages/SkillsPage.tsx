@@ -8,10 +8,12 @@ import { getWildShapeView } from '../lib/class-combat'
 import { ActionAlertBanner } from '../components/combat/ActionAlertBanner'
 import type { EffectiveSkill } from '../lib/stat-calc'
 import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
+import { useTranslation } from '../lib/i18n'
 
 const ABILITY_SHORT = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' }
 
 export function SkillsPage() {
+  const { t } = useTranslation()
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
   const openRoll = useDiceStore((s) => s.openRoll)
@@ -60,7 +62,7 @@ export function SkillsPage() {
   if (!char) {
     return (
       <div className="flex items-center justify-center h-64 text-tertiary font-label text-sm uppercase tracking-widest">
-        No character selected
+        {t('skills.noChar')}
       </div>
     )
   }
@@ -76,10 +78,10 @@ export function SkillsPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <h1 className="font-headline text-2xl sm:text-3xl font-black text-white mb-1.5 tracking-tight uppercase">
-              Grimoire Skills
+              {t('skills.title')}
             </h1>
             <p className="text-tertiary font-label text-xs sm:text-sm tracking-wide">
-              Mechanical Proficiencies & Dynamic Calculations
+              {t('skills.subtitle')}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
@@ -91,7 +93,7 @@ export function SkillsPage() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search skills..."
+                placeholder={t('skills.searchPlaceholder')}
                 className="bg-surface-container-high/80 rounded-xl pl-10 pr-4 py-2.5 font-label text-sm text-on-surface placeholder:text-tertiary/50 outline-none w-64 border border-white/10 focus:border-primary transition-colors"
               />
             </div>
@@ -104,7 +106,7 @@ export function SkillsPage() {
                   : 'border-white/10 text-tertiary hover:border-white/30 hover:text-white bg-surface-container'
               }`}
             >
-              Trained Only
+              {t('skills.trainedOnly')}
             </button>
           </div>
         </div>

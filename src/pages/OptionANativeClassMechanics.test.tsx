@@ -180,8 +180,8 @@ describe('Option A: Native Class Mechanics Integration', () => {
 
     // Held charge badge is now visible on the weapon card
     expect(screen.getAllByText(/spellstrike: shocking grasp/i).length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText(/\+3 vs metallo/i).length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByRole('button', { name: /tira & scarica/i }).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/\+3 vs metallo|\+3 vs metal/i).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByRole('button', { name: /tira & scarica|roll & discharge/i }).length).toBeGreaterThanOrEqual(1)
 
     // Spell Combat toggle in Buffs & Effects
     const spellCombatBtn = screen.getByText(/spell combat/i).closest('button')

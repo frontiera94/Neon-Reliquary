@@ -6,7 +6,9 @@ import { useSessionStore } from '../store/useSessionStore'
 import { CloudSyncBadge } from '../components/sync/CloudSyncBadge'
 import { CharacterEmblem } from '../components/character/CharacterEmblem'
 import { SettingsPanel } from '../components/layout/SettingsPanel'
+import { LanguageToggle } from '../components/layout/LanguageToggle'
 import { useSheetQueueStore } from '../store/useSheetQueueStore'
+import { useTranslation } from '../lib/i18n'
 import { getCharacterLore, isPlaceholderPortrait } from '../lib/character-lore'
 import type { FullCharacter } from '../store/useCharacterStore'
 
@@ -18,6 +20,7 @@ import marianoData from '../data/mariano-cardamomo.json'
 import noorieData from '../data/noorie.json'
 
 export function CharacterSelectionPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { characters, loadCharacter, removeCharacter, setActiveCharacter, activeCharacterId } = useCharacterStore()
   const { initSession } = useSessionStore()
@@ -121,16 +124,17 @@ export function CharacterSelectionPage() {
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
             Pathfinder 1E Roster
           </span>
+          <LanguageToggle />
           <CloudSyncBadge compact={false} />
           <button
             type="button"
             onClick={() => setSettingsOpen(true)}
-            aria-label="Gestione Schede"
+            aria-label={t('hud.manageSheetsAria')}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-primary/40 hover:bg-primary/10 text-tertiary hover:text-primary font-label text-xs uppercase tracking-wider transition-all cursor-pointer relative"
-            title="Archivio e Caricamento Schede"
+            title={t('hud.manageSheetsTitle')}
           >
             <span className="material-symbols-outlined text-sm">folder_shared</span>
-            <span className="hidden sm:inline">Schede</span>
+            <span className="hidden sm:inline">{t('hud.sheets')}</span>
             {newSheetsCount > 0 && (
               <span
                 data-testid="sheets-notification-badge-roster"

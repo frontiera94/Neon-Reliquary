@@ -45,20 +45,20 @@ describe('SheetQueueList', () => {
     render(<SheetQueueList />)
 
     expect(screen.getByText('Knam')).toBeInTheDocument()
-    expect(screen.getByText(/di Andrea/i)).toBeInTheDocument()
+    expect(screen.getByText(/di Andrea|by Andrea/i)).toBeInTheDocument()
     expect(screen.getByText('Knam_lv5.pdf')).toBeInTheDocument()
     expect(screen.getByText(/109\.1 KB/i)).toBeInTheDocument()
     expect(screen.getByText('"Passato a lvl 5"')).toBeInTheDocument()
 
     expect(screen.getByText('Mariano Cardamomo')).toBeInTheDocument()
-    expect(screen.getByText(/di Marco/i)).toBeInTheDocument()
+    expect(screen.getByText(/di Marco|by Marco/i)).toBeInTheDocument()
   })
 
   it('filters sheets when clicking filter buttons', () => {
     render(<SheetQueueList />)
 
-    // Click "Nuove" filter
-    const newFilterBtn = screen.getByRole('button', { name: /Nuove \(1\)/i })
+    // Click "New" / "Nuove" filter
+    const newFilterBtn = screen.getByRole('button', { name: /(Nuove|New) \(1\)/i })
     fireEvent.click(newFilterBtn)
 
     expect(screen.getByText('Knam')).toBeInTheDocument()
@@ -83,7 +83,7 @@ describe('SheetQueueList', () => {
 
     render(<SheetQueueList />)
 
-    const statusSelect = screen.getByLabelText(/Cambia stato scheda Knam/i)
+    const statusSelect = screen.getByLabelText(/(Cambia stato scheda|Change sheet status for) Knam/i)
     fireEvent.change(statusSelect, { target: { value: 'archived' } })
 
     await waitFor(() => {
@@ -97,7 +97,7 @@ describe('SheetQueueList', () => {
 
     render(<SheetQueueList />)
 
-    const deleteBtn = screen.getByRole('button', { name: /Elimina scheda Knam/i })
+    const deleteBtn = screen.getByRole('button', { name: /(Elimina scheda|Delete sheet) Knam/i })
     fireEvent.click(deleteBtn)
 
     await waitFor(() => {

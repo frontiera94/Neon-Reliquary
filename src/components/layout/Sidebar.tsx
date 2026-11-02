@@ -3,19 +3,21 @@ import { motion } from 'framer-motion'
 import { useCharacterStore } from '../../store/useCharacterStore'
 import { CharacterDropdown } from '../character/CharacterDropdown'
 import { TACTICAL_SPRING } from '../../lib/motion-presets'
+import { useTranslation, type TranslationKey } from '../../lib/i18n'
 
-const navItems = [
-  { to: '/status', icon: 'analytics', label: 'Status' },
-  { to: '/skills', icon: 'auto_fix_high', label: 'Skills' },
-  { to: '/combat', icon: 'swords', label: 'Combat' },
-  { to: '/spells', icon: 'auto_stories', label: 'Spells' },
-  { to: '/features', icon: 'auto_awesome', label: 'Features' },
-  { to: '/inventory', icon: 'inventory_2', label: 'Inventory' },
-  { to: '/companion', icon: 'pets', label: 'Companion' },
+const navItems: Array<{ to: string; icon: string; translationKey: TranslationKey }> = [
+  { to: '/status', icon: 'analytics', translationKey: 'nav.status' },
+  { to: '/skills', icon: 'auto_fix_high', translationKey: 'nav.skills' },
+  { to: '/combat', icon: 'swords', translationKey: 'nav.combat' },
+  { to: '/spells', icon: 'auto_stories', translationKey: 'nav.spells' },
+  { to: '/features', icon: 'auto_awesome', translationKey: 'nav.features' },
+  { to: '/inventory', icon: 'inventory_2', translationKey: 'nav.inventory' },
+  { to: '/companion', icon: 'pets', translationKey: 'nav.companion' },
 ]
 
 export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
   const char = useCharacterStore((s) => s.activeCharacter())
+  const { t } = useTranslation()
 
   return (
     <aside
@@ -29,8 +31,9 @@ export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
       )}
 
       <nav className="flex flex-col gap-1 px-3">
-        {navItems.map(({ to, icon, label }) => {
+        {navItems.map(({ to, icon, translationKey }) => {
           const compCount = to === '/companion' ? (char?.companions?.length ?? 0) : 0
+          const label = t(translationKey)
           return (
             <NavLink
               key={to}

@@ -165,7 +165,7 @@ describe('InventoryPage', () => {
     const nameInput = screen.getByPlaceholderText(/es\. pozione di cura/i)
     fireEvent.change(nameInput, { target: { value: 'Antitoxin' } })
 
-    const saveBtn = screen.getByRole('button', { name: /salva loot/i })
+    const saveBtn = screen.getByRole('button', { name: /salva loot|save loot/i })
     fireEvent.click(saveBtn)
 
     expect(screen.getByText('Antitoxin')).toBeInTheDocument()

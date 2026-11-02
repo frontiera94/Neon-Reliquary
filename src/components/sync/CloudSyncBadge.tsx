@@ -1,11 +1,13 @@
 import { useSyncStore } from '../../store/useSyncStore'
 import { syncSessionsNow } from '../../lib/session-sync'
+import { useTranslation } from '../../lib/i18n'
 
 interface CloudSyncBadgeProps {
   compact?: boolean
 }
 
 export function CloudSyncBadge({ compact = true }: CloudSyncBadgeProps) {
+  const { t, language } = useTranslation()
   const status = useSyncStore((s) => s.status)
   const pendingCount = useSyncStore((s) => s.pendingCount)
 
@@ -16,7 +18,7 @@ export function CloudSyncBadge({ compact = true }: CloudSyncBadgeProps) {
         return {
           icon: 'cloud_done',
           label: 'Cloud',
-          title: 'Stato salvato su Neon Cloud — clicca per sincronizzare',
+          title: t('sync.synced'),
           className:
             'text-primary/70 border-primary/20 bg-primary/5 hover:bg-primary/20 hover:text-primary',
           spin: false,
@@ -26,7 +28,7 @@ export function CloudSyncBadge({ compact = true }: CloudSyncBadgeProps) {
         return {
           icon: 'sync',
           label: 'Sync...',
-          title: 'Sincronizzazione stato su Neon Cloud in corso...',
+          title: t('sync.syncing'),
           className: 'text-primary border-primary/40 bg-primary/15',
           spin: true,
         }
@@ -34,8 +36,7 @@ export function CloudSyncBadge({ compact = true }: CloudSyncBadgeProps) {
         return {
           icon: 'cloud_off',
           label: pendingCount > 0 ? `Offline (${pendingCount})` : 'Offline',
-          title:
-            'Connessione cloud assente — stato salvato in locale, clicca per riprovare',
+          title: t('sync.offline'),
           className:
             'text-[#ffb4ab] border-error/40 bg-error/15 hover:bg-error/25',
           spin: false,
@@ -43,9 +44,8 @@ export function CloudSyncBadge({ compact = true }: CloudSyncBadgeProps) {
       case 'unconfigured':
         return {
           icon: 'save',
-          label: 'Locale',
-          title:
-            'Salvataggio solo locale (configura DATABASE_URL su Vercel per abilitare Neon Cloud)',
+          label: language === 'it' ? 'Locale' : 'Local',
+          title: t('sync.localOnly'),
           className:
             'text-tertiary border-white/10 bg-surface-container/70 hover:text-white hover:border-white/20',
           spin: false,
