@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
@@ -45,6 +46,26 @@ export function CompanionPage() {
   const [selectedCompanionId, setSelectedCompanionId] = useState<string | null>(null)
   const [showManifestModal, setShowManifestModal] = useState(false)
   const [showDismissModal, setShowDismissModal] = useState(false)
+
+  useEffect(() => {
+    if (!showManifestModal && !showDismissModal) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowManifestModal(false)
+        setShowDismissModal(false)
+      }
+    }
+
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = originalOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [showManifestModal, showDismissModal])
 
   if (!char) {
     return (
@@ -749,98 +770,165 @@ export function CompanionPage() {
       </section>
 
       {/* Preset Manifest Modal */}
-      {showManifestModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-surface-container border border-white/10 rounded-2xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto space-y-4 shadow-[0_0_50px_rgba(0,240,255,0.2)]">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div>
-                <h3 className="font-headline text-xl font-bold text-white uppercase tracking-tight flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">pets</span>
-                  {companions.length > 0 ? 'Replace Companion Preset' : 'Manifest Companion Preset'}
-                </h3>
-                {companions.length > 0 && (
-                  <p className="font-body text-xs text-tertiary mt-1">
-                    Selecting a preset will replace <strong className="text-white">{activeCompanion.name}</strong> as {char.name}&apos;s bonded companion.
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={() => setShowManifestModal(false)}
-                className="text-tertiary hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
-                aria-label="Close modal"
+      {showManifestModal &&
+        (typeof document !== 'undefined' ? (
+          createPortal(
+            <div
+              className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setShowManifestModal(false)
+              }}
+            >
+              <div
+                className="bg-surface-container border border-white/10 rounded-2xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto space-y-4 shadow-[0_0_50px_rgba(0,240,255,0.2)]"
+                onClick={(e) => e.stopPropagation()}
               >
-                <span className="material-symbols-outlined text-xl">close</span>
-              </button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {COMPANION_PRESETS.map((preset) => (
-                <div
-                  key={preset.id}
-                  className="bg-surface-container-high/80 border border-white/10 rounded-xl p-4 flex flex-col justify-between gap-3 hover:border-primary/40 transition-colors"
-                >
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
                   <div>
-                    <span className="font-label text-[10px] uppercase text-primary font-bold">
-                      {preset.type.replace('_', ' ')} • {preset.species}
-                    </span>
-                    <h4 className="font-headline text-base font-bold text-white mt-0.5">{preset.name}</h4>
-                    <p className="font-body text-xs text-tertiary mt-1">HP: {preset.maxHp} • AC: {preset.armorClass.total} • Speed: {preset.speed}</p>
+                    <h3 className="font-headline text-xl font-bold text-white uppercase tracking-tight flex items-center gap-2">
+                      <span className="material-symbols-outlined text-primary">pets</span>
+                      {companions.length > 0 ? 'Replace Companion Preset' : 'Manifest Companion Preset'}
+                    </h3>
+                    {companions.length > 0 && (
+                      <p className="font-body text-xs text-tertiary mt-1">
+                        Selecting a preset will replace <strong className="text-white">{activeCompanion.name}</strong> as {char.name}&apos;s bonded companion.
+                      </p>
+                    )}
                   </div>
                   <button
-                    onClick={() => {
-                      setCompanion(char.id, preset)
-                      setActiveCompanion(char.id, preset.id)
-                      setSelectedCompanionId(null)
-                      setShowManifestModal(false)
-                    }}
-                    className="w-full py-2 bg-primary/20 hover:bg-primary text-primary hover:text-surface font-label text-xs uppercase tracking-wider font-bold rounded-lg border border-primary/40 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    type="button"
+                    onClick={() => setShowManifestModal(false)}
+                    className="text-tertiary hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+                    aria-label="Close modal"
                   >
-                    <span className="material-symbols-outlined text-sm">
-                      {companions.length > 0 ? 'swap_horiz' : 'add'}
-                    </span>
-                    {companions.length > 0 ? 'Bond & Replace' : 'Manifest'}
+                    <span className="material-symbols-outlined text-xl">close</span>
                   </button>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {COMPANION_PRESETS.map((preset) => {
+                    const isCurrent =
+                      preset.id === activeCompanion.id ||
+                      (Boolean(activeCompanion.species) &&
+                        preset.species.toLowerCase() === activeCompanion.species.toLowerCase() &&
+                        preset.type === activeCompanion.type) ||
+                      (Boolean(activeCompanion.name) &&
+                        (preset.name.toLowerCase().includes(activeCompanion.name.toLowerCase()) ||
+                          activeCompanion.name.toLowerCase().includes(preset.name.toLowerCase())))
+                    return (
+                      <div
+                        key={preset.id}
+                        className={`bg-surface-container-high/80 border rounded-xl p-4 flex flex-col justify-between gap-3 transition-colors ${
+                          isCurrent ? 'border-primary/50 bg-primary/5' : 'border-white/10 hover:border-primary/40'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          {preset.portrait ? (
+                            <img
+                              src={preset.portrait}
+                              alt={preset.name}
+                              className="w-12 h-12 object-cover rounded-xl border border-primary/40 flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-surface-container rounded-xl border border-primary/30 flex items-center justify-center text-primary flex-shrink-0">
+                              <span className="material-symbols-outlined text-xl">pets</span>
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-label text-[10px] uppercase text-primary font-bold">
+                                {preset.type.replace('_', ' ')} • {preset.species}
+                              </span>
+                              {isCurrent && (
+                                <span className="font-label text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/40 font-bold">
+                                  Current
+                                </span>
+                              )}
+                            </div>
+                            <h4 className="font-headline text-base font-bold text-white mt-0.5 truncate">{preset.name}</h4>
+                            <p className="font-body text-xs text-tertiary mt-1">
+                              HP: {preset.maxHp} • AC: {preset.armorClass.total} • Speed: {preset.speed}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={isCurrent}
+                          onClick={() => {
+                            setCompanion(char.id, preset)
+                            setActiveCompanion(char.id, preset.id)
+                            setSelectedCompanionId(preset.id)
+                            setShowManifestModal(false)
+                          }}
+                          className={`w-full py-2 font-label text-xs uppercase tracking-wider font-bold rounded-lg border transition-all flex items-center justify-center gap-1.5 ${
+                            isCurrent
+                              ? 'border-white/10 text-tertiary bg-white/5 cursor-default'
+                              : 'border-primary/40 bg-primary/20 hover:bg-primary text-primary hover:text-surface-lowest cursor-pointer shadow-[0_0_15px_rgba(0,240,255,0.15)] active:scale-98'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-sm">
+                            {isCurrent ? 'check' : companions.length > 0 ? 'swap_horiz' : 'add'}
+                          </span>
+                          {isCurrent ? 'Currently Bonded' : companions.length > 0 ? 'Bond & Replace' : 'Manifest'}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>,
+            document.body
+          )
+        ) : null)}
 
       {/* Dismiss Confirmation Modal */}
-      {showDismissModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-surface-container border border-error/40 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-[0_0_50px_rgba(255,80,80,0.2)]">
-            <div className="flex items-center gap-3 text-error">
-              <span className="material-symbols-outlined text-2xl">warning</span>
-              <h3 className="font-headline text-lg font-bold text-white uppercase tracking-tight">
-                Dismiss Companion?
-              </h3>
-            </div>
-            <p className="font-body text-xs text-tertiary leading-relaxed">
-              Are you sure you want to dismiss <strong className="text-white">{activeCompanion.name}</strong>?
-              Their bond to {char.name} will be released. You can manifest another companion at any time.
-            </p>
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                onClick={() => setShowDismissModal(false)}
-                className="px-4 py-2 rounded-xl border border-white/10 text-tertiary hover:text-white font-label text-xs uppercase tracking-wider transition-colors cursor-pointer"
+      {showDismissModal &&
+        (typeof document !== 'undefined' ? (
+          createPortal(
+            <div
+              className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setShowDismissModal(false)
+              }}
+            >
+              <div
+                className="bg-surface-container border border-error/40 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-[0_0_50px_rgba(255,80,80,0.2)]"
+                onClick={(e) => e.stopPropagation()}
               >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  removeCompanion(char.id, activeCompanion.id)
-                  setSelectedCompanionId(null)
-                  setShowDismissModal(false)
-                }}
-                className="px-4 py-2 rounded-xl bg-error/20 hover:bg-error text-error hover:text-white border border-error/40 font-label text-xs uppercase tracking-wider font-bold transition-all cursor-pointer shadow-[0_0_15px_rgba(255,80,80,0.2)]"
-              >
-                Confirm Dismiss
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                <div className="flex items-center gap-3 text-error">
+                  <span className="material-symbols-outlined text-2xl">warning</span>
+                  <h3 className="font-headline text-lg font-bold text-white uppercase tracking-tight">
+                    Dismiss Companion?
+                  </h3>
+                </div>
+                <p className="font-body text-xs text-tertiary leading-relaxed">
+                  Are you sure you want to dismiss <strong className="text-white">{activeCompanion.name}</strong>?
+                  Their bond to {char.name} will be released. You can manifest another companion at any time.
+                </p>
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowDismissModal(false)}
+                    className="px-4 py-2 rounded-xl border border-white/10 text-tertiary hover:text-white font-label text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      removeCompanion(char.id, activeCompanion.id)
+                      setSelectedCompanionId(null)
+                      setShowDismissModal(false)
+                    }}
+                    className="px-4 py-2 rounded-xl bg-error/20 hover:bg-error text-error hover:text-white border border-error/40 font-label text-xs uppercase tracking-wider font-bold transition-all cursor-pointer shadow-[0_0_15px_rgba(255,80,80,0.2)]"
+                  >
+                    Confirm Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )
+        ) : null)}
     </div>
   )
 }
