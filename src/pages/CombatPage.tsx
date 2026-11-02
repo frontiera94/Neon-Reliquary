@@ -1192,21 +1192,44 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                     spent={session.spentResources[resource.id] ?? 0}
                     compact
                     extraAction={
-                      isMonk && resource.id === 'ki-pool' ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const rolled = Math.floor(Math.random() * 8) + 1 + (char.level ?? 4)
-                            triggerWholenessOfBody(char.id, rolled)
-                            spendResource(char.id, 'ki-pool', kiPoolMax)
-                            spendResource(char.id, 'ki-pool', kiPoolMax)
-                          }}
-                          className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 font-label text-[9px] font-bold text-primary hover:bg-primary/20 transition-colors cursor-pointer"
-                          title={`Cura 1d8+${char.level ?? 4} HP spendendo 2 Ki`}
-                        >
-                          Wholeness (2 Ki)
-                        </button>
-                      ) : undefined
+                      isMonk && resource.id === 'ki-pool' ? (() => {
+                        const kiSpent = session.spentResources['ki-pool'] ?? 0
+                        const kiRemaining = (resource.total ?? 6) - kiSpent
+                        const canUse = kiRemaining >= 2
+                        return (
+                          <button
+                            type="button"
+                            disabled={!canUse}
+                            onClick={() => {
+                              if (!canUse) return
+                              const monkLv = char.level ?? 4
+                              const rollD8 = Math.floor(Math.random() * 8) + 1
+                              const totalHealed = rollD8 + monkLv
+                              triggerWholenessOfBody(char.id, totalHealed)
+                              spendResource(char.id, 'ki-pool', kiPoolMax)
+                              spendResource(char.id, 'ki-pool', kiPoolMax)
+                              openRoll({
+                                diceType: 8,
+                                count: 1,
+                                modifier: monkLv,
+                                label: `Wholeness of Body — Cura ${totalHealed} HP (1d8+${monkLv})`,
+                                breakdown: [
+                                  { label: 'Tiro Dado 1d8', value: rollD8 },
+                                  { label: `Livello Monaco (${char.name})`, value: monkLv },
+                                ],
+                              })
+                            }}
+                            className={`rounded border px-2 py-0.5 font-label text-[9px] font-bold transition-colors ${
+                              canUse
+                                ? 'border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 cursor-pointer'
+                                : 'border-white/10 bg-white/5 text-tertiary opacity-50 cursor-not-allowed'
+                            }`}
+                            title={canUse ? `Cura 1d8+${char.level ?? 4} HP spendendo 2 Ki` : 'Ki insufficiente (servono 2 Ki)'}
+                          >
+                            Wholeness (2 Ki)
+                          </button>
+                        )
+                      })() : undefined
                     }
                   />
                 ))}

@@ -203,6 +203,49 @@ describe('ClassMechanicsPanel Component', () => {
     expect(screen.queryByText(/attivo nell'hud/i)).not.toBeInTheDocument()
   })
 
+  it('Wholeness of Body heals with 2 Ki, opens dice roll, and disables when Ki < 2', () => {
+    useSessionStore.getState().applyDamage('agelmund', 16) // 36 - 16 = 20 HP
+
+    const { rerender } = render(
+      <ClassMechanicsPanel
+        char={agelmundChar}
+        effectiveAbilities={{ scores: agelmundChar.abilities, mods: { str: 3, dex: 3, con: 2, int: 0, wis: 2, cha: -1 } }}
+      />
+    )
+
+    const wholenessBtn = screen.getByRole('button', { name: /wholeness of body/i })
+    expect(wholenessBtn).not.toBeDisabled()
+
+    // Click to heal
+    fireEvent.click(wholenessBtn)
+
+    // HP should have increased from 20
+    const sessAfter = useSessionStore.getState().getSession('agelmund')
+    expect(sessAfter.currentHp).toBeGreaterThan(20)
+    expect(sessAfter.spentResources['ki-pool']).toBe(2)
+
+    // Now spend remaining ki so only 1 Ki remains (max 6, spent 2 -> set spent to 5, 1 remains)
+    useSessionStore.setState((s) => ({
+      sessions: {
+        ...s.sessions,
+        agelmund: {
+          ...s.sessions['agelmund'],
+          spentResources: { ...s.sessions['agelmund'].spentResources, 'ki-pool': 5 },
+        },
+      },
+    }))
+
+    rerender(
+      <ClassMechanicsPanel
+        char={agelmundChar}
+        effectiveAbilities={{ scores: agelmundChar.abilities, mods: { str: 3, dex: 3, con: 2, int: 0, wis: 2, cha: -1 } }}
+      />
+    )
+
+    expect(screen.getByRole('button', { name: /wholeness of body/i })).toBeDisabled()
+    expect(screen.getByText(/ki insufficiente \(servono 2 ki\)/i)).toBeInTheDocument()
+  })
+
   // 7. Mariano (Rogue)
   it('renders Mariano Debilitating Injury badges and Underhanded button with restore', () => {
     render(

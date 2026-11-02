@@ -147,6 +147,8 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
   const wildShapeMax = char.dailyResources?.find((r) => r.id === 'wild-shape')?.total ?? 1
   const arcanePoolMax = char.dailyResources?.find((r) => r.id === 'arcane-pool')?.total ?? 5
   const kiPoolMax = char.dailyResources?.find((r) => r.id === 'ki-pool')?.total ?? 6
+  const kiPoolSpent = session?.spentResources?.['ki-pool'] ?? 0
+  const kiRemaining = kiPoolMax - kiPoolSpent
   const stunningFistMax = char.dailyResources?.find((r) => r.id === 'stunning-fist')?.total ?? 5
 
   // Rogue State
@@ -957,22 +959,41 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
 
             <button
               type="button"
+              disabled={kiRemaining < 2}
               onClick={() => {
+                if (kiRemaining < 2) return
                 const monkLv = char.level ?? 4
-                const rolled = Math.floor(Math.random() * 8) + 1 + monkLv
-                triggerWholeness(char.id, rolled)
+                const rollD8 = Math.floor(Math.random() * 8) + 1
+                const totalHealed = rollD8 + monkLv
+                triggerWholeness(char.id, totalHealed)
                 spendResource(char.id, 'ki-pool', kiPoolMax)
                 spendResource(char.id, 'ki-pool', kiPoolMax)
+                openRoll({
+                  diceType: 8,
+                  count: 1,
+                  modifier: monkLv,
+                  label: `Wholeness of Body — Cura ${totalHealed} HP (1d8+${monkLv})`,
+                  breakdown: [
+                    { label: 'Tiro Dado 1d8', value: rollD8 },
+                    { label: `Livello Monaco (${char.name})`, value: monkLv },
+                  ],
+                })
               }}
-              className="flex items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary/10 p-2 hover:bg-primary/20 transition-colors cursor-pointer"
+              className={`flex items-center justify-between gap-2 rounded-lg border p-2 transition-colors ${
+                kiRemaining < 2
+                  ? 'border-white/10 bg-white/5 opacity-50 cursor-not-allowed'
+                  : 'border-primary/30 bg-primary/10 hover:bg-primary/20 cursor-pointer'
+              }`}
             >
               <div className="text-left">
                 <span className="block font-headline text-xs font-bold text-white">Wholeness of Body</span>
                 <span className="block font-label text-[10px] text-tertiary">
-                  Cura istantanea 1d8+{char.level ?? 4} HP
+                  {kiRemaining < 2 ? 'Ki insufficiente (servono 2 Ki)' : `Cura istantanea 1d8+${char.level ?? 4} HP`}
                 </span>
               </div>
-              <span className="rounded bg-primary/20 px-1.5 py-0.5 font-label text-[10px] font-bold text-primary">
+              <span className={`rounded px-1.5 py-0.5 font-label text-[10px] font-bold ${
+                kiRemaining < 2 ? 'bg-white/10 text-tertiary' : 'bg-primary/20 text-primary'
+              }`}>
                 2 Ki
               </span>
             </button>
