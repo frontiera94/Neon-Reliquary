@@ -31,7 +31,7 @@ export function EquipmentSlotCell({
 
   if (item) {
     return (
-      <div className="bg-surface-container/70 backdrop-blur-md border border-white/10 border-l-4 border-l-secondary rounded-xl p-3 min-h-[88px] flex flex-col justify-between gap-1 hover:border-secondary/40 hover:shadow-[0_0_15px_rgba(217,70,239,0.15)] transition-all group">
+      <div className="bg-surface-container/70 backdrop-blur-md border border-secondary/40 shadow-[inset_0_1px_0_rgba(217,70,239,0.2)] rounded-xl p-3 min-h-[88px] flex flex-col justify-between gap-1 hover:border-secondary/60 hover:shadow-[0_0_20px_rgba(217,70,239,0.2)] transition-all group">
         <div>
           <div className="flex items-center justify-between gap-1.5">
             <div className="flex items-center gap-1.5">
@@ -59,7 +59,7 @@ export function EquipmentSlotCell({
   }
 
   return (
-    <div className="bg-surface-container/30 border border-white/5 border-l-4 border-l-outline-variant/30 rounded-xl p-3 min-h-[88px] flex flex-col gap-1 opacity-40">
+    <div className="bg-surface-container/20 border border-white/5 rounded-xl p-3 min-h-[88px] flex flex-col gap-1 opacity-40 hover:opacity-60 transition-opacity">
       <div className="flex items-center gap-1.5">
         <span className="material-symbols-outlined text-tertiary text-base">{icon}</span>
         <span className="font-label text-[10px] uppercase tracking-wider text-tertiary">{label}</span>

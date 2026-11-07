@@ -143,3 +143,63 @@ body {
   width: 100%;
   min-height: 100svh;
 }
+
+/* Micro-interaction & popover entrance utilities */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes zoomIn95 {
+  from {
+    scale: 0.95;
+  }
+  to {
+    scale: 1;
+  }
+}
+
+@keyframes fadeInZoom95 {
+  from {
+    opacity: 0;
+    scale: 0.95;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+.animate-in {
+  animation-duration: 150ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation-name: fadeIn;
+}
+
+.zoom-in-95 {
+  animation-name: zoomIn95;
+}
+
+.animate-in.fade-in.zoom-in-95 {
+  animation-name: fadeInZoom95;
+}
+
+/* Accessibility: prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .glow-pulse {
+    animation: none !important;
+  }
+}
+

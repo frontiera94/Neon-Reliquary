@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
@@ -43,6 +44,18 @@ export function CompanionPage() {
   const [selectedCompanionId, setSelectedCompanionId] = useState<string | null>(null)
   const [showManifestModal, setShowManifestModal] = useState(false)
   const [showDismissModal, setShowDismissModal] = useState(false)
+
+  useEffect(() => {
+    if (!showManifestModal && !showDismissModal) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowManifestModal(false)
+        setShowDismissModal(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showManifestModal, showDismissModal])
 
   if (!char) {
     return (
@@ -526,7 +539,7 @@ export function CompanionPage() {
             return (
               <div
                 key={index}
-                className="bg-surface-container-low/80 rounded-xl p-5 border border-white/5 border-l-4 border-l-primary flex flex-col justify-between"
+                className="bg-surface-container-low/80 rounded-xl p-5 border border-primary/25 shadow-[inset_0_1px_0_rgba(0,240,255,0.12)] flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -543,7 +556,7 @@ export function CompanionPage() {
                   )}
 
                   {atk.notes && (
-                    <p className="font-body text-xs text-on-surface-variant/90 mb-4 bg-surface-container-high/40 p-2.5 rounded-lg border-l-2 border-primary/50">
+                    <p className="font-body text-xs text-on-surface-variant/90 mb-4 bg-surface-container-high/40 p-2.5 rounded-lg border border-primary/20">
                       {atk.notes}
                     </p>
                   )}
@@ -679,7 +692,7 @@ export function CompanionPage() {
               </h2>
               <div className="space-y-3">
                 {activeCompanion.specialQualities.map((sq, idx) => (
-                  <div key={idx} className="bg-surface-container-low/80 p-3.5 rounded-xl border-l-4 border-l-primary border border-white/5">
+                  <div key={idx} className="bg-surface-container-low/80 p-3.5 rounded-xl border border-primary/25 shadow-[inset_0_1px_0_rgba(0,240,255,0.12)]">
                     <h4 className="font-headline text-xs uppercase tracking-wider text-primary font-bold">
                       {sq.name}
                     </h4>
@@ -732,98 +745,128 @@ export function CompanionPage() {
       </section>
 
       {/* Preset Manifest Modal */}
-      {showManifestModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-surface-container border border-white/10 rounded-2xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto space-y-4 shadow-[0_0_50px_rgba(0,240,255,0.2)]">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <div>
-                <h3 className="font-headline text-xl font-bold text-white uppercase tracking-tight flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">pets</span>
-                  {companions.length > 0 ? 'Replace Companion Preset' : 'Manifest Companion Preset'}
-                </h3>
-                {companions.length > 0 && (
-                  <p className="font-body text-xs text-tertiary mt-1">
-                    Selecting a preset will replace <strong className="text-white">{activeCompanion.name}</strong> as {char.name}&apos;s bonded companion.
-                  </p>
-                )}
-              </div>
-              <button
-                onClick={() => setShowManifestModal(false)}
-                className="text-tertiary hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
-                aria-label="Close modal"
-              >
-                <span className="material-symbols-outlined text-xl">close</span>
-              </button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {COMPANION_PRESETS.map((preset) => (
-                <div
-                  key={preset.id}
-                  className="bg-surface-container-high/80 border border-white/10 rounded-xl p-4 flex flex-col justify-between gap-3 hover:border-primary/40 transition-colors"
-                >
-                  <div>
-                    <span className="font-label text-[10px] uppercase text-primary font-bold">
-                      {preset.type.replace('_', ' ')} • {preset.species}
-                    </span>
-                    <h4 className="font-headline text-base font-bold text-white mt-0.5">{preset.name}</h4>
-                    <p className="font-body text-xs text-tertiary mt-1">HP: {preset.maxHp} • AC: {preset.armorClass.total} • Speed: {preset.speed}</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setCompanion(char.id, preset)
-                      setActiveCompanion(char.id, preset.id)
-                      setSelectedCompanionId(null)
-                      setShowManifestModal(false)
-                    }}
-                    className="w-full py-2 bg-primary/20 hover:bg-primary text-primary hover:text-surface font-label text-xs uppercase tracking-wider font-bold rounded-lg border border-primary/40 transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <span className="material-symbols-outlined text-sm">
-                      {companions.length > 0 ? 'swap_horiz' : 'add'}
-                    </span>
-                    {companions.length > 0 ? 'Bond & Replace' : 'Manifest'}
-                  </button>
+      <AnimatePresence>
+        {showManifestModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowManifestModal(false)}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-surface-container border border-white/10 rounded-2xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto space-y-4 shadow-[0_0_50px_rgba(0,240,255,0.2)] cursor-default"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div>
+                  <h3 className="font-headline text-xl font-bold text-white uppercase tracking-tight flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary">pets</span>
+                    {companions.length > 0 ? 'Replace Companion Preset' : 'Manifest Companion Preset'}
+                  </h3>
+                  {companions.length > 0 && (
+                    <p className="font-body text-xs text-tertiary mt-1">
+                      Selecting a preset will replace <strong className="text-white">{activeCompanion.name}</strong> as {char.name}&apos;s bonded companion.
+                    </p>
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+                <button
+                  onClick={() => setShowManifestModal(false)}
+                  className="text-tertiary hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+                  aria-label="Close modal"
+                >
+                  <span className="material-symbols-outlined text-xl">close</span>
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {COMPANION_PRESETS.map((preset) => (
+                  <div
+                    key={preset.id}
+                    className="bg-surface-container-high/80 border border-white/10 rounded-xl p-4 flex flex-col justify-between gap-3 hover:border-primary/40 transition-colors"
+                  >
+                    <div>
+                      <span className="font-label text-[10px] uppercase text-primary font-bold">
+                        {preset.type.replace('_', ' ')} • {preset.species}
+                      </span>
+                      <h4 className="font-headline text-base font-bold text-white mt-0.5">{preset.name}</h4>
+                      <p className="font-body text-xs text-tertiary mt-1">HP: {preset.maxHp} • AC: {preset.armorClass.total} • Speed: {preset.speed}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setCompanion(char.id, preset)
+                        setActiveCompanion(char.id, preset.id)
+                        setSelectedCompanionId(null)
+                        setShowManifestModal(false)
+                      }}
+                      className="w-full py-2 bg-primary/20 hover:bg-primary text-primary hover:text-surface font-label text-xs uppercase tracking-wider font-bold rounded-lg border border-primary/40 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-sm">
+                        {companions.length > 0 ? 'swap_horiz' : 'add'}
+                      </span>
+                      {companions.length > 0 ? 'Bond & Replace' : 'Manifest'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Dismiss Confirmation Modal */}
-      {showDismissModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-surface-container border border-error/40 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-[0_0_50px_rgba(255,80,80,0.2)]">
-            <div className="flex items-center gap-3 text-error">
-              <span className="material-symbols-outlined text-2xl">warning</span>
-              <h3 className="font-headline text-lg font-bold text-white uppercase tracking-tight">
-                Dismiss Companion?
-              </h3>
-            </div>
-            <p className="font-body text-xs text-tertiary leading-relaxed">
-              Are you sure you want to dismiss <strong className="text-white">{activeCompanion.name}</strong>?
-              Their bond to {char.name} will be released. You can manifest another companion at any time.
-            </p>
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                onClick={() => setShowDismissModal(false)}
-                className="px-4 py-2 rounded-xl border border-white/10 text-tertiary hover:text-white font-label text-xs uppercase tracking-wider transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  removeCompanion(char.id, activeCompanion.id)
-                  setSelectedCompanionId(null)
-                  setShowDismissModal(false)
-                }}
-                className="px-4 py-2 rounded-xl bg-error/20 hover:bg-error text-error hover:text-white border border-error/40 font-label text-xs uppercase tracking-wider font-bold transition-all cursor-pointer shadow-[0_0_15px_rgba(255,80,80,0.2)]"
-              >
-                Confirm Dismiss
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showDismissModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowDismissModal(false)}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-surface-container border border-error/40 rounded-2xl p-6 max-w-md w-full space-y-4 shadow-[0_0_50px_rgba(255,80,80,0.2)] cursor-default"
+            >
+              <div className="flex items-center gap-3 text-error">
+                <span className="material-symbols-outlined text-2xl">warning</span>
+                <h3 className="font-headline text-lg font-bold text-white uppercase tracking-tight">
+                  Dismiss Companion?
+                </h3>
+              </div>
+              <p className="font-body text-xs text-tertiary leading-relaxed">
+                Are you sure you want to dismiss <strong className="text-white">{activeCompanion.name}</strong>?
+                Their bond to {char.name} will be released. You can manifest another companion at any time.
+              </p>
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  onClick={() => setShowDismissModal(false)}
+                  className="px-4 py-2 rounded-xl border border-white/10 text-tertiary hover:text-white font-label text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    removeCompanion(char.id, activeCompanion.id)
+                    setSelectedCompanionId(null)
+                    setShowDismissModal(false)
+                  }}
+                  className="px-4 py-2 rounded-xl bg-error/20 hover:bg-error text-error hover:text-white border border-error/40 font-label text-xs uppercase tracking-wider font-bold transition-all cursor-pointer shadow-[0_0_15px_rgba(255,80,80,0.2)]"
+                >
+                  Confirm Dismiss
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -21,15 +21,17 @@ export function SummonSection({
   const currentSpell = spells.find((s) => s.id === activeTab) ?? spells[0]
 
   return (
-    <section className="bg-surface-container p-5 space-y-4">
+    <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl border border-white/10 p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <span className="font-label text-[10px] text-primary uppercase tracking-[0.25em]">Summon Nature's Ally</span>
-        <div className="flex gap-1">
+        <span className="font-label text-[10px] text-primary uppercase tracking-[0.25em] font-semibold">
+          Summon Nature&apos;s Ally
+        </span>
+        <div className="flex gap-1.5">
           {spells.map((s) => (
             <button
               key={s.id}
               onClick={() => setActiveTab(s.id)}
-              className="px-3 py-1 font-label text-[10px] uppercase tracking-widest transition-all"
+              className="px-3 py-1 rounded-lg font-label text-[10px] uppercase tracking-widest transition-all cursor-pointer"
               style={activeTab === s.id
                 ? { backgroundColor: 'rgba(0,218,243,0.15)', color: '#00daf3', border: '1px solid rgba(0,218,243,0.5)' }
                 : { color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.1)' }}
@@ -40,17 +42,17 @@ export function SummonSection({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
         {(currentSpell?.summonOptions ?? []).map((opt) => {
           const isActive = activeSummonId === opt.id
           return (
             <button
               key={opt.id}
               onClick={() => onSelect(currentSpell.id, opt)}
-              className="p-3 text-left transition-all hover:bg-surface-container-high"
+              className="p-3.5 rounded-xl text-left transition-all hover:bg-surface-container-high/80 cursor-pointer"
               style={isActive
                 ? { backgroundColor: 'rgba(0,218,243,0.12)', border: '1px solid rgba(0,218,243,0.5)', boxShadow: '0 0 16px rgba(0,218,243,0.2)' }
-                : { border: '1px solid rgba(255,255,255,0.08)' }}
+                : { backgroundColor: 'rgba(18,20,36,0.6)', border: '1px solid rgba(255,255,255,0.08)' }}
             >
               <p
                 className="font-headline text-sm font-bold leading-tight"

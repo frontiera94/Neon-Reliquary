@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCharacterStore } from '../../store/useCharacterStore'
 import { useSessionStore } from '../../store/useSessionStore'
@@ -43,13 +43,13 @@ export function CharacterDropdown({
     }
   }
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (controlledOnClose) {
       controlledOnClose()
     } else {
       setInternalIsOpen(false)
     }
-  }
+  }, [controlledOnClose])
 
   // Click outside and Escape key listener
   useEffect(() => {
@@ -76,7 +76,7 @@ export function CharacterDropdown({
       document.removeEventListener('touchstart', handleClickOutside)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen])
+  }, [isOpen, handleClose])
 
   if (!activeChar) return null
 
@@ -176,7 +176,7 @@ export function CharacterDropdown({
           data-testid="character-dropdown-menu"
           className={`absolute ${
             align === 'left' ? 'left-0' : 'right-0'
-          } top-full mt-2 w-64 max-w-[calc(100vw-2rem)] bg-surface-container-high/95 backdrop-blur-xl border border-primary/30 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(0,240,255,0.2)] py-2 z-[60] overflow-hidden`}
+          } top-full mt-2 w-64 max-w-[calc(100vw-2rem)] bg-surface-container-high/95 backdrop-blur-xl border border-primary/30 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(0,240,255,0.2)] py-2 z-[60] overflow-hidden animate-in fade-in zoom-in-95`}
         >
           <div className="px-3.5 py-1.5 border-b border-white/[0.08] mb-1 flex items-center justify-between">
             <span className="font-label text-[10px] uppercase tracking-widest text-tertiary">

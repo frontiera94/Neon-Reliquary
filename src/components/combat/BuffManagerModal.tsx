@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { nanoid } from 'nanoid'
 import { useCharacterStore } from '../../store/useCharacterStore'
@@ -24,6 +24,15 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
   const { toggleBuff, addCustomBuff, removeCustomBuff, toggleCondition } = useSessionStore()
 
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
   const [activeTab, setActiveTab] = useState<'presets' | 'active' | 'create' | 'conditions'>(initialTab)
 
   // Custom buff form state
@@ -43,11 +52,9 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
   const [extraDice, setExtraDice] = useState('')
   const [color, setColor] = useState<'primary' | 'secondary' | 'error'>('primary')
 
-  if (!isOpen || !char || !session) return null
-
-  const activeBuffIds = session.activeBuffIds
-  const customBuffs = session.customBuffs ?? []
-  const allAvailableBuffs = [...char.buffs, ...customBuffs]
+  const activeBuffIds = session?.activeBuffIds ?? []
+  const customBuffs = session?.customBuffs ?? []
+  const allAvailableBuffs = char ? [...char.buffs, ...customBuffs] : []
 
   function handleCreateBuff(e: React.FormEvent) {
     e.preventDefault()
@@ -111,13 +118,14 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl"
-        onClick={onClose}
-      >
+      {isOpen && char && session && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-xl"
+          onClick={onClose}
+        >
         <motion.section
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -610,6 +618,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
           </div>
         </motion.section>
       </motion.div>
+      )}
     </AnimatePresence>
   )
 }

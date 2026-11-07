@@ -1,31 +1,76 @@
-/* eslint-disable */
-// Vercel serverless function — not included in project tsconfig
+import type { ApiRequest, ApiResponse } from './_lib/http'
+import {
+  setNoStoreHeaders,
+  handleOptionsPreflight,
+  parseJsonBody,
+} from './_lib/http'
 
-export default async function handler(req: any, res: any) {
+export interface ChatMessagePayload {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+}
+
+export interface ChatRequestBody {
+  messages: ChatMessagePayload[]
+  character: unknown
+  session: unknown
+}
+
+export interface ChatRequestOptions {
+  env?: Record<string, string | undefined>
+  fetchFn?: typeof fetch
+}
+
+export async function handleChatRequest(
+  req: ApiRequest,
+  res: ApiResponse,
+  options?: ChatRequestOptions
+): Promise<void> {
+  setNoStoreHeaders(res)
+
+  if (handleOptionsPreflight(req, res)) return
+
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' })
     return
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
+  const env = options?.env ?? process.env
+  const apiKey = env.ANTHROPIC_API_KEY ?? env.GEMINI_API_KEY
   if (!apiKey) {
     res.status(500).json({ error: 'API key not configured' })
     return
   }
 
-  // Parse body: Vercel may pass it as a raw string depending on runtime version
-  let body: { messages: { role: string; content: string }[]; character: unknown; session: unknown }
-  try {
-    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-  } catch {
+  const body = parseJsonBody<ChatRequestBody>(req.body)
+  if (!body) {
     res.status(400).json({ error: 'Invalid JSON body' })
     return
   }
 
   const { messages, character, session } = body
 
-  if (!Array.isArray(messages) || !character || !session) {
-    res.status(400).json({ error: 'Invalid request body' })
+  if (
+    !Array.isArray(messages) ||
+    messages.length === 0 ||
+    typeof character !== 'object' ||
+    character === null ||
+    typeof session !== 'object' ||
+    session === null
+  ) {
+    res.status(400).json({ error: 'Invalid request body: expected messages array, character, and session objects' })
+    return
+  }
+
+  const isValidMessages = messages.every(
+    (m) =>
+      typeof m === 'object' &&
+      m !== null &&
+      typeof m.role === 'string' &&
+      typeof m.content === 'string'
+  )
+  if (!isValidMessages) {
+    res.status(400).json({ error: 'Invalid message format: each message requires role and content' })
     return
   }
 
@@ -39,8 +84,10 @@ ${JSON.stringify(character, null, 2)}
 ${JSON.stringify(session, null, 2)}
 </stato_sessione>`
 
+  const fetchImpl = options?.fetchFn ?? fetch
+
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetchImpl('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -62,11 +109,15 @@ ${JSON.stringify(session, null, 2)}
       return
     }
 
-    const data = await response.json() as { content: { type: string; text: string }[] }
-    const text = data.content[0]?.text ?? ''
+    const data = (await response.json()) as { content?: { type: string; text: string }[] }
+    const text = data.content?.[0]?.text ?? ''
     res.status(200).json({ role: 'assistant', content: text })
   } catch (e) {
     console.error('Chat handler error:', e)
     res.status(500).json({ error: 'Errore interno del server', detail: String(e) })
   }
+}
+
+export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+  return handleChatRequest(req, res)
 }

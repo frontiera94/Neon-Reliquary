@@ -1,18 +1,12 @@
 import { neon } from '@neondatabase/serverless'
+import type { ApiRequest, ApiResponse } from './_lib/http'
+import {
+  setNoStoreHeaders,
+  handleOptionsPreflight,
+  parseJsonBody,
+} from './_lib/http'
 
-export interface ApiRequest {
-  method?: string
-  body?: unknown
-  headers?: Record<string, string | string[] | undefined>
-}
-
-export interface ApiResponse {
-  setHeader?: (name: string, value: string) => void
-  status: (code: number) => {
-    json: (payload: unknown) => void
-    end?: () => void
-  }
-}
+export type { ApiRequest, ApiResponse }
 
 export type SqlTagFn = (
   strings: TemplateStringsArray,
@@ -59,14 +53,9 @@ export async function handleSessionsRequest(
     sql?: SqlTagFn
   }
 ): Promise<void> {
-  res.setHeader?.('Cache-Control', 'no-store')
+  setNoStoreHeaders(res)
 
-  if (req.method === 'OPTIONS') {
-    const statusRes = res.status(204)
-    if (statusRes.end) statusRes.end()
-    else statusRes.json({})
-    return
-  }
+  if (handleOptionsPreflight(req, res)) return
 
   if (req.method !== 'GET' && req.method !== 'PUT' && req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' })
@@ -115,14 +104,10 @@ export async function handleSessionsRequest(
     }
 
     // PUT or POST: batch upsert character sessions
-    let parsedBody: unknown = req.body
-    if (typeof req.body === 'string') {
-      try {
-        parsedBody = req.body.length > 0 ? JSON.parse(req.body) : {}
-      } catch {
-        res.status(400).json({ error: 'Invalid JSON body' })
-        return
-      }
+    const parsedBody = parseJsonBody<Record<string, unknown>>(req.body)
+    if (parsedBody === null) {
+      res.status(400).json({ error: 'Invalid JSON body' })
+      return
     }
 
     if (!isPlainObject(parsedBody) || !isPlainObject(parsedBody.sessions)) {

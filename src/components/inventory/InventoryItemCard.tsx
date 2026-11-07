@@ -26,8 +26,10 @@ export function InventoryItemCard({
 
   return (
     <div
-      className={`bg-surface-container/70 backdrop-blur-md p-5 rounded-2xl border border-white/5 border-l-4 ${
-        isEquipped ? 'border-l-secondary shadow-[0_0_15px_rgba(217,70,239,0.15)]' : 'border-l-primary'
+      className={`bg-surface-container/70 backdrop-blur-md p-5 rounded-2xl border ${
+        isEquipped
+          ? 'border-secondary/40 shadow-[0_0_20px_rgba(217,70,239,0.18),inset_0_1px_0_rgba(217,70,239,0.2)]'
+          : 'border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
       } transition-all duration-300 hover:border-primary/40 hover:shadow-[0_0_25px_rgba(0,240,255,0.15)] flex flex-col gap-3 group ${qty === 0 ? 'opacity-50' : ''}`}
     >
       <div className="flex items-start justify-between gap-2">

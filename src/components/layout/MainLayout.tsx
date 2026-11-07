@@ -1,4 +1,5 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { TopBar } from './TopBar'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
@@ -8,6 +9,8 @@ import { ChatFab } from '../chat/ChatFab'
 import { ChatModal } from '../chat/ChatModal'
 
 export function MainLayout() {
+  const location = useLocation()
+
   return (
     <div className="min-h-screen bg-surface text-on-surface dark relative overflow-x-clip">
       {/* Ambient background glow orbs (Cyber Cyan + Electric Magenta, no yellow) */}
@@ -25,8 +28,18 @@ export function MainLayout() {
         <TopBar />
         <div className="flex">
           <Sidebar />
-          <main className="flex-1 md:ml-64 pb-20 md:pb-0">
-            <Outlet />
+          <main className="flex-1 md:ml-64 pb-20 md:pb-0 min-w-0">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
           </main>
         </div>
         <BottomNav />
