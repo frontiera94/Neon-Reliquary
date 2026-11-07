@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useCallback, useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCharacterStore } from '../../store/useCharacterStore'
 import { useSessionStore } from '../../store/useSessionStore'
@@ -43,13 +43,13 @@ export function CharacterDropdown({
     }
   }
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (controlledOnClose) {
       controlledOnClose()
     } else {
       setInternalIsOpen(false)
     }
-  }
+  }, [controlledOnClose])
 
   // Click outside and Escape key listener
   useEffect(() => {
@@ -76,13 +76,14 @@ export function CharacterDropdown({
       document.removeEventListener('touchstart', handleClickOutside)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen])
+  }, [isOpen, handleClose])
 
   if (!activeChar) return null
 
   const handleSelect = (c: FullCharacter) => {
     setActiveCharacter(c.id)
-    initSession(c.id, c.maxHp)
+    const initialEquipped = (c.inventory ?? []).filter((i) => i.equipped).map((i) => i.id)
+    initSession(c.id, c.maxHp, c.startingCoins, initialEquipped)
     handleClose()
   }
 

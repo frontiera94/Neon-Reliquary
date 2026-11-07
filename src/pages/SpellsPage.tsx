@@ -3,13 +3,13 @@ import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { useInspectorStore } from '../store/useInspectorStore'
-import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
-import { deriveBuffFromSpell, findMatchingBuffForSpell, isSpellBuffCandidate, calcEffectiveAbilities } from '../lib/stat-calc'
+import { parseDiceFormula } from '../lib/dice-engine'
+import { deriveBuffFromSpell, findMatchingBuffForSpell, isSpellBuffCandidate, calcEffectiveAbilities, calcConcentrationBonus } from '../lib/stat-calc'
 import { getSpellAvailability } from '../lib/spell-availability'
 import { spellInspectorItem } from '../lib/inspector-items'
 import { SpellUsePips } from '../components/spells/SpellUsePips'
 import type { Spell, SpellAttackType } from '../types/resources'
-import type { AbilityScore } from '../types/character'
+
 
 function getSpellFocusBonus(school: string, feats: { id?: string; name: string }[]): number {
   if (!school || !feats.length) return 0
@@ -28,18 +28,6 @@ function getSpellFocusBonus(school: string, feats: { id?: string; name: string }
   return bonus
 }
 
-function concentrationMod(charClass: string, level: number, abilities: AbilityScore): number {
-  const cls = charClass.toLowerCase()
-  let abilMod: number
-  if (/wizard|magus|witch|alchemist|investigator|arcanist|rogue/.test(cls)) {
-    abilMod = abilityMod(abilities.int)
-  } else if (/sorcerer|bard|oracle|summoner|skald|bloodrager/.test(cls)) {
-    abilMod = abilityMod(abilities.cha)
-  } else {
-    abilMod = abilityMod(abilities.wis)
-  }
-  return level + abilMod
-}
 
 export function SpellsPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
@@ -95,7 +83,7 @@ export function SpellsPage() {
   const isPreparedCaster = availability.profile.mode === 'prepared'
 
   const arcaneFailure = char.armorClass.spellFailureChance ?? 0
-  const concMod = concentrationMod(char.class, char.level, effectiveAbilities.scores)
+  const concMod = calcConcentrationBonus(char.level, availability.castingMod)
   const hasCombatCasting = char.feats.some((f) => /combat casting/i.test(f.name))
   const defensiveConcMod = concMod + (hasCombatCasting ? 4 : 0)
 
@@ -139,7 +127,7 @@ export function SpellsPage() {
     const match = findMatchingBuffForSpell(spell, allBuffs)
     const buffId = match?.id ?? `spell-buff-${spell.id}`
     if (session.activeBuffIds.includes(buffId)) {
-      if (match) toggleBuff(char.id, match.id)
+      toggleBuff(char.id, buffId)
       return
     }
     if (!consumeCastCost(spell)) return

@@ -109,6 +109,17 @@ describe('rollDice', () => {
     }
   })
 
+  it('never marks a Natural 1 as a critical threat even if critRange <= 1', () => {
+    for (let i = 0; i < 100; i++) {
+      const result = rollDice({ diceType: 20, count: 1, modifier: 0, label: 'Atk', critRange: 1 })
+      if (result.naturalRolls[0] === 1) {
+        expect(result.isCriticalThreat).toBe(false)
+      } else {
+        expect(result.isCriticalThreat).toBe(true)
+      }
+    }
+  })
+
   it('isCriticalConfirmed is always false (not resolved by rollDice)', () => {
     const result = rollDice(baseRoll)
     expect(result.isCriticalConfirmed).toBe(false)

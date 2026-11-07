@@ -29,14 +29,42 @@ export default async function handler(req: any, res: any) {
     return
   }
 
+  if (messages.length === 0 || messages.length > 20) {
+    res.status(400).json({ error: 'Invalid message count: must be between 1 and 20' })
+    return
+  }
+
+  const isValidMessages = messages.every(
+    (m: any) =>
+      m &&
+      typeof m === 'object' &&
+      (m.role === 'user' || m.role === 'assistant') &&
+      typeof m.content === 'string' &&
+      m.content.length > 0 &&
+      m.content.length <= 2000
+  )
+
+  if (!isValidMessages) {
+    res.status(400).json({ error: 'Invalid message structure or size limit exceeded' })
+    return
+  }
+
+  const charJson = JSON.stringify(character, null, 2)
+  const sessionJson = JSON.stringify(session, null, 2)
+
+  if (charJson.length > 100_000 || sessionJson.length > 100_000) {
+    res.status(413).json({ error: 'Payload too large' })
+    return
+  }
+
   const systemPrompt = `Sei un esperto di Pathfinder 1a Edizione e del personaggio descritto qui sotto. Rispondi SEMPRE in italiano. Quando citi regole, menziona il nome preciso del feat, dell'abilità di classe o della spell. Usa i dati statici del personaggio (feat, BAB, spell DC, class abilities) per sapere cosa il personaggio può fare; usa lo stato di sessione per sapere cosa è già stato speso (HP correnti, slot incantesimo, risorse giornaliere, buff attivi, condizioni).
 
 <personaggio>
-${JSON.stringify(character, null, 2)}
+${charJson}
 </personaggio>
 
 <stato_sessione>
-${JSON.stringify(session, null, 2)}
+${sessionJson}
 </stato_sessione>`
 
   try {

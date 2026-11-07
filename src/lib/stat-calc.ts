@@ -926,6 +926,7 @@ export function deriveBuffFromSpell(spell: Spell): BuffToggle {
   else if (/haste/.test(key)) {
     buff.attackMod = 1
     buff.acMod = 1
+    buff.saveMod = { ref: 1 }
   } else if (/bless/.test(key)) {
     buff.attackMod = 1
     buff.saveMod = 1

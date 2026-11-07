@@ -41,7 +41,8 @@ export function CharacterSelectionPage() {
   const handleManifest = useCallback(() => {
     if (!activeChar) return
     setActiveCharacter(activeChar.id)
-    initSession(activeChar.id, activeChar.maxHp)
+    const initialEquipped = (activeChar.inventory ?? []).filter((i) => i.equipped).map((i) => i.id)
+    initSession(activeChar.id, activeChar.maxHp, activeChar.startingCoins, initialEquipped)
     window.scrollTo(0, 0)
     navigate('/status')
   }, [activeChar, setActiveCharacter, initSession, navigate])

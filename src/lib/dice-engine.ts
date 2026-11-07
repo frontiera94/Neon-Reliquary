@@ -23,7 +23,7 @@ export function rollDice(roll: DiceRoll): RollResult {
 
   // Critical threat: highest die roll (first die for attack rolls) within crit range
   const firstRoll = naturalRolls[0] ?? 0
-  const isCriticalThreat = firstRoll >= critRange
+  const isCriticalThreat = firstRoll > 1 && firstRoll >= critRange
 
   const naturalsStr = naturalRolls.length === 1
     ? `${naturalRolls[0]}`

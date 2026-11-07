@@ -6,6 +6,7 @@ import {
   calcEffectiveWeaponStats,
   calcEffectiveSkills,
   getActiveActionRestrictions,
+  deriveBuffFromSpell,
 } from './stat-calc'
 import type { Weapon, BuffToggle } from '../types/combat'
 import type { SavingThrow, ArmorClass } from '../types/defense'
@@ -539,6 +540,28 @@ describe('stat-calc engine', () => {
     it('returns empty array when conditions list has no restrictions', () => {
       expect(getActiveActionRestrictions([])).toEqual([])
       expect(getActiveActionRestrictions(['shaken', 'fatigued'])).toEqual([])
+    })
+  })
+
+  describe('deriveBuffFromSpell', () => {
+    it('creates Haste buff with attackMod 1, acMod 1, and saveMod { ref: 1 }', () => {
+      const spell = {
+        id: 'spell-haste-3',
+        name: 'Haste',
+        level: 3,
+        school: 'Transmutation',
+        castingTime: '1 standard action',
+        range: 'Close',
+        duration: '1 round/level',
+        description: 'One creature/level moves faster, +1 on attack rolls, AC, and Reflex saves.',
+        components: 'V, S',
+        spellResistance: true,
+      }
+      const buff = deriveBuffFromSpell(spell)
+      expect(buff.id).toBe('spell-buff-spell-haste-3')
+      expect(buff.attackMod).toBe(1)
+      expect(buff.acMod).toBe(1)
+      expect(buff.saveMod).toEqual({ ref: 1 })
     })
   })
 })

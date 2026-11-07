@@ -76,7 +76,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
   )
 
   const restrictions = getActiveActionRestrictions(session.conditions)
-  const spellAvailability = getSpellAvailability(char, session)
+  const spellAvailability = getSpellAvailability({ ...char, abilities: effectiveAbilities.scores }, session)
 
   const activeBuffsList = allBuffs.filter((b) => activeBuffIds.includes(b.id))
 

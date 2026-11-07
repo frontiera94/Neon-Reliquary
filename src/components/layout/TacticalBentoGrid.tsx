@@ -399,7 +399,9 @@ function BentoLibraryColumn() {
 
   if (!char || !session) return null
 
-  const availability = getSpellAvailability(char, session)
+  const activeBuffs = allBuffs.filter((b) => session.activeBuffIds.includes(b.id))
+  const effectiveAbilities = calcEffectiveAbilities(char.abilities, session.conditions, activeBuffs)
+  const availability = getSpellAvailability({ ...char, abilities: effectiveAbilities.scores }, session)
   const castingMod = availability.castingMod
   const concentration = calcConcentrationBonus(char.level, castingMod)
   const hasCombatCasting = char.feats.some((feat) => /combat casting/i.test(feat.name))
@@ -410,7 +412,7 @@ function BentoLibraryColumn() {
     const match = findMatchingBuffForSpell(spell, allBuffs)
     const buffId = match?.id ?? `spell-buff-${spell.id}`
     if (session.activeBuffIds.includes(buffId)) {
-      if (match) toggleBuff(char.id, match.id)
+      toggleBuff(char.id, buffId)
       return
     }
     if (!availability.isCastable(spell)) return

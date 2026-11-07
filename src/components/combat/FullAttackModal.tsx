@@ -427,7 +427,7 @@ export function FullAttackModal({
               {results.map((r) => {
                 const isCurrentlyRolling = isAnimated && isRollingSequence && r.index === revealedCount
                 const isQueued = isAnimated && isRollingSequence && r.index > revealedCount
-                const isCritConfirmed = r.isCritThreat && !!r.critConfirmation
+                const isCritConfirmed = r.isCritThreat && !!r.critConfirmation && r.critConfirmation.naturalRoll > 1
                 const isConfirming = confirmingIndex === r.index
 
                 if (isCurrentlyRolling) {
@@ -597,10 +597,17 @@ export function FullAttackModal({
                         )}
                         {!isConfirming && r.critConfirmation && (
                           <div className="mt-2 flex items-center gap-2 flex-wrap">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-secondary/20 border border-secondary/50 text-secondary font-label text-xs font-bold shadow-[0_0_12px_rgba(217,70,239,0.3)]">
-                              <span className="material-symbols-outlined text-sm">verified</span>
-                              <span>Confirm Roll: {r.critConfirmation.total}</span>
-                            </span>
+                            {r.critConfirmation.naturalRoll === 1 ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-error/20 border border-error/50 text-error font-label text-xs font-bold shadow-[0_0_12px_rgba(255,75,96,0.3)]">
+                                <span className="material-symbols-outlined text-sm">cancel</span>
+                                <span>Nat 1 — Not Confirmed</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-secondary/20 border border-secondary/50 text-secondary font-label text-xs font-bold shadow-[0_0_12px_rgba(217,70,239,0.3)]">
+                                <span className="material-symbols-outlined text-sm">verified</span>
+                                <span>Confirm Roll: {r.critConfirmation.total}</span>
+                              </span>
+                            )}
                             <span className="text-xs font-label text-tertiary">
                               (d20: {r.critConfirmation.naturalRoll} {r.bonus >= 0 ? `+ ${r.bonus}` : `- ${Math.abs(r.bonus)}`})
                             </span>

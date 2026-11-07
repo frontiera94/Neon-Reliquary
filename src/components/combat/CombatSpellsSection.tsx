@@ -744,7 +744,7 @@ export function CombatSpellsSection({
                           type="button"
                           onClick={() => {
                             if (isBuffActive) {
-                              if (matchBuff) onToggleBuff?.(matchBuff.id)
+                              onToggleBuff?.(matchBuff?.id ?? `spell-buff-${spell.id}`)
                             } else {
                               handleCast(spell)
                             }

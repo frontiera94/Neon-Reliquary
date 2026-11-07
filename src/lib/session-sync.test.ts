@@ -380,6 +380,53 @@ describe('session-sync client controller', () => {
 
     expect(useSessionStore.getState().getSession('shotrix-blackburn').currentHp).toBe(25)
     expect(fakeFetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('serializes concurrent flush calls without race conditions', async () => {
+    let resolveFirstPut: (() => void) | null = null
+    const putPayloads: Array<Record<string, { currentHp: number }>> = []
+    const serverDb: Record<string, { state: unknown; updatedAt: number }> = {}
+
+    const fakeFetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const method = init?.method ?? 'GET'
+      if (method === 'GET') {
+        return new Response(JSON.stringify({ configured: true, sessions: serverDb }), { status: 200 })
+      }
+      if (putPayloads.length === 0) {
+        await new Promise<void>((resolve) => {
+          resolveFirstPut = resolve
+        })
+      }
+      const parsed = JSON.parse(String(init?.body))
+      putPayloads.push(parsed.sessions)
+      for (const [id, s] of Object.entries(parsed.sessions)) {
+        serverDb[id] = { state: s, updatedAt: Date.now() }
+      }
+      return new Response(JSON.stringify({ ok: true, updated: {} }), { status: 200 })
+    }) as unknown as typeof fetch
+
+    const controller = createSessionSyncController({ debounceMs: 100, fetchImpl: fakeFetch })
+    await controller.pullRemoteSessions()
+
+    useSessionStore.getState().initSession('knam', 40)
+    useSessionStore.getState().setHp('knam', 30)
+
+    // Trigger first flush via timer
+    await vi.advanceTimersByTimeAsync(150)
+    expect(fakeFetch).toHaveBeenCalledTimes(2)
+
+    // While PUT #1 is in flight, mutate state again and force sync
+    useSessionStore.getState().setHp('knam', 20)
+    const secondSyncPromise = controller.syncNow()
+
+    // Resolve first PUT
+    resolveFirstPut!()
+    await secondSyncPromise
+
+    expect(putPayloads).toHaveLength(2)
+    expect(putPayloads[0]['knam'].currentHp).toBe(30)
+    expect(putPayloads[1]['knam'].currentHp).toBe(20)
+    expect(useSyncStore.getState().status).toBe('synced')
 
     controller.stop()
   })

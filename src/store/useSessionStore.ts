@@ -174,14 +174,18 @@ export const useSessionStore = create<SessionStore>()(
               },
             }
           }
+          let updated = existing
           if (existing.equippedItemIds === undefined && initialEquippedIds) {
+            updated = { ...updated, equippedItemIds: initialEquippedIds }
+          }
+          if (existing.coins === undefined && startingCoins) {
+            updated = { ...updated, coins: startingCoins }
+          }
+          if (updated !== existing) {
             return {
               sessions: {
                 ...s.sessions,
-                [id]: {
-                  ...existing,
-                  equippedItemIds: initialEquippedIds,
-                },
+                [id]: updated,
               },
             }
           }

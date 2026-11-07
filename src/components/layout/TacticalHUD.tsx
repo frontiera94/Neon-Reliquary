@@ -40,7 +40,8 @@ export function TacticalHUD() {
     if (idx < 0 || characters.length < 2) return
     const next = characters[(idx + offset + characters.length) % characters.length]
     setActiveCharacter(next.id)
-    initSession(next.id, next.maxHp)
+    const initialEquipped = (next.inventory ?? []).filter((i) => i.equipped).map((i) => i.id)
+    initSession(next.id, next.maxHp, next.startingCoins, initialEquipped)
   }
 
   // Active Buffs & Conditions aggregation
