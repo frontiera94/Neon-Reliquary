@@ -334,3 +334,212 @@ export function translateActionType(type: string, locale: Locale): string {
   if (locale !== 'it') return type
   return ACTION_TYPE_IT[type.toLowerCase()] ?? type
 }
+
+const MANEUVER_MAP_IT: Record<string, string> = {
+  trip: 'Sgambettare',
+  disarm: 'Disarmare',
+  grapple: 'Lottare',
+  'bull rush': 'Spingere',
+  bullrush: 'Spingere',
+  overrun: 'Oltrepassare',
+  sunder: 'Spezzare',
+  'dirty trick': 'Manovra Sporca',
+  dirtytrick: 'Manovra Sporca',
+  drag: 'Trascinare',
+  reposition: 'Riposizionare',
+  steal: 'Rubare',
+}
+
+export function translateManeuverName(name: string, locale: Locale): string {
+  if (locale !== 'it') return name
+  const lower = name.trim().toLowerCase()
+  return MANEUVER_MAP_IT[lower] ?? name
+}
+
+const SIZE_MAP_IT: Record<string, string> = {
+  fine: 'Piccolissima',
+  diminutive: 'Minuta',
+  tiny: 'Minuscola',
+  small: 'Piccola',
+  medium: 'Media',
+  large: 'Grande',
+  huge: 'Enorme',
+  gargantuan: 'Mastodontica',
+  colossal: 'Colossale',
+}
+
+export function translateSize(size: string, locale: Locale): string {
+  if (locale !== 'it') return size
+  const lower = size.trim().toLowerCase()
+  return SIZE_MAP_IT[lower] ?? size
+}
+
+const ATTACK_MAP_IT: Record<string, string> = {
+  bite: 'Morso',
+  claw: 'Artiglio',
+  claws: 'Artigli',
+  '2 claws': '2 Artigli',
+  talons: 'Speroni',
+  slam: 'Schianto',
+  sting: 'Pungiglione',
+  gore: 'Incornata',
+  hoof: 'Zoccolo',
+  hooves: 'Zoccoli',
+  'tail slap': 'Colpo di Coda',
+  tentacle: 'Tentacolo',
+  wing: 'Ala',
+  wings: 'Ali',
+  'deliver touch spell': 'Trasmettere Incantesimo a Contatto',
+}
+
+export function translateNaturalAttack(name: string, locale: Locale): string {
+  if (locale !== 'it') return name
+  const lower = name.trim().toLowerCase()
+  return ATTACK_MAP_IT[lower] ?? name
+}
+
+const TRICK_MAP_IT: Record<string, string> = {
+  attack: 'Attaccare',
+  come: 'Venire',
+  defend: 'Difendere',
+  down: 'A Terra',
+  fetch: 'Riportare',
+  guard: 'Guardia',
+  heel: 'Al Piede',
+  stay: 'Resta',
+  track: 'Tracciare',
+  work: 'Lavorare',
+}
+
+export function translateTrick(trick: string, locale: Locale): string {
+  if (locale !== 'it') return trick
+  const lower = trick.trim().toLowerCase()
+  return TRICK_MAP_IT[lower] ?? trick
+}
+
+const COMPANION_TYPE_IT: Record<string, string> = {
+  animal_companion: 'Compagno Animale',
+  familiar: 'Famiglio',
+  eidolon: 'Eidolon',
+  summon: 'Creatura Evocata',
+}
+
+export function translateCompanionType(type: string, locale: Locale): string {
+  if (locale !== 'it') return type.replace('_', ' ')
+  return COMPANION_TYPE_IT[type.toLowerCase()] ?? type.replace('_', ' ')
+}
+
+const ALIGNMENT_MAP_IT: Record<string, string> = {
+  lg: 'LB',
+  ng: 'NB',
+  cg: 'CB',
+  ln: 'LN',
+  n: 'N',
+  tn: 'N',
+  cn: 'CN',
+  le: 'LM',
+  ne: 'NM',
+  ce: 'CM',
+  'lawful good': 'Legale Buono',
+  'neutral good': 'Neutrale Buono',
+  'chaotic good': 'Caotico Buono',
+  'lawful neutral': 'Legale Neutrale',
+  neutral: 'Neutrale',
+  'true neutral': 'Neutrale Puro',
+  'chaotic neutral': 'Caotico Neutrale',
+  'lawful evil': 'Legale Malvagio',
+  'neutral evil': 'Neutrale Malvagio',
+  'chaotic evil': 'Caotico Malvagio',
+}
+
+export function translateAlignment(alignment: string, locale: Locale): string {
+  if (locale !== 'it') return alignment
+  return ALIGNMENT_MAP_IT[alignment.trim().toLowerCase()] ?? alignment
+}
+
+const DAMAGE_TYPE_MAP_IT: Record<string, string> = {
+  slashing: 'Tagliente',
+  piercing: 'Perforante',
+  bludgeoning: 'Contundente',
+  'p/s': 'P/T',
+  'b/p': 'C/P',
+  'b/s': 'C/T',
+  fire: 'Fuoco',
+  cold: 'Freddo',
+  electricity: 'Elettricità',
+  acid: 'Acido',
+  sonic: 'Sonoro',
+  force: 'Forza',
+  magical: 'Magico',
+}
+
+export function translateDamageType(type: string, locale: Locale): string {
+  if (locale !== 'it') return type
+  const lower = type.trim().toLowerCase()
+  return DAMAGE_TYPE_MAP_IT[lower] ?? type
+}
+
+const SPELL_RANGE_MAP_IT: Record<string, string> = {
+  personal: 'Personale',
+  touch: 'Contatto',
+  close: 'Vicino (7,5m + 1,5m/2 liv)',
+  medium: 'Medio (30m + 3m/liv)',
+  long: 'Lungo (120m + 12m/liv)',
+  unlimited: 'Illimitato',
+}
+
+export function translateSpellRange(range: string, locale: Locale): string {
+  if (locale !== 'it') return range
+  const lower = range.trim().toLowerCase()
+  for (const [k, v] of Object.entries(SPELL_RANGE_MAP_IT)) {
+    if (lower === k || lower.startsWith(k)) return v
+  }
+  return range
+}
+
+const SPELL_DURATION_MAP_IT: Record<string, string> = {
+  instantaneous: 'Istantanea',
+  permanent: 'Permanente',
+  concentration: 'Concentrazione',
+}
+
+export function translateSpellDuration(duration: string, locale: Locale): string {
+  if (locale !== 'it') return duration
+  const lower = duration.trim().toLowerCase()
+  if (SPELL_DURATION_MAP_IT[lower]) return SPELL_DURATION_MAP_IT[lower]
+  return duration
+    .replace(/\bround\/level\b/gi, 'round/livello')
+    .replace(/\bmin\.\/level\b/gi, 'min./livello')
+    .replace(/\bminutes\/level\b/gi, 'minuti/livello')
+    .replace(/\bhours\/level\b/gi, 'ore/livello')
+    .replace(/\bhour\/level\b/gi, 'ora/livello')
+    .replace(/\bdays\/level\b/gi, 'giorni/livello')
+    .replace(/\bday\/level\b/gi, 'giorno/livello')
+    .replace(/\binstantaneous\b/gi, 'Istantanea')
+}
+
+export function translateSpellSave(save: string, locale: Locale): string {
+  if (locale !== 'it') return save
+  if (save.trim().toLowerCase() === 'none') return 'Nessuno'
+  return save
+    .replace(/\bFortitude\b/gi, 'Tempra')
+    .replace(/\bReflex\b/gi, 'Riflessi')
+    .replace(/\bWill\b/gi, 'Volontà')
+    .replace(/\bnegates\b/gi, 'nega')
+    .replace(/\bhalf\b/gi, 'dimezza')
+    .replace(/\bpartial\b/gi, 'parziale')
+    .replace(/\bdisbelief\b/gi, 'dubita')
+    .replace(/\bnone\b/gi, 'nessuno')
+    .replace(/\bharmless\b/gi, 'innocuo')
+}
+
+export function translateCastingTime(time: string, locale: Locale): string {
+  if (locale !== 'it') return time
+  return time
+    .replace(/\b1 standard action\b/gi, '1 azione standard')
+    .replace(/\b1 swift action\b/gi, '1 azione veloce')
+    .replace(/\b1 immediate action\b/gi, '1 azione immediata')
+    .replace(/\b1 full-round action\b/gi, '1 azione di round completo')
+    .replace(/\b1 round\b/gi, '1 round')
+    .replace(/\b1 minute\b/gi, '1 minuto')
+}

@@ -6,6 +6,14 @@ import type { DiceRoll } from '../../types/dice'
 import { abilityMod, parseDiceFormula } from '../../lib/dice-engine'
 import { getSpellAvailability, type SpellAvailability } from '../../lib/spell-availability'
 import { isSpellBuffCandidate, findMatchingBuffForSpell, deriveBuffFromSpell } from '../../lib/stat-calc'
+import {
+  useTranslation,
+  translateSchool,
+  translateSpellRange,
+  translateSpellDuration,
+  translateSpellSave,
+  translateCastingTime,
+} from '../../i18n'
 
 export interface CombatSpellsSectionProps {
   spells: Spell[]
@@ -84,6 +92,9 @@ export function CombatSpellsSection({
   onToggleBuff,
   onAddCustomBuff,
 }: CombatSpellsSectionProps) {
+  const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
+
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const [activeLevelFilter, setActiveLevelFilter] = useState<number | 'all'>('all')
   const [sortBy, setSortBy] = useState<'level' | 'offensive' | 'name'>('level')
@@ -131,7 +142,7 @@ export function CombatSpellsSection({
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim()
       const matchName = s.name.toLowerCase().includes(q)
-      const matchSchool = s.school.toLowerCase().includes(q)
+      const matchSchool = s.school.toLowerCase().includes(q) || translateSchool(s.school, locale).toLowerCase().includes(q)
       const matchDesc = s.description?.toLowerCase().includes(q)
       const matchDamage = s.damageDice?.toLowerCase().includes(q)
       if (!matchName && !matchSchool && !matchDesc && !matchDamage) return false
@@ -145,21 +156,16 @@ export function CombatSpellsSection({
     if (aPinned && !bPinned) return -1
     if (!aPinned && bPinned) return 1
 
-    if (sortBy === 'offensive') {
-      const aOffensive = !!(a.attackType || a.damageDice)
-      const bOffensive = !!(b.attackType || b.damageDice)
-      if (aOffensive && !bOffensive) return -1
-      if (!aOffensive && bOffensive) return 1
+    if (sortBy === 'level') {
       if (a.level !== b.level) return a.level - b.level
       return a.name.localeCompare(b.name)
     }
-
-    if (sortBy === 'name') {
-      return a.name.localeCompare(b.name)
+    if (sortBy === 'offensive') {
+      const aOffensive = a.attackType ? 2 : a.damageDice ? 1 : 0
+      const bOffensive = b.attackType ? 2 : b.damageDice ? 1 : 0
+      if (aOffensive !== bOffensive) return bOffensive - aOffensive
+      return a.level - b.level
     }
-
-    // Default 'level'
-    if (a.level !== b.level) return a.level - b.level
     return a.name.localeCompare(b.name)
   })
 
@@ -168,34 +174,45 @@ export function CombatSpellsSection({
     ...availability.levels.filter((level) => level.total > 0).map((level) => level.level),
   ]
 
-  function handleConcentrationCheck(defensive = false) {
-    const bonus = defensive ? concentrationMod + 4 : concentrationMod
+  function handleConcentrationCheck(isDefensive: boolean = false) {
+    const ccBonus = isDefensive && hasCombatCasting ? 4 : 0
+    const totalBonus = concentrationMod + ccBonus
     const breakdown = [
-      { label: 'Caster Level', value: cl },
+      { label: isIt ? 'Livello Incantatore' : 'Caster Level', value: cl },
       { label: `${castAbil.toUpperCase()} Mod`, value: castingMod },
+      ...(ccBonus > 0 ? [{ label: 'Combat Casting', value: ccBonus }] : []),
     ]
-    if (defensive) {
-      breakdown.push({ label: 'Combat Casting', value: 4 })
-    }
 
     openRoll({
       diceType: 20,
       count: 1,
-      modifier: bonus,
-      label: defensive ? 'Concentration (Defensive)' : 'Concentration Check',
+      modifier: totalBonus,
+      label: isDefensive
+        ? isIt
+          ? 'Concentrazione (Difensiva)'
+          : 'Concentration (Defensive)'
+        : isIt
+        ? 'Prova di Concentrazione'
+        : 'Concentration Check',
       breakdown,
     })
   }
 
   function handleAttackRoll(spell: Spell) {
     if (!spell.attackType) return
-    const bonus = spell.attackType === 'meleeTouch' ? bab + strMod : bab + dexMod
-    const typeLabel =
-      spell.attackType === 'meleeTouch'
-        ? 'Melee Touch'
-        : spell.attackType === 'rangedTouch'
-        ? 'Ranged Touch'
-        : 'Ray Attack'
+    const isMelee = spell.attackType === 'meleeTouch'
+    const bonus = isMelee ? bab + strMod : bab + dexMod
+    const typeLabel = isMelee
+      ? isIt
+        ? 'Contatto da Mischia'
+        : 'Melee Touch'
+      : spell.attackType === 'rangedTouch'
+      ? isIt
+        ? 'Contatto a Distanza'
+        : 'Ranged Touch'
+      : isIt
+      ? 'Raggio'
+      : 'Ray'
 
     openRoll({
       diceType: 20,
@@ -219,7 +236,7 @@ export function CombatSpellsSection({
       diceType: parsed.sides,
       count: parsed.count,
       modifier: (spell.damageBonus ?? 0) + parsed.bonus,
-      label: `${spell.name} Damage`,
+      label: `${spell.name} ${isIt ? 'Danno' : 'Damage'}`,
     })
   }
 
@@ -290,15 +307,15 @@ export function CombatSpellsSection({
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <h3 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
-                Combat Spells & Invocations
+                {t('combat.combatSpellsInvocations')}
               </h3>
               <span className="font-label text-[10px] text-secondary">
-                {availability.castableSpells.length} castable
+                {availability.castableSpells.length} {isIt ? 'lanciabili' : 'castable'}
               </span>
               {spellFailureChance > 0 && (
                 <span
                   className="flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/15 px-1.5 py-0.5 font-label text-[10px] font-bold uppercase tracking-wider text-amber-300"
-                  title={`Arcane Spell Failure: ${spellFailureChance}% chance of failure when casting spells with somatic components while wearing armor or shields.`}
+                  title={isIt ? `Fallimento Incantesimi Arcani: ${spellFailureChance}% di probabilità di fallimento lanciando con componenti somatiche con armature o scudi.` : `Arcane Spell Failure: ${spellFailureChance}% chance of failure when casting spells with somatic components while wearing armor or shields.`}
                 >
                   <span className="material-symbols-outlined text-[11px] leading-none text-amber-400">warning</span>
                   ASF {spellFailureChance}%
@@ -307,14 +324,14 @@ export function CombatSpellsSection({
             </div>
             <p className="mt-0.5 truncate font-label text-[10px] text-tertiary">
               {availability.profile.mode === 'prepared'
-                ? `Active Uses: ${availability.remainingSlots} remaining · ${
+                ? `${isIt ? 'Usi Attivi' : 'Active Uses'}: ${availability.remainingSlots} ${isIt ? 'rimanenti' : 'remaining'} · ${
                     availableLevels
                       .filter((level) => level > 0)
                       .map((level) => {
                         const info = availability.getLevel(level)
                         return `L${level} ${info?.remaining ?? 0}/${info?.total ?? 0}`
                       })
-                      .join(' · ') || 'cantrips only'
+                      .join(' · ') || (isIt ? 'solo trucchetti' : 'cantrips only')
                   }`
                 : `Slots: ${
                     availableLevels
@@ -323,7 +340,7 @@ export function CombatSpellsSection({
                         const info = availability.getLevel(level)
                         return `L${level} ${info?.remaining ?? 0}/${info?.total ?? 0}`
                       })
-                      .join(' · ') || 'cantrips only'
+                      .join(' · ') || (isIt ? 'solo trucchetti' : 'cantrips only')
                   }`}
             </p>
           </div>
@@ -331,7 +348,7 @@ export function CombatSpellsSection({
 
         <div className="flex flex-shrink-0 items-center gap-2">
           <span className="hidden font-label text-[10px] uppercase tracking-wider text-tertiary sm:inline">
-            {isExpanded ? 'Close' : 'Open'}
+            {isExpanded ? (isIt ? 'Chiudi' : 'Close') : (isIt ? 'Apri' : 'Open')}
           </span>
           <span
             className={`material-symbols-outlined text-tertiary transition-transform duration-200 ${
@@ -351,10 +368,12 @@ export function CombatSpellsSection({
               <span className="material-symbols-outlined text-base text-amber-400 flex-shrink-0">warning</span>
               <div className="flex-1">
                 <strong className="text-amber-300 font-bold uppercase tracking-wider">
-                  Arcane Spell Failure: {spellFailureChance}%
+                  {isIt ? 'Fallimento Incantesimi Arcani:' : 'Arcane Spell Failure:'} {spellFailureChance}%
                 </strong>
                 <span className="text-amber-200/80 ml-2">
-                  Armor or shield interference applies to arcane spells with Somatic (S) components.
+                  {isIt
+                    ? "L'ingombro di armatura o scudo si applica agli incantesimi arcani con componenti Somatiche (S)."
+                    : 'Armor or shield interference applies to arcane spells with Somatic (S) components.'}
                 </span>
               </div>
             </div>
@@ -370,7 +389,7 @@ export function CombatSpellsSection({
                   : 'bg-surface-container border-white/10 text-tertiary hover:text-white'
               }`}
             >
-              All Levels
+              {isIt ? 'Tutti i Livelli' : 'All Levels'}
             </button>
 
             {/* Level Pills with Remaining Slots and Quick +1 Recover */}
@@ -391,7 +410,7 @@ export function CombatSpellsSection({
                         : 'bg-surface-container border-white/10 text-tertiary hover:text-white'
                     }`}
                   >
-                    <span>{lvl === 0 ? 'Cantrips' : `Lvl ${lvl}`}</span>
+                    <span>{lvl === 0 ? (isIt ? 'Trucchetti' : 'Cantrips') : (isIt ? `Liv ${lvl}` : `Lvl ${lvl}`)}</span>
                     {lvl > 0 && max > 0 && (
                       <span
                         className={`px-1.5 py-0.2 rounded font-mono text-[10px] font-bold ${
@@ -413,7 +432,7 @@ export function CombatSpellsSection({
                         onRecoverSlot(lvl)
                       }}
                       className="ml-1 px-2 py-1 rounded-lg bg-surface-container border border-white/10 hover:border-primary/50 text-primary text-[10px] font-label font-bold uppercase transition-all hover:shadow-[0_0_8px_rgba(0,240,255,0.3)] flex items-center gap-0.5 cursor-pointer active:scale-95"
-                      title={`Ripristina 1 slot di livello ${lvl} (Restore 1 level ${lvl} slot)`}
+                      title={isIt ? `Ripristina 1 slot di livello ${lvl}` : `Restore 1 level ${lvl} slot`}
                       aria-label={`Ripristina slot livello ${lvl} dalla barra`}
                     >
                       <span className="material-symbols-outlined text-[12px] leading-none">undo</span>
@@ -429,20 +448,20 @@ export function CombatSpellsSection({
               <button
                 onClick={() => handleConcentrationCheck(false)}
                 className="px-3 py-1.5 rounded-xl border border-secondary/30 bg-secondary/10 hover:bg-secondary/20 text-secondary text-xs font-label uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-[0_0_10px_rgba(217,70,239,0.15)] hover:shadow-[0_0_14px_rgba(217,70,239,0.3)] active:scale-95"
-                title={`Roll Concentration Check (CL ${cl} + ${castAbil.toUpperCase()} ${castingMod >= 0 ? `+${castingMod}` : castingMod})`}
+                title={isIt ? `Tira Prova di Concentrazione (LI ${cl} + ${castAbil.toUpperCase()} ${castingMod >= 0 ? `+${castingMod}` : castingMod})` : `Roll Concentration Check (CL ${cl} + ${castAbil.toUpperCase()} ${castingMod >= 0 ? `+${castingMod}` : castingMod})`}
               >
                 <span className="material-symbols-outlined text-sm">electric_bolt</span>
-                <span>Concentration ({concentrationMod >= 0 ? `+${concentrationMod}` : concentrationMod})</span>
+                <span>{isIt ? 'Concentrazione' : 'Concentration'} ({concentrationMod >= 0 ? `+${concentrationMod}` : concentrationMod})</span>
               </button>
 
               {hasCombatCasting && (
                 <button
                   onClick={() => handleConcentrationCheck(true)}
                   className="px-3 py-1.5 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-label uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-[0_0_10px_rgba(0,240,255,0.15)] hover:shadow-[0_0_14px_rgba(0,240,255,0.3)] active:scale-95"
-                  title="Roll Defensive Concentration (+4 Combat Casting)"
+                  title={isIt ? 'Tira Concentrazione Difensiva (+4 Incantare in Combattimento)' : 'Roll Defensive Concentration (+4 Combat Casting)'}
                 >
                   <span className="material-symbols-outlined text-sm">shield</span>
-                  <span>Defensive ({(concentrationMod + 4) >= 0 ? `+${concentrationMod + 4}` : concentrationMod + 4})</span>
+                  <span>{isIt ? 'Difensivo' : 'Defensive'} ({(concentrationMod + 4) >= 0 ? `+${concentrationMod + 4}` : concentrationMod + 4})</span>
                 </button>
               )}
             </div>
@@ -459,7 +478,7 @@ export function CombatSpellsSection({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search combat spells (name, school, damage)..."
+                placeholder={isIt ? 'Cerca incantesimi (nome, scuola, danno)...' : 'Search combat spells (name, school, damage)...'}
                 className="w-full bg-surface-container border border-white/10 hover:border-secondary/40 focus:border-secondary rounded-xl pl-9 pr-8 py-1.5 text-xs text-white placeholder:text-tertiary font-label outline-none transition-all shadow-inner"
               />
               {searchQuery && (
@@ -467,7 +486,7 @@ export function CombatSpellsSection({
                   type="button"
                   onClick={() => setSearchQuery('')}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary hover:text-white cursor-pointer p-0.5"
-                  aria-label="Clear search"
+                  aria-label={isIt ? 'Cancella ricerca' : 'Clear search'}
                 >
                   <span className="material-symbols-outlined text-xs">close</span>
                 </button>
@@ -477,7 +496,7 @@ export function CombatSpellsSection({
             {/* Sort Controls */}
             <div className="flex items-center gap-1 bg-surface-container border border-white/10 p-1 rounded-xl text-xs font-label flex-wrap sm:flex-nowrap">
               <span className="px-2 text-[10px] text-tertiary uppercase tracking-wider font-semibold select-none">
-                Sort:
+                {isIt ? 'Ordina:' : 'Sort:'}
               </span>
               <button
                 type="button"
@@ -488,7 +507,7 @@ export function CombatSpellsSection({
                     : 'text-tertiary hover:text-white hover:bg-white/5'
                 }`}
               >
-                Level
+                {isIt ? 'Livello' : 'Level'}
               </button>
               <button
                 type="button"
@@ -498,9 +517,9 @@ export function CombatSpellsSection({
                     ? 'bg-secondary text-black font-bold shadow-[0_0_8px_rgba(217,70,239,0.4)]'
                     : 'text-tertiary hover:text-white hover:bg-white/5'
                 }`}
-                title="Attacks & Damage spells first"
+                title={isIt ? 'Incantesimi di attacco e danno prima' : 'Attacks & Damage spells first'}
               >
-                Attack / Dmg
+                {isIt ? 'Attacco / Danno' : 'Attack / Dmg'}
               </button>
               <button
                 type="button"
@@ -519,7 +538,7 @@ export function CombatSpellsSection({
           {/* Spell Cards Grid */}
           {displayedSpells.length === 0 ? (
             <div className="p-8 text-center text-tertiary font-label text-xs uppercase tracking-wider bg-surface-container-lowest/50 rounded-xl border border-white/5">
-              No combat spells matching your search criteria
+              {isIt ? 'Nessun incantesimo di combattimento corrisponde alla ricerca' : 'No combat spells matching your search criteria'}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -561,20 +580,20 @@ export function CombatSpellsSection({
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary border border-secondary/30 text-[10px] font-label uppercase tracking-widest font-bold">
-                              {spell.level === 0 ? 'Cantrip' : `Level ${spell.level}`}
+                              {spell.level === 0 ? (isIt ? 'Trucchetto' : 'Cantrip') : (isIt ? `Livello ${spell.level}` : `Level ${spell.level}`)}
                             </span>
                             <span className="text-tertiary text-[10px] font-label uppercase tracking-wider">
-                              {spell.school}
+                              {translateSchool(spell.school, locale)}
                             </span>
                             {isBuffActive && (
                               <span className="px-2 py-0.5 rounded-full bg-secondary text-white font-label text-[10px] uppercase tracking-widest font-bold">
-                                Buff Active
+                                {isIt ? 'Buff Attivo' : 'Buff Active'}
                               </span>
                             )}
                             {showsAsf && (
                               <span
                                 className="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 font-mono text-[10px] font-bold uppercase tracking-wider cursor-help flex items-center gap-0.5"
-                                title={`Arcane Spell Failure: ${spellFailureChance}% chance of failure due to Somatic component (S)`}
+                                title={isIt ? `Fallimento Incantesimi Arcani: ${spellFailureChance}% di probabilità di fallimento dovuta a componente somatica (S)` : `Arcane Spell Failure: ${spellFailureChance}% chance of failure due to Somatic component (S)`}
                               >
                                 <span className="material-symbols-outlined text-[10px] text-amber-400">warning</span>
                                 ASF {spellFailureChance}%
@@ -590,7 +609,7 @@ export function CombatSpellsSection({
                           {spell.savingThrow && (
                             <div className="text-right">
                               <span className="font-label text-[10px] text-tertiary uppercase tracking-widest block">
-                                DC
+                                {isIt ? 'CD' : 'DC'}
                               </span>
                               <span className="font-mono text-sm font-black text-secondary">
                                 {dc}
@@ -608,7 +627,7 @@ export function CombatSpellsSection({
                                 ? 'text-amber-400 hover:text-amber-300'
                                 : 'text-tertiary/40 hover:text-tertiary hover:bg-white/5'
                             }`}
-                            title={isPinned ? 'Rimuovi dai preferiti' : 'Fissa tra i preferiti in alto'}
+                            title={isPinned ? (isIt ? 'Rimuovi dai preferiti' : 'Remove from favorites') : (isIt ? 'Fissa tra i preferiti in alto' : 'Pin to top')}
                             aria-label={isPinned ? `Unpin ${spell.name}` : `Pin ${spell.name}`}
                           >
                             <span className="material-symbols-outlined text-lg leading-none">
@@ -619,15 +638,21 @@ export function CombatSpellsSection({
                       </div>
 
                     <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-[10px] font-label text-tertiary">
-                      <span>Time: <strong className="text-white">{spell.castingTime}</strong></span>
-                      <span>Range: <strong className="text-white">{spell.range}</strong></span>
+                      <span>{isIt ? 'Tempo:' : 'Time:'} <strong className="text-white">{translateCastingTime(spell.castingTime, locale)}</strong></span>
+                      <span>{isIt ? 'Gittata:' : 'Range:'} <strong className="text-white">{translateSpellRange(spell.range, locale)}</strong></span>
+                      {spell.duration && (
+                        <span>{isIt ? 'Durata:' : 'Duration:'} <strong className="text-white">{translateSpellDuration(spell.duration, locale)}</strong></span>
+                      )}
+                      {spell.savingThrow && (
+                        <span>{isIt ? 'TS:' : 'Save:'} <strong className="text-white">{translateSpellSave(spell.savingThrow, locale)}</strong></span>
+                      )}
                       {spell.attackType && (
                         <span className="text-primary font-bold">
                           {spell.attackType === 'meleeTouch'
-                            ? 'Melee Touch'
+                            ? (isIt ? 'Contatto da Mischia' : 'Melee Touch')
                             : spell.attackType === 'rangedTouch'
-                            ? 'Ranged Touch'
-                            : 'Ray'}
+                            ? (isIt ? 'Contatto a Distanza' : 'Ranged Touch')
+                            : (isIt ? 'Raggio' : 'Ray')}
                         </span>
                       )}
                       {spell.components && (
@@ -650,7 +675,7 @@ export function CombatSpellsSection({
                     {!isAtWill && spell.level > 0 && (uses.kind === 'prepared' || uses.kind === 'domain') && uses.total > 0 ? (
                       <div className="flex items-center gap-2 text-xs font-label">
                         <div className="flex items-center gap-1">
-                          <span className="text-tertiary text-[10px] uppercase tracking-wider">Uses:</span>
+                          <span className="text-tertiary text-[10px] uppercase tracking-wider">{isIt ? 'Usi:' : 'Uses:'}</span>
                           <span className={`font-mono text-xs font-bold tabular-nums ${uses.remaining > 0 ? 'text-primary' : 'text-error'}`}>
                             {uses.remaining}/{uses.total}
                           </span>
@@ -663,7 +688,7 @@ export function CombatSpellsSection({
                             aria-label={`Ripristina uso per ${spell.name}`}
                           >
                             <span className="material-symbols-outlined text-[11px] leading-none">undo</span>
-                            <span>+1 Use</span>
+                            <span>+1 {isIt ? 'Uso' : 'Use'}</span>
                           </button>
                         )}
                       </div>
@@ -698,7 +723,7 @@ export function CombatSpellsSection({
                       <div className="flex items-center gap-1.5">
                         <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-label text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
                           <span className="text-xs font-black">∞</span>
-                          <span>At-will</span>
+                          <span>{isIt ? 'A Volontà' : 'At-will'}</span>
                         </span>
                       </div>
                     )}
@@ -717,7 +742,7 @@ export function CombatSpellsSection({
                         >
                           <span className="material-symbols-outlined text-xs">adjust</span>
                           <span>
-                            {spell.attackType === 'meleeTouch' ? 'Touch' : spell.attackType === 'rangedTouch' ? 'R.Touch' : 'Ray'}{' '}
+                            {spell.attackType === 'meleeTouch' ? (isIt ? 'Contatto' : 'Touch') : spell.attackType === 'rangedTouch' ? (isIt ? 'Contatto Dist.' : 'R.Touch') : (isIt ? 'Raggio' : 'Ray')}{' '}
                             ({(spell.attackType === 'meleeTouch' ? bab + strMod : bab + dexMod) >= 0 ? `+${spell.attackType === 'meleeTouch' ? bab + strMod : bab + dexMod}` : (spell.attackType === 'meleeTouch' ? bab + strMod : bab + dexMod)})
                           </span>
                         </button>
@@ -757,10 +782,10 @@ export function CombatSpellsSection({
                               ? 'bg-secondary/10 border-secondary/40 text-secondary hover:bg-secondary/20 cursor-pointer'
                               : 'bg-secondary/5 border-white/10 text-tertiary opacity-40 cursor-not-allowed'
                           }`}
-                          title={isBuffActive ? 'Disattiva buff attivo' : 'Attiva come buff (consuma 1 uso)'}
+                          title={isBuffActive ? (isIt ? 'Disattiva buff attivo' : 'Dismiss active buff') : (isIt ? 'Attiva come buff (consuma 1 uso)' : 'Engage as buff (spends 1 use)')}
                         >
                           <span className="material-symbols-outlined text-xs">{isBuffActive ? 'check_circle' : 'add_circle'}</span>
-                          <span>{isBuffActive ? 'Buff On' : 'Buff'}</span>
+                          <span>{isBuffActive ? (isIt ? 'Buff Attivo' : 'Buff On') : 'Buff'}</span>
                         </button>
                       )}
 
@@ -778,14 +803,14 @@ export function CombatSpellsSection({
                         <span className="material-symbols-outlined text-xs">bolt</span>
                         <span>
                           {isSla
-                            ? 'Use'
+                            ? (isIt ? 'Usa' : 'Use')
                             : spell.level === 0
-                            ? 'Cast'
+                            ? (isIt ? 'Lancia' : 'Cast')
                             : hasSlots
-                            ? 'Cast'
+                            ? (isIt ? 'Lancia' : 'Cast')
                             : (uses.kind === 'prepared' || uses.kind === 'domain')
-                            ? 'No Uses'
-                            : 'No Slots'}
+                            ? (isIt ? 'Nessun Uso' : 'No Uses')
+                            : (isIt ? 'Nessun Slot' : 'No Slots')}
                         </span>
                       </button>
                     </div>

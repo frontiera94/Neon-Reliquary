@@ -3,6 +3,7 @@ import { useLocaleStore, type Locale } from '../store/useLocaleStore'
 import { en } from './en'
 import { it } from './it'
 
+export type { Locale } from '../store/useLocaleStore'
 export type Translations = typeof en
 
 const DICTIONARIES: Record<Locale, Translations> = {

@@ -4,8 +4,8 @@ import { nanoid } from 'nanoid'
 import { useCharacterStore } from '../../store/useCharacterStore'
 import { useSessionStore } from '../../store/useSessionStore'
 import { BUFF_PRESETS } from '../../lib/buff-presets'
-import { CONDITION_INFO } from '../../lib/conditions'
 import type { BuffToggle, ConditionType } from '../../types/combat'
+import { useTranslation, getConditionInfo } from '../../i18n'
 
 interface BuffManagerModalProps {
   isOpen: boolean
@@ -23,6 +23,8 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
   const { toggleBuff, addCustomBuff, removeCustomBuff, toggleCondition } = useSessionStore()
+  const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
 
   const [activeTab, setActiveTab] = useState<'presets' | 'active' | 'create' | 'conditions'>(initialTab)
 
@@ -131,20 +133,20 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 text-[10px] font-label uppercase tracking-widest font-bold">
-                  Tactical Protocol
+                  {isIt ? 'Protocollo Tattico' : 'Tactical Protocol'}
                 </span>
                 <span className="font-label text-[10px] text-slate-400 uppercase tracking-wider">
-                  PF1e Stacking
+                  {isIt ? 'Cumulo PF1e' : 'PF1e Stacking'}
                 </span>
               </div>
               <h2 className="font-headline text-lg sm:text-xl uppercase tracking-wider text-white font-bold">
-                Combat Buffs & Protocols
+                {t('combat.buffsProtocols')}
               </h2>
             </div>
             <button
               onClick={onClose}
               className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer"
-              aria-label="Close modal"
+              aria-label={t('common.close')}
             >
               <span className="material-symbols-outlined text-xl">close</span>
             </button>
@@ -160,7 +162,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                   : 'text-slate-300 hover:text-white hover:bg-white/5'
               }`}
             >
-              PF1e Presets
+              {t('combat.pf1ePresets')}
             </button>
             <button
               onClick={() => setActiveTab('active')}
@@ -170,7 +172,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                   : 'text-slate-300 hover:text-white hover:bg-white/5'
               }`}
             >
-              Active ({activeBuffIds.length})
+              {t('combat.active')} ({activeBuffIds.length})
             </button>
             <button
               onClick={() => setActiveTab('create')}
@@ -180,7 +182,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                   : 'text-slate-300 hover:text-white hover:bg-white/5'
               }`}
             >
-              + Custom Buff
+              {t('combat.customBuff')}
             </button>
             <button
               onClick={() => setActiveTab('conditions')}
@@ -190,7 +192,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                   : 'text-slate-300 hover:text-white hover:bg-white/5'
               }`}
             >
-              Conditions ({session.conditions.length})
+              {t('status.conditions')} ({session.conditions.length})
             </button>
           </div>
 
@@ -222,7 +224,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                                 : 'bg-white/5 border border-white/10 text-slate-400'
                             }`}
                           >
-                            {isActive ? 'ACTIVE' : 'READY'}
+                            {isActive ? (isIt ? 'ATTIVO' : 'ACTIVE') : (isIt ? 'PRONTO' : 'READY')}
                           </span>
                         </div>
                         <p className="font-body text-xs text-slate-300 mb-3 leading-relaxed">
@@ -238,7 +240,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                             : 'bg-primary/15 border border-primary/40 text-primary hover:bg-primary hover:text-black hover:shadow-[0_0_15px_rgba(0,240,255,0.3)]'
                         }`}
                       >
-                        {isActive ? 'Dismiss Buff' : 'Engage Buff'}
+                        {isActive ? (isIt ? 'Disattiva Buff' : 'Dismiss Buff') : (isIt ? 'Attiva Buff' : 'Engage Buff')}
                       </button>
                     </div>
                   )
@@ -251,7 +253,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
               <div className="space-y-3">
                 {allAvailableBuffs.length === 0 ? (
                   <p className="text-center font-label text-xs text-slate-400 py-8 uppercase tracking-widest">
-                    No buffs configured for this character.
+                    {t('combat.noBuffs')}
                   </p>
                 ) : (
                   allAvailableBuffs.map((buff) => {
@@ -277,32 +279,32 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                             </h4>
                             {buff.isCustom && (
                               <span className="font-label text-[9px] font-bold text-secondary border border-secondary/40 px-1.5 py-0.5 rounded-md bg-secondary/10">
-                                CUSTOM
+                                {isIt ? 'PERS' : 'CUSTOM'}
                               </span>
                             )}
                           </div>
                           <p className="font-label text-xs text-slate-300 mt-1">
                             {[
-                              buff.attackMod ? `${buff.attackMod > 0 ? '+' : ''}${buff.attackMod} Att` : '',
-                              buff.damageMod ? `${buff.damageMod > 0 ? '+' : ''}${buff.damageMod} Dmg` : '',
-                              buff.acMod ? `${buff.acMod > 0 ? '+' : ''}${buff.acMod} AC` : '',
-                              buff.extraDamageDice ? `+${buff.extraDamageDice} Dice` : '',
+                              buff.attackMod ? `${buff.attackMod > 0 ? '+' : ''}${buff.attackMod} ${isIt ? 'Att' : 'Att'}` : '',
+                              buff.damageMod ? `${buff.damageMod > 0 ? '+' : ''}${buff.damageMod} ${isIt ? 'Danni' : 'Dmg'}` : '',
+                              buff.acMod ? `${buff.acMod > 0 ? '+' : ''}${buff.acMod} ${isIt ? 'CA' : 'AC'}` : '',
+                              buff.extraDamageDice ? `+${buff.extraDamageDice} ${isIt ? 'Dadi' : 'Dice'}` : '',
                               ...(buff.abilityMods
                                 ? Object.entries(buff.abilityMods)
                                     .filter(([, v]) => v !== undefined && v !== 0)
                                     .map(([k, v]) => `${(v as number) > 0 ? '+' : ''}${v} ${k.toUpperCase()}`)
                                 : []),
                               ...(typeof buff.saveMod === 'number' && buff.saveMod !== 0
-                                ? [`${buff.saveMod > 0 ? '+' : ''}${buff.saveMod} Saves`]
+                                ? [`${buff.saveMod > 0 ? '+' : ''}${buff.saveMod} ${isIt ? 'TS' : 'Saves'}`]
                                 : typeof buff.saveMod === 'object' && buff.saveMod !== null
                                   ? Object.entries(buff.saveMod)
                                       .filter(([, v]) => v !== undefined && v !== 0)
-                                      .map(([k, v]) => `${(v as number) > 0 ? '+' : ''}${v} ${k === 'fort' ? 'Fort' : k === 'ref' ? 'Ref' : k === 'will' ? 'Will' : k}`)
+                                      .map(([k, v]) => `${(v as number) > 0 ? '+' : ''}${v} ${k === 'fort' ? (isIt ? 'Temp' : 'Fort') : k === 'ref' ? (isIt ? 'Rifl' : 'Ref') : k === 'will' ? (isIt ? 'Vol' : 'Will') : k}`)
                                   : []),
-                              buff.meleeOnly ? 'Melee only' : '',
+                              buff.meleeOnly ? (isIt ? 'Solo mischia' : 'Melee only') : '',
                             ]
                               .filter(Boolean)
-                              .join(' • ') || buff.description || 'Custom modifier'}
+                              .join(' • ') || buff.description || (isIt ? 'Modificatore personalizzato' : 'Custom modifier')}
                           </p>
                         </div>
 
@@ -322,7 +324,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                             <button
                               onClick={() => removeCustomBuff(char.id, buff.id)}
                               className="p-1.5 text-slate-400 hover:text-error rounded-lg hover:bg-error/10 transition-colors cursor-pointer"
-                              title="Delete custom buff"
+                              title={isIt ? 'Elimina buff personalizzato' : 'Delete custom buff'}
                             >
                               <span className="material-symbols-outlined text-lg">delete</span>
                             </button>
@@ -340,14 +342,14 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
               <form onSubmit={handleCreateBuff} className="space-y-4">
                 <div>
                   <label className="block font-label text-xs text-slate-300 uppercase tracking-wider font-semibold mb-1.5">
-                    Buff / Spell Name
+                    {isIt ? 'Nome Buff / Incantesimo' : 'Buff / Spell Name'}
                   </label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Divine Favor, Cat's Grace, Heroism..."
+                    placeholder={isIt ? 'es. Favore Divino, Grazia del Gatto, Eroismo...' : "e.g. Divine Favor, Cat's Grace, Heroism..."}
                     className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-3.5 py-2.5 font-body text-sm text-white placeholder:text-slate-500 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                   />
                 </div>
@@ -355,7 +357,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block font-label text-xs text-slate-300 uppercase tracking-wider font-semibold mb-1.5">
-                      Attack Mod
+                      {isIt ? 'Mod. Attacco' : 'Attack Mod'}
                     </label>
                     <input
                       type="number"
@@ -366,7 +368,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                   </div>
                   <div>
                     <label className="block font-label text-xs text-slate-300 uppercase tracking-wider font-semibold mb-1.5">
-                      Damage Mod
+                      {isIt ? 'Mod. Danno' : 'Damage Mod'}
                     </label>
                     <input
                       type="number"
@@ -377,7 +379,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                   </div>
                   <div>
                     <label className="block font-label text-xs text-slate-300 uppercase tracking-wider font-semibold mb-1.5">
-                      AC Mod
+                      {isIt ? 'Mod. CA' : 'AC Mod'}
                     </label>
                     <input
                       type="number"
@@ -392,7 +394,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                 <div className="p-4 rounded-2xl border border-white/10 bg-surface-container-high/40">
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-label text-xs text-secondary uppercase tracking-wider font-bold">
-                      Saving Throws
+                      {t('status.savingThrows')}
                     </span>
                     <div className="flex gap-2">
                       <button
@@ -404,7 +406,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                             : 'bg-white/5 border border-white/10 text-slate-300 hover:text-white'
                         }`}
                       >
-                        All Saves
+                        {isIt ? 'Tutti i TS' : 'All Saves'}
                       </button>
                       <button
                         type="button"
@@ -415,7 +417,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                             : 'bg-white/5 border border-white/10 text-slate-300 hover:text-white'
                         }`}
                       >
-                        Fort / Ref / Will
+                        {isIt ? 'Temp / Rifl / Vol' : 'Fort / Ref / Will'}
                       </button>
                     </div>
                   </div>
@@ -424,7 +426,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                     <div>
                       <input
                         type="number"
-                        placeholder="All Saves modifier (+/-)"
+                        placeholder={isIt ? 'Modificatore a tutti i TS (+/-)' : 'All Saves modifier (+/-)'}
                         value={globalSaveMod}
                         onChange={(e) => setGlobalSaveMod(parseInt(e.target.value) || 0)}
                         className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-3 py-2 font-label text-sm text-center text-white focus:border-primary outline-none"
@@ -433,7 +435,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                   ) : (
                     <div className="grid grid-cols-3 gap-2">
                       <div>
-                        <span className="block font-label text-[10px] text-slate-400 mb-1">FORT</span>
+                        <span className="block font-label text-[10px] text-slate-400 mb-1">{isIt ? 'TEMP' : 'FORT'}</span>
                         <input
                           type="number"
                           value={fortMod}
@@ -442,7 +444,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                         />
                       </div>
                       <div>
-                        <span className="block font-label text-[10px] text-slate-400 mb-1">REF</span>
+                        <span className="block font-label text-[10px] text-slate-400 mb-1">{isIt ? 'RIFL' : 'REF'}</span>
                         <input
                           type="number"
                           value={refMod}
@@ -451,7 +453,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                         />
                       </div>
                       <div>
-                        <span className="block font-label text-[10px] text-slate-400 mb-1">WILL</span>
+                        <span className="block font-label text-[10px] text-slate-400 mb-1">{isIt ? 'VOL' : 'WILL'}</span>
                         <input
                           type="number"
                           value={willMod}
@@ -466,11 +468,11 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                 {/* Ability Scores Section */}
                 <div className="p-4 rounded-2xl border border-white/10 bg-surface-container-high/40">
                   <span className="block font-label text-xs text-secondary uppercase tracking-wider font-bold mb-3">
-                    Ability Score Enhancements (+/-)
+                    {isIt ? 'Modificatori Caratteristiche (+/-)' : 'Ability Score Enhancements (+/-)'}
                   </span>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <span className="block font-label text-[10px] text-slate-400 mb-1">STR</span>
+                      <span className="block font-label text-[10px] text-slate-400 mb-1">{isIt ? 'FOR' : 'STR'}</span>
                       <input
                         type="number"
                         value={strMod}
@@ -479,7 +481,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                       />
                     </div>
                     <div>
-                      <span className="block font-label text-[10px] text-slate-400 mb-1">DEX</span>
+                      <span className="block font-label text-[10px] text-slate-400 mb-1">{isIt ? 'DES' : 'DEX'}</span>
                       <input
                         type="number"
                         value={dexMod}
@@ -488,7 +490,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                       />
                     </div>
                     <div>
-                      <span className="block font-label text-[10px] text-slate-400 mb-1">CON</span>
+                      <span className="block font-label text-[10px] text-slate-400 mb-1">{isIt ? 'COS' : 'CON'}</span>
                       <input
                         type="number"
                         value={conMod}
@@ -503,11 +505,11 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block font-label text-xs text-slate-300 uppercase tracking-wider font-semibold mb-1.5">
-                      Extra Damage Dice
+                      {isIt ? 'Dadi Danno Extra' : 'Extra Damage Dice'}
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. 1d6 or 2d6"
+                      placeholder="es. 1d6 o 2d6"
                       value={extraDice}
                       onChange={(e) => setExtraDice(e.target.value)}
                       className="w-full bg-surface-container-highest/60 border border-white/10 rounded-xl px-3 py-2 font-label text-sm text-white placeholder:text-slate-500 focus:border-primary outline-none"
@@ -521,13 +523,13 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                         onChange={(e) => setMeleeOnly(e.target.checked)}
                         className="w-4 h-4 rounded accent-primary cursor-pointer"
                       />
-                      Melee weapons only
+                      {isIt ? 'Solo armi da mischia' : 'Melee weapons only'}
                     </label>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 pt-2">
-                  <span className="font-label text-xs text-slate-300 uppercase font-semibold">Accent:</span>
+                  <span className="font-label text-xs text-slate-300 uppercase font-semibold">{isIt ? 'Colore:' : 'Accent:'}</span>
                   {(['primary', 'secondary', 'error'] as const).map((c) => (
                     <button
                       type="button"
@@ -544,7 +546,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                   type="submit"
                   className="w-full py-3 mt-4 rounded-xl bg-primary text-black font-label text-sm uppercase tracking-widest hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] transition-all font-bold cursor-pointer active:scale-[0.99]"
                 >
-                  Manifest Custom Buff
+                  {isIt ? 'Crea Buff Personalizzato' : 'Manifest Custom Buff'}
                 </button>
               </form>
             )}
@@ -553,7 +555,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
             {activeTab === 'conditions' && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {ALL_CONDITIONS.map((cond) => {
-                  const info = CONDITION_INFO[cond]
+                  const info = getConditionInfo(cond, locale)
                   const isActive = session.conditions.includes(cond)
                   return (
                     <div
@@ -576,7 +578,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                                 : 'bg-white/5 border border-white/10 text-slate-400'
                             }`}
                           >
-                            {isActive ? 'AFFLICTED' : 'CLEAR'}
+                            {isActive ? (isIt ? 'ATTIVA' : 'AFFLICTED') : (isIt ? 'INATTIVA' : 'CLEAR')}
                           </span>
                         </div>
                         <p className="font-body text-xs text-slate-300 mb-2.5 leading-relaxed">
@@ -600,7 +602,7 @@ export function BuffManagerModal({ isOpen, onClose, initialTab = 'presets' }: Bu
                             : 'bg-white/5 border border-white/15 text-slate-200 hover:bg-primary/20 hover:text-primary hover:border-primary/50 hover:shadow-[0_0_12px_rgba(0,240,255,0.2)]'
                         }`}
                       >
-                        {isActive ? 'Remove Condition' : 'Apply Condition'}
+                        {isActive ? (isIt ? 'Rimuovi Condizione' : 'Remove Condition') : (isIt ? 'Applica Condizione' : 'Apply Condition')}
                       </button>
                     </div>
                   )

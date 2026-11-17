@@ -1,6 +1,7 @@
 import { parseDiceFormula } from '../../lib/dice-engine'
 import type { SummonOption } from '../../types/resources'
 import type { DiceRoll } from '../../types/dice'
+import { useTranslation, translateSize, translateNaturalAttack } from '../../i18n'
 
 export function SummonedCreaturePanel({
   option,
@@ -15,6 +16,8 @@ export function SummonedCreaturePanel({
   onDismiss: () => void
   openRoll: (roll: DiceRoll) => void
 }) {
+  const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
   const percent = Math.max(0, Math.min(100, (currentHp / option.hp) * 100))
 
   return (
@@ -23,20 +26,20 @@ export function SummonedCreaturePanel({
       <div className="flex items-start justify-between">
         <div>
           <p className="font-label text-[10px] text-primary uppercase tracking-[0.2em] mb-1">
-            {option.template ? `${option.template} ·` : ''} {option.size}
+            {option.template ? `${option.template} ·` : ''} {translateSize(option.size, locale)}
           </p>
           <h3 className="font-headline text-2xl font-bold text-on-surface">{option.name}</h3>
         </div>
         <div className="flex items-center gap-3">
           <div className="bg-surface-container-high px-4 py-2 text-center">
-            <p className="font-label text-[10px] text-tertiary uppercase tracking-widest">AC</p>
+            <p className="font-label text-[10px] text-tertiary uppercase tracking-widest">{isIt ? 'CA' : 'AC'}</p>
             <p className="font-label text-2xl font-bold text-on-surface">{option.ac}</p>
           </div>
           <button
             onClick={onDismiss}
             className="px-3 py-2 font-label text-[10px] uppercase tracking-widest text-tertiary border border-outline-variant/30 hover:text-error hover:border-error/50 transition-all"
           >
-            Dismiss
+            {t('combat.dismiss')}
           </button>
         </div>
       </div>
@@ -45,12 +48,13 @@ export function SummonedCreaturePanel({
       <div className="flex items-center gap-4">
         <button
           onClick={() => onAdjustHp(-1)}
-          className="w-10 h-10 bg-surface-container-high hover:bg-error-container text-primary hover:text-on-error transition-all active:scale-95 flex items-center justify-center flex-shrink-0"
+          aria-label={isIt ? 'Riduci PF' : 'Decrease HP'}
+          className="w-10 h-10 bg-surface-container-high hover:bg-error-container text-primary hover:text-on-error transition-all active:scale-95 flex items-center justify-center flex-shrink-0 cursor-pointer"
         >
           <span className="material-symbols-outlined text-lg">remove</span>
         </button>
         <div className="bg-surface-container-high px-4 py-2 text-center flex-shrink-0">
-          <p className="font-label text-[10px] text-tertiary uppercase tracking-widest">HP</p>
+          <p className="font-label text-[10px] text-tertiary uppercase tracking-widest">{isIt ? 'PF' : 'HP'}</p>
           <p className="font-label text-2xl font-bold text-primary">
             {currentHp}<span className="text-tertiary text-sm font-normal"> / {option.hp}</span>
           </p>
@@ -65,7 +69,8 @@ export function SummonedCreaturePanel({
         </div>
         <button
           onClick={() => onAdjustHp(1)}
-          className="w-10 h-10 bg-surface-container-high hover:bg-primary-container text-primary hover:text-on-primary transition-all active:scale-95 flex items-center justify-center flex-shrink-0"
+          aria-label={isIt ? 'Aumenta PF' : 'Increase HP'}
+          className="w-10 h-10 bg-surface-container-high hover:bg-primary-container text-primary hover:text-on-primary transition-all active:scale-95 flex items-center justify-center flex-shrink-0 cursor-pointer"
         >
           <span className="material-symbols-outlined text-lg">add</span>
         </button>
@@ -75,13 +80,17 @@ export function SummonedCreaturePanel({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {option.attacks.map((attack) => (
           <div key={attack.name} className="bg-surface-container-high p-4 space-y-3">
-            <p className="font-label text-[10px] text-secondary uppercase tracking-widest">{attack.name}</p>
+            <p className="font-label text-[10px] text-secondary uppercase tracking-widest">
+              {translateNaturalAttack(attack.name, locale)}
+            </p>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => openRoll({ diceType: 20, count: 1, modifier: attack.bonus, label: `${option.name} — ${attack.name}`, critRange: 20 })}
-                className="py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary hover:shadow-[0_0_20px_rgba(0,218,243,0.2)] transition-all active:scale-95 flex flex-col items-center"
+                className="py-4 bg-gradient-to-br from-primary to-primary-container text-on-primary hover:shadow-[0_0_20px_rgba(0,218,243,0.2)] transition-all active:scale-95 flex flex-col items-center cursor-pointer"
               >
-                <span className="font-label text-[9px] uppercase tracking-widest opacity-80 mb-0.5">Attack</span>
+                <span className="font-label text-[9px] uppercase tracking-widest opacity-80 mb-0.5">
+                  {isIt ? 'Attacco' : 'Attack'}
+                </span>
                 <span className="font-label text-2xl font-black">{attack.bonus >= 0 ? `+${attack.bonus}` : attack.bonus}</span>
               </button>
               <button
@@ -89,9 +98,11 @@ export function SummonedCreaturePanel({
                   const { count, sides, bonus } = parseDiceFormula(attack.damageDice)
                   openRoll({ diceType: sides, count, modifier: attack.damageBonus + bonus, label: `${option.name} — ${attack.name} Dmg` })
                 }}
-                className="py-4 bg-surface-container-lowest border border-outline-variant/30 text-secondary hover:bg-surface-container-highest transition-all flex flex-col items-center"
+                className="py-4 bg-surface-container-lowest border border-outline-variant/30 text-secondary hover:bg-surface-container-highest transition-all flex flex-col items-center cursor-pointer"
               >
-                <span className="font-label text-[9px] uppercase tracking-widest opacity-60 mb-0.5">Damage</span>
+                <span className="font-label text-[9px] uppercase tracking-widest opacity-60 mb-0.5">
+                  {isIt ? 'Danno' : 'Damage'}
+                </span>
                 <span className="font-label text-xl font-bold">
                   {attack.damageDice}{attack.damageBonus > 0 ? `+${attack.damageBonus}` : attack.damageBonus < 0 ? attack.damageBonus : ''}
                 </span>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ActionEconomyState } from '../../types/combat'
 import { defaultActionEconomy, computeNextActionEconomy } from '../../store/useSessionStore'
+import { useTranslation } from '../../i18n'
 
 export interface ActionEconomyTrackerProps {
   actionEconomy?: ActionEconomyState
@@ -24,6 +25,7 @@ export function ActionEconomyTracker({
   onResetRound,
   compact = false,
 }: ActionEconomyTrackerProps) {
+  const { t } = useTranslation()
   const [internalEconomy, setInternalEconomy] = useState<ActionEconomyState>(defaultActionEconomy())
   const [internalRound, setInternalRound] = useState<number>(initialRound)
 
@@ -76,37 +78,37 @@ export function ActionEconomyTracker({
   }[] = [
     {
       key: 'standard',
-      label: 'Standard',
-      sublabel: 'Attack, Cast, Maneuver',
+      label: t('combat.standard'),
+      sublabel: t('combat.standardDesc'),
       icon: 'swords',
       glowColor: 'cyan',
     },
     {
       key: 'move',
-      label: 'Movement',
-      sublabel: 'Move speed, Draw weapon',
+      label: t('combat.movement'),
+      sublabel: t('combat.moveDesc'),
       icon: 'directions_run',
       glowColor: 'cyan',
     },
     {
       key: 'swift',
-      label: 'Swift',
-      sublabel: 'Quickened spell, Stance',
+      label: t('combat.swift'),
+      sublabel: t('combat.swiftDesc'),
       icon: 'bolt',
       glowColor: 'magenta',
     },
     {
       key: 'immediate',
-      label: 'Immediate',
-      sublabel: 'Reaction (Feather Fall)',
+      label: t('combat.immediate'),
+      sublabel: t('combat.immediateDesc'),
       icon: 'shield',
       glowColor: 'magenta',
     },
     {
       key: 'fullRound',
-      label: 'Full-Round',
-      sublabel: 'Full Attack, Charge, Run',
-      badgeSub: 'Standard + Move',
+      label: t('combat.fullRound'),
+      sublabel: t('combat.fullRoundDesc'),
+      badgeSub: t('combat.twoInOne'),
       icon: 'sync_alt',
       glowColor: 'amber',
     },
@@ -117,7 +119,7 @@ export function ActionEconomyTracker({
   if (compact) {
     return (
       <section
-        aria-label="Round action economy"
+        aria-label={t('combat.roundActionEconomy')}
         className="rounded-2xl border border-white/10 bg-surface-container/80 px-3 py-2.5 backdrop-blur-sm"
       >
         <div className="flex flex-wrap items-center gap-2.5">
@@ -127,10 +129,10 @@ export function ActionEconomyTracker({
               data-testid="round-counter"
               className="font-label text-xs font-bold uppercase tracking-wider text-white"
             >
-              Round <span className="text-primary">{currentRound}</span>
+              {t('combat.round')} <span className="text-primary">{currentRound}</span>
             </span>
             <span className="font-label text-[10px] text-tertiary">
-              {spentCount === 0 ? 'All actions ready' : `${5 - spentCount}/5 ready`}
+              {spentCount === 0 ? t('combat.allActionsReady') : t('combat.actionsReady', { ready: 5 - spentCount })}
             </span>
           </div>
 
@@ -139,8 +141,8 @@ export function ActionEconomyTracker({
             <button
               type="button"
               onClick={handleResetRound}
-              aria-label="Reset Round"
-              title="Reset combat to Round 1"
+              aria-label={t('combat.resetRound')}
+              title={t('combat.resetRound')}
               className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-surface-container-high text-tertiary transition-colors hover:border-amber-400/40 hover:text-amber-300 active:scale-95 cursor-pointer"
             >
               <span className="material-symbols-outlined text-base">restart_alt</span>
@@ -148,11 +150,11 @@ export function ActionEconomyTracker({
             <button
               type="button"
               onClick={handleNewTurn}
-              title="Reset actions and advance to the next round"
+              title={t('combat.newTurn')}
               className="flex min-h-[40px] items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/15 px-3 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider text-primary transition-all hover:bg-primary/25 hover:text-white active:scale-95 cursor-pointer"
             >
               <span className="material-symbols-outlined text-base">refresh</span>
-              <span>New Turn</span>
+              <span>{t('combat.newTurn')}</span>
             </button>
           </div>
 
@@ -181,7 +183,7 @@ export function ActionEconomyTracker({
                     {isSpent ? 'check' : act.icon}
                   </span>
                   <span>{act.label}</span>
-                  <span className="sr-only">{isSpent ? 'Spent' : 'Ready'}</span>
+                  <span className="sr-only">{isSpent ? t('combat.spent') : t('combat.ready')}</span>
                 </button>
               )
             })}
@@ -202,26 +204,26 @@ export function ActionEconomyTracker({
           <div>
             <div className="flex items-center gap-2.5">
               <h3 className="font-headline text-sm uppercase tracking-widest text-white font-bold">
-                Round Action Economy
+                {t('combat.roundActionEconomy')}
               </h3>
               {/* Glowing Round Badge */}
               <div
                 className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-surface-container-highest border border-primary/30 shadow-[0_0_10px_rgba(0,240,255,0.15)]"
-                aria-label={`Round ${currentRound}`}
+                aria-label={`${t('combat.round')} ${currentRound}`}
               >
                 <span className="material-symbols-outlined text-primary text-xs">timer</span>
                 <span
                   data-testid="round-counter"
                   className="font-headline text-xs font-black tracking-wider text-white"
                 >
-                  Round <span className="text-primary font-bold">{currentRound}</span>
+                  {t('combat.round')} <span className="text-primary font-bold">{currentRound}</span>
                 </span>
               </div>
             </div>
             <p className="font-label text-[10px] text-tertiary tracking-wider mt-0.5">
               {spentCount === 0
-                ? 'All actions available for this turn'
-                : `${spentCount} of 5 actions committed`}
+                ? t('combat.allActionsAvailable')
+                : t('combat.actionsCommitted', { spent: spentCount })}
             </p>
           </div>
         </div>
@@ -233,10 +235,10 @@ export function ActionEconomyTracker({
             type="button"
             onClick={handleResetRound}
             className="px-2.5 py-1.5 rounded-xl bg-surface-container-high hover:bg-white/10 border border-white/10 hover:border-amber-400/40 text-tertiary hover:text-amber-300 font-label text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-[0_0_10px_rgba(0,0,0,0.2)]"
-            title="Reset combat to Round 1"
+            title={t('combat.resetRound')}
           >
             <span className="material-symbols-outlined text-sm">restart_alt</span>
-            <span>Reset Round</span>
+            <span>{t('combat.resetRound')}</span>
           </button>
 
           {/* New Turn button */}
@@ -244,10 +246,10 @@ export function ActionEconomyTracker({
             type="button"
             onClick={handleNewTurn}
             className="px-3.5 py-1.5 rounded-xl bg-primary/15 hover:bg-primary/25 border border-primary/40 hover:border-primary text-primary hover:text-white font-label text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-[0_0_12px_rgba(0,240,255,0.2)] hover:shadow-[0_0_18px_rgba(0,240,255,0.4)]"
-            title="Reset actions and advance to next round"
+            title={t('combat.newTurn')}
           >
             <span className="material-symbols-outlined text-sm">refresh</span>
-            <span>New Turn</span>
+            <span>{t('combat.newTurn')}</span>
           </button>
         </div>
       </div>
@@ -319,7 +321,7 @@ export function ActionEconomyTracker({
                   }`}
                 >
                   {!isSpent && <span className="w-1.5 h-1.5 rounded-full bg-current" />}
-                  {isSpent ? 'Spent' : 'Ready'}
+                  {isSpent ? t('combat.spent') : t('combat.ready')}
                 </span>
               </div>
 
@@ -354,4 +356,3 @@ export function ActionEconomyTracker({
     </div>
   )
 }
-

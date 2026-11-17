@@ -16,22 +16,23 @@ import {
 import { abilityMod } from '../../lib/dice-engine'
 import { getSpellAvailability } from '../../lib/spell-availability'
 import { CONDITION_INFO } from '../../lib/conditions'
-import { ACTION_ECONOMY_LABEL, categorizeFeatures } from '../../lib/action-economy'
+import { categorizeFeatures } from '../../lib/action-economy'
 import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
 import { DefensiveBadges } from '../combat/ContextualCombatFeatures'
 import { CombatPage } from '../../pages/CombatPage'
 import { DiceRollLog } from '../dice/DiceRollLog'
 import type { ConditionType } from '../../types/combat'
+import { useTranslation, translateActionType, translateAbilityShort, translateAbilityFull } from '../../i18n'
 
 const NAV_ITEMS = [
-  { to: '/status', label: 'Status', icon: 'analytics' },
-  { to: '/combat', label: 'Combat', icon: 'swords' },
-  { to: '/spells', label: 'Spells', icon: 'auto_stories' },
-  { to: '/features', label: 'Features', icon: 'auto_awesome' },
-  { to: '/skills', label: 'Skills', icon: 'auto_fix_high' },
-  { to: '/inventory', label: 'Inventory', icon: 'inventory_2' },
-  { to: '/companion', label: 'Companion', icon: 'pets' },
-]
+  { to: '/status', key: 'status', icon: 'analytics' },
+  { to: '/combat', key: 'combat', icon: 'swords' },
+  { to: '/spells', key: 'spells', icon: 'auto_stories' },
+  { to: '/features', key: 'features', icon: 'auto_awesome' },
+  { to: '/skills', key: 'skills', icon: 'auto_fix_high' },
+  { to: '/inventory', key: 'inventory', icon: 'inventory_2' },
+  { to: '/companion', key: 'companion', icon: 'pets' },
+] as const
 
 const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const
 
@@ -41,6 +42,8 @@ const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const
  * this component is hidden and the regular tab + HUD flow remains.
  */
 export function TacticalBentoGrid() {
+  const { t } = useTranslation()
+
   return (
     <div className="p-4 xl:p-6 space-y-4">
       {/* Compact desktop navigation (sidebar is hidden in bento mode) */}
@@ -61,7 +64,7 @@ export function TacticalBentoGrid() {
             }
           >
             <span className="material-symbols-outlined text-base">{item.icon}</span>
-            {item.label}
+            {t(`bento.${item.key}` as any)}
           </NavLink>
         ))}
       </nav>
@@ -83,6 +86,9 @@ export function TacticalBentoGrid() {
 }
 
 function BentoStatusColumn() {
+  const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
+
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
   const openRoll = useDiceStore((s) => s.openRoll)
@@ -115,7 +121,9 @@ function BentoStatusColumn() {
 
   if (!char || !session || !sheet) {
     return (
-      <p className="font-label text-xs uppercase tracking-widest text-tertiary p-4">No character selected</p>
+      <p className="font-label text-xs uppercase tracking-widest text-tertiary p-4">
+        {t('bento.noCharacter')}
+      </p>
     )
   }
 
@@ -127,9 +135,9 @@ function BentoStatusColumn() {
       type: 'condition',
       id: condition,
       title: info.name,
-      subtitle: 'Active Condition',
+      subtitle: isIt ? 'Condizione Attiva' : 'Active Condition',
       description: info.summary,
-      tags: ['Condition'],
+      tags: [isIt ? 'Condizione' : 'Condition'],
       notes: info.penalties,
     })
   }
@@ -149,14 +157,16 @@ function BentoStatusColumn() {
           <div className="min-w-0">
             <h2 className="font-headline text-sm font-bold text-white truncate">{char.name}</h2>
             <p className="font-label text-[9px] uppercase tracking-widest text-tertiary">
-              Lv {char.level} · {char.class}
+              {isIt ? 'Liv' : 'Lv'} {char.level} · {char.class}
             </p>
           </div>
         </div>
 
         <div className="mt-4">
           <div className="flex items-end justify-between">
-            <span className="font-label text-[9px] uppercase tracking-[0.2em] text-tertiary">Hit Points</span>
+            <span className="font-label text-[9px] uppercase tracking-[0.2em] text-tertiary">
+              {t('bento.hitPoints')}
+            </span>
             <span className="font-label text-sm font-black text-primary tabular-nums">
               {session.currentHp}<span className="text-tertiary text-[10px] font-normal"> / {char.maxHp}</span>
             </span>
@@ -178,14 +188,14 @@ function BentoStatusColumn() {
             )}
             {session.nonlethalDamage > 0 && (
               <span className="px-1.5 py-0.5 rounded-md border border-[#ffb4ab]/30 bg-[#ffb4ab]/10 text-[#ffb4ab]">
-                {session.nonlethalDamage} NL
+                {session.nonlethalDamage} {isIt ? 'NL' : 'NL'}
               </span>
             )}
             <span className="px-1.5 py-0.5 rounded-md border border-white/10 text-tertiary">
-              Speed {char.speed}
+              {isIt ? `Velocità ${char.speed}` : `Speed ${char.speed}`}
             </span>
             <span className="px-1.5 py-0.5 rounded-md border border-white/10 text-tertiary">
-              Init {char.initiativeBonus >= 0 ? `+${char.initiativeBonus}` : char.initiativeBonus}
+              {isIt ? `Iniz ${char.initiativeBonus >= 0 ? `+${char.initiativeBonus}` : char.initiativeBonus}` : `Init ${char.initiativeBonus >= 0 ? `+${char.initiativeBonus}` : char.initiativeBonus}`}
             </span>
           </div>
         </div>
@@ -196,14 +206,14 @@ function BentoStatusColumn() {
         <div className="grid grid-cols-3 gap-1.5">
           {(
             [
-              { id: 'ac-total', label: 'AC', value: sheet.ac.total, base: char.armorClass.total },
-              { id: 'ac-touch', label: 'TOUCH', value: sheet.ac.touch, base: char.armorClass.touch },
-              { id: 'ac-flat', label: 'FLAT', value: sheet.ac.flatFooted, base: char.armorClass.flatFooted },
+              { id: 'ac-total', label: isIt ? 'CA' : 'AC', value: sheet.ac.total, base: char.armorClass.total, title: t('bento.acTotal') },
+              { id: 'ac-touch', label: isIt ? 'CONT' : 'TOUCH', value: sheet.ac.touch, base: char.armorClass.touch, title: t('bento.touchAc') },
+              { id: 'ac-flat', label: isIt ? 'SPROVV' : 'FLAT', value: sheet.ac.flatFooted, base: char.armorClass.flatFooted, title: t('bento.flatFootedAc') },
             ] as const
           ).map((entry) => (
             <StatBreakdownTooltip
               key={entry.id}
-              title={entry.label === 'AC' ? 'Armor Class (Total)' : entry.label === 'TOUCH' ? 'Touch AC' : 'Flat-Footed AC'}
+              title={entry.title}
               total={entry.value}
               breakdown={sheet.ac.breakdown}
               notes={sheet.ac.notes}
@@ -225,9 +235,9 @@ function BentoStatusColumn() {
         <div className="grid grid-cols-3 gap-1.5 mt-1.5">
           {(
             [
-              { key: 'fort', label: 'FORT', full: 'Fortitude Save', value: sheet.saves.fort, base: char.savingThrows.fort, breakdown: sheet.saves.breakdowns.fortitude },
-              { key: 'ref', label: 'REF', full: 'Reflex Save', value: sheet.saves.ref, base: char.savingThrows.ref, breakdown: sheet.saves.breakdowns.reflex },
-              { key: 'will', label: 'WILL', full: 'Will Save', value: sheet.saves.will, base: char.savingThrows.will, breakdown: sheet.saves.breakdowns.will },
+              { key: 'fort', label: isIt ? 'TEMP' : 'FORT', full: t('bento.fortSave'), value: sheet.saves.fort, base: char.savingThrows.fort, breakdown: sheet.saves.breakdowns.fortitude },
+              { key: 'ref', label: isIt ? 'RIFL' : 'REF', full: t('bento.refSave'), value: sheet.saves.ref, base: char.savingThrows.ref, breakdown: sheet.saves.breakdowns.reflex },
+              { key: 'will', label: isIt ? 'VOL' : 'WILL', full: t('bento.willSave'), value: sheet.saves.will, base: char.savingThrows.will, breakdown: sheet.saves.breakdowns.will },
             ] as const
           ).map((save) => (
             <button
@@ -252,7 +262,7 @@ function BentoStatusColumn() {
       {/* Ability scores */}
       <section className="rounded-2xl border border-white/10 bg-[#11131c] p-3">
         <h3 className="font-label text-[9px] uppercase tracking-[0.2em] text-secondary font-bold mb-2">
-          Ability Scores
+          {t('bento.abilityScores')}
         </h3>
         <div className="grid grid-cols-3 gap-1.5">
           {ABILITY_KEYS.map((key) => {
@@ -267,13 +277,15 @@ function BentoStatusColumn() {
                     diceType: 20,
                     count: 1,
                     modifier: value,
-                    label: `${key.toUpperCase()} Check`,
+                    label: isIt ? `Prova di ${translateAbilityFull(key, locale)}` : `${key.toUpperCase()} Check`,
                     breakdown: sheet.abilities.breakdowns[key],
                   })
                 }
                 className="min-h-[44px] rounded-xl border border-white/10 bg-[#181b26] px-2 py-1.5 text-left hover:border-primary/40 transition-colors cursor-pointer tabular-nums"
               >
-                <span className="font-label text-[8px] uppercase tracking-widest text-tertiary">{key}</span>
+                <span className="font-label text-[8px] uppercase tracking-widest text-tertiary">
+                  {translateAbilityShort(key, locale)}
+                </span>
                 <div className="flex items-baseline gap-1">
                   <span
                     className="font-label text-base font-black"
@@ -293,7 +305,7 @@ function BentoStatusColumn() {
       {char.dailyResources.length > 0 && (
         <section className="rounded-2xl border border-white/10 bg-[#11131c] p-3">
           <h3 className="font-label text-[9px] uppercase tracking-[0.2em] text-secondary font-bold mb-2">
-            Daily Resources
+            {t('bento.dailyResources')}
           </h3>
           <div className="space-y-2">
             {char.dailyResources.map((resource) => {
@@ -331,7 +343,7 @@ function BentoStatusColumn() {
                       type="button"
                       onClick={() => recoverResource(char.id, resource.id)}
                       disabled={spent <= 0}
-                      aria-label={`Recover ${resource.name}`}
+                      aria-label={`${isIt ? 'Ripristina' : 'Recover'} ${resource.name}`}
                       className="min-h-[44px] min-w-[36px] rounded-lg border border-white/10 text-tertiary hover:text-primary disabled:opacity-30 cursor-pointer transition-colors"
                     >
                       <span className="material-symbols-outlined text-sm">add</span>
@@ -340,7 +352,7 @@ function BentoStatusColumn() {
                       type="button"
                       onClick={() => spendResource(char.id, resource.id, resource.total)}
                       disabled={remaining <= 0}
-                      aria-label={`Spend ${resource.name}`}
+                      aria-label={`${isIt ? 'Spendi' : 'Spend'} ${resource.name}`}
                       className="min-h-[44px] min-w-[36px] rounded-lg border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-30 cursor-pointer transition-colors"
                     >
                       <span className="material-symbols-outlined text-sm">remove</span>
@@ -356,10 +368,12 @@ function BentoStatusColumn() {
       {/* Conditions */}
       <section className="rounded-2xl border border-white/10 bg-[#11131c] p-3">
         <h3 className="font-label text-[9px] uppercase tracking-[0.2em] text-secondary font-bold mb-2">
-          Conditions
+          {t('bento.conditions')}
         </h3>
         {session.conditions.length === 0 ? (
-          <p className="font-label text-[9px] uppercase tracking-widest text-tertiary/60">No active conditions</p>
+          <p className="font-label text-[9px] uppercase tracking-widest text-tertiary/60">
+            {t('bento.noConditions')}
+          </p>
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {session.conditions.map((condition) => (
@@ -383,6 +397,9 @@ function BentoStatusColumn() {
 }
 
 function BentoLibraryColumn() {
+  const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
+
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
   const toggleBuff = useSessionStore((s) => s.toggleBuff)
@@ -451,7 +468,7 @@ function BentoLibraryColumn() {
                   : 'border-transparent text-tertiary hover:text-white'
               }`}
             >
-              {entry}
+              {t(`bento.${entry}` as any)}
             </button>
           ))}
         </div>
@@ -481,8 +498,8 @@ function BentoLibraryColumn() {
                         if (isSpent) recoverSpellSlot(char.id, level.level)
                         else spendSpellSlot(char.id, level.level, level.total)
                       }}
-                      title={!isSpontaneous ? 'Prepared spells have dedicated uses' : undefined}
-                      aria-label={`Spell slot level ${level.level} ${index + 1}`}
+                      title={!isSpontaneous ? (isIt ? 'Gli incantesimi preparati hanno usi dedicati' : 'Prepared spells have dedicated uses') : undefined}
+                      aria-label={`${isIt ? 'Slot incantesimo livello' : 'Spell slot level'} ${level.level} ${index + 1}`}
                       className={`w-2.5 h-4 rounded-sm border transition-colors ${
                         isSpontaneous ? 'cursor-pointer' : 'cursor-default'
                       } ${
@@ -506,7 +523,9 @@ function BentoLibraryColumn() {
         {tab === 'spells' && (
           <>
             {char.spells.length === 0 && (
-              <p className="px-1 py-4 font-label text-[9px] uppercase tracking-widest text-tertiary/60">No spells</p>
+              <p className="px-1 py-4 font-label text-[9px] uppercase tracking-widest text-tertiary/60">
+                {t('bento.noSpells')}
+              </p>
             )}
             {char.spells.map((spell) => {
               const candidate = isSpellBuffCandidate(spell)
@@ -520,12 +539,12 @@ function BentoLibraryColumn() {
                         type: 'spell',
                         id: spell.id,
                         title: spell.name,
-                        subtitle: `${spell.school} · Level ${spell.level}`,
+                        subtitle: `${spell.school} · ${isIt ? 'Livello' : 'Level'} ${spell.level}`,
                         description: spell.description,
-                        tags: [`Lv ${spell.level}`, spell.school, spell.spellResistance ? 'SR: Yes' : 'SR: No'],
+                        tags: [`${isIt ? 'Liv' : 'Lv'} ${spell.level}`, spell.school, spell.spellResistance ? (isIt ? 'RI: Sì' : 'SR: Yes') : (isIt ? 'RI: No' : 'SR: No')],
                         notes: [
-                          `Duration: ${spell.duration}`,
-                          `Save DC: ${availability.spellDc(spell)}`,
+                          `${isIt ? 'Durata:' : 'Duration:'} ${spell.duration}`,
+                          `${isIt ? 'CD Tiro Salvezza:' : 'Save DC:'} ${availability.spellDc(spell)}`,
                         ],
                       })
                     }
@@ -553,7 +572,7 @@ function BentoLibraryColumn() {
                           : 'border-secondary/30 bg-secondary/10 text-secondary hover:bg-secondary/20'
                       }`}
                     >
-                      {active ? 'Deactivate Buff' : 'Activate Buff'}
+                      {active ? t('bento.deactivateBuff') : t('bento.activateBuff')}
                     </button>
                   )}
                 </article>
@@ -561,10 +580,10 @@ function BentoLibraryColumn() {
             })}
             <button
               type="button"
-              onClick={() => openRollConcentration(concentration + (hasCombatCasting ? 4 : 0))}
+              onClick={() => openRollConcentration(concentration + (hasCombatCasting ? 4 : 0), isIt)}
               className="w-full min-h-[44px] rounded-xl border border-white/10 bg-[#181b26] font-label text-[9px] uppercase tracking-widest text-tertiary hover:text-primary transition-colors cursor-pointer tabular-nums"
             >
-              Concentration {concentration + (hasCombatCasting ? 4 : 0) >= 0 ? `+${concentration + (hasCombatCasting ? 4 : 0)}` : concentration + (hasCombatCasting ? 4 : 0)}
+              {isIt ? 'Concentrazione' : 'Concentration'} {concentration + (hasCombatCasting ? 4 : 0) >= 0 ? `+${concentration + (hasCombatCasting ? 4 : 0)}` : concentration + (hasCombatCasting ? 4 : 0)}
             </button>
           </>
         )}
@@ -578,11 +597,11 @@ function BentoLibraryColumn() {
                 type: feature.source === 'feat' ? 'feat' : 'classAbility',
                 id: feature.id,
                 title: feature.name,
-                subtitle: `${ACTION_ECONOMY_LABEL[feature.actionType]} Action`,
+                subtitle: `${translateActionType(feature.actionType, locale)} ${isIt ? 'Azione' : 'Action'}`,
                 description: feature.fullDesc,
-                tags: [ACTION_ECONOMY_LABEL[feature.actionType], feature.source === 'feat' ? 'Feat' : 'Class Ability'],
+                tags: [translateActionType(feature.actionType, locale), feature.source === 'feat' ? (isIt ? 'Talento' : 'Feat') : (isIt ? 'Capacità di Classe' : 'Class Ability')],
                 notes: feature.remainingUses !== undefined
-                  ? [`Uses remaining: ${feature.remainingUses} / ${feature.maxUses ?? 0}`]
+                  ? [`${isIt ? 'Usi rimanenti:' : 'Uses remaining:'} ${feature.remainingUses} / ${feature.maxUses ?? 0}`]
                   : undefined,
               })
             }
@@ -591,7 +610,7 @@ function BentoLibraryColumn() {
             <div className="flex items-center justify-between gap-2">
               <span className="font-label text-[10px] font-bold text-white truncate">{feature.name}</span>
               <span className="font-label text-[8px] uppercase tracking-widest text-tertiary border border-white/10 px-1.5 py-0.5 rounded-md flex-shrink-0">
-                {ACTION_ECONOMY_LABEL[feature.actionType]}
+                {translateActionType(feature.actionType, locale)}
               </span>
             </div>
             <p className="font-label text-[8px] text-tertiary mt-0.5 line-clamp-2">{feature.shortDesc}</p>
@@ -602,11 +621,11 @@ function BentoLibraryColumn() {
   )
 }
 
-function openRollConcentration(modifier: number) {
+function openRollConcentration(modifier: number, isIt: boolean) {
   useDiceStore.getState().openRoll({
     diceType: 20,
     count: 1,
     modifier,
-    label: 'Concentration (Desktop Library)',
+    label: isIt ? 'Concentrazione (Grimorio Desktop)' : 'Concentration (Desktop Library)',
   })
 }
