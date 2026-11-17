@@ -1,6 +1,7 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useInspectorStore } from '../../store/useInspectorStore'
+import { useTranslation } from '../../i18n'
 
 const DESKTOP_QUERY = '(min-width: 1024px)'
 
@@ -20,7 +21,7 @@ function useIsDesktop() {
   return useSyncExternalStore(subscribeDesktop, getDesktopSnapshot, () => false)
 }
 
-const TYPE_LABELS: Record<string, string> = {
+const TYPE_LABELS_EN: Record<string, string> = {
   feat: 'Feat / Talent',
   ability: 'Class Ability',
   classAbility: 'Class Ability',
@@ -31,12 +32,25 @@ const TYPE_LABELS: Record<string, string> = {
   stat: 'Stat Breakdown',
 }
 
+const TYPE_LABELS_IT: Record<string, string> = {
+  feat: 'Talento',
+  ability: 'Capacità di Classe',
+  classAbility: 'Capacità di Classe',
+  spell: 'Incantesimo',
+  buff: 'Effetto Attivo',
+  condition: 'Condizione',
+  weapon: 'Arma',
+  stat: 'Dettaglio Statistica',
+}
+
 export function InspectorDrawer() {
   const isOpen = useInspectorStore((s) => s.isOpen)
   const item = useInspectorStore((s) => s.currentItem)
   const closeInspector = useInspectorStore((s) => s.closeInspector)
   const isDesktop = useIsDesktop()
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const { locale, t } = useTranslation()
+  const typeLabels = locale === 'it' ? TYPE_LABELS_IT : TYPE_LABELS_EN
 
   useEffect(() => {
     if (!isOpen) return
@@ -66,7 +80,7 @@ export function InspectorDrawer() {
         >
           <button
             type="button"
-            aria-label="Close inspector backdrop"
+            aria-label={t('inspector.close')}
             onClick={closeInspector}
             className="absolute inset-0 w-full h-full bg-black/70 backdrop-blur-sm cursor-default"
           />
@@ -85,7 +99,7 @@ export function InspectorDrawer() {
             <div className="flex items-start justify-between gap-4 p-5 border-b border-white/10 bg-[#181b26]">
               <div className="min-w-0">
                 <span className="font-label text-[10px] uppercase tracking-[0.2em] text-secondary font-bold">
-                  {TYPE_LABELS[item.type] ?? 'Inspector'}
+                  {typeLabels[item.type] ?? (locale === 'it' ? 'Ispettore' : 'Inspector')}
                 </span>
                 <h2 id="inspector-title" className="font-headline text-xl font-bold text-white mt-1 truncate">
                   {item.title}
@@ -98,7 +112,7 @@ export function InspectorDrawer() {
                 ref={closeButtonRef}
                 type="button"
                 onClick={closeInspector}
-                aria-label="Close inspector"
+                aria-label={t('inspector.close')}
                 className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl border border-white/10 text-tertiary hover:text-primary hover:border-primary/40 transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined">close</span>
@@ -137,7 +151,7 @@ export function InspectorDrawer() {
               {item.breakdown && item.breakdown.length > 0 && (
                 <section>
                   <h3 className="font-label text-[10px] uppercase tracking-[0.2em] text-primary font-bold mb-2">
-                    Calculation Breakdown
+                    {locale === 'it' ? 'Dettaglio Calcolo' : 'Calculation Breakdown'}
                   </h3>
                   <ul className="border border-white/10 rounded-xl overflow-hidden divide-y divide-white/5">
                     {item.breakdown.map((row, index) => (
@@ -166,7 +180,7 @@ export function InspectorDrawer() {
               {item.notes && item.notes.length > 0 && (
                 <section>
                   <h3 className="font-label text-[10px] uppercase tracking-[0.2em] text-secondary font-bold mb-2">
-                    Rules Notes
+                    {locale === 'it' ? 'Note sulle Regole' : 'Rules Notes'}
                   </h3>
                   <ul className="space-y-1.5">
                     {item.notes.map((note, index) => (

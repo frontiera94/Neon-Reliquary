@@ -26,6 +26,7 @@ import { SpellUsePips } from '../components/spells/SpellUsePips'
 import { buffModifierTokens, modifierColor } from '../lib/buff-summary'
 import type { Weapon } from '../types/combat'
 import type { DiceType } from '../types/dice'
+import { useTranslation, getConditionInfo, translateSaveName } from '../i18n'
 
 export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
   const char = useCharacterStore((s) => s.activeCharacter())
@@ -49,6 +50,8 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     spendResource,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
+  const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
 
   const [showBuffModal, setShowBuffModal] = useState(false)
   const [fullAttackWeapon, setFullAttackWeapon] = useState<Weapon | null>(null)
@@ -56,7 +59,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
   if (!char) {
     return (
       <div className="flex h-64 items-center justify-center font-label text-sm uppercase tracking-widest text-tertiary">
-        No character selected
+        {t('common.noCharacterSelected')}
       </div>
     )
   }
@@ -135,10 +138,10 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
           <section aria-labelledby="attacks-heading">
             <div className="mb-2 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
               <h2 id="attacks-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
-                Attacks
+                {t('companion.attacks')}
               </h2>
               <span className="font-label text-[10px] uppercase tracking-wider text-tertiary">
-                {char.weapons.length} equipped
+                {char.weapons.length} {isIt ? 'equipaggiate' : 'equipped'}
               </span>
             </div>
 
@@ -167,20 +170,20 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                     offhandPenalty={offhandPenalty}
                     hasteActive={hasteActive}
                     sneakAttackDice={effective.extraDamageDice}
-                    extraDiceLabel={effective.extraDiceLabel ?? 'Extra Dmg'}
+                    extraDiceLabel={effective.extraDiceLabel ?? (isIt ? 'Danni Extra' : 'Extra Dmg')}
                     onAttackRoll={(attackIndex = 0) => {
                       const bonus = effective.attackBonus[attackIndex] ?? effective.attackBonus[0]
                       const label =
                         effective.attackBonus.length > 1
-                          ? `${weapon.name} ${attackIndex + 1}° Attack`
-                          : `${weapon.name} Attack`
+                          ? `${weapon.name} ${attackIndex + 1}° ${t('combat.attack')}`
+                          : `${weapon.name} ${t('combat.attack')}`
 
                       const { count: dmgCount, sides: dmgSides, bonus: dmgBonus } = parseDiceFormula(weapon.damageDice)
                       const followUpRoll = {
                         diceType: dmgSides as DiceType,
                         count: dmgCount,
                         modifier: effective.damageBonus + dmgBonus,
-                        label: `${weapon.name} Damage`,
+                        label: `${weapon.name} ${t('combat.damage')}`,
                         breakdown: effective.damageBreakdown,
                       }
 
@@ -209,11 +212,11 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         diceType: dmgSides as DiceType,
                         count: dmgCount,
                         modifier: offhandDmgBonus + dmgBonus,
-                        label: `${weapon.name} Damage (Off-hand)`,
+                        label: `${weapon.name} ${t('combat.damage')} (${t('combat.offHand')})`,
                         breakdown: [
                           ...effective.damageBreakdown,
                           ...(offhandDmgPenalty > 0
-                            ? [{ label: 'Off-hand Str (0.5x)', value: -offhandDmgPenalty }]
+                            ? [{ label: isIt ? 'For Secondaria (0.5x)' : 'Off-hand Str (0.5x)', value: -offhandDmgPenalty }]
                             : []),
                         ],
                       }
@@ -222,12 +225,12 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         diceType: 20,
                         count: 1,
                         modifier: effective.attackBonus[0] + offhandPenalty,
-                        label: `${weapon.name} Off-hand`,
+                        label: `${weapon.name} ${t('combat.offHand')}`,
                         critRange: weapon.critRange,
                         critMultiplier: weapon.critMultiplier,
                         breakdown: [
                           ...effective.attackBreakdown,
-                          { label: 'Off-hand Penalty', value: offhandPenalty },
+                          { label: isIt ? 'Penalità Secondaria' : 'Off-hand Penalty', value: offhandPenalty },
                         ],
                         followUpRoll,
                         followUpLabel: formatDamage(weapon.damageDice, offhandDmgBonus),
@@ -240,7 +243,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         diceType: sides,
                         count,
                         modifier: effective.damageBonus + bonus,
-                        label: `${weapon.name} Damage`,
+                        label: `${weapon.name} ${t('combat.damage')}`,
                         breakdown: effective.damageBreakdown,
                       })
                     }}
@@ -252,7 +255,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                               diceType: sides,
                               count,
                               modifier: 0,
-                              label: `${effective.extraDiceLabel ?? 'Extra Dmg'} Roll`,
+                              label: `${effective.extraDiceLabel ?? (isIt ? 'Danni Extra' : 'Extra Dmg')} Roll`,
                             })
                           }
                         : undefined
@@ -306,10 +309,10 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
               <div className="flex items-center justify-between">
                 <div className="flex items-baseline gap-2">
                   <h2 id="summon-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
-                    Summoned ally
+                    {isIt ? 'Alleato Evocato' : 'Summoned ally'}
                   </h2>
                   <span className="font-label text-[10px] uppercase tracking-wider text-primary">
-                    active
+                    {t('common.active').toLowerCase()}
                   </span>
                 </div>
               </div>
@@ -330,7 +333,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                 <div className="flex items-center gap-3">
                   <div className="flex items-baseline gap-2">
                     <h2 id="companion-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
-                      Companion
+                      {t('nav.companion')}
                     </h2>
                     <span className="font-label text-[10px] text-tertiary">{companion.name}</span>
                   </div>
@@ -362,7 +365,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                   to="/companion"
                   className="flex items-center gap-1 font-label text-[10px] uppercase tracking-wider text-tertiary transition-colors hover:text-primary"
                 >
-                  Sheet
+                  {isIt ? 'Scheda' : 'Sheet'}
                   <span className="material-symbols-outlined text-xs">arrow_forward</span>
                 </Link>
               </div>
@@ -382,7 +385,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-headline text-sm font-bold text-white">{companion.name}</p>
                     <p className="font-label text-[10px] uppercase tracking-wider text-tertiary">
-                      {companion.type.replace('_', ' ')} · {companion.species} · AC {companion.armorClass.total}
+                      {companion.type.replace('_', ' ')} · {companion.species} · {t('hud.ac')} {companion.armorClass.total}
                     </p>
                     {companionConditions.length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1">
@@ -391,7 +394,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                             key={cond}
                             className="rounded-full border border-error/40 bg-error/20 px-1.5 py-0.2 font-label text-[10px] font-bold uppercase tracking-wider text-error"
                           >
-                            {cond}
+                            {getConditionInfo(cond, locale).name}
                           </span>
                         ))}
                       </div>
@@ -402,7 +405,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                     <button
                       onClick={() => adjustCompanionHp(char.id, companion.id, -1, companion.maxHp)}
                       className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/5 bg-surface-container-high text-sm font-bold text-primary transition-colors hover:bg-error/20 hover:text-white cursor-pointer"
-                      title="-1 HP"
+                      title={`-1 ${t('hud.hp')}`}
                     >
                       -
                     </button>
@@ -419,7 +422,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                     <button
                       onClick={() => adjustCompanionHp(char.id, companion.id, 1, companion.maxHp)}
                       className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/5 bg-surface-container-high text-sm font-bold text-primary transition-colors hover:bg-primary/20 hover:text-white cursor-pointer"
-                      title="+1 HP"
+                      title={`+1 ${t('hud.hp')}`}
                     >
                       +
                     </button>
@@ -452,12 +455,12 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                                 diceType: 20,
                                 count: 1,
                                 modifier: effectiveAtkBonus,
-                                label: `${companion.name} — ${atk.name} Atk${conditionAttackMod !== 0 ? ` (${conditionAttackMod >= 0 ? '+' : ''}${conditionAttackMod})` : ''}`,
+                                label: `${companion.name} — ${atk.name} ${isIt ? 'Att' : 'Atk'}${conditionAttackMod !== 0 ? ` (${conditionAttackMod >= 0 ? '+' : ''}${conditionAttackMod})` : ''}`,
                                 critRange: atk.critRange ?? 20,
                               })
                             }
                             className="min-h-[32px] rounded-lg bg-primary/10 px-2 font-label text-[11px] font-bold text-primary transition-colors hover:bg-primary/20 cursor-pointer"
-                            title={`Roll ${atk.name} attack`}
+                            title={`${t('common.roll')} ${atk.name}`}
                           >
                             {effectiveAtkBonus >= 0 ? `+${effectiveAtkBonus}` : effectiveAtkBonus}
                           </button>
@@ -465,22 +468,22 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                             onClick={() => {
                               if (isTouch) {
                                 openRoll({
-                                   diceType: 20,
-                                   count: 1,
-                                   modifier: effectiveAtkBonus,
-                                   label: `${companion.name} — Touch Attack`,
-                                 })
+                                  diceType: 20,
+                                  count: 1,
+                                  modifier: effectiveAtkBonus,
+                                  label: `${companion.name} — ${isIt ? 'Attacco a Contatto' : 'Touch Attack'}`,
+                                })
                               } else {
                                 openRoll({
                                   diceType: parsed.sides,
                                   count: parsed.count,
                                   modifier: finalDmgBonus,
-                                  label: `${companion.name} — ${atk.name} Dmg${conditionDamageMod !== 0 ? ` (${conditionDamageMod >= 0 ? '+' : ''}${conditionDamageMod})` : ''}`,
+                                  label: `${companion.name} — ${atk.name} ${isIt ? 'Danni' : 'Dmg'}${conditionDamageMod !== 0 ? ` (${conditionDamageMod >= 0 ? '+' : ''}${conditionDamageMod})` : ''}`,
                                 })
                               }
                             }}
                             className="min-h-[32px] rounded-lg bg-secondary/10 px-2 font-label text-[11px] font-bold text-secondary transition-colors hover:bg-secondary/20 cursor-pointer"
-                            title={`Roll ${atk.name} damage`}
+                            title={`${t('common.roll')} ${atk.name}`}
                           >
                             {dmgLabel}
                           </button>
@@ -503,10 +506,10 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                 <h2 id="buffs-heading" className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
-                  Buffs & Effects
+                  {isIt ? 'Buff ed Effetti' : 'Buffs & Effects'}
                 </h2>
                 <span className="font-label text-[10px] text-tertiary">
-                  {activeBuffIds.length} active
+                  {activeBuffIds.length} {isIt ? 'attivi' : 'active'}
                 </span>
               </div>
               <button
@@ -514,7 +517,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                 className="flex min-h-[32px] items-center gap-1.5 rounded-lg border border-primary/25 px-2.5 font-label text-[10px] uppercase tracking-wider text-primary transition-colors hover:border-primary/60 hover:bg-primary/10 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-sm">tune</span>
-                Manage
+                {isIt ? 'Gestisci' : 'Manage'}
               </button>
             </div>
 
@@ -531,7 +534,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                     key={buff.id}
                     onClick={() => toggleBuff(char.id, buff.id)}
                     aria-pressed={isActive}
-                    title={isActive ? `Disable ${buff.name}` : `Enable ${buff.name}`}
+                    title={isActive ? `${isIt ? 'Disattiva' : 'Disable'} ${buff.name}` : `${isIt ? 'Attiva' : 'Enable'} ${buff.name}`}
                     className="flex w-full items-center gap-2.5 rounded-xl border bg-surface-container/80 px-2.5 py-2 text-left backdrop-blur-sm transition-all hover:bg-surface-container-high active:scale-[0.99] cursor-pointer"
                     style={
                       isActive
@@ -574,16 +577,16 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         {[
                           buff.attackMod !== 0 ? `${buff.attackMod > 0 ? '+' : ''}${buff.attackMod} Att` : '',
                           buff.damageMod !== 0 ? `${buff.damageMod > 0 ? '+' : ''}${buff.damageMod} Dmg` : '',
-                          buff.acMod !== 0 ? `${buff.acMod > 0 ? '+' : ''}${buff.acMod} AC` : '',
+                          buff.acMod !== 0 ? `${buff.acMod > 0 ? '+' : ''}${buff.acMod} ${t('hud.ac')}` : '',
                           buff.extraDamageDice ? `+${buff.extraDamageDice}` : '',
                           ...(typeof buff.saveMod === 'number' && buff.saveMod !== 0
                             ? [`${buff.saveMod > 0 ? '+' : ''}${buff.saveMod} Saves`]
                             : typeof buff.saveMod === 'object' && buff.saveMod !== null
                               ? Object.entries(buff.saveMod)
                                   .filter(([, v]) => v !== undefined && v !== 0)
-                                  .map(([k, v]) => `${(v as number) > 0 ? '+' : ''}${v} ${k === 'fort' ? 'Fort' : k === 'ref' ? 'Ref' : k === 'will' ? 'Will' : k}`)
+                                  .map(([k, v]) => `${(v as number) > 0 ? '+' : ''}${v} ${translateSaveName(k, locale, true)}`)
                               : []),
-                          buff.meleeOnly ? 'Melee only' : '',
+                          buff.meleeOnly ? (isIt ? 'Solo mischia' : 'Melee only') : '',
                         ]
                           .filter(Boolean)
                           .join(' / ')}
@@ -619,7 +622,9 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
               <div className="mt-3 space-y-1.5 border-t border-white/5 pt-2">
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-label text-[10px] uppercase tracking-wider text-secondary font-bold">
-                    {spellAvailability.profile.mode === 'prepared' ? 'Prepared Spells' : 'Spell Slots'}
+                    {spellAvailability.profile.mode === 'prepared'
+                      ? isIt ? 'Incantesimi Preparati' : 'Prepared Spells'
+                      : isIt ? 'Slot Incantesimo' : 'Spell Slots'}
                   </span>
                   <div className="flex items-center gap-2">
                     <span className="font-label text-[10px] text-tertiary tabular-nums">
@@ -628,9 +633,9 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                     <Link
                       to="/spells"
                       className="font-label text-[10px] text-primary hover:underline uppercase tracking-wider flex items-center gap-0.5"
-                      title="Manage prepared spells in Repository"
+                      title={isIt ? 'Gestisci incantesimi nel Grimorio' : 'Manage prepared spells in Repository'}
                     >
-                      <span>Spells</span>
+                      <span>{t('nav.spells')}</span>
                       <span className="material-symbols-outlined text-[11px] leading-none">arrow_forward</span>
                     </Link>
                   </div>
@@ -662,25 +667,33 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                               <span className="px-1 py-0.5 rounded bg-white/5 border border-white/5 text-[10px] font-bold">
                                 L{lvl.level}
                               </span>
-                              <span>{lvl.unpreparedCount} Unprepared Slot{lvl.unpreparedCount > 1 ? 's' : ''}</span>
+                              <span>
+                                {lvl.unpreparedCount}{' '}
+                                {isIt
+                                  ? lvl.unpreparedCount > 1 ? 'Slot Non Preparati' : 'Slot Non Preparato'
+                                  : `Unprepared Slot${lvl.unpreparedCount > 1 ? 's' : ''}`}
+                              </span>
                             </span>
                             <Link
                               to="/spells"
                               className="text-primary hover:underline text-[10px] capitalize"
                             >
-                              prepare +
+                              {isIt ? 'prepara +' : 'prepare +'}
                             </Link>
                           </div>
                         ))}
                     </div>
                   ) : (
                     <div className="flex items-center justify-between px-1 py-1 text-tertiary/60 font-label text-[10px]">
-                      <span>{spellAvailability.totalSlots} slots free to prepare</span>
+                      <span>
+                        {spellAvailability.totalSlots}{' '}
+                        {isIt ? 'slot liberi da preparare' : 'slots free to prepare'}
+                      </span>
                       <Link
                         to="/spells"
                         className="text-primary hover:underline font-bold uppercase text-[10px]"
                       >
-                        Prepare Spells →
+                        {isIt ? 'Prepara Incantesimi →' : 'Prepare Spells →'}
                       </Link>
                     </div>
                   )
@@ -691,7 +704,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                       .map((level) => (
                         <SpellUsePips
                           key={`slot-lvl-${level.level}`}
-                          label={`Level ${level.level}`}
+                          label={`${t('common.level')} ${level.level}`}
                           prefix="SLOT"
                           total={level.total}
                           spent={level.spent}
@@ -737,7 +750,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
           offhandPenalty={offhandPenalty}
           hasteActive={hasteActive}
           sneakAttackDice={fullAttackEffective.extraDamageDice}
-          extraDiceLabel={fullAttackEffective.extraDiceLabel ?? 'Extra Dmg'}
+          extraDiceLabel={fullAttackEffective.extraDiceLabel ?? (isIt ? 'Danni Extra' : 'Extra Dmg')}
           animated={true}
           onRollDamage={(dmgLabel, dmgMod, isCritical) => {
             const { count, sides } = parseDiceFormula(fullAttackWeapon.damageDice)
@@ -758,7 +771,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                     diceType: sides,
                     count,
                     modifier: 0,
-                    label: `${fullAttackEffective.extraDiceLabel ?? 'Extra Dmg'} Roll`,
+                    label: `${fullAttackEffective.extraDiceLabel ?? (isIt ? 'Danni Extra' : 'Extra Dmg')} Roll`,
                   })
                 }
               : undefined

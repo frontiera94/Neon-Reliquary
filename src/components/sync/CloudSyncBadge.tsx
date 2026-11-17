@@ -1,5 +1,6 @@
 import { useSyncStore } from '../../store/useSyncStore'
 import { syncSessionsNow } from '../../lib/session-sync'
+import { useTranslation } from '../../i18n'
 
 interface CloudSyncBadgeProps {
   compact?: boolean
@@ -8,6 +9,7 @@ interface CloudSyncBadgeProps {
 export function CloudSyncBadge({ compact = true }: CloudSyncBadgeProps) {
   const status = useSyncStore((s) => s.status)
   const pendingCount = useSyncStore((s) => s.pendingCount)
+  const { locale, t } = useTranslation()
 
   const config = (() => {
     switch (status) {
@@ -16,7 +18,10 @@ export function CloudSyncBadge({ compact = true }: CloudSyncBadgeProps) {
         return {
           icon: 'cloud_done',
           label: 'Cloud',
-          title: 'Stato salvato su Neon Cloud — clicca per sincronizzare',
+          title:
+            locale === 'it'
+              ? 'Stato salvato su Neon Cloud — clicca per sincronizzare'
+              : 'State saved on Neon Cloud — click to sync',
           className:
             'text-primary/70 border-primary/20 bg-primary/5 hover:bg-primary/20 hover:text-primary',
           spin: false,
@@ -25,17 +30,19 @@ export function CloudSyncBadge({ compact = true }: CloudSyncBadgeProps) {
       case 'loading':
         return {
           icon: 'sync',
-          label: 'Sync...',
-          title: 'Sincronizzazione stato su Neon Cloud in corso...',
+          label: `${t('sync.syncing')}...`,
+          title:
+            locale === 'it'
+              ? 'Sincronizzazione stato su Neon Cloud in corso...'
+              : 'Syncing state to Neon Cloud...',
           className: 'text-primary border-primary/40 bg-primary/15',
           spin: true,
         }
       case 'offline':
         return {
           icon: 'cloud_off',
-          label: pendingCount > 0 ? `Offline (${pendingCount})` : 'Offline',
-          title:
-            'Connessione cloud assente — stato salvato in locale, clicca per riprovare',
+          label: pendingCount > 0 ? `${t('sync.offline')} (${pendingCount})` : t('sync.offline'),
+          title: t('sync.cloudUnavailable'),
           className:
             'text-[#ffb4ab] border-error/40 bg-error/15 hover:bg-error/25',
           spin: false,
@@ -43,9 +50,8 @@ export function CloudSyncBadge({ compact = true }: CloudSyncBadgeProps) {
       case 'unconfigured':
         return {
           icon: 'save',
-          label: 'Locale',
-          title:
-            'Salvataggio solo locale (configura DATABASE_URL su Vercel per abilitare Neon Cloud)',
+          label: t('sync.local'),
+          title: t('sync.localOnlyHint'),
           className:
             'text-tertiary border-white/10 bg-surface-container/70 hover:text-white hover:border-white/20',
           spin: false,

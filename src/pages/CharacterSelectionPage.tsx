@@ -4,9 +4,11 @@ import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { CloudSyncBadge } from '../components/sync/CloudSyncBadge'
+import { LanguageFlagSwitcher } from '../components/layout/LanguageFlagButton'
 import { CharacterEmblem } from '../components/character/CharacterEmblem'
 import { getCharacterLore, isPlaceholderPortrait } from '../lib/character-lore'
 import type { FullCharacter } from '../store/useCharacterStore'
+import { useTranslation } from '../i18n'
 
 import mazeData from '../data/mazikeen-noctis.json'
 import shotrixData from '../data/shotrix-blackburn.json'
@@ -20,6 +22,7 @@ export function CharacterSelectionPage() {
   const { characters, loadCharacter, removeCharacter, setActiveCharacter, activeCharacterId } = useCharacterStore()
   const { initSession } = useSessionStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const { locale, t } = useTranslation()
 
   // Seed default roster
   useEffect(() => {
@@ -78,7 +81,7 @@ export function CharacterSelectionPage() {
   if (!activeChar) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center text-tertiary font-label">
-        Inizializzazione Roster...
+        {t('characterSelection.initializingRoster')}
       </div>
     )
   }
@@ -108,9 +111,10 @@ export function CharacterSelectionPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <LanguageFlagSwitcher variant="pill" />
           <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.03] border border-white/10 font-label text-[11px] text-tertiary uppercase tracking-widest">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-            Pathfinder 1E Roster
+            {t('characterSelection.rosterBadge')}
           </span>
           <CloudSyncBadge compact={false} />
         </div>
@@ -123,7 +127,7 @@ export function CharacterSelectionPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="font-label text-xs text-primary font-bold tracking-widest uppercase">
-                // ARCHIVE SELECTION
+                {locale === 'it' ? '// SELEZIONE ARCHIVIO' : '// ARCHIVE SELECTION'}
               </span>
               <span className="text-white/20">•</span>
               <span className="font-label text-xs text-tertiary">
@@ -131,17 +135,23 @@ export function CharacterSelectionPage() {
               </span>
             </div>
             <h1 className="font-headline text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white uppercase">
-              CHOOSE YOUR <span className="text-primary neon-glow">RELIC</span>
+              {locale === 'it' ? (
+                <>SCEGLI LA TUA <span className="text-primary neon-glow">RELIQUIA</span></>
+              ) : (
+                <>CHOOSE YOUR <span className="text-primary neon-glow">RELIC</span></>
+              )}
             </h1>
           </div>
 
           {/* Quick Keyboard indicator on desktop */}
           <div className="hidden lg:flex items-center gap-2 text-xs font-mono text-tertiary/70 bg-white/[0.02] border border-white/10 px-3 py-1.5 rounded-xl">
-            <span>Usa</span>
+            <span>{locale === 'it' ? 'Usa' : 'Use'}</span>
             <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">↑</kbd>
             <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">↓</kbd>
-            <span>o</span>
-            <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">Invio</kbd>
+            <span>{locale === 'it' ? 'o' : 'or'}</span>
+            <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white font-mono text-[10px]">
+              {locale === 'it' ? 'Invio' : 'Enter'}
+            </kbd>
           </div>
         </div>
 
@@ -149,10 +159,10 @@ export function CharacterSelectionPage() {
         <div className="lg:hidden mb-5">
           <div className="flex items-center justify-between mb-2">
             <span className="font-label text-xs uppercase tracking-wider text-tertiary font-bold">
-              Seleziona Personaggio
+              {t('characterSelection.selectHero')}
             </span>
             <span className="font-mono text-[11px] text-primary">
-              Swipe orizzontale attivo
+              {locale === 'it' ? 'Swipe orizzontale attivo' : 'Horizontal swipe active'}
             </span>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x">
@@ -169,7 +179,7 @@ export function CharacterSelectionPage() {
                       ? 'bg-primary/15 border-primary shadow-[0_0_15px_rgba(0,240,255,0.25)] text-white'
                       : 'bg-surface-container/80 border-white/10 text-tertiary hover:border-white/20'
                   }`}
-                  aria-label={`Quick select ${char.name}`}
+                  aria-label={locale === 'it' ? `Selezione rapida ${char.name}` : `Quick select ${char.name}`}
                 >
                   <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
                     <CharacterEmblem characterId={char.id} lore={lore} variant="avatar" className="w-full h-full" />
@@ -184,7 +194,7 @@ export function CharacterSelectionPage() {
                       )}
                     </div>
                     <p className="font-label text-[10px] text-tertiary tracking-wider uppercase">
-                      Lv {char.level} {char.class}
+                      {t('common.lvl')} {char.level} {char.class}
                     </p>
                   </div>
                 </button>
@@ -196,13 +206,13 @@ export function CharacterSelectionPage() {
         {/* Layout Grid: Desktop Master-Detail (5/7) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* LEFT: Active Roster List (Desktop) */}
-          <section className="hidden lg:flex lg:col-span-5 flex-col gap-2.5" aria-label="Roster personaggi">
+          <section className="hidden lg:flex lg:col-span-5 flex-col gap-2.5" aria-label={t('settings.characterRoster')}>
             <div className="flex items-center justify-between px-1 mb-1">
               <span className="font-label text-xs uppercase tracking-widest text-tertiary font-bold">
-                Active Roster ({chars.length})
+                {locale === 'it' ? `Roster Attivo (${chars.length})` : `Active Roster (${chars.length})`}
               </span>
               <span className="font-mono text-[11px] text-tertiary/70">
-                Seleziona per i dettagli
+                {locale === 'it' ? 'Seleziona per i dettagli' : 'Select for details'}
               </span>
             </div>
 
@@ -228,7 +238,7 @@ export function CharacterSelectionPage() {
           </section>
 
           {/* RIGHT: Character Spotlight Panel */}
-          <section className="lg:col-span-7 flex flex-col" aria-label="Dettagli personaggio">
+          <section className="lg:col-span-7 flex flex-col" aria-label={locale === 'it' ? 'Dettagli personaggio' : 'Character details'}>
             <motion.div
               key={activeChar.id}
               initial={{ opacity: 0.8 }}
@@ -252,7 +262,7 @@ export function CharacterSelectionPage() {
                   {isCurrentlyActive && (
                     <span className="px-2.5 py-0.5 rounded-full bg-secondary/15 border border-secondary/40 font-label text-[10px] text-secondary font-bold tracking-widest uppercase flex items-center gap-1.5 shadow-[0_0_10px_rgba(217,70,239,0.25)]">
                       <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-                      Sessione Attiva
+                      {locale === 'it' ? 'Sessione Attiva' : 'Active Session'}
                     </span>
                   )}
                 </div>
@@ -262,7 +272,7 @@ export function CharacterSelectionPage() {
                   <button
                     onClick={() => selectRelative(-1)}
                     className="p-1 rounded-lg text-tertiary hover:text-primary hover:bg-white/5 transition-colors cursor-pointer"
-                    aria-label="Personaggio precedente"
+                    aria-label={t('hud.previousCharacter')}
                   >
                     <span className="material-symbols-outlined text-lg">chevron_left</span>
                   </button>
@@ -272,7 +282,7 @@ export function CharacterSelectionPage() {
                   <button
                     onClick={() => selectRelative(1)}
                     className="p-1 rounded-lg text-tertiary hover:text-primary hover:bg-white/5 transition-colors cursor-pointer"
-                    aria-label="Personaggio successivo"
+                    aria-label={t('hud.nextCharacter')}
                   >
                     <span className="material-symbols-outlined text-lg">chevron_right</span>
                   </button>
@@ -316,7 +326,7 @@ export function CharacterSelectionPage() {
                   {/* Core Identity Pills: Race, Alignment, Level & Class */}
                   <div className="flex flex-wrap gap-2 items-center">
                     <span className="px-3 py-1 rounded-lg bg-surface-container-high border border-white/10 font-label text-xs text-white uppercase tracking-wider font-semibold">
-                      Lv {activeChar.level} {activeChar.class}
+                      {t('common.lvl')} {activeChar.level} {activeChar.class}
                     </span>
                     <span className="px-3 py-1 rounded-lg bg-primary/10 border border-primary/30 font-label text-xs text-primary uppercase tracking-wider font-semibold">
                       {activeChar.race}
@@ -345,14 +355,12 @@ export function CharacterSelectionPage() {
               <div className="bg-surface-container/60 rounded-xl p-4 border border-white/[0.06]">
                 <p className="font-label text-[11px] uppercase tracking-wider text-tertiary font-bold mb-1.5 flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-sm text-primary">feed</span>
-                  Profilo Identitario
+                  {locale === 'it' ? 'Profilo Identitario' : 'Identity Profile'}
                 </p>
                 <p className="font-body text-sm text-on-surface-variant leading-relaxed">
                   {activeLore.bio}
                 </p>
               </div>
-
-
 
               {/* Compagno / Famiglio Legato (se presente) */}
               {activeChar.companions && activeChar.companions.length > 0 && (
@@ -374,12 +382,12 @@ export function CharacterSelectionPage() {
                         {activeChar.companions[0].name}
                       </p>
                       <p className="font-label text-[11px] text-tertiary tracking-wide uppercase">
-                        {activeChar.companions[0].type.replace('_', ' ')} • {activeChar.companions[0].species} • HP {activeChar.companions[0].maxHp}
+                        {activeChar.companions[0].type.replace('_', ' ')} • {activeChar.companions[0].species} • {t('hud.hp')} {activeChar.companions[0].maxHp}
                       </p>
                     </div>
                   </div>
                   <span className="px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/30 font-label text-[10px] text-primary uppercase font-bold tracking-widest flex-shrink-0">
-                    Legame Attivo
+                    {locale === 'it' ? 'Legame Attivo' : 'Active Bond'}
                   </span>
                 </div>
               )}
@@ -398,7 +406,11 @@ export function CharacterSelectionPage() {
                   </span>
                   <span>
                     {isCurrentlyActive
-                      ? `Resume Session — ${activeChar.name}`
+                      ? locale === 'it'
+                        ? `Riprendi Sessione — ${activeChar.name}`
+                        : `Resume Session — ${activeChar.name}`
+                      : locale === 'it'
+                      ? `Manifesta Personaggio — ${activeChar.name}`
                       : `Manifest Character — ${activeChar.name}`}
                   </span>
                 </button>
@@ -429,6 +441,7 @@ function RosterItemCard({
   onSelect,
 }: RosterItemCardProps) {
   const session = useSessionStore((s) => s.sessions[char.id])
+  const { locale, t } = useTranslation()
   const currentHp = session?.currentHp ?? char.maxHp
   const maxHp = char.maxHp
   const hpPct = Math.max(0, Math.min(100, (currentHp / maxHp) * 100))
@@ -443,7 +456,7 @@ function RosterItemCard({
           ? 'bg-surface-container-high border-primary ring-1 ring-primary shadow-[0_0_20px_rgba(0,240,255,0.18)]'
           : 'bg-surface-container/70 border-white/[0.08] hover:bg-surface-container hover:border-white/20'
       }`}
-      aria-label={`Select ${char.name}`}
+      aria-label={`${t('common.select')} ${char.name}`}
     >
       {/* Active selection bar indicator on left */}
       {isSelected && (
@@ -464,7 +477,7 @@ function RosterItemCard({
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {isCharActive && (
               <span className="px-1.5 py-0.5 rounded bg-secondary/15 border border-secondary/30 font-label text-[10px] text-secondary font-bold uppercase tracking-widest">
-                Active
+                {t('common.active')}
               </span>
             )}
             <span className="font-mono text-[10px] text-tertiary">
@@ -475,7 +488,7 @@ function RosterItemCard({
 
         <div className="flex items-center gap-2 mt-0.5">
           <p className="font-label text-xs text-primary font-medium tracking-wide">
-            Lv {char.level} {char.class}
+            {t('common.lvl')} {char.level} {char.class}
           </p>
           <span className="text-white/20 text-xs">•</span>
           <p className="font-label text-xs text-tertiary truncate">
@@ -503,10 +516,14 @@ function RosterItemCard({
             {currentHp}/{maxHp}
           </span>
           {isDead && (
-            <span className="font-label text-[10px] uppercase text-error font-bold">Dead</span>
+            <span className="font-label text-[10px] uppercase text-error font-bold">
+              {locale === 'it' ? 'Morto' : 'Dead'}
+            </span>
           )}
           {isDying && (
-            <span className="font-label text-[10px] uppercase text-error font-bold animate-pulse">Dying</span>
+            <span className="font-label text-[10px] uppercase text-error font-bold animate-pulse">
+              {locale === 'it' ? 'Morente' : 'Dying'}
+            </span>
           )}
         </div>
       </div>
@@ -516,6 +533,7 @@ function RosterItemCard({
 
 function VitalitySummaryStrip({ char }: { char: FullCharacter }) {
   const session = useSessionStore((s) => s.sessions[char.id])
+  const { locale, t } = useTranslation()
   const currentHp = session?.currentHp ?? char.maxHp
   const maxHp = char.maxHp
   const tempHp = session?.tempHp ?? 0
@@ -532,11 +550,11 @@ function VitalitySummaryStrip({ char }: { char: FullCharacter }) {
     <div className="bg-surface-container/60 rounded-xl p-3.5 border border-white/[0.06]">
       <div className="flex items-center justify-between mb-1.5">
         <span className="font-label text-xs text-tertiary uppercase tracking-wider font-bold">
-          Stato Vitale & Sessione
+          {locale === 'it' ? 'Stato Vitale & Sessione' : 'Vital & Session Status'}
         </span>
         <span className="font-mono text-xs text-primary font-bold tabular-nums">
-          {currentHp} / {maxHp} HP
-          {tempHp > 0 && <span className="text-cyan-300 ml-1">+{tempHp} TEMP</span>}
+          {currentHp} / {maxHp} {t('hud.hp')}
+          {tempHp > 0 && <span className="text-cyan-300 ml-1">+{tempHp} {t('hud.temp').toUpperCase()}</span>}
           {nonlethal > 0 && <span className="text-[#ffb4ab] ml-1">({nonlethal} NL)</span>}
         </span>
       </div>
@@ -559,32 +577,32 @@ function VitalitySummaryStrip({ char }: { char: FullCharacter }) {
       <div className="flex flex-wrap gap-1.5 items-center">
         {isDead && (
           <span className="bg-error/20 text-error border border-error/50 px-2 py-0.5 font-label text-[10px] rounded-md uppercase font-bold">
-            Dead
+            {t('hud.dead')}
           </span>
         )}
         {isDying && (
           <span className="bg-error/20 text-error border border-error/50 px-2 py-0.5 font-label text-[10px] rounded-md uppercase font-bold animate-pulse">
-            Dying
+            {t('hud.dying')}
           </span>
         )}
         {isDisabled && (
           <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 font-label text-[10px] rounded-md uppercase font-bold">
-            Disabled
+            {t('hud.disabledStatus')}
           </span>
         )}
         {activeBuffs > 0 && (
           <span className="bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 font-label text-[10px] rounded-md uppercase">
-            {activeBuffs} buff attivi
+            {locale === 'it' ? `${activeBuffs} buff attivi` : `${activeBuffs} active buffs`}
           </span>
         )}
         {conditions > 0 && (
           <span className="bg-error/10 text-error border border-error/30 px-2 py-0.5 font-label text-[10px] rounded-md uppercase">
-            {conditions} condizioni
+            {locale === 'it' ? `${conditions} condizioni` : `${conditions} conditions`}
           </span>
         )}
         {activeBuffs === 0 && conditions === 0 && !isDead && !isDying && !isDisabled && (
           <span className="text-tertiary/60 font-label text-[10px] uppercase tracking-wider">
-            Condizioni stabili • Nessun debuff attivo
+            {locale === 'it' ? 'Condizioni stabili • Nessun debuff attivo' : 'Stable conditions • No active debuffs'}
           </span>
         )}
       </div>

@@ -5,6 +5,8 @@ import { useCharacterStore } from '../../store/useCharacterStore'
 import { useSyncStore } from '../../store/useSyncStore'
 import { syncSessionsNow } from '../../lib/session-sync'
 import type { DiceType } from '../../types/dice'
+import { useTranslation } from '../../i18n'
+import { LanguageFlagSwitcher } from './LanguageFlagButton'
 
 const DICE_TYPES: DiceType[] = [4, 6, 8, 10, 12, 20, 100]
 
@@ -22,6 +24,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const syncStatus = useSyncStore((s) => s.status)
   const lastSyncedAt = useSyncStore((s) => s.lastSyncedAt)
   const chatCount = activeCharacterId ? (chats[activeCharacterId]?.length ?? 0) : 0
+  const { t, locale } = useTranslation()
 
   const [diceType, setDiceType] = useState<DiceType>(20)
   const [diceCount, setDiceCount] = useState(1)
@@ -51,19 +54,31 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 flex-shrink-0 bg-surface-container-high/40">
-          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">Settings</h2>
+          <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
+            {t('settings.title')}
+          </h2>
           <button
             onClick={onClose}
             className="text-tertiary hover:text-primary transition-colors p-1 rounded-lg hover:bg-white/5 cursor-pointer"
-            aria-label="Chiudi"
+            aria-label={t('common.close')}
           >
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
+        {/* Language Selector */}
+        <div className="px-6 py-4 border-b border-white/10 space-y-2.5">
+          <span className="font-label text-xs text-tertiary uppercase tracking-widest block">
+            {t('settings.language')}
+          </span>
+          <LanguageFlagSwitcher variant="settings" />
+        </div>
+
         {/* Freeform Dice Roller */}
         <div className="px-6 py-4 border-b border-white/10 space-y-3">
-          <span className="font-label text-xs text-tertiary uppercase tracking-widest">Custom Roll</span>
+          <span className="font-label text-xs text-tertiary uppercase tracking-widest">
+            {t('settings.customRoll')}
+          </span>
           <div className="flex flex-wrap gap-1.5">
             {DICE_TYPES.map((d) => (
               <button
@@ -111,7 +126,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               type="text"
               value={rollLabel}
               onChange={(e) => setRollLabel(e.target.value)}
-              placeholder="Label (optional)"
+              placeholder={t('settings.labelOptional')}
               className="flex-1 bg-surface-container-high px-3 py-2 font-label text-xs text-on-surface placeholder:text-tertiary/50 rounded-xl border border-white/10 focus:border-primary/50 focus:outline-none transition-colors"
             />
             <button
@@ -123,7 +138,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               })}
               className="px-4 py-2 bg-primary text-black font-bold font-label text-xs uppercase tracking-widest rounded-xl hover:shadow-[0_0_15px_rgba(0,240,255,0.4)] transition-all active:scale-95 cursor-pointer"
             >
-              Roll
+              {t('settings.roll')}
             </button>
           </div>
         </div>
@@ -133,16 +148,21 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           <div className="px-6 py-4 flex items-center justify-between border-b border-white/10">
             <div>
               <span className="font-label text-xs text-tertiary uppercase tracking-widest block">
-                Neon Cloud Save
+                {t('settings.cloudSave')}
               </span>
               <span className="font-label text-[10px] text-tertiary/70 mt-0.5 block">
                 {syncStatus === 'synced' && lastSyncedAt
-                  ? `Salvato alle ${new Date(lastSyncedAt).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
+                  ? t('settings.savedAt', {
+                      time: new Date(lastSyncedAt).toLocaleTimeString(
+                        locale === 'it' ? 'it-IT' : 'en-US',
+                        { hour: '2-digit', minute: '2-digit' }
+                      ),
+                    })
                   : syncStatus === 'syncing' || syncStatus === 'loading'
-                  ? 'Sincronizzazione in corso...'
+                  ? t('settings.syncing')
                   : syncStatus === 'unconfigured'
-                  ? 'Solo locale (DATABASE_URL assente)'
-                  : 'Offline — salvato in locale'}
+                  ? t('settings.localOnly')
+                  : t('settings.offlineLocal')}
               </span>
             </div>
             {syncStatus !== 'unconfigured' && (
@@ -153,7 +173,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
                 }}
                 className="font-label text-[10px] uppercase tracking-widest text-primary hover:text-white transition-colors cursor-pointer"
               >
-                Sincronizza
+                {t('settings.syncNow')}
               </button>
             )}
           </div>
@@ -169,7 +189,7 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
               onClick={() => clearChat(activeCharacterId)}
               className="font-label text-[10px] uppercase tracking-widest text-tertiary hover:text-error transition-colors cursor-pointer"
             >
-              Cancella
+              {t('common.clear')}
             </button>
           )}
         </div>
@@ -178,14 +198,14 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         {activeChar?.pdfPath && (
           <div className="px-6 py-4 flex items-center justify-between border-b border-white/10">
             <span className="font-label text-xs text-tertiary uppercase tracking-widest">
-              Character Sheet
+              {locale === 'it' ? 'Scheda Personaggio' : 'Character Sheet'}
             </span>
             <button
               onClick={() => window.open(activeChar.pdfPath, '_blank', 'noopener,noreferrer')}
               className="flex items-center gap-1.5 font-label text-[10px] uppercase tracking-widest text-tertiary hover:text-primary transition-colors cursor-pointer"
             >
               <span className="material-symbols-outlined text-base">picture_as_pdf</span>
-              Open PDF
+              {locale === 'it' ? 'Apri PDF' : 'Open PDF'}
             </button>
           </div>
         )}
@@ -194,21 +214,23 @@ export function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         <div className="flex-1 overflow-y-auto">
           <div className="px-6 py-4 flex items-center justify-between border-b border-white/10">
             <span className="font-label text-xs text-tertiary uppercase tracking-widest">
-              Roll History ({history.length})
+              {t('settings.rollHistory')} ({history.length})
             </span>
             {history.length > 0 && (
               <button
                 onClick={clearHistory}
                 className="font-label text-[10px] uppercase tracking-widest text-tertiary hover:text-error transition-colors cursor-pointer"
               >
-                Clear
+                {t('settings.clearHistory')}
               </button>
             )}
           </div>
 
           {history.length === 0 ? (
             <div className="px-6 py-10 text-center">
-              <p className="font-label text-xs text-tertiary/50 uppercase tracking-widest">No rolls yet</p>
+              <p className="font-label text-xs text-tertiary/50 uppercase tracking-widest">
+                {t('settings.noRollsYet')}
+              </p>
             </div>
           ) : (
             <ul className="divide-y divide-white/5">

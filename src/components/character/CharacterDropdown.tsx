@@ -5,6 +5,7 @@ import { useSessionStore } from '../../store/useSessionStore'
 import { CharacterEmblem } from './CharacterEmblem'
 import { getCharacterLore } from '../../lib/character-lore'
 import type { FullCharacter } from '../../store/useCharacterStore'
+import { useTranslation } from '../../i18n'
 
 export interface CharacterDropdownProps {
   align?: 'left' | 'right'
@@ -28,6 +29,7 @@ export function CharacterDropdown({
   const activeChar = useCharacterStore((s) => s.activeCharacter())
   const setActiveCharacter = useCharacterStore((s) => s.setActiveCharacter)
   const initSession = useSessionStore((s) => s.initSession)
+  const { locale, t } = useTranslation()
 
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -98,7 +100,7 @@ export function CharacterDropdown({
           onClick={handleToggle}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
-          aria-label="Character Switcher"
+          aria-label={t('hud.characterSwitcher')}
           data-testid="character-dropdown-trigger"
           className="flex items-center gap-2 px-3 py-1.5 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-xs rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_20px_rgba(0,240,255,0.25)] transition-all duration-300 cursor-pointer"
         >
@@ -111,7 +113,7 @@ export function CharacterDropdown({
               className="w-full h-full"
             />
           </div>
-          <span className="hidden xl:inline">Character Switcher</span>
+          <span className="hidden xl:inline">{t('hud.characterSwitcher')}</span>
           <span
             className={`material-symbols-outlined text-sm text-primary transition-transform duration-200 ${
               isOpen ? 'rotate-180' : ''
@@ -127,7 +129,7 @@ export function CharacterDropdown({
           onClick={handleToggle}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
-          aria-label="Character Switcher"
+          aria-label={t('hud.characterSwitcher')}
           data-testid="character-dropdown-trigger-sidebar"
           className="w-full flex items-center justify-between gap-3 p-2 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-primary/40 hover:bg-white/[0.04] transition-all cursor-pointer group text-left"
         >
@@ -155,7 +157,7 @@ export function CharacterDropdown({
                 {activeChar.name}
               </h3>
               <p className="font-label text-tertiary text-[10px] uppercase tracking-wider truncate">
-                Lv {activeChar.level} {activeChar.class}
+                {t('common.lvl')} {activeChar.level} {activeChar.class}
               </p>
             </div>
           </div>
@@ -173,7 +175,7 @@ export function CharacterDropdown({
       {isOpen && (
         <div
           role="listbox"
-          aria-label="Seleziona personaggio"
+          aria-label={t('characterSelection.selectHero')}
           data-testid="character-dropdown-menu"
           className={`absolute ${
             align === 'left' ? 'left-0' : 'right-0'
@@ -181,7 +183,7 @@ export function CharacterDropdown({
         >
           <div className="px-3.5 py-1.5 border-b border-white/[0.08] mb-1 flex items-center justify-between">
             <span className="font-label text-[10px] uppercase tracking-widest text-tertiary">
-              Seleziona Personaggio
+              {t('characterSelection.selectHero')}
             </span>
             <span className="font-label text-[10px] text-primary font-mono">
               {characters.length}
@@ -218,7 +220,6 @@ export function CharacterDropdown({
                       />
                     </div>
 
-                    {/* Nome e basta! */}
                     <span
                       className={`font-headline text-sm font-bold truncate ${
                         isSelected ? 'text-primary' : 'text-on-surface group-hover:text-white'
@@ -250,7 +251,7 @@ export function CharacterDropdown({
               className="w-full flex items-center gap-2 px-3 py-1.5 text-left text-tertiary hover:text-primary hover:bg-white/[0.04] rounded-lg transition-colors text-[11px] font-label uppercase tracking-wider cursor-pointer"
             >
               <span className="material-symbols-outlined text-xs">group</span>
-              <span>Tutti i personaggi (Roster)</span>
+              <span>{locale === 'it' ? 'Tutti i personaggi (Roster)' : 'All Characters (Roster)'}</span>
             </button>
           </div>
         </div>

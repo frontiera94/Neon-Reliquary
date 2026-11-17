@@ -1,4 +1,5 @@
 import type { InventoryItem } from '../../types/inventory'
+import { useTranslation, translateEquipmentSlot } from '../../i18n'
 
 const categoryColors: Record<string, string> = {
   weapon: 'text-primary border-primary/20',
@@ -6,6 +7,14 @@ const categoryColors: Record<string, string> = {
   consumable: 'text-error border-error/20',
   gear: 'text-tertiary border-outline-variant/30',
   magic: 'text-primary border-primary/20',
+}
+
+const categoryIt: Record<string, string> = {
+  weapon: 'arma',
+  armor: 'armatura',
+  consumable: 'consumabile',
+  gear: 'equipaggiamento',
+  magic: 'magico',
 }
 
 export function InventoryItemCard({
@@ -21,6 +30,7 @@ export function InventoryItemCard({
   onAdjust: (delta: number) => void
   onToggleEquip?: () => void
 }) {
+  const { locale, t } = useTranslation()
   const chipColor = categoryColors[item.category] ?? categoryColors.gear
   const isEquippable = Boolean(item.slot || item.category === 'weapon' || item.category === 'armor' || item.category === 'magic')
 
@@ -33,7 +43,7 @@ export function InventoryItemCard({
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-1 min-w-0">
           <span className={`text-[10px] font-label uppercase tracking-widest px-2.5 py-0.5 rounded-full border self-start ${chipColor}`}>
-            {item.category}
+            {locale === 'it' ? (categoryIt[item.category] ?? item.category) : item.category}
           </span>
           <h3 className="font-headline text-base sm:text-lg font-bold text-white leading-tight">{item.name}</h3>
         </div>
@@ -68,22 +78,22 @@ export function InventoryItemCard({
           <div className="flex flex-wrap items-center gap-1.5">
             {item.slot && (
               <span className="font-label text-[10px] text-tertiary uppercase tracking-wider bg-white/5 px-2 py-0.5 rounded">
-                {item.slot}
+                {translateEquipmentSlot(item.slot, locale)}
               </span>
             )}
             {item.armorBonus !== undefined && (
               <span className="font-label text-[10px] text-secondary font-bold bg-secondary/10 px-2 py-0.5 rounded">
-                +{item.armorBonus} AC
+                +{item.armorBonus} {t('hud.ac')}
               </span>
             )}
             {item.armorCheckPenalty !== undefined && item.armorCheckPenalty < 0 && (
               <span className="font-label text-[10px] text-amber-400 font-bold bg-amber-400/10 px-2 py-0.5 rounded">
-                {item.armorCheckPenalty} ACP
+                {item.armorCheckPenalty} {locale === 'it' ? 'PA' : 'ACP'}
               </span>
             )}
             {item.spellFailureChance !== undefined && item.spellFailureChance > 0 && (
               <span className="font-label text-[10px] text-red-400 font-bold bg-red-400/10 px-2 py-0.5 rounded">
-                {item.spellFailureChance}% ASF
+                {item.spellFailureChance}% {locale === 'it' ? 'FIA' : 'ASF'}
               </span>
             )}
           </div>
@@ -99,7 +109,7 @@ export function InventoryItemCard({
               <span className="material-symbols-outlined text-sm">
                 {isEquipped ? 'check_circle' : 'radio_button_unchecked'}
               </span>
-              {isEquipped ? 'Equipped' : 'Equip'}
+              {isEquipped ? t('inventory.equipped') : t('inventory.equip')}
             </button>
           )}
         </div>

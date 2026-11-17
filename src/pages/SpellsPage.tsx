@@ -9,6 +9,7 @@ import { getSpellAvailability } from '../lib/spell-availability'
 import { spellInspectorItem } from '../lib/inspector-items'
 import { SpellUsePips } from '../components/spells/SpellUsePips'
 import type { Spell, SpellAttackType } from '../types/resources'
+import { useTranslation, translateSchool } from '../i18n'
 
 
 function getSpellFocusBonus(school: string, feats: { id?: string; name: string }[]): number {
@@ -50,17 +51,23 @@ export function SpellsPage() {
   const openInspector = useInspectorStore((s) => s.openInspector)
   const [search, setSearch] = useState('')
   const [levelFilter, setLevelFilter] = useState<number | 'all'>('all')
+  const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
 
   if (!char) return (
     <div className="flex items-center justify-center h-64 text-tertiary font-label text-sm uppercase tracking-widest">
-      No character selected
+      {t('common.noCharacterSelected')}
     </div>
   )
 
   if (!char.spells || char.spells.length === 0) return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      <h1 className="font-headline text-2xl sm:text-3xl font-black text-white mb-2 tracking-tight uppercase">The Repository</h1>
-      <p className="text-tertiary font-label text-xs sm:text-sm">This character has no spellcasting ability.</p>
+      <h1 className="font-headline text-2xl sm:text-3xl font-black text-white mb-2 tracking-tight uppercase">
+        {isIt ? 'Il Grimorio' : 'The Repository'}
+      </h1>
+      <p className="text-tertiary font-label text-xs sm:text-sm">
+        {isIt ? 'Questo personaggio non possiede capacità da incantatore.' : 'This character has no spellcasting ability.'}
+      </p>
     </div>
   )
 
@@ -90,8 +97,8 @@ export function SpellsPage() {
   const bab = char.baseAttackBonus[0] ?? 0
   const dexMod = effectiveAbilities.mods.dex
   const strMod = effectiveAbilities.mods.str
-  const attackBonusFor = (t: SpellAttackType): number =>
-    t === 'meleeTouch' ? bab + strMod : bab + dexMod
+  const attackBonusFor = (tType: SpellAttackType): number =>
+    tType === 'meleeTouch' ? bab + strMod : bab + dexMod
 
   const isAlwaysPrepared = (spell: Spell) =>
     Boolean(spell.alwaysPrepared || spell.source === 'domain' || spell.source === 'bloodline')
@@ -145,14 +152,16 @@ export function SpellsPage() {
       spellInspectorItem(spell, {
         dc: availability.spellDc(spell),
         tags: [
-          ...(isSpellBuffActive(spell) ? ['Buff Active'] : []),
-          ...(isAlwaysPrepared(spell) ? ['Always Prepared'] : []),
+          ...(isSpellBuffActive(spell) ? [isIt ? 'Buff Attivo' : 'Buff Active'] : []),
+          ...(isAlwaysPrepared(spell) ? [isIt ? 'Sempre Preparato' : 'Always Prepared'] : []),
           ...(spell.source === 'sla' ? ['SLA'] : []),
         ],
         actions: isSpellBuffCandidate(spell)
           ? [
               {
-                label: isSpellBuffActive(spell) ? 'Deactivate Buff' : 'Activate as Buff',
+                label: isSpellBuffActive(spell)
+                  ? isIt ? 'Disattiva Buff' : 'Deactivate Buff'
+                  : isIt ? 'Attiva come Buff' : 'Activate as Buff',
                 onClick: () => activateSpellBuff(spell),
                 variant: isSpellBuffActive(spell) ? 'danger' : 'secondary',
               },
@@ -162,11 +171,17 @@ export function SpellsPage() {
     )
   }
 
-  const attackLabel: Record<SpellAttackType, string> = {
-    rangedTouch: 'Cast (Ranged Touch)',
-    meleeTouch: 'Cast (Melee Touch)',
-    ray: 'Cast (Ray)',
-  }
+  const attackLabel: Record<SpellAttackType, string> = isIt
+    ? {
+        rangedTouch: 'Lancia (Contatto a Distanza)',
+        meleeTouch: 'Lancia (Contatto in Mischia)',
+        ray: 'Lancia (Raggio)',
+      }
+    : {
+        rangedTouch: 'Cast (Ranged Touch)',
+        meleeTouch: 'Cast (Melee Touch)',
+        ray: 'Cast (Ray)',
+      }
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
@@ -175,13 +190,19 @@ export function SpellsPage() {
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
             <h1 className="font-headline text-2xl sm:text-3xl font-black text-white mb-1.5 tracking-tight uppercase">
-              The Repository
+              {isIt ? 'Il Grimorio' : 'The Repository'}
             </h1>
             <p className="text-tertiary font-label text-xs sm:text-sm tracking-wide">
               {isSpontaneous
-                ? `Spontaneous caster · ${availability.knownCount} known · ${availability.remainingSlots} slots remaining`
+                ? isIt
+                  ? `Incantatore spontaneo · ${availability.knownCount} conosciuti · ${availability.remainingSlots} slot rimasti`
+                  : `Spontaneous caster · ${availability.knownCount} known · ${availability.remainingSlots} slots remaining`
                 : isPreparedCaster
-                ? `Prepared caster · ${availability.preparedCount}/${availability.preparedCapacity} prepared · ${availability.remainingSlots} active uses remaining`
+                ? isIt
+                  ? `Incantatore preparato · ${availability.preparedCount}/${availability.preparedCapacity} preparati · ${availability.remainingSlots} usi attivi rimasti`
+                  : `Prepared caster · ${availability.preparedCount}/${availability.preparedCapacity} prepared · ${availability.remainingSlots} active uses remaining`
+                : isIt
+                ? `Capacità magiche · ${availability.remainingSlots} slot incantesimi`
                 : `Spell-like abilities · ${availability.remainingSlots} spell slots`}
             </p>
           </div>
@@ -190,10 +211,10 @@ export function SpellsPage() {
               type="button"
               onClick={() => clearPreparedSpells(char.id)}
               className="px-3.5 py-1.5 rounded-xl border border-white/10 text-tertiary hover:text-error hover:border-error/40 hover:bg-error/10 font-label text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center"
-              title="Clear all prepared spells and reset preparation from scratch"
+              title={isIt ? 'Rimuovi tutti gli incantesimi preparati e riparti da zero' : 'Clear all prepared spells and reset preparation from scratch'}
             >
               <span className="material-symbols-outlined text-sm">restart_alt</span>
-              Clear Preparation
+              {isIt ? 'Azzera Preparazione' : 'Clear Preparation'}
             </button>
           )}
         </div>
@@ -202,7 +223,7 @@ export function SpellsPage() {
           <div className="mt-4 px-4 py-3 bg-error-container/20 border border-error/30 rounded-xl flex items-center gap-3">
             <span className="material-symbols-outlined text-error text-sm">warning</span>
             <span className="font-label text-xs text-error uppercase tracking-widest font-bold">
-              Arcane Spell Failure: {arcaneFailure}%
+              {t('spells.arcaneFailure')}: {arcaneFailure}%
             </span>
           </div>
         )}
@@ -210,19 +231,19 @@ export function SpellsPage() {
         {/* Global Concentration Check */}
         <div className="mt-4 flex items-center gap-2 flex-wrap">
           <button
-            onClick={() => openRoll({ diceType: 20, count: 1, modifier: concMod, label: 'Concentration' })}
+            onClick={() => openRoll({ diceType: 20, count: 1, modifier: concMod, label: isIt ? 'Concentrazione' : 'Concentration' })}
             className="px-4 py-2 bg-surface-container/90 border border-white/10 rounded-xl text-tertiary font-label text-xs uppercase tracking-widest hover:text-primary hover:border-primary/50 hover:shadow-[0_0_12px_rgba(0,240,255,0.25)] transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>electric_bolt</span>
-            Concentration ({concMod >= 0 ? `+${concMod}` : concMod})
+            {isIt ? 'Concentrazione' : 'Concentration'} ({concMod >= 0 ? `+${concMod}` : concMod})
           </button>
           {hasCombatCasting && (
             <button
-              onClick={() => openRoll({ diceType: 20, count: 1, modifier: concMod + 4, label: 'Concentration (Defensive)' })}
+              onClick={() => openRoll({ diceType: 20, count: 1, modifier: concMod + 4, label: isIt ? 'Concentrazione (Difensiva)' : 'Concentration (Defensive)' })}
               className="px-4 py-2 bg-surface-container/90 border border-white/10 rounded-xl text-tertiary font-label text-xs uppercase tracking-widest hover:text-secondary hover:border-secondary/50 hover:shadow-[0_0_12px_rgba(217,70,239,0.3)] transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
             >
               <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>electric_bolt</span>
-              Defensive ({defensiveConcMod >= 0 ? `+${defensiveConcMod}` : defensiveConcMod})
+              {isIt ? 'Difensiva' : 'Defensive'} ({defensiveConcMod >= 0 ? `+${defensiveConcMod}` : defensiveConcMod})
             </button>
           )}
         </div>
@@ -233,7 +254,7 @@ export function SpellsPage() {
         <section className="mb-8 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.06)]">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary neon-glow-accent">
-              Active Spell Uses
+              {isIt ? 'Usi Incantesimi Attivi' : 'Active Spell Uses'}
             </h2>
             <div className="flex flex-wrap items-center gap-2">
               {availability.levels
@@ -243,17 +264,19 @@ export function SpellsPage() {
                     key={l.level}
                     className="font-label text-[10px] text-amber-300/90 bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-md uppercase tracking-wider"
                   >
-                    Lv {l.level}: {l.unpreparedCount} unprepared
+                    {t('common.lvl')} {l.level}: {l.unpreparedCount} {isIt ? 'non preparati' : 'unprepared'}
                   </span>
                 ))}
               <span className="font-label text-[10px] text-tertiary uppercase tracking-wider tabular-nums">
-                {availability.remainingSlots}/{availability.totalSlots} uses remaining
+                {availability.remainingSlots}/{availability.totalSlots} {isIt ? 'usi rimasti' : 'uses remaining'}
               </span>
             </div>
           </div>
           {availability.activeSpellUses.length === 0 ? (
             <p className="font-label text-xs uppercase tracking-widest text-tertiary/60 py-2">
-              No spells prepared yet. Check spells in the list below to assign daily uses.
+              {isIt
+                ? 'Nessun incantesimo preparato. Seleziona gli incantesimi nella lista qui sotto per assegnare gli usi giornalieri.'
+                : 'No spells prepared yet. Check spells in the list below to assign daily uses.'}
             </p>
           ) : (
             <div className="flex flex-wrap gap-3">
@@ -291,10 +314,10 @@ export function SpellsPage() {
         <section className="mb-8 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.06)]">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary neon-glow-accent">
-              Spell Slots
+              {isIt ? 'Slot Incantesimo' : 'Spell Slots'}
             </h2>
             <span className="font-label text-[10px] text-tertiary uppercase tracking-wider tabular-nums">
-              {availability.remainingSlots}/{availability.totalSlots} remaining
+              {availability.remainingSlots}/{availability.totalSlots} {isIt ? 'rimasti' : 'remaining'}
             </span>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -306,7 +329,7 @@ export function SpellsPage() {
                   className="rounded-xl border border-white/10 bg-surface-container-high/40 px-3.5 py-2 hover:border-primary/30 transition-all"
                 >
                   <SpellUsePips
-                    label={`Level ${slot.level}`}
+                    label={`${t('common.level')} ${slot.level}`}
                     prefix="SLOT"
                     total={slot.total}
                     spent={slot.spent}
@@ -321,7 +344,7 @@ export function SpellsPage() {
         <section className="mb-8 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.06)]">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary neon-glow-accent">
-              Active Spell Uses
+              {isIt ? 'Usi Incantesimi Attivi' : 'Active Spell Uses'}
             </h2>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -359,7 +382,7 @@ export function SpellsPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search spells..."
+            placeholder={t('spells.searchPlaceholder')}
             className="bg-surface-container-high/80 rounded-xl pl-10 pr-4 py-2.5 font-label text-sm text-on-surface placeholder:text-tertiary/50 outline-none w-64 border border-white/10 focus:border-primary transition-colors"
           />
         </div>
@@ -368,7 +391,7 @@ export function SpellsPage() {
             onClick={() => setLevelFilter('all')}
             className={`px-3 py-2 font-label text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer ${levelFilter === 'all' ? 'bg-primary text-black font-bold shadow-[0_0_12px_rgba(0,240,255,0.4)]' : 'bg-surface-container text-tertiary hover:text-white border border-white/5'}`}
           >
-            All
+            {t('common.all')}
           </button>
           {spellLevels.map((lvl) => (
             <button
@@ -376,7 +399,7 @@ export function SpellsPage() {
               onClick={() => setLevelFilter(lvl)}
               className={`px-3 py-2 font-label text-xs uppercase tracking-widest rounded-xl transition-all cursor-pointer ${levelFilter === lvl ? 'bg-primary text-black font-bold shadow-[0_0_12px_rgba(0,240,255,0.4)]' : 'bg-surface-container text-tertiary hover:text-white border border-white/5'}`}
             >
-              Lv {lvl}
+              {t('common.lvl')} {lvl}
             </button>
           ))}
         </div>
@@ -397,11 +420,11 @@ export function SpellsPage() {
             <div key={lvl} className="mb-8">
               <div className="flex items-center gap-4 mb-3">
                 <h3 className="font-headline text-sm sm:text-base font-bold uppercase tracking-wider text-primary tabular-nums">
-                  Level {lvl}
+                  {t('common.level')} {lvl}
                   {isPreparedCaster && slotMax > 0
-                    ? ` · Prepared: ${levelPreparedCount}/${preparedCapacity}`
+                    ? ` · ${isIt ? 'Preparati' : 'Prepared'}: ${levelPreparedCount}/${preparedCapacity}`
                     : slotMax > 0
-                    ? ` · Slots: ${levelInfo?.remaining ?? 0}/${slotMax}`
+                    ? ` · ${t('spells.slots')}: ${levelInfo?.remaining ?? 0}/${slotMax}`
                     : ''}
                 </h3>
                 <div className="flex-1 h-px bg-white/10" />
@@ -471,7 +494,7 @@ export function SpellsPage() {
                                       diceType: sides,
                                       count: dCount,
                                       modifier: (spell.damageBonus ?? 0) + bonus,
-                                      label: `${spell.name} (Damage)`,
+                                      label: `${spell.name} (${t('combat.damage')})`,
                                     }
                                   })()
                                 : undefined
@@ -480,7 +503,7 @@ export function SpellsPage() {
                                 diceType: 20,
                                 count: 1,
                                 modifier: atkBonus,
-                                label: `${spell.name} (Attack)`,
+                                label: `${spell.name} (${t('combat.attack')})`,
                                 followUpRoll,
                                 followUpLabel: spell.damageDice
                                   ? `${spell.damageDice}${spell.damageBonus ? `+${spell.damageBonus}` : ''}`
@@ -500,7 +523,7 @@ export function SpellsPage() {
                                 diceType: sides,
                                 count: dCount,
                                 modifier: (spell.damageBonus ?? 0) + bonus,
-                                label: `${spell.name} (Damage)`,
+                                label: `${spell.name} (${t('combat.damage')})`,
                               })
                             }
                           : undefined
@@ -572,6 +595,8 @@ function SpellRow({
   usesRemaining?: number
   resourceRemaining?: number
 }) {
+  const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
   const preparationLocked = isSpontaneous || isAlwaysPrepared || isSla || isAtWill || spell.level === 0
   return (
     <details className={`w-full group rounded-xl overflow-hidden border transition-all ${isPrepared ? 'border-primary/50 shadow-[0_0_12px_rgba(0,240,255,0.15)]' : 'border-white/[0.08]'}`}>
@@ -579,7 +604,7 @@ function SpellRow({
         {/* Preparation state */}
         {isSpontaneous ? (
           <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/40 px-2 py-0.5 rounded-md uppercase font-bold flex-shrink-0">
-            Known
+            {isIt ? 'Conosciuto' : 'Known'}
           </span>
         ) : preparationLocked ? (
           <span className={`font-label text-[10px] px-2 py-0.5 rounded-md uppercase font-bold flex-shrink-0 border ${
@@ -592,10 +617,10 @@ function SpellRow({
             {isSla
               ? `SLA${resourceRemaining !== undefined ? ` ${resourceRemaining}` : ''}`
               : spell.level === 0
-              ? 'Cantrip'
+              ? isIt ? 'Trucchetto' : 'Cantrip'
               : isAtWill
-              ? 'At-will'
-              : 'Domain'}
+              ? isIt ? 'A volontà' : 'At-will'
+              : isIt ? 'Dominio' : 'Domain'}
           </span>
         ) : (
           <button
@@ -608,8 +633,8 @@ function SpellRow({
                 ? 'border-white/10 opacity-30 cursor-not-allowed'
                 : 'border-white/20 hover:border-primary cursor-pointer'
             }`}
-            aria-label={`${isPrepared ? 'Unprepare' : 'Prepare'} ${spell.name}`}
-            title={!isPrepared && !canPrepareMore ? 'All preparation capacity used for this level' : undefined}
+            aria-label={`${isPrepared ? t('spells.unprepare') : t('spells.prepare')} ${spell.name}`}
+            title={!isPrepared && !canPrepareMore ? (isIt ? 'Capacità di preparazione esaurita per questo livello' : 'All preparation capacity used for this level') : undefined}
           >
             {isPrepared && (
               <span className="material-symbols-outlined text-black leading-none font-bold" style={{ fontSize: '14px' }}>check</span>
@@ -631,7 +656,7 @@ function SpellRow({
             </button>
             {isBuffActive && (
               <span className="font-label text-[10px] text-white font-bold bg-secondary px-2 py-0.5 rounded-full uppercase tracking-widest">
-                Buff Active
+                {isIt ? 'Buff Attivo' : 'Buff Active'}
               </span>
             )}
             {!isSpontaneous && !preparationLocked && isPrepared && (
@@ -640,13 +665,13 @@ function SpellRow({
                 onClick={(e) => e.stopPropagation()}
               >
                 <span className="font-label text-[10px] text-primary font-bold uppercase tracking-widest">
-                  Prepared {preparedCount > 1 ? `x${preparedCount}` : ''}
+                  {t('spells.prepared')} {preparedCount > 1 ? `x${preparedCount}` : ''}
                 </span>
                 {onRemovePrepare && (
                   <button
                     onClick={(e) => { e.preventDefault(); onRemovePrepare() }}
                     className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-primary hover:text-white hover:bg-primary/40 text-[10px] font-bold cursor-pointer"
-                    title="Remove one prepared copy"
+                    title={isIt ? 'Rimuovi una copia preparata' : 'Remove one prepared copy'}
                     aria-label={`Remove one prepared ${spell.name}`}
                   >
                     -
@@ -661,7 +686,7 @@ function SpellRow({
                         ? 'hover:text-white hover:bg-primary/40 cursor-pointer'
                         : 'opacity-30 cursor-not-allowed'
                     }`}
-                    title={canPrepareMore ? 'Prepare an additional copy' : 'No more slots available for this level'}
+                    title={canPrepareMore ? (isIt ? 'Prepara una copia aggiuntiva' : 'Prepare an additional copy') : (isIt ? 'Nessuno slot disponibile per questo livello' : 'No more slots available for this level')}
                     aria-label={`Prepare another copy of ${spell.name}`}
                   >
                     +
@@ -675,7 +700,7 @@ function SpellRow({
                   ? 'text-primary bg-primary/10 border-primary/30'
                   : 'text-error bg-error/10 border-error/30'
               }`}>
-                Uses {usesRemaining}/{usesTotal}
+                {t('common.uses')} {usesRemaining}/{usesTotal}
               </span>
             )}
             {isSpontaneous && spell.level > 0 && !isSla && slotTotal > 0 && (
@@ -684,25 +709,29 @@ function SpellRow({
                   ? 'text-primary bg-primary/10 border-primary/30'
                   : 'text-error bg-error/10 border-error/30'
               }`}>
-                Slots {slotRemaining}/{slotTotal}
+                {t('spells.slots')} {slotRemaining}/{slotTotal}
               </span>
             )}
             {isAlwaysPrepared && (
               <span className="font-label text-[10px] text-secondary bg-secondary/10 border border-secondary/30 px-2 py-0.5 rounded-md uppercase">
-                Always Prepared
+                {isIt ? 'Sempre Preparato' : 'Always Prepared'}
               </span>
             )}
             {spell.savingThrow && dc !== undefined && (
               <span className="font-label text-[10px] text-secondary bg-secondary/15 border border-secondary/30 px-2 py-0.5 rounded-md uppercase font-bold">
-                DC {dc}
+                {isIt ? 'CD' : 'DC'} {dc}
               </span>
             )}
             <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-md uppercase">
-              {spell.school}{spell.subschool ? ` (${spell.subschool})` : ''}
+              {translateSchool(spell.school, locale)}{spell.subschool ? ` (${spell.subschool})` : ''}
             </span>
             {spell.attackType && (
               <span className="font-label text-[10px] text-error bg-error/15 border border-error/30 px-2 py-0.5 rounded-md uppercase">
-                {spell.attackType === 'meleeTouch' ? 'Melee Touch' : spell.attackType === 'ray' ? 'Ray' : 'Ranged Touch'}
+                {spell.attackType === 'meleeTouch'
+                  ? isIt ? 'Contatto Mischia' : 'Melee Touch'
+                  : spell.attackType === 'ray'
+                  ? isIt ? 'Raggio' : 'Ray'
+                  : isIt ? 'Contatto Distanza' : 'Ranged Touch'}
               </span>
             )}
           </div>
@@ -720,23 +749,23 @@ function SpellRow({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[10px] font-label uppercase tracking-widest">
           {spell.savingThrow && (
             <div>
-              <p className="text-primary mb-1 font-bold">Saving Throw</p>
+              <p className="text-primary mb-1 font-bold">{t('spells.savingThrow')}</p>
               <p className="text-on-surface-variant font-bold">
-                {spell.savingThrow} {dc !== undefined && <span className="text-secondary">(DC {dc})</span>}
+                {spell.savingThrow} {dc !== undefined && <span className="text-secondary">({isIt ? 'CD' : 'DC'} {dc})</span>}
               </p>
             </div>
           )}
           <div>
-            <p className="text-primary mb-1 font-bold">Spell Resist</p>
-            <p className="text-on-surface-variant">{spell.spellResistance ? 'Yes' : 'No'}</p>
+            <p className="text-primary mb-1 font-bold">{isIt ? 'Resist. Incantesimi' : 'Spell Resist'}</p>
+            <p className="text-on-surface-variant">{spell.spellResistance ? t('common.yes') : t('common.no')}</p>
           </div>
           <div>
-            <p className="text-primary mb-1 font-bold">Components</p>
+            <p className="text-primary mb-1 font-bold">{t('spells.components')}</p>
             <p className="text-on-surface-variant">{spell.components}</p>
           </div>
           {spell.damageDice && (
             <div>
-              <p className="text-primary mb-1 font-bold">Damage</p>
+              <p className="text-primary mb-1 font-bold">{t('combat.damage')}</p>
               <p className="text-on-surface-variant font-bold">
                 {spell.damageDice}{spell.damageBonus ? `+${spell.damageBonus}` : ''}
               </p>
@@ -765,7 +794,7 @@ function SpellRow({
                 isCastable ? 'hover:shadow-[0_0_15px_rgba(255,75,96,0.3)] hover:bg-error/10 cursor-pointer' : 'opacity-40 cursor-not-allowed'
               }`}
             >
-              Roll Damage ({spell.damageDice}{spell.damageBonus ? `+${spell.damageBonus}` : ''})
+              {isIt ? 'Tira Danno' : 'Roll Damage'} ({spell.damageDice}{spell.damageBonus ? `+${spell.damageBonus}` : ''})
             </button>
           )}
           {onCast && !onAttack && !onDamage && !onActivateBuff && (
@@ -780,7 +809,7 @@ function SpellRow({
                   : 'bg-white/5 border-white/10 text-tertiary opacity-40 cursor-not-allowed'
               }`}
             >
-              {isSla ? 'Use SLA' : 'Cast'}
+              {isSla ? (isIt ? 'Usa SLA' : 'Use SLA') : t('spells.cast')}
             </button>
           )}
           {onActivateBuff && (
@@ -797,7 +826,9 @@ function SpellRow({
                   : 'bg-secondary/5 border-white/10 text-tertiary opacity-40 cursor-not-allowed'
               }`}
             >
-              {isBuffActive ? 'Deactivate Buff' : 'Activate as Buff'}
+              {isBuffActive
+                ? isIt ? 'Disattiva Buff' : 'Deactivate Buff'
+                : isIt ? 'Attiva come Buff' : 'Activate as Buff'}
             </button>
           )}
           {onInspect && (
@@ -806,7 +837,7 @@ function SpellRow({
               onClick={onInspect}
               className="px-5 py-2.5 bg-white/5 border border-white/10 text-tertiary font-label text-xs uppercase tracking-widest rounded-xl hover:text-primary hover:border-primary/40 transition-all cursor-pointer"
             >
-              Inspect
+              {isIt ? 'Ispeziona' : 'Inspect'}
             </button>
           )}
         </div>

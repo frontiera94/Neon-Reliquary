@@ -1,4 +1,5 @@
 import { useDiceStore } from '../../store/useDiceStore'
+import { useTranslation } from '../../i18n'
 
 /**
  * Always-visible tactical roll feed used by the desktop bento dashboard.
@@ -6,14 +7,15 @@ import { useDiceStore } from '../../store/useDiceStore'
 export function DiceRollLog({ compact = false }: { compact?: boolean }) {
   const history = useDiceStore((s) => s.history)
   const clearHistory = useDiceStore((s) => s.clearHistory)
+  const { t } = useTranslation()
 
   return (
-    <section aria-label="Dice roll log" className="rounded-2xl border border-white/10 bg-[#11131c] overflow-hidden">
+    <section aria-label={t('dice.rollLog')} className="rounded-2xl border border-white/10 bg-[#11131c] overflow-hidden">
       <header className="flex items-center justify-between gap-2 px-3.5 py-2.5 border-b border-white/10">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-primary text-sm">casino</span>
           <h3 className="font-headline text-xs uppercase tracking-widest text-secondary font-bold">
-            Roll Log
+            {t('dice.rollLog')}
           </h3>
           <span className="font-label text-[10px] text-tertiary tabular-nums">({history.length})</span>
         </div>
@@ -23,14 +25,14 @@ export function DiceRollLog({ compact = false }: { compact?: boolean }) {
             onClick={clearHistory}
             className="min-h-[32px] px-2 rounded-lg border border-white/10 text-tertiary hover:text-error hover:border-error/40 font-label text-[9px] uppercase tracking-widest transition-colors cursor-pointer"
           >
-            Clear
+            {t('common.clear')}
           </button>
         )}
       </header>
 
       {history.length === 0 ? (
         <p className="px-3.5 py-5 text-center font-label text-[10px] uppercase tracking-widest text-tertiary/60">
-          No rolls yet
+          {t('settings.noRollsYet')}
         </p>
       ) : (
         <ul className={`divide-y divide-white/5 overflow-y-auto ${compact ? 'max-h-44' : 'max-h-72'}`}>

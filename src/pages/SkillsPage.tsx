@@ -5,8 +5,7 @@ import { useDiceStore } from '../store/useDiceStore'
 import { calcEffectiveAbilities, calcEffectiveSkills, getActiveActionRestrictions } from '../lib/stat-calc'
 import { ActionAlertBanner } from '../components/combat/ActionAlertBanner'
 import type { EffectiveSkill } from '../lib/stat-calc'
-
-const ABILITY_SHORT = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' }
+import { useTranslation, translateSkillName, translateAbilityShort } from '../i18n'
 
 export function SkillsPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
@@ -14,6 +13,7 @@ export function SkillsPage() {
   const openRoll = useDiceStore((s) => s.openRoll)
   const [search, setSearch] = useState('')
   const [trainedOnly, setTrainedOnly] = useState(false)
+  const { locale, t } = useTranslation()
 
   const effectiveSkills = useMemo(() => {
     if (!char || !session) return []
@@ -38,11 +38,17 @@ export function SkillsPage() {
     return calculated
       .filter((s) => {
         if (trainedOnly && !s.trained) return false
-        if (search && !s.name.toLowerCase().includes(search.toLowerCase())) return false
+        if (search) {
+          const q = search.toLowerCase()
+          const localized = translateSkillName(s.name, locale).toLowerCase()
+          if (!s.name.toLowerCase().includes(q) && !localized.includes(q)) return false
+        }
         return true
       })
-      .sort((a, b) => a.name.localeCompare(b.name))
-  }, [char, session, search, trainedOnly])
+      .sort((a, b) =>
+        translateSkillName(a.name, locale).localeCompare(translateSkillName(b.name, locale))
+      )
+  }, [char, session, search, trainedOnly, locale])
 
   const { leftSkills, rightSkills } = useMemo(() => {
     const half = Math.ceil(effectiveSkills.length / 2)
@@ -55,7 +61,7 @@ export function SkillsPage() {
   if (!char) {
     return (
       <div className="flex items-center justify-center h-64 text-tertiary font-label text-sm uppercase tracking-widest">
-        No character selected
+        {t('common.noCharacterSelected')}
       </div>
     )
   }
@@ -71,10 +77,10 @@ export function SkillsPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
             <h1 className="font-headline text-2xl sm:text-3xl font-black text-white mb-1.5 tracking-tight uppercase">
-              Grimoire Skills
+              {t('skills.title')}
             </h1>
             <p className="text-tertiary font-label text-xs sm:text-sm tracking-wide">
-              Mechanical Proficiencies & Dynamic Calculations
+              {t('skills.subtitle')}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
@@ -86,7 +92,7 @@ export function SkillsPage() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search skills..."
+                placeholder={t('skills.searchPlaceholder')}
                 className="bg-surface-container-high/80 rounded-xl pl-10 pr-4 py-2.5 font-label text-sm text-on-surface placeholder:text-tertiary/50 outline-none w-64 border border-white/10 focus:border-primary transition-colors"
               />
             </div>
@@ -99,7 +105,7 @@ export function SkillsPage() {
                   : 'border-white/10 text-tertiary hover:border-white/30 hover:text-white bg-surface-container'
               }`}
             >
-              Trained Only
+              {t('skills.trainedOnly')}
             </button>
           </div>
         </div>
@@ -108,46 +114,54 @@ export function SkillsPage() {
       {/* Skills Grid */}
       {effectiveSkills.length === 0 ? (
         <div className="py-16 text-center text-tertiary font-label text-xs uppercase tracking-widest">
-          No skills found
+          {t('skills.noSkillsFound')}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           <div className="flex flex-col gap-4">
-            {leftSkills.map((skill) => (
-              <SkillRow
-                key={skill.id}
-                skill={skill}
-                total={skill.effectiveTotal}
-                onRoll={() =>
-                  openRoll({
-                    diceType: 20,
-                    count: 1,
-                    modifier: skill.effectiveTotal,
-                    label: `${skill.name} Check`,
-                    breakdown: skill.breakdown,
-                  })
-                }
-              />
-            ))}
-          </div>
-          {rightSkills.length > 0 && (
-            <div className="flex flex-col gap-4">
-              {rightSkills.map((skill) => (
+            {leftSkills.map((skill) => {
+              const displayName = translateSkillName(skill.name, locale)
+              return (
                 <SkillRow
                   key={skill.id}
                   skill={skill}
+                  displayName={displayName}
                   total={skill.effectiveTotal}
                   onRoll={() =>
                     openRoll({
                       diceType: 20,
                       count: 1,
                       modifier: skill.effectiveTotal,
-                      label: `${skill.name} Check`,
+                      label: locale === 'it' ? `Prova di ${displayName}` : `${displayName} Check`,
                       breakdown: skill.breakdown,
                     })
                   }
                 />
-              ))}
+              )
+            })}
+          </div>
+          {rightSkills.length > 0 && (
+            <div className="flex flex-col gap-4">
+              {rightSkills.map((skill) => {
+                const displayName = translateSkillName(skill.name, locale)
+                return (
+                  <SkillRow
+                    key={skill.id}
+                    skill={skill}
+                    displayName={displayName}
+                    total={skill.effectiveTotal}
+                    onRoll={() =>
+                      openRoll({
+                        diceType: 20,
+                        count: 1,
+                        modifier: skill.effectiveTotal,
+                        label: locale === 'it' ? `Prova di ${displayName}` : `${displayName} Check`,
+                        breakdown: skill.breakdown,
+                      })
+                    }
+                  />
+                )
+              })}
             </div>
           )}
         </div>
@@ -158,17 +172,21 @@ export function SkillsPage() {
 
 function SkillRow({
   skill,
+  displayName,
   total,
   onRoll,
 }: {
   skill: EffectiveSkill
+  displayName: string
   total: number
   onRoll: () => void
 }) {
+  const { locale, t } = useTranslation()
+
   return (
     <button
       onClick={onRoll}
-      aria-label={`Roll ${skill.name}`}
+      aria-label={t('skills.rollSkill', { name: displayName })}
       className="w-full bg-surface-container/90 backdrop-blur-sm flex items-center justify-between p-4 gap-4 rounded-xl border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] hover:bg-surface-container-high transition-all active:scale-[0.99] text-left cursor-pointer group"
     >
       {/* Left: name + meta */}
@@ -180,19 +198,19 @@ function SkillRow({
         />
         <div className="min-w-0">
           <p className="font-headline text-base sm:text-lg font-bold text-white group-hover:text-primary truncate leading-tight transition-colors">
-            {skill.name}
+            {displayName}
           </p>
           <div className="flex items-center gap-2 mt-1">
             <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-md uppercase font-bold">
-              {ABILITY_SHORT[skill.ability]}
+              {translateAbilityShort(skill.ability, locale)}
             </span>
             {skill.classSkill && (
               <span className="font-label text-[10px] text-secondary bg-secondary/15 border border-secondary/30 px-2 py-0.5 rounded-md uppercase tracking-wider font-bold">
-                Class
+                {locale === 'it' ? 'Classe' : 'Class'}
               </span>
             )}
             <span className="font-label text-[10px] text-tertiary">
-              Ranks: {skill.ranks}
+              {t('skills.ranks')}: {skill.ranks}
             </span>
           </div>
         </div>

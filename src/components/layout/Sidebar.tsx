@@ -1,19 +1,21 @@
 import { NavLink } from 'react-router-dom'
 import { useCharacterStore } from '../../store/useCharacterStore'
 import { CharacterDropdown } from '../character/CharacterDropdown'
+import { useTranslation } from '../../i18n'
 
 const navItems = [
-  { to: '/status', icon: 'analytics', label: 'Status' },
-  { to: '/skills', icon: 'auto_fix_high', label: 'Skills' },
-  { to: '/combat', icon: 'swords', label: 'Combat' },
-  { to: '/spells', icon: 'auto_stories', label: 'Spells' },
-  { to: '/features', icon: 'auto_awesome', label: 'Features' },
-  { to: '/inventory', icon: 'inventory_2', label: 'Inventory' },
-  { to: '/companion', icon: 'pets', label: 'Companion' },
+  { to: '/status', icon: 'analytics', key: 'nav.status' },
+  { to: '/skills', icon: 'auto_fix_high', key: 'nav.skills' },
+  { to: '/combat', icon: 'swords', key: 'nav.combat' },
+  { to: '/spells', icon: 'auto_stories', key: 'nav.spells' },
+  { to: '/features', icon: 'auto_awesome', key: 'nav.features' },
+  { to: '/inventory', icon: 'inventory_2', key: 'nav.inventory' },
+  { to: '/companion', icon: 'pets', key: 'nav.companion' },
 ]
 
 export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
   const char = useCharacterStore((s) => s.activeCharacter())
+  const { t } = useTranslation()
 
   return (
     <aside
@@ -27,7 +29,7 @@ export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
       )}
 
       <nav className="flex flex-col gap-1 px-3">
-        {navItems.map(({ to, icon, label }) => {
+        {navItems.map(({ to, icon, key }) => {
           const compCount = to === '/companion' ? (char?.companions?.length ?? 0) : 0
           return (
             <NavLink
@@ -42,7 +44,7 @@ export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
             >
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-lg">{icon}</span>
-                {label}
+                {t(key)}
               </div>
               {compCount > 0 && (
                 <span className="text-[10px] px-2 py-0.5 bg-primary/15 text-primary border border-primary/30 font-label rounded-full">

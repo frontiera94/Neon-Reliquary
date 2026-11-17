@@ -1,22 +1,25 @@
 import { NavLink } from 'react-router-dom'
+import { useTranslation } from '../../i18n'
 
 const navItems = [
-  { to: '/status', icon: 'analytics', label: 'Status' },
-  { to: '/skills', icon: 'auto_fix_high', label: 'Skills' },
-  { to: '/combat', icon: 'swords', label: 'Combat' },
-  { to: '/spells', icon: 'auto_stories', label: 'Spells' },
-  { to: '/features', icon: 'auto_awesome', label: 'Features' },
-  { to: '/inventory', icon: 'inventory_2', label: 'Inventory' },
-  { to: '/companion', icon: 'pets', label: 'Companion' },
+  { to: '/status', icon: 'analytics', key: 'nav.status' },
+  { to: '/skills', icon: 'auto_fix_high', key: 'nav.skills' },
+  { to: '/combat', icon: 'swords', key: 'nav.combat' },
+  { to: '/spells', icon: 'auto_stories', key: 'nav.spells' },
+  { to: '/features', icon: 'auto_awesome', key: 'nav.features' },
+  { to: '/inventory', icon: 'inventory_2', key: 'nav.inventory' },
+  { to: '/companion', icon: 'pets', key: 'nav.companion' },
 ]
 
 export function BottomNav() {
+  const { t } = useTranslation()
+
   return (
     <nav
       className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex overflow-x-auto border-t border-white/[0.08]"
       style={{ backdropFilter: 'blur(16px)', background: 'rgba(10,10,18,0.92)', boxShadow: '0 -4px 20px -8px rgba(0,240,255,0.15)' }}
     >
-      {navItems.map(({ to, icon, label }) => (
+      {navItems.map(({ to, icon, key }) => (
         <NavLink
           key={to}
           to={to}
@@ -33,7 +36,7 @@ export function BottomNav() {
               >
                 {icon}
               </span>
-              {label}
+              {t(key)}
             </>
           )}
         </NavLink>

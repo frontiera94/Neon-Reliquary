@@ -1,10 +1,12 @@
 import type { ActionRestriction } from '../../lib/stat-calc'
+import { useTranslation } from '../../i18n'
 
 interface ActionAlertBannerProps {
   restrictions: ActionRestriction[]
 }
 
 export function ActionAlertBanner({ restrictions }: ActionAlertBannerProps) {
+  const { locale } = useTranslation()
   if (!restrictions || restrictions.length === 0) return null
 
   return (
@@ -35,7 +37,7 @@ export function ActionAlertBanner({ restrictions }: ActionAlertBannerProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <h4 className="font-headline text-xs uppercase tracking-widest font-bold">
-                  Tactical Restriction: {r.title}
+                  {locale === 'it' ? 'Restrizione Tattica:' : 'Tactical Restriction:'} {r.title}
                 </h4>
                 <span className="font-label text-[9px] uppercase px-1.5 py-0.5 border border-current opacity-80">
                   {r.severity}
