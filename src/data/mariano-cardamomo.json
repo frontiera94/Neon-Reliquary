@@ -261,15 +261,6 @@
       "acMod": 0,
       "meleeOnly": true,
       "color": "secondary"
-    },
-    {
-      "id": "debilitating-injury",
-      "name": "Debilitating Injury: Bewildered (−2 AC on target)",
-      "active": false,
-      "attackMod": 0,
-      "damageMod": 0,
-      "acMod": 0,
-      "color": "error"
     }
   ],
   "dailyResources": [

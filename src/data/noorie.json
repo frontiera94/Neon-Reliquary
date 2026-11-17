@@ -208,15 +208,6 @@
   ],
   "buffs": [
     {
-      "id": "wild-shape",
-      "name": "Wild Shape (active)",
-      "active": false,
-      "attackMod": 0,
-      "damageMod": 0,
-      "acMod": 0,
-      "color": "primary"
-    },
-    {
       "id": "barkskin",
       "name": "Barkskin (+2 Natural Armor)",
       "active": false,
@@ -224,15 +215,6 @@
       "damageMod": 0,
       "acMod": 2,
       "color": "secondary"
-    },
-    {
-      "id": "fire-resistance",
-      "name": "Fire Resistance 5 (Ash subdomain, passive)",
-      "active": false,
-      "attackMod": 0,
-      "damageMod": 0,
-      "acMod": 0,
-      "color": "error"
     }
   ],
   "dailyResources": [

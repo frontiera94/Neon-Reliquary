@@ -7,9 +7,9 @@ interface CloudSyncBadgeProps {
 }
 
 export function CloudSyncBadge({ compact = true }: CloudSyncBadgeProps) {
+  const { locale, t } = useTranslation()
   const status = useSyncStore((s) => s.status)
   const pendingCount = useSyncStore((s) => s.pendingCount)
-  const { locale, t } = useTranslation()
 
   const config = (() => {
     switch (status) {

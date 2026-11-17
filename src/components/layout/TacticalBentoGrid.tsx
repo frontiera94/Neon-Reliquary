@@ -6,11 +6,13 @@ import { useDiceStore } from '../../store/useDiceStore'
 import { useInspectorStore } from '../../store/useInspectorStore'
 import {
   calcConcentrationBonus,
+  calcDetailedAcBreakdowns,
   calcEffectiveAbilities,
   calcEffectiveArmorClass,
   calcEffectiveSaves,
   deriveBuffFromSpell,
   findMatchingBuffForSpell,
+  getSpellFocusBonus,
   isSpellBuffCandidate,
 } from '../../lib/stat-calc'
 import { abilityMod } from '../../lib/dice-engine'
@@ -109,6 +111,12 @@ function BentoStatusColumn() {
       session.conditions,
       activeBuffs
     )
+    const detailedAc = calcDetailedAcBreakdowns(
+      char.armorClass,
+      abilities.mods.dex,
+      session.conditions,
+      activeBuffs
+    )
     const saves = calcEffectiveSaves(
       char.savingThrows,
       char.abilities,
@@ -116,7 +124,7 @@ function BentoStatusColumn() {
       session.conditions,
       activeBuffs
     )
-    return { abilities, ac, saves, activeBuffs }
+    return { abilities, ac, detailedAc, saves, activeBuffs }
   }, [char, session])
 
   if (!char || !session || !sheet) {
@@ -206,16 +214,16 @@ function BentoStatusColumn() {
         <div className="grid grid-cols-3 gap-1.5">
           {(
             [
-              { id: 'ac-total', label: isIt ? 'CA' : 'AC', value: sheet.ac.total, base: char.armorClass.total, title: t('bento.acTotal') },
-              { id: 'ac-touch', label: isIt ? 'CONT' : 'TOUCH', value: sheet.ac.touch, base: char.armorClass.touch, title: t('bento.touchAc') },
-              { id: 'ac-flat', label: isIt ? 'SPROVV' : 'FLAT', value: sheet.ac.flatFooted, base: char.armorClass.flatFooted, title: t('bento.flatFootedAc') },
+{ id: 'ac-total', label: isIt ? 'CA' : 'AC', value: sheet.ac.total, base: char.armorClass.total, title: t('bento.acTotal'), breakdown: sheet.detailedAc.totalBreakdown },
+              { id: 'ac-touch', label: isIt ? 'CONT' : 'TOUCH', value: sheet.ac.touch, base: char.armorClass.touch, title: t('bento.touchAc'), breakdown: sheet.detailedAc.touchBreakdown },
+              { id: 'ac-flat', label: isIt ? 'SPROVV' : 'FLAT', value: sheet.ac.flatFooted, base: char.armorClass.flatFooted, title: t('bento.flatFootedAc'), breakdown: sheet.detailedAc.flatFootedBreakdown },
             ] as const
           ).map((entry) => (
             <StatBreakdownTooltip
               key={entry.id}
               title={entry.title}
               total={entry.value}
-              breakdown={sheet.ac.breakdown}
+              breakdown={entry.breakdown}
               notes={sheet.ac.notes}
               trigger="click"
             >
@@ -412,13 +420,22 @@ function BentoLibraryColumn() {
   const [tab, setTab] = useState<'spells' | 'features'>('spells')
 
   const allBuffs = useMemo(() => (char ? [...char.buffs, ...(session?.customBuffs ?? [])] : []), [char, session?.customBuffs])
+  const activeBuffs = useMemo(
+    () => allBuffs.filter((buff) => session?.activeBuffIds.includes(buff.id)),
+    [allBuffs, session?.activeBuffIds]
+  )
+  const effectiveAbilities = useMemo(
+    () => (char && session ? calcEffectiveAbilities(char.abilities, session.conditions, activeBuffs) : null),
+    [char, session, activeBuffs]
+  )
   const categorized = useMemo(() => (char && session ? categorizeFeatures(char, session) : []), [char, session])
 
   if (!char || !session) return null
 
-  const activeBuffs = allBuffs.filter((b) => session.activeBuffIds.includes(b.id))
-  const effectiveAbilities = calcEffectiveAbilities(char.abilities, session.conditions, activeBuffs)
-  const availability = getSpellAvailability({ ...char, abilities: effectiveAbilities.scores }, session)
+const availability = getSpellAvailability(
+    { ...char, abilities: effectiveAbilities?.scores ?? char.abilities },
+    session
+  )
   const castingMod = availability.castingMod
   const concentration = calcConcentrationBonus(char.level, castingMod)
   const hasCombatCasting = char.feats.some((feat) => /combat casting/i.test(feat.name))
@@ -530,6 +547,7 @@ function BentoLibraryColumn() {
             {char.spells.map((spell) => {
               const candidate = isSpellBuffCandidate(spell)
               const active = spellActive(spell.id)
+              const spellDc = availability.spellDc(spell, getSpellFocusBonus(spell.school, char.feats))
               return (
                 <article key={spell.id} className="rounded-xl border border-white/10 bg-[#181b26] p-2.5">
                   <button
@@ -543,8 +561,8 @@ function BentoLibraryColumn() {
                         description: spell.description,
                         tags: [`${isIt ? 'Liv' : 'Lv'} ${spell.level}`, spell.school, spell.spellResistance ? (isIt ? 'RI: Sì' : 'SR: Yes') : (isIt ? 'RI: No' : 'SR: No')],
                         notes: [
-                          `${isIt ? 'Durata:' : 'Duration:'} ${spell.duration}`,
-                          `${isIt ? 'CD Tiro Salvezza:' : 'Save DC:'} ${availability.spellDc(spell)}`,
+`${isIt ? 'Durata:' : 'Duration:'} ${spell.duration}`,
+                          `${isIt ? 'CD Tiro Salvezza:' : 'Save DC:'} ${spellDc}`,
                         ],
                       })
                     }
@@ -555,7 +573,7 @@ function BentoLibraryColumn() {
                         {spell.name}
                       </span>
                       <span className="font-label text-[9px] text-tertiary tabular-nums flex-shrink-0">
-                        {availability.spellDc(spell)}
+                        {spellDc}
                       </span>
                     </div>
                     <p className="font-label text-[8px] uppercase tracking-widest text-tertiary truncate">

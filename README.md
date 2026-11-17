@@ -11,6 +11,7 @@ A high-performance digital companion for **Pathfinder 1st Edition** with a Neon 
 - **Features tab** — feats, class features, and special abilities
 - **Dice system** — cryptographically random dice rolls with animated 2D overlay, crit detection, and a persistent roll log
 - **Session persistence** — HP, spent resources, active buffs, conditions, and spell slots survive page reloads via localStorage and automatically sync across devices/sessions with **Neon Serverless Postgres** (`/api/sessions`)
+- **Sheet Upload Queue & Telegram Notifications** — players can submit new character sheets (PDFs up to 10 MB) protected by a campaign passphrase; the DM receives instant Telegram notifications with download links to manually review and integrate characters into the roster
 
 ## Cloud Database Setup (Neon Postgres on Vercel)
 
@@ -19,6 +20,20 @@ Character session state (`useSessionStore`: current HP, temp HP, nonlethal damag
 1. Open your project on **Vercel** → **Storage** (or **Marketplace**) → **Create Database** → select **Neon Postgres** and connect it to the project (this injects `DATABASE_URL` automatically).
 2. Redeploy on Vercel (the `character_sessions` table is created automatically on first request).
 3. *(Optional, for local dev)* Run `npx vercel env pull .env.local` (or add `DATABASE_URL=...` to `.env.local`) so `npm run dev` syncs with the same cloud database. Without `DATABASE_URL`, the app runs seamlessly in local-only mode.
+
+## Sheet Upload Queue & Telegram Notifications Setup
+
+Players can upload their new character sheets in PDF format from the Settings panel (`SettingsPanel`) on the right:
+
+1. **Upload Passphrase**: Set `UPLOAD_PASSPHRASE=your_secret_passphrase` in your environment (default: `reliquary_secret`). Players must enter this passphrase every time they submit a sheet to prevent unauthorized uploads.
+2. **Telegram Bot Notification**:
+   - Create a bot via [@BotFather](https://t.me/BotFather) and copy the API token into `TELEGRAM_BOT_TOKEN`.
+   - Obtain your user or group chat ID and set `TELEGRAM_CHAT_ID`.
+   - Set `APP_BASE_URL=https://your-domain.vercel.app` so the bot sends clickable download links directly into Telegram.
+3. **Queue & Archive Management**:
+   - Uploaded sheets are stored in the `uploaded_sheets` table in Neon Postgres.
+   - The DM and players can access the queue from the Settings panel, download the original PDF, and transition statuses (`Nuova`, `In lavorazione`, `Archiviata`) or delete completed entries.
+   - A notification badge appears on the Settings gear whenever new unprocessed sheets are waiting.
 
 ## Tech Stack
 

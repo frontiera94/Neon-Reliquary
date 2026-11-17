@@ -315,21 +315,15 @@ describe('CharacterDropdown Component', () => {
     expect(screen.getByText(/Level 6 Bloodrager/i)).toBeInTheDocument()
   })
 
-  it('allows opening dropdown by clicking the character name in Left Cockpit of TopBar', () => {
+  it('displays character name and level statically without dropdown trigger in Left Cockpit of TopBar', () => {
     render(
       <MemoryRouter>
         <TopBar />
       </MemoryRouter>
     )
 
-    const toggleBtn = screen.getByLabelText('Toggle character dropdown')
-    fireEvent.click(toggleBtn)
-
-    expect(screen.getByTestId('character-dropdown-menu')).toBeInTheDocument()
-
-    // Select Shotrix
-    fireEvent.click(screen.getByTestId('character-dropdown-option-shotrix-blackburn'))
-    expect(useCharacterStore.getState().activeCharacterId).toBe('shotrix-blackburn')
-    expect(screen.getByText('Shotrix Blackburn')).toBeInTheDocument()
+    expect(screen.getByText('Mazikeen Noctis')).toBeInTheDocument()
+    expect(screen.getByText(/Level 6 Witch/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText('Toggle character dropdown')).not.toBeInTheDocument()
   })
 })

@@ -6,6 +6,9 @@ import { useSessionStore } from '../store/useSessionStore'
 import { CloudSyncBadge } from '../components/sync/CloudSyncBadge'
 import { LanguageFlagSwitcher } from '../components/layout/LanguageFlagButton'
 import { CharacterEmblem } from '../components/character/CharacterEmblem'
+import { SettingsPanel } from '../components/layout/SettingsPanel'
+import { LanguageToggle } from '../components/layout/LanguageToggle'
+import { useSheetQueueStore } from '../store/useSheetQueueStore'
 import { getCharacterLore, isPlaceholderPortrait } from '../lib/character-lore'
 import type { FullCharacter } from '../store/useCharacterStore'
 import { useTranslation } from '../i18n'
@@ -18,11 +21,19 @@ import marianoData from '../data/mariano-cardamomo.json'
 import noorieData from '../data/noorie.json'
 
 export function CharacterSelectionPage() {
+  const { locale, t } = useTranslation()
   const navigate = useNavigate()
   const { characters, loadCharacter, removeCharacter, setActiveCharacter, activeCharacterId } = useCharacterStore()
   const { initSession } = useSessionStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const { locale, t } = useTranslation()
+const [settingsOpen, setSettingsOpen] = useState(false)
+
+  const newSheetsCount = useSheetQueueStore((s) => s.newCount())
+  const fetchSheets = useSheetQueueStore((s) => s.fetchSheets)
+
+  useEffect(() => {
+    void fetchSheets()
+  }, [fetchSheets])
 
   // Seed default roster
   useEffect(() => {
@@ -104,7 +115,7 @@ export function CharacterSelectionPage() {
           </div>
           <span
             className="text-xl md:text-2xl font-black tracking-tight text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft hover:opacity-90 transition-opacity"
-            onClick={() => navigate('/status')}
+            onClick={() => navigate('/')}
           >
             NEON RELIQUARY
           </span>
@@ -116,7 +127,26 @@ export function CharacterSelectionPage() {
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
             {t('characterSelection.rosterBadge')}
           </span>
+          <LanguageToggle />
           <CloudSyncBadge compact={false} />
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            aria-label={t('hud.manageSheetsAria')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-primary/40 hover:bg-primary/10 text-tertiary hover:text-primary font-label text-xs uppercase tracking-wider transition-all cursor-pointer relative"
+            title={t('hud.manageSheetsTitle')}
+          >
+            <span className="material-symbols-outlined text-sm">folder_shared</span>
+            <span className="hidden sm:inline">{t('hud.sheets')}</span>
+            {newSheetsCount > 0 && (
+              <span
+                data-testid="sheets-notification-badge-roster"
+                className="w-4 h-4 rounded-full bg-primary text-black font-label text-[9px] font-black flex items-center justify-center shadow-[0_0_8px_rgba(0,240,255,0.6)] animate-pulse"
+              >
+                {newSheetsCount}
+              </span>
+            )}
+          </button>
         </div>
       </header>
 
@@ -419,6 +449,11 @@ export function CharacterSelectionPage() {
           </section>
         </div>
       </main>
+      <SettingsPanel
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        initialTab="sheets"
+      />
     </div>
   )
 }

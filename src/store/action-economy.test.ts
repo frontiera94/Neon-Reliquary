@@ -103,4 +103,49 @@ describe('Action Economy in useSessionStore', () => {
     longRest('char1', 50)
     expect(getSession('char1').currentRound).toBe(1)
   })
+
+  it('gates swift action consumption on activating vs deactivating class powers', () => {
+    const { initSession, activateArcaneWeapon, activateKiExtraAttack, activateKiDefense, activateKiSpeed, getSession } =
+      useSessionStore.getState()
+    initSession('agelmund', 50)
+
+    // Activating ki extra attack consumes swift action
+    activateKiExtraAttack('agelmund', true)
+    expect(getSession('agelmund').actionEconomy?.swift).toBe(true)
+
+    // Reset actions
+    useSessionStore.getState().resetRoundActions('agelmund')
+    expect(getSession('agelmund').actionEconomy?.swift).toBe(false)
+
+    // Deactivating ki extra attack does NOT consume swift action
+    activateKiExtraAttack('agelmund', false)
+    expect(getSession('agelmund').actionEconomy?.swift).toBe(false)
+
+    // Activating ki defense consumes swift action
+    activateKiDefense('agelmund', true)
+    expect(getSession('agelmund').actionEconomy?.swift).toBe(true)
+
+    useSessionStore.getState().resetRoundActions('agelmund')
+    // Deactivating ki defense does NOT consume swift action
+    activateKiDefense('agelmund', false)
+    expect(getSession('agelmund').actionEconomy?.swift).toBe(false)
+
+    // Activating ki speed consumes swift action
+    activateKiSpeed('agelmund', true)
+    expect(getSession('agelmund').actionEconomy?.swift).toBe(true)
+
+    useSessionStore.getState().resetRoundActions('agelmund')
+    // Deactivating ki speed does NOT consume swift action
+    activateKiSpeed('agelmund', false)
+    expect(getSession('agelmund').actionEconomy?.swift).toBe(false)
+
+    // Magus arcane pool: bonus > 0 consumes swift, bonus === 0 does not
+    initSession('shotrix-blackburn', 40)
+    activateArcaneWeapon('shotrix-blackburn', 1)
+    expect(getSession('shotrix-blackburn').actionEconomy?.swift).toBe(true)
+
+    useSessionStore.getState().resetRoundActions('shotrix-blackburn')
+    activateArcaneWeapon('shotrix-blackburn', 0)
+    expect(getSession('shotrix-blackburn').actionEconomy?.swift).toBe(false)
+  })
 })

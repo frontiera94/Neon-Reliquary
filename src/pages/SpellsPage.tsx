@@ -1,34 +1,24 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { useInspectorStore } from '../store/useInspectorStore'
 import { parseDiceFormula } from '../lib/dice-engine'
-import { deriveBuffFromSpell, findMatchingBuffForSpell, isSpellBuffCandidate, calcEffectiveAbilities, calcConcentrationBonus } from '../lib/stat-calc'
+import {
+  deriveBuffFromSpell,
+  findMatchingBuffForSpell,
+  isSpellBuffCandidate,
+  calcEffectiveAbilities,
+  calcConcentrationBonus,
+  getSpellFocusBonus,
+} from '../lib/stat-calc'
 import { getSpellAvailability } from '../lib/spell-availability'
 import { spellInspectorItem } from '../lib/inspector-items'
 import { SpellUsePips } from '../components/spells/SpellUsePips'
 import type { Spell, SpellAttackType } from '../types/resources'
 import { useTranslation, translateSchool } from '../i18n'
-
-
-function getSpellFocusBonus(school: string, feats: { id?: string; name: string }[]): number {
-  if (!school || !feats.length) return 0
-  const schoolLower = school.toLowerCase()
-  let bonus = 0
-  for (const f of feats) {
-    const nameLower = f.name.toLowerCase()
-    if (nameLower.includes('spell focus') && nameLower.includes(schoolLower)) {
-      if (nameLower.includes('greater')) {
-        bonus = Math.max(bonus, 2)
-      } else {
-        bonus = Math.max(bonus, 1)
-      }
-    }
-  }
-  return bonus
-}
-
+import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
 export function SpellsPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
@@ -92,7 +82,7 @@ export function SpellsPage() {
   const arcaneFailure = char.armorClass.spellFailureChance ?? 0
   const concMod = calcConcentrationBonus(char.level, availability.castingMod)
   const hasCombatCasting = char.feats.some((f) => /combat casting/i.test(f.name))
-  const defensiveConcMod = concMod + (hasCombatCasting ? 4 : 0)
+  const defensiveConcMod = calcConcentrationBonus(char.level, availability.castingMod, hasCombatCasting ? 4 : 0)
 
   const bab = char.baseAttackBonus[0] ?? 0
   const dexMod = effectiveAbilities.mods.dex
@@ -148,9 +138,10 @@ export function SpellsPage() {
   }
 
   const inspectSpell = (spell: Spell) => {
+    const spellFocusBonus = getSpellFocusBonus(spell.school, char.feats)
     openInspector(
       spellInspectorItem(spell, {
-        dc: availability.spellDc(spell),
+        dc: availability.spellDc(spell, spellFocusBonus),
         tags: [
           ...(isSpellBuffActive(spell) ? [isIt ? 'Buff Attivo' : 'Buff Active'] : []),
           ...(isAlwaysPrepared(spell) ? [isIt ? 'Sempre Preparato' : 'Always Prepared'] : []),
@@ -184,7 +175,12 @@ export function SpellsPage() {
       }
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
+    <motion.div
+      variants={STAGGER_CONTAINER}
+      initial="initial"
+      animate="animate"
+      className="p-4 md:p-8 max-w-6xl mx-auto space-y-6"
+    >
       {/* Header */}
       <header className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -417,7 +413,7 @@ export function SpellsPage() {
           const preparedCapacity = levelInfo?.preparedCapacity ?? 0
 
           return (
-            <div key={lvl} className="mb-8">
+            <motion.div variants={STAGGER_ITEM} key={lvl} className="mb-8">
               <div className="flex items-center gap-4 mb-3">
                 <h3 className="font-headline text-sm sm:text-base font-bold uppercase tracking-wider text-primary tabular-nums">
                   {t('common.level')} {lvl}
@@ -533,10 +529,10 @@ export function SpellsPage() {
                   )
                 })}
               </div>
-            </div>
+            </motion.div>
           )
         })}
-    </div>
+    </motion.div>
   )
 }
 

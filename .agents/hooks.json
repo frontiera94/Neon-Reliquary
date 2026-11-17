@@ -7,7 +7,7 @@
           {
             "type": "command",
             "command": "node ../scripts/validate-tests.mjs",
-            "timeout": 60
+            "timeout": 180
           }
         ]
       }

@@ -1,5 +1,6 @@
-import type { Spell } from '../types/resources'
-import type { BuffToggle } from '../types/combat'
+import type { Spell } from "../types/resources"
+import type { BuffToggle } from "../types/combat"
+import { deriveBuffFromSpell } from "./stat-calc"
 
 const NON_INSTANT = /minute|hour|round|day|concentration|permanent/i
 
@@ -18,83 +19,21 @@ export function isBuffSpell(spell: Spell): boolean {
   if (KNOWN_BUFF_NAMES.test(spell.name)) return true
   if (BUFF_EFFECT_RE.test(spell.description) && NON_INSTANT.test(spell.duration)) return true
   return (
-    !NON_INSTANT.test(spell.duration) === false &&
+    NON_INSTANT.test(spell.duration) &&
     /abjuration|transmutation|enchantment/i.test(spell.school) &&
     !/instantaneous|permanent/i.test(spell.duration)
   )
 }
 
-function scaleBonus(spell: Spell, max = 4): number {
-  return Math.max(1, Math.min(max, Math.floor(spell.level / 2) + 1))
-}
-
 /**
  * Converts a prepared duration spell into a BuffToggle understood by
  * calcEffectiveAbilities / calcEffectiveArmorClass / calcEffectiveSaves.
+ * Delegates modifier derivation to deriveBuffFromSpell so all UI surfaces share
+ * one source of truth.
  */
 export function spellToBuff(spell: Spell): BuffToggle {
-  const name = spell.name.toLowerCase()
-  const buff: BuffToggle = {
-    id: `spell-buff-${spell.id}`,
-    name: spell.name,
-    active: true,
-    attackMod: 0,
-    damageMod: 0,
-    acMod: 0,
-    color: 'primary',
-    isCustom: true,
-    duration: spell.duration,
-    description: spell.description,
+  return {
+    ...deriveBuffFromSpell(spell),
+    color: "primary",
   }
-
-  if (/mage armor|shield$|shield of faith/i.test(name)) {
-    buff.acMod = /mage armor|shield$/i.test(name) ? 4 : 2
-  } else if (/barkskin/i.test(name)) {
-    buff.acMod = 2
-  } else if (/haste/i.test(name)) {
-    buff.attackMod = 1
-    buff.acMod = 1
-    buff.saveMod = { ref: 1 }
-  } else if (/bless|prayer|divine favor|magic weapon|greater magic weapon/i.test(name)) {
-    const amount = /divine favor|greater magic weapon|prayer/i.test(name) ? scaleBonus(spell, 3) : 1
-    buff.attackMod = amount
-    buff.damageMod = /greater magic weapon|prayer/i.test(name) ? amount : 0
-  } else if (/heroism|good hope/i.test(name)) {
-    buff.attackMod = 2
-    buff.damageMod = /good hope/i.test(name) ? 2 : 0
-    buff.saveMod = 2
-  } else if (/resistance$/i.test(name)) {
-    buff.saveMod = 1
-  } else if (/remove fear/i.test(name)) {
-    buff.saveMod = 4
-  } else if (/protection from/i.test(name)) {
-    buff.acMod = 2
-    buff.saveMod = 2
-  } else if (/bull's strength/i.test(name)) {
-    buff.abilityMods = { str: 4 }
-  } else if (/cat's grace/i.test(name)) {
-    buff.abilityMods = { dex: 4 }
-  } else if (/bear's endurance/i.test(name)) {
-    buff.abilityMods = { con: 4 }
-  } else if (/eagle's splendor/i.test(name)) {
-    buff.abilityMods = { cha: 4 }
-  } else if (/fox's cunning/i.test(name)) {
-    buff.abilityMods = { int: 4 }
-  } else if (/owl's wisdom/i.test(name)) {
-    buff.abilityMods = { wis: 4 }
-  } else if (/enlarge person/i.test(name)) {
-    buff.abilityMods = { str: 2 }
-    buff.acMod = -1
-    buff.attackMod = -1
-  } else if (/reduce person/i.test(name)) {
-    buff.abilityMods = { dex: 2 }
-    buff.acMod = 1
-  } else if (/righteous might/i.test(name)) {
-    buff.abilityMods = { str: 4, con: 2 }
-    buff.acMod = 2
-  } else if (/resist energy/i.test(name)) {
-    buff.saveMod = 0
-  }
-
-  return buff
 }

@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { useLocaleStore, type Locale } from '../store/useLocaleStore'
+import { useLocaleStore, type Locale, type LocaleState } from '../store/useLocaleStore'
 import { en } from './en'
 import { it } from './it'
 
@@ -50,9 +50,9 @@ export function getTranslations(locale?: Locale): Translations {
 }
 
 export function useTranslation() {
-  const locale = useLocaleStore((s) => s.locale)
-  const setLocale = useLocaleStore((s) => s.setLocale)
-  const toggleLocale = useLocaleStore((s) => s.toggleLocale)
+  const locale = useLocaleStore((s: LocaleState) => s.locale)
+  const setLocale = useLocaleStore((s: LocaleState) => s.setLocale)
+  const toggleLocale = useLocaleStore((s: LocaleState) => s.toggleLocale)
 
   const t = useCallback(
     (key: string, params?: Record<string, string | number>) => translate(locale, key, params),

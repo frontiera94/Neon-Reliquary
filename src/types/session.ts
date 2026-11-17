@@ -1,5 +1,6 @@
 import type { ConditionType, BuffToggle, ActionEconomyState } from './combat'
-import type { CoinPurse } from './inventory'
+import type { CoinPurse, InventoryItem } from './inventory'
+import type { ClassMechanicsState } from './class-mechanics'
 
 export interface ActiveSummon {
   spellId: string
@@ -16,6 +17,7 @@ export interface SessionState {
   activeBuffIds: string[]
   conditions: ConditionType[]
   customBuffs?: BuffToggle[]
+  customItems?: InventoryItem[]
   /** Canonical prepared-copy counts keyed by spell id. */
   preparedSpells?: Record<string, number>
   /** Derived flattened list kept for backwards compatibility. */
@@ -34,4 +36,5 @@ export interface SessionState {
   activeCompanionId?: string
   actionEconomy?: ActionEconomyState
   currentRound?: number
+  classMechanics?: ClassMechanicsState
 }

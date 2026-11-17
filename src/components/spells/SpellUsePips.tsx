@@ -1,3 +1,6 @@
+import { motion } from 'framer-motion'
+import { SNAPPY_SPRING } from '../../lib/motion-presets'
+
 export interface SpellUsePipsProps {
   label: string
   prefix?: string
@@ -66,11 +69,12 @@ export function SpellUsePips({
           const isSpent = index < spent
           const isInteractive = !disabled && (Boolean(onSetSpent) || Boolean(onSpend))
           return (
-            <button
+            <motion.button
               key={index}
               type="button"
               disabled={disabled || !isInteractive}
               onClick={() => handleClick(index)}
+              whileTap={isInteractive ? { scale: 0.88 } : undefined}
               aria-label={`${isSpent ? 'Recover' : 'Spend'} ${label} ${index + 1} of ${total}`}
               aria-pressed={isSpent}
               className={`${
@@ -79,14 +83,17 @@ export function SpellUsePips({
                 isInteractive ? 'cursor-pointer group' : 'cursor-default'
               } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60`}
             >
-              <span
+              <motion.span
+                layout
+                animate={{ scale: isSpent ? 0.95 : 1 }}
+                transition={SNAPPY_SPRING}
                 className={`block transition-all ${isInteractive ? 'group-hover:scale-110' : ''} ${
                   isSpent
                     ? 'w-2.5 h-2.5 rounded-full border border-white/20 bg-surface-container-highest'
                     : 'w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(0,240,255,0.55)]'
                 }`}
               />
-            </button>
+            </motion.button>
           )
         })}
       </div>

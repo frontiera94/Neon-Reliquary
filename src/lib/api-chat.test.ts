@@ -18,8 +18,8 @@ function createMockReqRes(options: {
       statusCode = code
       return res
     },
-    json: (data: Record<string, unknown>) => {
-      jsonBody = data
+    json: (data: unknown) => {
+      jsonBody = data as Record<string, unknown>
       return res
     },
   }
@@ -60,11 +60,11 @@ describe('api/chat serverless handler', () => {
     })
     await handler(req, res)
     expect(getStatus()).toBe(400)
-    expect(getJson().error).toContain('Invalid message count')
+    expect(getJson().error).toContain('messages must be a non-empty array')
   })
 
-  it('rejects messages array with more than 20 items', async () => {
-    const messages = Array.from({ length: 21 }, (_, i) => ({
+  it('rejects messages array with more than 40 items', async () => {
+    const messages = Array.from({ length: 41 }, (_, i) => ({
       role: 'user',
       content: `Message ${i}`,
     }))
@@ -77,7 +77,7 @@ describe('api/chat serverless handler', () => {
     })
     await handler(req, res)
     expect(getStatus()).toBe(400)
-    expect(getJson().error).toContain('Invalid message count')
+    expect(getJson().error).toContain('Too many messages')
   })
 
   it('rejects messages with invalid roles or oversized content (>2000 chars)', async () => {
@@ -90,11 +90,11 @@ describe('api/chat serverless handler', () => {
     })
     await handler(req, res)
     expect(getStatus()).toBe(400)
-    expect(getJson().error).toContain('Invalid message structure')
+    expect(getJson().error).toContain('Invalid message')
 
     const { req: req2, res: res2, getStatus: getStatus2 } = createMockReqRes({
       body: {
-        messages: [{ role: 'user', content: 'x'.repeat(2001) }],
+        messages: [{ role: 'user', content: 'x'.repeat(8001) }],
         character: { name: 'Knam' },
         session: { currentHp: 40 },
       },
@@ -103,7 +103,7 @@ describe('api/chat serverless handler', () => {
     expect(getStatus2()).toBe(400)
   })
 
-  it('rejects oversized character or session payload (>100KB) with 413', async () => {
+  it('rejects oversized character or session payload with 400', async () => {
     const hugeCharacter = { name: 'Knam', lore: 'x'.repeat(100_001) }
     const { req, res, getStatus, getJson } = createMockReqRes({
       body: {
@@ -113,8 +113,8 @@ describe('api/chat serverless handler', () => {
       },
     })
     await handler(req, res)
-    expect(getStatus()).toBe(413)
-    expect(getJson().error).toBe('Payload too large')
+    expect(getStatus()).toBe(400)
+    expect(getJson().error).toContain("serialize to at most")
   })
 
   it('processes valid payload and returns AI response', async () => {

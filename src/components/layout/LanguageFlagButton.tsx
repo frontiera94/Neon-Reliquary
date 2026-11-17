@@ -1,4 +1,4 @@
-import { useLocaleStore, type Locale } from '../../store/useLocaleStore'
+import { useLocaleStore, type Locale, type LocaleState } from '../../store/useLocaleStore'
 
 function ItalianFlagSvg({ className = 'w-4 h-3' }: { className?: string }) {
   return (
@@ -48,8 +48,8 @@ export function LanguageFlagSwitcher({
 }: {
   variant?: 'pill' | 'settings'
 }) {
-  const locale = useLocaleStore((s) => s.locale)
-  const setLocale = useLocaleStore((s) => s.setLocale)
+  const locale = useLocaleStore((s: LocaleState) => s.locale)
+  const setLocale = useLocaleStore((s: LocaleState) => s.setLocale)
 
   const options: { code: Locale; label: string; Flag: typeof ItalianFlagSvg }[] = [
     { code: 'en', label: 'English', Flag: BritishFlagSvg },

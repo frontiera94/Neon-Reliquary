@@ -169,4 +169,116 @@ describe('CompanionPage component', () => {
     const updatedChar = useCharacterStore.getState().characters.find((c) => c.id === 'test-druid-companion')
     expect(updatedChar?.companions?.length).toBe(0)
   })
+
+  it('opens Replace Companion modal on click and allows replacing companion', () => {
+    const charWithWolf: FullCharacter = {
+      ...testDruid,
+      companions: [
+        {
+          id: 'wolf-companion-1',
+          name: 'Ignis',
+          type: 'animal_companion',
+          species: 'Wolf',
+          size: 'Medium',
+          maxHp: 26,
+          speed: '50 ft.',
+          initiativeBonus: 3,
+          armorClass: { total: 17, touch: 13, flatFooted: 14 },
+          savingThrows: { fort: 5, ref: 6, will: 2 },
+          abilities: { str: 14, dex: 16, con: 14, int: 2, wis: 12, cha: 6 },
+          baseAttackBonus: 3,
+          attacks: [{ name: 'Bite', bonus: 5, damageDice: '1d6+3' }],
+          skills: [],
+          specialQualities: [],
+        },
+      ],
+    }
+
+    useCharacterStore.setState({
+      characters: [charWithWolf],
+      activeCharacterId: 'test-druid-companion',
+    })
+
+    render(
+      <MemoryRouter>
+        <CompanionPage />
+      </MemoryRouter>
+    )
+
+    // Click Replace Companion
+    const replaceButton = screen.getByRole('button', { name: /replace companion/i })
+    fireEvent.click(replaceButton)
+
+    // Modal should be open with Replace Companion Preset title
+    expect(screen.getByText('Replace Companion Preset')).toBeInTheDocument()
+
+    // Current companion should show as "Currently Bonded"
+    expect(screen.getByRole('button', { name: /currently bonded/i })).toBeDisabled()
+
+    // Find a replacement button (e.g. Cat Familiar)
+    const replaceButtons = screen.getAllByRole('button', { name: /bond & replace/i })
+    expect(replaceButtons.length).toBeGreaterThan(0)
+
+    // Click to replace with Cat Familiar
+    fireEvent.click(replaceButtons[0])
+
+    // Modal should be closed
+    expect(screen.queryByText('Replace Companion Preset')).not.toBeInTheDocument()
+
+    // Active character's companion should now be updated
+    const updatedChar = useCharacterStore.getState().characters.find((c) => c.id === 'test-druid-companion')
+    expect(updatedChar?.companions?.[0].id).toBe('preset-cat-familiar')
+    expect(updatedChar?.companions?.[0].name).toContain('Shadow')
+  })
+
+  it('closes Replace Companion modal on close button and on Escape key', () => {
+    const charWithWolf: FullCharacter = {
+      ...testDruid,
+      companions: [
+        {
+          id: 'wolf-companion-1',
+          name: 'Ignis',
+          type: 'animal_companion',
+          species: 'Wolf',
+          size: 'Medium',
+          maxHp: 26,
+          speed: '50 ft.',
+          initiativeBonus: 3,
+          armorClass: { total: 17, touch: 13, flatFooted: 14 },
+          savingThrows: { fort: 5, ref: 6, will: 2 },
+          abilities: { str: 14, dex: 16, con: 14, int: 2, wis: 12, cha: 6 },
+          baseAttackBonus: 3,
+          attacks: [{ name: 'Bite', bonus: 5, damageDice: '1d6+3' }],
+          skills: [],
+          specialQualities: [],
+        },
+      ],
+    }
+
+    useCharacterStore.setState({
+      characters: [charWithWolf],
+      activeCharacterId: 'test-druid-companion',
+    })
+
+    render(
+      <MemoryRouter>
+        <CompanionPage />
+      </MemoryRouter>
+    )
+
+    // Open modal
+    fireEvent.click(screen.getByRole('button', { name: /replace companion/i }))
+    expect(screen.getByText('Replace Companion Preset')).toBeInTheDocument()
+
+    // Close via close button
+    fireEvent.click(screen.getByRole('button', { name: /close modal/i }))
+    expect(screen.queryByText('Replace Companion Preset')).not.toBeInTheDocument()
+
+    // Reopen modal and close via Escape
+    fireEvent.click(screen.getByRole('button', { name: /replace companion/i }))
+    expect(screen.getByText('Replace Companion Preset')).toBeInTheDocument()
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByText('Replace Companion Preset')).not.toBeInTheDocument()
+  })
 })

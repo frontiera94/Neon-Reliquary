@@ -6,6 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import type { Plugin } from 'vite'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { handleSessionsRequest } from './api/sessions'
+import { handleSheetsRequest } from './api/sheets'
 
 // ---------------------------------------------------------------------------
 // Local dev mock — replaces Vercel Blob + serverless functions when using
@@ -164,12 +165,61 @@ function localSessionsApiPlugin(): Plugin {
   }
 }
 
+function localSheetsApiPlugin(): Plugin {
+  return {
+    name: 'local-sheets-api',
+    apply: 'serve',
+    configureServer(server) {
+      const fileEnv = loadEnv(server.config.mode, process.cwd(), '')
+      server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+        const url = (req.url ?? '').split('?')[0]
+        if (url !== '/api/sheets') return next()
+
+        const rawBody =
+          req.method === 'POST' || req.method === 'PATCH' || req.method === 'DELETE' || req.method === 'PUT'
+            ? await readBody(req)
+            : undefined
+
+        await handleSheetsRequest(
+          {
+            method: req.method,
+            url: req.url,
+            body: rawBody,
+            headers: req.headers,
+          },
+          {
+            setHeader: (name, value) => res.setHeader(name, value),
+            status: (code) => ({
+              json: (payload) => sendJson(res, code, payload),
+              end: () => {
+                res.writeHead(code)
+                res.end()
+              },
+              send: (data: Buffer | string) => {
+                res.writeHead(code)
+                res.end(data)
+              },
+            }),
+          },
+          {
+            env: {
+              ...fileEnv,
+              ...process.env,
+            },
+          }
+        )
+      })
+    },
+  }
+}
+
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
     localMapApiPlugin(),
     localSessionsApiPlugin(),
+    localSheetsApiPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: null,

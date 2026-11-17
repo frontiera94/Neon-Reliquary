@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useCharacterStore } from '../../store/useCharacterStore'
 import { CharacterDropdown } from '../character/CharacterDropdown'
+import { TACTICAL_SPRING } from '../../lib/motion-presets'
 import { useTranslation } from '../../i18n'
 
 const navItems = [
@@ -19,42 +21,61 @@ export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
 
   return (
     <aside
-      className={`hidden md:flex flex-col h-screen w-64 bg-surface-container/90 backdrop-blur-md fixed left-0 top-0 pb-8 z-40 border-r border-white/[0.08] pt-20 ${forceHidden ? 'lg:hidden' : ''}`}
-      style={{ boxShadow: '4px 0 24px -8px rgba(0,240,255,0.08)' }}
+      className={`hidden md:flex flex-col w-56 flex-shrink-0 bg-surface-container/60 backdrop-blur-xl border-r border-white/5 ${
+        forceHidden ? 'md:hidden' : ''
+      }`}
     >
-      {char && (
-        <div className="px-6 mb-8">
-          <CharacterDropdown align="left" variant="sidebar" />
-        </div>
-      )}
+      <div className="p-4 border-b border-white/5">
+        <CharacterDropdown />
+      </div>
 
-      <nav className="flex flex-col gap-1 px-3">
+      <nav aria-label="Main Navigation" className="flex-1 p-3 space-y-1">
         {navItems.map(({ to, icon, key }) => {
-          const compCount = to === '/companion' ? (char?.companions?.length ?? 0) : 0
+          const label = t(key)
           return (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
-                `flex items-center justify-between px-4 py-3 font-label text-xs uppercase tracking-widest rounded-xl transition-all duration-200 ` +
+                `relative flex items-center gap-3 px-3 py-2.5 rounded-xl font-label text-xs uppercase tracking-wider transition-all duration-200 ` +
                 (isActive
-                  ? 'text-primary bg-primary/10 border border-primary/30 shadow-[0_0_15px_rgba(0,240,255,0.15)]'
-                  : 'text-tertiary hover:text-white hover:bg-white/[0.04]')
+                  ? 'text-primary font-bold shadow-[0_0_15px_rgba(0,240,255,0.15)]'
+                  : 'text-tertiary hover:text-white hover:bg-white/5')
               }
             >
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-lg">{icon}</span>
-                {t(key)}
-              </div>
-              {compCount > 0 && (
-                <span className="text-[10px] px-2 py-0.5 bg-primary/15 text-primary border border-primary/30 font-label rounded-full">
-                  {compCount}
-                </span>
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-sidebar-pill"
+                      transition={TACTICAL_SPRING}
+                      className="absolute inset-0 rounded-xl bg-primary/10 border border-primary/30 pointer-events-none"
+                    />
+                  )}
+                  <span
+                    className="material-symbols-outlined text-lg"
+                    style={isActive ? { filter: 'drop-shadow(0 0 6px #00f0ff)' } : undefined}
+                  >
+                    {icon}
+                  </span>
+                  <span>{label}</span>
+                </>
               )}
             </NavLink>
           )
         })}
       </nav>
+
+      <div className="p-4 border-t border-white/5 text-[10px] font-label text-tertiary/50 uppercase tracking-widest text-center">
+        {char ? (
+          <div>
+            <span className="text-secondary font-bold">{char.name}</span>
+            <div className="text-[9px] text-tertiary/40">PF1e Companion</div>
+          </div>
+        ) : (
+          <span>Neon Reliquary</span>
+        )}
+      </div>
     </aside>
   )
 }

@@ -12,6 +12,16 @@ export interface Weapon {
   currentAmmo?: number
 }
 
+export type AcBonusType =
+  | 'dodge'
+  | 'natural'
+  | 'size'
+  | 'deflection'
+  | 'armor'
+  | 'shield'
+  | 'other'
+  | 'untyped'
+
 export interface BuffToggle {
   id: string
   name: string
@@ -19,6 +29,8 @@ export interface BuffToggle {
   attackMod: number
   damageMod: number
   acMod: number
+  /** Classification of the AC bonus for Touch / Flat-Footed / CMD calculations */
+  acType?: AcBonusType
   color?: 'primary' | 'secondary' | 'error'
   /** When true, attackMod/damageMod are not applied to ranged weapons */
   meleeOnly?: boolean

@@ -8,6 +8,7 @@ import { useDiceStore } from '../store/useDiceStore'
 import type { DiceRoll } from '../types/dice'
 import type { FullCharacter } from '../store/useCharacterStore'
 import type { Skill } from '../types/skills'
+import { WILD_SHAPE_PRESETS } from '../data/wild-shape-presets'
 
 const sampleSkills: Skill[] = [
   { id: 'acrobatics', name: 'Acrobatics', ability: 'dex', ranks: 3, classSkill: true, miscBonus: 0, trained: true, armorCheckPenalty: false },
@@ -152,5 +153,45 @@ describe('SkillsPage', () => {
 
     expect(rollCalledWith).not.toBeNull()
     expect((rollCalledWith as unknown as DiceRoll)?.label).toBe('Acrobatics Check')
+  })
+
+  it('sets Take 10 result when Take 10 button is clicked without opening modal', () => {
+    useDiceStore.setState({ history: [] })
+
+    render(<SkillsPage />)
+    const take10Btn = screen.getByRole('button', { name: /take 10 on acrobatics/i })
+    expect(take10Btn).toBeInTheDocument()
+    // Acrobatics: ranks 3 + classSkill 3 + dexMod 3 = +9. Take 10 = 19.
+    expect(take10Btn).toHaveTextContent(/take 10:\s*19/i)
+
+    fireEvent.click(take10Btn)
+
+    const history = useDiceStore.getState().history
+    expect(history.length).toBe(1)
+    expect(history[0].label).toBe('Acrobatics (Take 10)')
+    expect(history[0].total).toBe(19)
+  })
+
+  it('reflects Wild Shape ability modifiers in skill totals', () => {
+    // Activate Wild Shape (Wolf: +2 Str, Dex unchanged)
+    useSessionStore.setState({
+      sessions: {
+        'skills-test-char': {
+          ...useSessionStore.getState().getSession('skills-test-char'),
+          classMechanics: {
+            druid: {
+              active: true,
+              formId: 'wolf',
+              activeForm: WILD_SHAPE_PRESETS.wolf,
+            },
+          },
+        },
+      },
+    })
+
+    render(<SkillsPage />)
+    // Climb: ranks 0 + Str 10 (+2 from Wolf = 12, mod +1). Total should be +1, Take 10 = 11.
+    const climbTake10 = screen.getByRole('button', { name: /take 10 on climb/i })
+    expect(climbTake10).toHaveTextContent(/take 10:\s*11/i)
   })
 })

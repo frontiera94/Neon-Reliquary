@@ -1,25 +1,29 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCharacterStore } from '../../store/useCharacterStore'
 import { useSessionStore } from '../../store/useSessionStore'
 import { useDiceStore } from '../../store/useDiceStore'
+import { useSheetQueueStore } from '../../store/useSheetQueueStore'
 import {
   calcEffectiveAbilities,
   calcEffectiveArmorClass,
   calcEffectiveSaves,
   calcDetailedAcBreakdowns,
+  calcEffectiveMaxHp,
+  checkBloodrageExitSafety,
 } from '../../lib/stat-calc'
 import { abilityMod } from '../../lib/dice-engine'
+import { getWildShapeView } from '../../lib/class-combat'
 import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
 import { TacticalHpPopover } from './TacticalHpPopover'
 import { SettingsPanel } from './SettingsPanel'
 import { CloudSyncBadge } from '../sync/CloudSyncBadge'
+import { LanguageToggle } from './LanguageToggle'
 import { useInspectorStore } from '../../store/useInspectorStore'
 import { CharacterDropdown } from '../character/CharacterDropdown'
 import { CharacterEmblem } from '../character/CharacterEmblem'
 import { getCharacterLore } from '../../lib/character-lore'
 import { useTranslation, getConditionInfo, translateSaveName } from '../../i18n'
-import { LanguageFlagSwitcher } from './LanguageFlagButton'
 
 export function TacticalHUD() {
   const navigate = useNavigate()
@@ -34,7 +38,13 @@ export function TacticalHUD() {
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [hpPopoverOpen, setHpPopoverOpen] = useState(false)
-  const [characterDropdownOpen, setCharacterDropdownOpen] = useState(false)
+
+  const newSheetsCount = useSheetQueueStore((s) => s.newCount())
+  const fetchSheets = useSheetQueueStore((s) => s.fetchSheets)
+
+  useEffect(() => {
+    void fetchSheets()
+  }, [fetchSheets])
 
   // Character Cycling
   const idx = char ? characters.findIndex((c) => c.id === char.id) : -1
@@ -54,24 +64,39 @@ export function TacticalHUD() {
     return allBuffs.filter((b) => session.activeBuffIds.includes(b.id))
   }, [char, session])
 
+  const wildShapeView = useMemo(() => {
+    if (!char) return null
+    return getWildShapeView(char, session?.classMechanics)
+  }, [char, session?.classMechanics])
+
   // Effective defensive stats calculations
   const effectiveAbilities = useMemo(() => {
-    if (!char) return null
-    return calcEffectiveAbilities(char.abilities, conditions, activeBuffs)
-  }, [char, conditions, activeBuffs])
+    if (!char || !wildShapeView) return null
+    return calcEffectiveAbilities(wildShapeView.abilities, conditions, activeBuffs)
+  }, [char, wildShapeView, conditions, activeBuffs])
 
   const baseDexMod = char ? abilityMod(char.abilities.dex) : 0
   const effDexMod = effectiveAbilities ? effectiveAbilities.mods.dex : baseDexMod
 
+  const hasUncannyDodge = useMemo(() => {
+    if (!char) return false
+    return Boolean(
+      char.classAbilities?.some((a) => /uncanny dodge/i.test(a.name)) ||
+      char.feats?.some((f) => /uncanny dodge/i.test(f.name))
+    )
+  }, [char])
+
+  const acOptions = useMemo(() => ({ hasUncannyDodge }), [hasUncannyDodge])
+
   const effectiveAc = useMemo(() => {
-    if (!char) return null
-    return calcEffectiveArmorClass(char.armorClass, baseDexMod, effDexMod, conditions, activeBuffs)
-  }, [char, baseDexMod, effDexMod, conditions, activeBuffs])
+    if (!char || !wildShapeView) return null
+    return calcEffectiveArmorClass(wildShapeView.armorClass, baseDexMod, effDexMod, conditions, activeBuffs, acOptions)
+  }, [char, wildShapeView, baseDexMod, effDexMod, conditions, activeBuffs, acOptions])
 
   const detailedAc = useMemo(() => {
-    if (!char) return null
-    return calcDetailedAcBreakdowns(char.armorClass, effDexMod, conditions, activeBuffs)
-  }, [char, effDexMod, conditions, activeBuffs])
+    if (!char || !wildShapeView) return null
+    return calcDetailedAcBreakdowns(wildShapeView.armorClass, effDexMod, conditions, activeBuffs, acOptions)
+  }, [char, wildShapeView, effDexMod, conditions, activeBuffs, acOptions])
 
   const effectiveSaves = useMemo(() => {
     if (!char || !effectiveAbilities) return null
@@ -81,35 +106,64 @@ export function TacticalHUD() {
   // If no character is active, render fallback TopBar
   if (!char) {
     return (
-      <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-surface/90 border-b border-white/[0.08] px-6 py-4 flex justify-between items-center" style={{ boxShadow: '0 4px 24px -6px rgba(0,240,255,0.1)' }}>
-        <span
-          className="text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft"
-          onClick={() => navigate('/characters')}
-        >
-          NEON RELIQUARY
-        </span>
-        <span className="font-label text-xs text-tertiary">{t('hud.noActiveCharacter')}</span>
-        <div className="flex items-center gap-3">
-          <LanguageFlagSwitcher variant="pill" />
-          <CloudSyncBadge />
-          <button
-            onClick={() => navigate('/characters')}
-            className="flex items-center gap-2 px-4 py-2 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-sm rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+<>
+        <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-surface/90 border-b border-white/[0.08] px-6 py-4 flex justify-between items-center" style={{ boxShadow: '0 4px 24px -6px rgba(0,240,255,0.1)' }}>
+          <span
+            className="text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft"
+            onClick={() => navigate('/')}
           >
-            <span className="material-symbols-outlined text-sm text-primary">account_circle</span>
-            <span>{t('hud.characterSwitcher')}</span>
-          </button>
-        </div>
-      </header>
+            NEON RELIQUARY
+          </span>
+          <span className="font-label text-xs text-tertiary">{t('hud.noActiveCharacter')}</span>
+          <div className="flex items-center gap-4">
+            <LanguageToggle />
+            <CloudSyncBadge />
+            <button
+              onClick={() => navigate('/characters')}
+              className="flex items-center gap-2 px-4 py-2 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-sm rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-sm text-primary">account_circle</span>
+              <span>{t('hud.characterSwitcher')}</span>
+            </button>
+            <button
+              onClick={() => setSettingsOpen(true)}
+              aria-label={t('hud.settings')}
+              className="p-1.5 text-tertiary hover:text-primary transition-all duration-300 rounded-lg hover:bg-white/5 cursor-pointer relative"
+            >
+              <span className="material-symbols-outlined text-base md:text-lg">settings</span>
+              {newSheetsCount > 0 && (
+                <span
+                  data-testid="sheets-notification-badge"
+                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-black font-label text-[9px] font-black flex items-center justify-center shadow-[0_0_8px_rgba(0,240,255,0.6)] animate-pulse"
+                >
+                  {newSheetsCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </header>
+        <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      </>
     )
   }
 
   // Multi-track HP math
   const hp = session?.currentHp ?? 0
-  const maxHp = char.maxHp ?? 1
+  const conScore = char.abilities.con ?? 10
+  const baseConMod = abilityMod(char.abilities.con)
+  const effConMod = effectiveAbilities ? effectiveAbilities.mods.con : baseConMod
+  const effectiveMaxHp = calcEffectiveMaxHp(char.maxHp ?? 1, char.level ?? 1, baseConMod, effConMod)
+  const maxHp = effectiveMaxHp
   const tempHp = session?.tempHp ?? 0
   const nonlethalDamage = session?.nonlethalDamage ?? 0
-  const conScore = char.abilities.con ?? 10
+
+  const isBloodraging = Boolean(
+    session?.classMechanics?.bloodrager?.isRaging ??
+    session?.classMechanics?.bloodrager?.isBloodraging
+  )
+  const exitSafety = isBloodraging
+    ? checkBloodrageExitSafety(hp, char.level ?? 4, 4, conScore)
+    : null
 
   const scaleMax = Math.max(maxHp, Math.max(0, hp) + tempHp)
   const pctCurrent = Math.max(0, Math.min(100, (Math.max(0, hp) / scaleMax) * 100))
@@ -135,22 +189,13 @@ export function TacticalHUD() {
           <div className="col-start-1 row-start-1 flex flex-shrink-0 items-center gap-3">
             <span
               className="text-xl md:text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft select-none"
-              onClick={() => navigate('/characters')}
+              onClick={() => navigate('/')}
             >
               NEON RELIQUARY
             </span>
-            <div className="hidden md:block h-8 w-px bg-white/10 mx-1" />
-            <div
-              className="hidden xl:flex items-center gap-2.5 cursor-pointer group select-none"
-              onClick={() => setCharacterDropdownOpen((prev) => !prev)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') setCharacterDropdownOpen((prev) => !prev)
-              }}
-              aria-label="Toggle character dropdown"
-            >
-              <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
+            <div className="h-5 md:h-8 w-px bg-white/10 mx-1 shrink-0" />
+            <div className="flex items-center gap-1.5 sm:gap-2.5 select-none min-w-0">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg overflow-hidden flex-shrink-0">
                 <CharacterEmblem
                   characterId={char.id}
                   lore={getCharacterLore(char.id)}
@@ -158,18 +203,11 @@ export function TacticalHUD() {
                   className="w-full h-full"
                 />
               </div>
-              <div>
-                <h1 className="font-headline text-base leading-none text-white font-bold group-hover:text-primary transition-colors flex items-center gap-1">
-                  <span>{char.name}</span>
-                  <span
-                    className={`material-symbols-outlined text-xs text-tertiary group-hover:text-primary transition-transform duration-200 ${
-                      characterDropdownOpen ? 'rotate-180 text-primary' : ''
-                    }`}
-                  >
-                    expand_more
-                  </span>
+              <div className="min-w-0">
+                <h1 className="font-headline text-xs sm:text-base leading-none text-white font-bold truncate max-w-[85px] sm:max-w-none">
+                  {char.name}
                 </h1>
-                <p className="font-label text-xs tracking-widest text-tertiary uppercase mt-0.5">
+<p className="font-label text-[8px] sm:text-xs tracking-wider sm:tracking-widest text-tertiary uppercase mt-0.5 truncate max-w-[85px] sm:max-w-none">
                   {t('common.level')} {char.level} {char.class}
                 </p>
               </div>
@@ -280,6 +318,18 @@ export function TacticalHUD() {
                     {isStaggered && (
                       <span className="font-label text-[10px] font-bold uppercase text-amber-300 bg-amber-950/60 border border-amber-500/30 px-1.5 py-0.2 rounded">
                         {locale === 'it' ? 'BARCOLLANTE' : 'STAGGERED'}
+                      </span>
+                    )}
+                    {exitSafety && exitSafety.severity !== 'none' && (
+                      <span
+                        title={exitSafety.message}
+                        className={`font-label text-[10px] font-black uppercase px-1.5 py-0.2 rounded animate-pulse cursor-help ${
+                          exitSafety.severity === 'danger'
+                            ? 'text-error bg-error/20 border border-error/50'
+                            : 'text-amber-400 bg-amber-950/60 border border-amber-500/30'
+                        }`}
+                      >
+                        {exitSafety.isInstantDeath ? 'RAGE: LETHAL' : 'RAGE: RISK'}
                       </span>
                     )}
                   </div>
@@ -537,7 +587,7 @@ export function TacticalHUD() {
 
           {/* Right Cockpit: Language & Cycler & Switcher & Settings */}
           <div className="col-start-2 row-start-1 flex flex-shrink-0 items-center gap-2 justify-self-end md:gap-3">
-            <LanguageFlagSwitcher variant="pill" />
+<LanguageToggle />
             <CloudSyncBadge />
             {characters.length >= 2 && (
               <div className="flex items-center gap-1">
@@ -558,20 +608,22 @@ export function TacticalHUD() {
               </div>
             )}
 
-            <CharacterDropdown
-              align="right"
-              variant="cockpit"
-              isOpen={characterDropdownOpen}
-              onToggle={() => setCharacterDropdownOpen((prev) => !prev)}
-              onClose={() => setCharacterDropdownOpen(false)}
-            />
+            <CharacterDropdown align="right" variant="cockpit" />
 
             <button
               onClick={() => setSettingsOpen(true)}
-              aria-label={t('hud.settings')}
-              className="p-1.5 text-tertiary hover:text-primary transition-all duration-300 rounded-lg hover:bg-white/5 cursor-pointer"
+aria-label={t('hud.settings')}
+              className="p-1.5 text-tertiary hover:text-primary transition-all duration-300 rounded-lg hover:bg-white/5 cursor-pointer relative"
             >
               <span className="material-symbols-outlined text-base md:text-lg">settings</span>
+              {newSheetsCount > 0 && (
+                <span
+                  data-testid="sheets-notification-badge"
+                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-black font-label text-[9px] font-black flex items-center justify-center shadow-[0_0_8px_rgba(0,240,255,0.6)] animate-pulse"
+                >
+                  {newSheetsCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
