@@ -6,7 +6,6 @@ import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { useInspectorStore } from '../store/useInspectorStore'
 import { abilityMod } from '../lib/dice-engine'
-import { CONDITION_INFO } from '../lib/conditions'
 import { conditionInspectorItem } from '../lib/inspector-items'
 import {
   calcEffectiveAbilities,
@@ -23,6 +22,13 @@ import { BuffManagerModal } from '../components/combat/BuffManagerModal'
 import { DailyResourcePips } from '../components/combat/BuffResourceToggle'
 import { StatBreakdownTooltip } from '../components/ui/StatBreakdownTooltip'
 import type { ConditionType } from '../types/combat'
+import {
+  useTranslation,
+  getConditionInfo,
+  translateAbilityShort,
+  translateAbilityFull,
+  translateSaveName,
+} from '../i18n'
 import { STAGGER_CONTAINER, STAGGER_ITEM, SNAPPY_SPRING } from '../lib/motion-presets'
 
 const COLOR_MAP: Record<string, string> = {
@@ -32,14 +38,6 @@ const COLOR_MAP: Record<string, string> = {
 }
 
 const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const
-const ABILITY_NAMES = {
-  str: 'Strength',
-  dex: 'Dexterity',
-  con: 'Constitution',
-  int: 'Intelligence',
-  wis: 'Wisdom',
-  cha: 'Charisma',
-}
 
 const ALL_CONDITIONS: ConditionType[] = [
   'shaken', 'sickened', 'fatigued', 'exhausted',
@@ -61,6 +59,7 @@ export function StatusPage() {
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
   const openInspector = useInspectorStore((s) => s.openInspector)
+  const { locale, t } = useTranslation()
 
   const [hpDelta, setHpDelta] = useState(1)
   const [nlEdit, setNlEdit] = useState<string | null>(null)
@@ -70,7 +69,8 @@ export function StatusPage() {
   if (!char) return <EmptyState />
 
   if (!session) {
-    initSession(char.id, char.maxHp)
+    const initialEquipped = (char.inventory ?? []).filter((i) => i.equipped).map((i) => i.id)
+    initSession(char.id, char.maxHp, char.startingCoins, initialEquipped)
     return null
   }
 
@@ -137,11 +137,15 @@ export function StatusPage() {
     acOptions
   )
   const initBreakdown = [
-    { label: 'Base Init', value: char.initiativeBonus },
+    { label: locale === 'it' ? 'Iniz Base' : 'Base Init', value: char.initiativeBonus },
     ...(effectiveAbilities.deltas.dex !== 0
-      ? [{ label: 'DEX Shift', value: effectiveAbilities.deltas.dex }]
+      ? [{ label: locale === 'it' ? 'Var. DES' : 'DEX Shift', value: effectiveAbilities.deltas.dex }]
       : []),
   ]
+
+  const dexShort = translateAbilityShort('dex', locale)
+  const conShort = translateAbilityShort('con', locale)
+  const wisShort = translateAbilityShort('wis', locale)
 
   return (
     <div className="p-4 md:p-8">
@@ -171,10 +175,11 @@ export function StatusPage() {
                 <span className="material-symbols-outlined text-primary text-2xl">pets</span>
                 <div>
                   <p className="font-headline text-sm font-bold text-on-surface">
-                    Bonded Companion: <span className="text-secondary">{companion.name}</span>
+                    {locale === 'it' ? 'Compagno Legato:' : 'Bonded Companion:'}{' '}
+                    <span className="text-secondary">{companion.name}</span>
                   </p>
                   <p className="font-label text-[10px] text-tertiary uppercase">
-                    {companion.type.replace('_', ' ')} • {companion.species} • HP {session.companionHp?.[companion.id] ?? companion.maxHp} / {companion.maxHp}
+                    {companion.type.replace('_', ' ')} • {companion.species} • {t('hud.hp')} {session.companionHp?.[companion.id] ?? companion.maxHp} / {companion.maxHp}
                   </p>
                 </div>
               </div>
@@ -182,7 +187,7 @@ export function StatusPage() {
                 to="/companion"
                 className="px-4 py-2 bg-primary/10 border border-primary text-primary font-label text-xs uppercase tracking-widest rounded-xl hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all flex items-center gap-2 cursor-pointer"
               >
-                Open Companion Sheet
+                {locale === 'it' ? 'Apri Scheda Compagno' : 'Open Companion Sheet'}
                 <span className="material-symbols-outlined text-xs">arrow_forward</span>
               </Link>
             </motion.div>
@@ -196,7 +201,7 @@ export function StatusPage() {
         >
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent pointer-events-none" />
           <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-8 neon-glow-accent">
-            Vitality Core
+            {locale === 'it' ? 'Nucleo Vitale' : 'Vitality Core'}
           </h2>
           <div className="text-center">
             <motion.div
@@ -223,12 +228,18 @@ export function StatusPage() {
                   <span className="material-symbols-outlined text-xs">
                     {vitalStatus === 'dead' ? 'skull' : 'warning'}
                   </span>
-                  {vitalStatus === 'dead' ? 'Dead' : vitalStatus === 'dying' ? 'Dying' : 'Disabled (0 HP)'}
+                  {vitalStatus === 'dead'
+                    ? t('hud.dead')
+                    : vitalStatus === 'dying'
+                    ? t('hud.dying')
+                    : locale === 'it'
+                    ? 'Inabile (0 PF)'
+                    : 'Disabled (0 HP)'}
                 </span>
               </div>
             )}
             <div className="font-label text-tertiary tracking-widest uppercase mt-2 text-xs">
-              Current Hit Points
+              {locale === 'it' ? 'Punti Ferita Attuali' : 'Current Hit Points'}
             </div>
             <div className="font-label text-on-surface-variant text-sm mt-1">/ {maxHp}</div>
           </div>
@@ -238,7 +249,7 @@ export function StatusPage() {
               className="px-5 py-3 bg-error-container text-on-error-container hover:brightness-125 transition-all active:scale-95 font-label text-sm uppercase tracking-widest rounded-xl cursor-pointer"
               aria-label="Decrease HP"
             >
-              Damage
+              {t('hud.damage')}
             </button>
             <input
               type="number"
@@ -252,7 +263,7 @@ export function StatusPage() {
               className="px-5 py-3 bg-primary-container text-on-primary-container hover:brightness-125 transition-all active:scale-95 font-label text-sm uppercase tracking-widest rounded-xl cursor-pointer"
               aria-label="Increase HP"
             >
-              Heal
+              {t('hud.heal')}
             </button>
           </div>
           <div className="mt-8 flex gap-4">
@@ -261,11 +272,13 @@ export function StatusPage() {
                 onClick={() => setTempEdit(String(session.tempHp))}
                 className="px-4 py-2 bg-surface-container-lowest border border-white/10 rounded-xl font-label text-xs text-primary hover:bg-surface-container-high transition-all cursor-pointer"
               >
-                TEMP HP: {session.tempHp}
+                {locale === 'it' ? `PF TEMP: ${session.tempHp}` : `TEMP HP: ${session.tempHp}`}
               </button>
             ) : (
               <div className="flex items-center gap-1 bg-surface-container-lowest border border-white/10 rounded-xl px-3 py-1">
-                <span className="font-label text-xs text-primary">TEMP HP:</span>
+                <span className="font-label text-xs text-primary">
+                  {locale === 'it' ? 'PF TEMP:' : 'TEMP HP:'}
+                </span>
                 <input
                   autoFocus
                   type="number"
@@ -286,11 +299,13 @@ export function StatusPage() {
                 onClick={() => setNlEdit(String(session.nonlethalDamage))}
                 className="px-4 py-2 bg-surface-container-lowest border border-white/10 rounded-xl font-label text-xs text-error hover:bg-surface-container-high transition-all cursor-pointer"
               >
-                NONLETHAL: {session.nonlethalDamage}
+                {locale === 'it' ? `NON LETALI: ${session.nonlethalDamage}` : `NONLETHAL: ${session.nonlethalDamage}`}
               </button>
             ) : (
               <div className="flex items-center gap-1 bg-surface-container-lowest border border-white/10 rounded-xl px-3 py-1">
-                <span className="font-label text-xs text-error">NONLETHAL:</span>
+                <span className="font-label text-xs text-error">
+                  {locale === 'it' ? 'NON LETALI:' : 'NONLETHAL:'}
+                </span>
                 <input
                   autoFocus
                   type="number"
@@ -313,14 +328,14 @@ export function StatusPage() {
               className="px-6 py-2.5 bg-surface-container-highest border border-white/10 rounded-xl font-label text-xs text-secondary uppercase tracking-widest hover:bg-primary/10 hover:text-primary hover:border-primary/40 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm align-middle mr-1">bedtime</span>
-              Long Rest
+              {locale === 'it' ? 'Riposo Lungo' : 'Long Rest'}
             </button>
             <button
               onClick={() => setShowBuffModal(true)}
               className="px-5 py-2.5 bg-primary/10 border border-primary/40 text-primary font-label text-xs uppercase tracking-widest rounded-xl hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm">tune</span>
-              Buffs & Presets
+              {locale === 'it' ? 'Buff e Preset' : 'Buffs & Presets'}
             </button>
           </div>
         </motion.section>
@@ -331,22 +346,22 @@ export function StatusPage() {
           className="lg:col-span-6 bg-surface-container/90 backdrop-blur-sm p-5 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all grid grid-cols-2 gap-4"
         >
           <DefenseCard
-            label="Armor Class"
+            label={locale === 'it' ? 'Classe Armatura' : 'Armor Class'}
             value={effectiveAc.total}
             baseValue={char.armorClass.total}
             breakdown={detailedAc.totalBreakdown}
             notes={effectiveAc.notes}
             showSign={false}
-            sub={`TOUCH: ${effectiveAc.touch} | FLAT: ${effectiveAc.flatFooted}${
+            sub={`${locale === 'it' ? 'CONT' : 'TOUCH'}: ${effectiveAc.touch} | ${locale === 'it' ? 'IMP' : 'FLAT'}: ${effectiveAc.flatFooted}${
               effectiveAc.notes.length > 0 ? ` (${effectiveAc.notes.join(', ')})` : ''
             }`}
           />
           <DefenseCard
-            label="Initiative"
+            label={t('status.initiative')}
             value={effectiveInit}
             baseValue={char.initiativeBonus}
             breakdown={initBreakdown}
-            sub={`DEX: ${effectiveAbilities.mods.dex >= 0 ? `+${effectiveAbilities.mods.dex}` : effectiveAbilities.mods.dex} | MISC: +${
+            sub={`${dexShort}: ${effectiveAbilities.mods.dex >= 0 ? `+${effectiveAbilities.mods.dex}` : effectiveAbilities.mods.dex} | ${locale === 'it' ? 'VARIE' : 'MISC'}: +${
               char.initiativeBonus - abilityMod(char.abilities.dex)
             }`}
             color="primary"
@@ -355,17 +370,17 @@ export function StatusPage() {
                 diceType: 20,
                 count: 1,
                 modifier: effectiveInit,
-                label: 'Initiative',
+                label: t('status.initiative'),
                 breakdown: initBreakdown,
               })
             }
           />
           <DefenseCard
-            label="Fortitude"
+            label={translateSaveName('fort', locale, false)}
             value={effectiveSaves.fort}
             baseValue={char.savingThrows.fort}
             breakdown={effectiveSaves.breakdowns.fortitude}
-            sub={`BASE: +${char.savingThrows.fortBase} | CON: ${
+            sub={`BASE: +${char.savingThrows.fortBase} | ${conShort}: ${
               effectiveAbilities.mods.con >= 0 ? `+${effectiveAbilities.mods.con}` : effectiveAbilities.mods.con
             }`}
             color="secondary"
@@ -374,17 +389,17 @@ export function StatusPage() {
                 diceType: 20,
                 count: 1,
                 modifier: effectiveSaves.fort,
-                label: 'Fortitude Save',
+                label: locale === 'it' ? 'Tiro Salvezza Tempra' : 'Fortitude Save',
                 breakdown: effectiveSaves.breakdowns.fortitude,
               })
             }
           />
           <DefenseCard
-            label="Reflex"
+            label={translateSaveName('ref', locale, false)}
             value={effectiveSaves.ref}
             baseValue={char.savingThrows.ref}
             breakdown={effectiveSaves.breakdowns.reflex}
-            sub={`BASE: +${char.savingThrows.refBase} | DEX: ${
+            sub={`BASE: +${char.savingThrows.refBase} | ${dexShort}: ${
               effectiveAbilities.mods.dex >= 0 ? `+${effectiveAbilities.mods.dex}` : effectiveAbilities.mods.dex
             }`}
             color="secondary"
@@ -393,17 +408,17 @@ export function StatusPage() {
                 diceType: 20,
                 count: 1,
                 modifier: effectiveSaves.ref,
-                label: 'Reflex Save',
+                label: locale === 'it' ? 'Tiro Salvezza Riflessi' : 'Reflex Save',
                 breakdown: effectiveSaves.breakdowns.reflex,
               })
             }
           />
           <DefenseCard
-            label="Willpower"
+            label={locale === 'it' ? 'Volontà' : 'Willpower'}
             value={effectiveSaves.will}
             baseValue={char.savingThrows.will}
             breakdown={effectiveSaves.breakdowns.will}
-            sub={`BASE: +${char.savingThrows.willBase} | WIS: ${
+            sub={`BASE: +${char.savingThrows.willBase} | ${wisShort}: ${
               effectiveAbilities.mods.wis >= 0 ? `+${effectiveAbilities.mods.wis}` : effectiveAbilities.mods.wis
             }`}
             color="secondary"
@@ -412,7 +427,7 @@ export function StatusPage() {
                 diceType: 20,
                 count: 1,
                 modifier: effectiveSaves.will,
-                label: 'Will Save',
+                label: locale === 'it' ? 'Tiro Salvezza Volontà' : 'Will Save',
                 breakdown: effectiveSaves.breakdowns.will,
               })
             }
@@ -429,6 +444,7 @@ export function StatusPage() {
             const effScore = effectiveAbilities.scores[key]
             const mod = effectiveAbilities.mods[key]
             const delta = effectiveAbilities.deltas[key]
+            const fullName = translateAbilityFull(key, locale)
 
             return (
               <button
@@ -438,7 +454,7 @@ export function StatusPage() {
                     diceType: 20,
                     count: 1,
                     modifier: mod,
-                    label: `${ABILITY_NAMES[key]} Check`,
+                    label: locale === 'it' ? `Prova di ${fullName}` : `${fullName} Check`,
                     breakdown: effectiveAbilities.breakdowns[key],
                   })
                 }
@@ -446,7 +462,7 @@ export function StatusPage() {
               >
                 <div className="flex justify-between items-center mb-1">
                   <p className="font-label text-[10px] text-tertiary uppercase tracking-widest font-bold">
-                    {key.toUpperCase()}
+                    {translateAbilityShort(key, locale)}
                   </p>
                   {delta !== 0 && (
                     <span
@@ -483,7 +499,7 @@ export function StatusPage() {
             className="lg:col-span-12 bg-surface-container/90 backdrop-blur-sm p-6 rounded-2xl border border-white/10 shadow-[0_0_15px_rgba(0,240,255,0.05)] hover:border-primary/30 transition-all"
           >
             <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
-              Daily Resources
+              {t('status.dailyResources')}
             </h2>
             <div className="flex flex-wrap gap-3">
               {char.dailyResources.map((res) => (
@@ -509,21 +525,21 @@ export function StatusPage() {
         >
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary neon-glow-accent">
-              Conditions
+              {t('status.conditions')}
             </h2>
             <button
               onClick={() => setShowBuffModal(true)}
               className="font-label text-xs uppercase tracking-wider text-primary hover:text-white flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
             >
               <span className="material-symbols-outlined text-sm">tune</span>
-              Open Full Manager
+              {locale === 'it' ? 'Gestore Completo' : 'Open Full Manager'}
             </button>
           </div>
 
           <div className="flex flex-wrap gap-2">
             {ALL_CONDITIONS.map((condition) => {
               const active = session.conditions.includes(condition)
-              const info = CONDITION_INFO[condition]
+              const info = getConditionInfo(condition, locale)
               return (
                 <div key={condition} className="relative group flex items-center gap-1">
                   <button
@@ -534,7 +550,7 @@ export function StatusPage() {
                         : 'bg-surface-container-high text-tertiary hover:text-error hover:bg-error-container/20 border border-white/5'
                     }`}
                   >
-                    {condition}
+                    {info.name}
                   </button>
                   <button
                     type="button"
@@ -543,7 +559,7 @@ export function StatusPage() {
                         conditionInspectorItem(condition, () => toggleCondition(char.id, condition))
                       )
                     }
-                    aria-label={`Inspect condition ${condition}`}
+                    aria-label={`${t('hud.inspectCondition')} ${info.name}`}
                     className="min-h-[36px] min-w-[36px] rounded-lg border border-white/10 text-tertiary hover:text-primary hover:border-primary/40 transition-colors cursor-pointer flex items-center justify-center"
                   >
                     <span className="material-symbols-outlined text-sm">info</span>
@@ -577,7 +593,7 @@ export function StatusPage() {
           </div>
           {session.conditions.length === 0 && (
             <p className="font-label text-xs text-tertiary/60 uppercase tracking-widest mt-2">
-              No active conditions
+              {t('status.noConditions')}
             </p>
           )}
         </motion.section>
@@ -666,9 +682,10 @@ function DefenseCard({
 }
 
 function EmptyState() {
+  const { t } = useTranslation()
   return (
     <div className="flex items-center justify-center h-64 text-tertiary font-label text-sm uppercase tracking-widest">
-      No character selected
+      {t('common.noCharacterSelected')}
     </div>
   )
 }

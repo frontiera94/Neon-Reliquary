@@ -4,6 +4,7 @@ import { useCharacterStore } from '../store/useCharacterStore'
 import { useInspectorStore } from '../store/useInspectorStore'
 import { featInspectorItem, classAbilityInspectorItem } from '../lib/inspector-items'
 import type { Feat, ClassAbility } from '../types/features'
+import { useTranslation } from '../i18n'
 import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
 export function FeaturesPage() {
@@ -11,11 +12,12 @@ export function FeaturesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'all' | 'feats' | 'class'>('all')
   const openInspector = useInspectorStore((s) => s.openInspector)
+  const { locale, t } = useTranslation()
 
   if (!char) {
     return (
       <div className="flex items-center justify-center h-64 text-tertiary font-label text-sm uppercase tracking-widest">
-        No character selected
+        {t('common.noCharacterSelected')}
       </div>
     )
   }
@@ -48,10 +50,18 @@ export function FeaturesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="font-headline text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
-            Features & <span className="text-secondary neon-glow-accent">Abilities</span>
+            {locale === 'it' ? (
+              <>Capacità & <span className="text-secondary neon-glow-accent">Talenti</span></>
+            ) : (
+              <>Features & <span className="text-secondary neon-glow-accent">Abilities</span></>
+            )}
           </h1>
           <p className="font-label text-xs sm:text-sm text-tertiary tracking-wide mt-0.5">
-            Powers, talents and feats for <span className="text-white font-medium">{char.name}</span>
+            {locale === 'it' ? (
+              <>Poteri, capacità e talenti per <span className="text-white font-medium">{char.name}</span></>
+            ) : (
+              <>Powers, talents and feats for <span className="text-white font-medium">{char.name}</span></>
+            )}
           </p>
         </div>
 
@@ -62,7 +72,7 @@ export function FeaturesPage() {
           </span>
           <input
             type="text"
-            placeholder="Search features..."
+            placeholder={t('features.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-surface-container/80 border border-white/10 rounded-xl pl-9 pr-8 py-1.5 text-xs sm:text-sm text-white placeholder-tertiary focus:outline-none focus:border-primary/50 transition-colors"
@@ -71,7 +81,7 @@ export function FeaturesPage() {
             <button
               onClick={() => setSearchQuery('')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary hover:text-white cursor-pointer"
-              aria-label="Clear search"
+              aria-label={t('common.clear')}
             >
               <span className="material-symbols-outlined text-sm">close</span>
             </button>
@@ -89,7 +99,7 @@ export function FeaturesPage() {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-label text-[10px] uppercase tracking-wider text-primary font-bold">
-                  Signature Ability
+                  {locale === 'it' ? 'Capacità Distintiva' : 'Signature Ability'}
                 </span>
                 <h2 className="font-headline text-base sm:text-lg font-bold text-white truncate">
                   {signatureAbility.name}
@@ -105,7 +115,7 @@ export function FeaturesPage() {
             className="px-2.5 py-1 bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary rounded-lg font-label text-[10px] sm:text-[11px] uppercase tracking-wider flex items-center gap-1 flex-shrink-0 transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm">info</span>
-            <span className="hidden sm:inline">Inspect</span>
+            <span className="hidden sm:inline">{locale === 'it' ? 'Ispeziona' : 'Inspect'}</span>
           </button>
         </div>
       )}
@@ -115,9 +125,9 @@ export function FeaturesPage() {
         <div className="flex items-center gap-1.5 sm:gap-2">
           {(
             [
-              { id: 'all', label: 'All', count: char.feats.length + char.classAbilities.length },
-              { id: 'class', label: 'Class Abilities', count: char.classAbilities.length },
-              { id: 'feats', label: 'Feats', count: char.feats.length },
+              { id: 'all', label: t('features.all'), count: char.feats.length + char.classAbilities.length },
+              { id: 'class', label: t('features.classFeatures'), count: char.classAbilities.length },
+              { id: 'feats', label: t('features.feats'), count: char.feats.length },
             ] as const
           ).map((tab) => {
             const isActive = activeTab === tab.id
@@ -144,7 +154,10 @@ export function FeaturesPage() {
           })}
         </div>
         <span className="font-label text-[11px] text-tertiary">
-          {totalResults} {totalResults === 1 ? 'result' : 'results'}
+          {totalResults}{' '}
+          {locale === 'it'
+            ? totalResults === 1 ? 'risultato' : 'risultati'
+            : totalResults === 1 ? 'result' : 'results'}
         </span>
       </div>
 
@@ -156,7 +169,7 @@ export function FeaturesPage() {
         className="space-y-6"
       >
         {totalResults === 0 ? (
-          <p className="font-body text-tertiary italic text-center py-8">No features match your search.</p>
+          <p className="font-body text-tertiary italic text-center py-8">{t('features.noFeaturesFound')}</p>
         ) : (
           <>
             {/* Class Abilities Section */}
@@ -166,7 +179,7 @@ export function FeaturesPage() {
                   <div className="flex items-center gap-3 pt-1">
                     <span className="material-symbols-outlined text-secondary text-base">auto_awesome</span>
                     <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary">
-                      Class Abilities ({filteredAbilities.length})
+                      {t('features.classFeatures')} ({filteredAbilities.length})
                     </h2>
                     <div className="flex-1 h-px bg-white/10" />
                   </div>
@@ -191,7 +204,7 @@ export function FeaturesPage() {
                   <div className="flex items-center gap-3 pt-2">
                     <span className="material-symbols-outlined text-primary text-base">military_tech</span>
                     <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-primary">
-                      Feats ({filteredFeats.length})
+                      {t('features.feats')} ({filteredFeats.length})
                     </h2>
                     <div className="flex-1 h-px bg-white/10" />
                   </div>
@@ -223,6 +236,7 @@ function ClassAbilityItem({
   index: number
   onInspect: () => void
 }) {
+  const { locale } = useTranslation()
   return (
     <div className="group border border-white/10 rounded-xl overflow-hidden bg-surface-container/70 backdrop-blur-sm hover:border-secondary/40 transition-colors shadow-[0_2px_10px_rgba(0,0,0,0.2)]">
       <details className="w-full">
@@ -238,7 +252,7 @@ function ClassAbilityItem({
                 </span>
                 {ability.isSignature && (
                   <span className="font-label text-[10px] uppercase tracking-wider text-primary bg-primary/20 border border-primary/30 px-1.5 py-0.2 rounded font-bold">
-                    Signature
+                    {locale === 'it' ? 'Distintiva' : 'Signature'}
                   </span>
                 )}
               </div>
@@ -255,7 +269,7 @@ function ClassAbilityItem({
                 e.stopPropagation()
                 onInspect()
               }}
-              title="Inspect details"
+              title={locale === 'it' ? 'Ispeziona dettagli' : 'Inspect details'}
               aria-label={`Inspect ${ability.name}`}
               className="p-1 rounded-md text-tertiary hover:text-secondary hover:bg-white/5 transition-colors cursor-pointer"
             >
@@ -281,6 +295,7 @@ function FeatAccordionItem({
   feat: Feat
   onInspect: () => void
 }) {
+  const { locale } = useTranslation()
   return (
     <div className="group border border-white/10 rounded-xl overflow-hidden bg-surface-container/70 backdrop-blur-sm hover:border-primary/40 transition-colors shadow-[0_2px_10px_rgba(0,0,0,0.2)]">
       <details className="w-full">
@@ -306,7 +321,7 @@ function FeatAccordionItem({
                 e.stopPropagation()
                 onInspect()
               }}
-              title="Inspect details"
+              title={locale === 'it' ? 'Ispeziona dettagli' : 'Inspect details'}
               aria-label={`Inspect ${feat.name}`}
               className="p-1 rounded-md text-tertiary hover:text-primary hover:bg-white/5 transition-colors cursor-pointer"
             >

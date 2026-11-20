@@ -97,8 +97,15 @@ export function createSessionSyncController(options?: {
   }
 
   async function flushDirtySessions(opts?: { keepalive?: boolean }): Promise<void> {
+
     if (isStopped) return
     clearDebounce()
+
+    if (inFlightFlush && !opts?.keepalive) {
+      await inFlightFlush
+      clearDebounce()
+      if (isStopped) return
+    }
 
     const currentSessions = useSessionStore.getState().sessions
     const snapshotTs: Record<string, number> = {}
@@ -187,9 +194,15 @@ export function createSessionSyncController(options?: {
       }
     }
 
-    inFlightFlush = run()
-    await inFlightFlush
-    inFlightFlush = null
+    const flushPromise = run()
+    inFlightFlush = flushPromise
+    try {
+      await flushPromise
+    } finally {
+      if (inFlightFlush === flushPromise) {
+        inFlightFlush = null
+      }
+    }
   }
 
   async function pullRemoteSessions(): Promise<void> {
@@ -344,6 +357,7 @@ export function createSessionSyncController(options?: {
     if (isStopped) return
     if (inFlightFlush) {
       await inFlightFlush
+      clearDebounce()
     }
     if (Object.keys(dirtyMap).length > 0) {
       await flushDirtySessions()

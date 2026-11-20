@@ -7,19 +7,18 @@ import { calcEffectiveAbilities, calcEffectiveSkills, getActiveActionRestriction
 import { getWildShapeView } from '../lib/class-combat'
 import { ActionAlertBanner } from '../components/combat/ActionAlertBanner'
 import type { EffectiveSkill } from '../lib/stat-calc'
+import { useTranslation, translateSkillName, translateAbilityShort } from '../i18n'
 import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
-import { useTranslation } from '../lib/i18n'
 
-const ABILITY_SHORT = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' }
 
 export function SkillsPage() {
-  const { t } = useTranslation()
   const char = useCharacterStore((s) => s.activeCharacter())
   const session = useSessionStore((s) => (char ? s.getSession(char.id) : null))
   const openRoll = useDiceStore((s) => s.openRoll)
   const setResult = useDiceStore((s) => s.setResult)
   const [search, setSearch] = useState('')
   const [trainedOnly, setTrainedOnly] = useState(false)
+  const { locale, t } = useTranslation()
 
   const effectiveSkills = useMemo(() => {
     if (!char || !session) return []
@@ -45,11 +44,17 @@ export function SkillsPage() {
     return calculated
       .filter((s) => {
         if (trainedOnly && !s.trained) return false
-        if (search && !s.name.toLowerCase().includes(search.toLowerCase())) return false
+        if (search) {
+          const q = search.toLowerCase()
+          const localized = translateSkillName(s.name, locale).toLowerCase()
+          if (!s.name.toLowerCase().includes(q) && !localized.includes(q)) return false
+        }
         return true
       })
-      .sort((a, b) => a.name.localeCompare(b.name))
-  }, [char, session, search, trainedOnly])
+      .sort((a, b) =>
+        translateSkillName(a.name, locale).localeCompare(translateSkillName(b.name, locale))
+      )
+  }, [char, session, search, trainedOnly, locale])
 
   const { leftSkills, rightSkills } = useMemo(() => {
     const half = Math.ceil(effectiveSkills.length / 2)
@@ -62,7 +67,7 @@ export function SkillsPage() {
   if (!char) {
     return (
       <div className="flex items-center justify-center h-64 text-tertiary font-label text-sm uppercase tracking-widest">
-        {t('skills.noChar')}
+        {t('common.noCharacterSelected')}
       </div>
     )
   }
@@ -115,7 +120,7 @@ export function SkillsPage() {
       {/* Skills Grid */}
       {effectiveSkills.length === 0 ? (
         <div className="py-16 text-center text-tertiary font-label text-xs uppercase tracking-widest">
-          No skills found
+          {t('skills.noSkillsFound')}
         </div>
       ) : (
         <motion.div
@@ -125,17 +130,20 @@ export function SkillsPage() {
           className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start"
         >
           <div className="flex flex-col gap-4">
-            {leftSkills.map((skill) => (
-              <motion.div key={skill.id} variants={STAGGER_ITEM}>
+            {leftSkills.map((skill) => {
+              const displayName = translateSkillName(skill.name, locale)
+              return (
+                <motion.div key={skill.id} variants={STAGGER_ITEM}>
                 <SkillRow
                   skill={skill}
+                  displayName={displayName}
                   total={skill.effectiveTotal}
                   onRoll={() =>
                     openRoll({
                       diceType: 20,
                       count: 1,
                       modifier: skill.effectiveTotal,
-                      label: `${skill.name} Check`,
+                      label: locale === 'it' ? `Prova di ${displayName}` : `${displayName} Check`,
                       breakdown: skill.breakdown,
                     })
                   }
@@ -155,29 +163,34 @@ export function SkillsPage() {
                     })
                   }
                 />
-              </motion.div>
-            ))}
+                </motion.div>
+              )
+            })}
           </div>
           {rightSkills.length > 0 && (
             <div className="flex flex-col gap-4">
-              {rightSkills.map((skill) => (
-                <motion.div key={skill.id} variants={STAGGER_ITEM}>
-                  <SkillRow
-                    skill={skill}
+              {rightSkills.map((skill) => {
+                const displayName = translateSkillName(skill.name, locale)
+                return (
+                  <motion.div key={skill.id} variants={STAGGER_ITEM}>
+                    <SkillRow
+                      key={skill.id}
+                      skill={skill}
+                      displayName={displayName}
                     total={skill.effectiveTotal}
                     onRoll={() =>
                       openRoll({
                         diceType: 20,
                         count: 1,
                         modifier: skill.effectiveTotal,
-                        label: `${skill.name} Check`,
+                        label: locale === 'it' ? `Prova di ${displayName}` : `${displayName} Check`,
                         breakdown: skill.breakdown,
                       })
                     }
                     onTake10={() =>
                       setResult({
                         id: crypto.randomUUID(),
-                        label: `${skill.name} (Take 10)`,
+                        label: locale === 'it' ? `${displayName} (Prendi 10)` : `${skill.name} (Take 10)`,
                         diceType: 20,
                         naturalRolls: [10],
                         modifier: skill.effectiveTotal,
@@ -186,12 +199,13 @@ export function SkillsPage() {
                         isCriticalConfirmed: false,
                         formula: `10 + ${skill.effectiveTotal} = ${10 + skill.effectiveTotal}`,
                         timestamp: Date.now(),
-                        breakdown: [{ label: 'Take 10', value: 10 }, ...(skill.breakdown ?? [])],
+                        breakdown: [{ label: locale === 'it' ? 'Prendi 10' : 'Take 10', value: 10 }, ...(skill.breakdown ?? [])],
                       })
                     }
                   />
                 </motion.div>
-              ))}
+              )
+            })}
             </div>
           )}
         </motion.div>
@@ -202,15 +216,19 @@ export function SkillsPage() {
 
 function SkillRow({
   skill,
+  displayName,
   total,
   onRoll,
   onTake10,
 }: {
   skill: EffectiveSkill
+  displayName: string
   total: number
   onRoll: () => void
   onTake10: () => void
 }) {
+  const { locale, t } = useTranslation()
+
   return (
     <div
       onClick={onRoll}
@@ -222,7 +240,7 @@ function SkillRow({
           onRoll()
         }
       }}
-      aria-label={`Roll ${skill.name}`}
+      aria-label={t('skills.rollSkill', { name: displayName })}
       className="w-full bg-surface-container/90 backdrop-blur-sm flex items-center justify-between p-4 gap-3 sm:gap-4 rounded-xl border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] hover:bg-surface-container-high transition-all active:scale-[0.99] text-left cursor-pointer group"
     >
       {/* Left: name + meta */}
@@ -234,19 +252,19 @@ function SkillRow({
         />
         <div className="min-w-0">
           <p className="font-headline text-base sm:text-lg font-bold text-white group-hover:text-primary truncate leading-tight transition-colors">
-            {skill.name}
+            {displayName}
           </p>
           <div className="flex items-center gap-2 mt-1">
             <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-md uppercase font-bold">
-              {ABILITY_SHORT[skill.ability]}
+              {translateAbilityShort(skill.ability, locale)}
             </span>
             {skill.classSkill && (
               <span className="font-label text-[10px] text-secondary bg-secondary/15 border border-secondary/30 px-2 py-0.5 rounded-md uppercase tracking-wider font-bold">
-                Class
+                {locale === 'it' ? 'Classe' : 'Class'}
               </span>
             )}
             <span className="font-label text-[10px] text-tertiary">
-              Ranks: {skill.ranks}
+              {t('skills.ranks')}: {skill.ranks}
             </span>
           </div>
         </div>

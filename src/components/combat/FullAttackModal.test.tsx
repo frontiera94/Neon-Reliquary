@@ -232,6 +232,34 @@ describe('FullAttackModal', () => {
     expect(screen.getByRole('button', { name: /roll crit dmg \(x2\)/i })).toBeInTheDocument()
   })
 
+  it('does NOT confirm critical and displays Nat 1 badge when confirmation roll is 1', () => {
+    mockRandomRolls([19, 12, 1])
+
+    render(
+      <FullAttackModal
+        isOpen={true}
+        onClose={onClose}
+        weapon={baseWeapon}
+        effective={baseEffective}
+        twfActive={false}
+        offhandPenalty={0}
+        onRollDamage={onRollDamage}
+      />
+    )
+
+    const confirmButton = screen.getByRole('button', { name: /confirm crit/i })
+    fireEvent.click(confirmButton)
+
+    // Nat 1 badge displayed
+    expect(screen.getByText(/Nat 1 — Not Confirmed/i)).toBeInTheDocument()
+
+    // Must NOT show "Roll Crit Dmg" button
+    expect(screen.queryByRole('button', { name: /roll crit dmg/i })).not.toBeInTheDocument()
+
+    // Shows normal "Roll Dmg" button instead
+    expect(screen.getAllByRole('button', { name: /roll dmg/i })).toHaveLength(2)
+  })
+
   it('triggers onRollDamage with correct parameters for normal hit', () => {
     mockRandomRolls([14, 12])
 

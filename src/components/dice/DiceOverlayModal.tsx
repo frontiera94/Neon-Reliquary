@@ -5,6 +5,7 @@ import type { DiceRoll } from '../../types/dice'
 import { rollDice } from '../../lib/dice-engine'
 import { DiceRollingAnimation } from './DiceRollingAnimation'
 import { CRIT_HIT_SHAKE, FUMBLE_GLITCH_SHAKE, SNAPPY_SPRING } from '../../lib/motion-presets'
+import { useTranslation } from '../../i18n'
 
 export function DiceOverlayModal() {
   const { isOpen, isRolling, pendingRoll, lastResult, openRoll, setResult, close } = useDiceStore()
@@ -12,6 +13,7 @@ export function DiceOverlayModal() {
   const isConfirmingRef = useRef(false)
   const [critConfirmed, setCritConfirmed] = useState<boolean | null>(null)
   const [confirmationResult, setConfirmationResult] = useState<number | null>(null)
+  const { locale, t } = useTranslation()
 
   const resolveRollImmediately = () => {
     if (!pendingRoll) return
@@ -71,7 +73,7 @@ export function DiceOverlayModal() {
             <button
               className="absolute top-4 right-4 text-tertiary hover:text-primary transition-colors z-10 p-1 rounded-lg hover:bg-white/5 cursor-pointer"
               onClick={close}
-              aria-label="Chiudi"
+              aria-label={t('common.close')}
             >
               <span className="material-symbols-outlined text-3xl">close</span>
             </button>
@@ -174,7 +176,7 @@ export function DiceOverlayModal() {
                       animate={{ scale: 1 }}
                       className="px-4 py-1.5 bg-secondary/20 border border-secondary font-label text-xs uppercase tracking-widest text-secondary rounded-full mb-4 shadow-[0_0_15px_rgba(217,70,239,0.3)] font-bold"
                     >
-                      Critical Hit Confirmed!
+                      {locale === 'it' ? 'Critico Confermato!' : 'Critical Hit Confirmed!'}
                     </motion.div>
                   )}
                   {critConfirmed === false && (
@@ -183,7 +185,7 @@ export function DiceOverlayModal() {
                       animate={{ scale: 1 }}
                       className="px-4 py-1.5 bg-error/15 border border-error font-label text-xs uppercase tracking-widest text-error rounded-full mb-4 font-bold"
                     >
-                      Critical Failed — Natural 1
+                      {locale === 'it' ? 'Critico Fallito — 1 Naturale' : 'Critical Failed — Natural 1'}
                     </motion.div>
                   )}
                   {critConfirmed === null && lastResult.isCriticalThreat && (
@@ -192,7 +194,7 @@ export function DiceOverlayModal() {
                       animate={{ scale: 1 }}
                       className="px-4 py-1.5 bg-secondary/20 border border-secondary font-label text-xs uppercase tracking-widest text-secondary rounded-full mb-4 shadow-[0_0_15px_rgba(217,70,239,0.3)] font-bold"
                     >
-                      Critical Threat! — Confirm Roll
+                      {locale === 'it' ? 'Minaccia di Critico! — Conferma il Tiro' : 'Critical Threat! — Confirm Roll'}
                     </motion.div>
                   )}
 
@@ -235,7 +237,11 @@ export function DiceOverlayModal() {
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-center gap-2 py-1 px-3 rounded-lg bg-secondary/15 border border-secondary/30 text-secondary font-label text-xs font-bold">
                           <span className="material-symbols-outlined text-sm">verified</span>
-                          <span>Confirmation Roll: {confirmationResult}</span>
+                          <span>
+                            {locale === 'it'
+                              ? `Tiro di Conferma: ${confirmationResult}`
+                              : `Confirmation Roll: ${confirmationResult}`}
+                          </span>
                         </div>
                         <div className="flex gap-2">
                           <button
@@ -257,7 +263,11 @@ export function DiceOverlayModal() {
                             }}
                           >
                             <span className="material-symbols-outlined text-base">colorize</span>
-                            <span>Roll Crit Dmg (x{pendingRoll.critMultiplier ?? 2})</span>
+                            <span>
+                              {locale === 'it'
+                                ? `Tira Danno Crit (x${pendingRoll.critMultiplier ?? 2})`
+                                : `Roll Crit Dmg (x${pendingRoll.critMultiplier ?? 2})`}
+                            </span>
                           </button>
                           <button
                             type="button"
@@ -277,7 +287,7 @@ export function DiceOverlayModal() {
                             }}
                           >
                             <span className="material-symbols-outlined text-base text-primary">colorize</span>
-                            <span>Roll Normal Dmg</span>
+                            <span>{locale === 'it' ? 'Tira Danno Normale' : 'Roll Normal Dmg'}</span>
                           </button>
                         </div>
                       </div>
@@ -289,19 +299,21 @@ export function DiceOverlayModal() {
                           onClick={() => {
                             if (!pendingRoll) return
                             isConfirmingRef.current = true
-                            const bonus = pendingRoll.critConfirmationBonus ?? 0
+const bonus = pendingRoll.critConfirmationBonus ?? 0
+                            const confirmPrefix = locale === 'it' ? 'Conferma' : 'Confirm'
+                            const confirmBonusLabel = locale === 'it' ? 'Bonus Conferma Critico' : 'Crit Confirm Bonus'
                             openRoll({
                               ...pendingRoll,
                               modifier: pendingRoll.modifier + bonus,
                               breakdown: bonus > 0
-                                ? [...(pendingRoll.breakdown ?? []), { label: 'Crit Confirm Bonus', value: bonus }]
+                                ? [...(pendingRoll.breakdown ?? []), { label: confirmBonusLabel, value: bonus }]
                                 : pendingRoll.breakdown,
-                              label: `Confirm: ${pendingRoll.label}`,
+                              label: `${confirmPrefix}: ${pendingRoll.label}`,
                             })
                           }}
                         >
                           <span className="material-symbols-outlined text-base">verified</span>
-                          Confirm Critical
+                          {t('dice.confirmCrit')}
                         </button>
                         <button
                           type="button"
@@ -321,7 +333,7 @@ export function DiceOverlayModal() {
                           }}
                         >
                           <span className="material-symbols-outlined text-base text-secondary">colorize</span>
-                          Roll Damage
+                          {locale === 'it' ? 'Tira Danno' : 'Roll Damage'}
                         </button>
                       </div>
                     ) : (
@@ -349,8 +361,8 @@ export function DiceOverlayModal() {
                         <span className="material-symbols-outlined text-base">colorize</span>
                         <span>
                           {critConfirmed === true
-                            ? `Roll Critical Damage (${pendingRoll.followUpLabel ? `${pendingRoll.followUpLabel} x${pendingRoll.critMultiplier ?? 2}` : 'Crit'})`
-                            : `Roll Damage ${pendingRoll.followUpLabel ? `(${pendingRoll.followUpLabel})` : ''}`}
+                            ? `${locale === 'it' ? 'Tira Danno Critico' : 'Roll Critical Damage'} (${pendingRoll.followUpLabel ? `${pendingRoll.followUpLabel} x${pendingRoll.critMultiplier ?? 2}` : 'Crit'})`
+                            : `${locale === 'it' ? 'Tira Danno' : 'Roll Damage'} ${pendingRoll.followUpLabel ? `(${pendingRoll.followUpLabel})` : ''}`}
                         </span>
                       </button>
                     )}
@@ -363,7 +375,7 @@ export function DiceOverlayModal() {
                         onClick={() => { setCritConfirmed(null); if (pendingRoll) openRoll({ ...pendingRoll }) }}
                       >
                         <span className="material-symbols-outlined text-sm">refresh</span>
-                        Roll Again
+                        {t('dice.rollAgain')}
                       </button>
                       <button
                         type="button"
@@ -371,7 +383,7 @@ export function DiceOverlayModal() {
                         onClick={() => { close(); setCritConfirmed(null) }}
                       >
                         <span className="material-symbols-outlined text-sm">close</span>
-                        Dismiss
+                        {t('dice.dismiss')}
                       </button>
                     </div>
                   </>
@@ -383,24 +395,24 @@ export function DiceOverlayModal() {
                         onClick={() => {
                           if (!pendingRoll) return
                           isConfirmingRef.current = true
-                          openRoll({ ...pendingRoll, label: `Confirm: ${pendingRoll.label}` })
+                          openRoll({ ...pendingRoll, label: `${locale === 'it' ? 'Conferma' : 'Confirm'}: ${pendingRoll.label}` })
                         }}
                       >
-                        Confirm Critical
+                        {t('dice.confirmCrit')}
                       </button>
                     ) : (
                       <button
                         className="flex-1 py-4 bg-gradient-to-r from-primary to-primary-container text-black font-label font-bold text-sm uppercase tracking-widest rounded-xl hover:shadow-[0_0_25px_rgba(0,240,255,0.45)] transition-all active:scale-95 cursor-pointer"
                         onClick={() => { setCritConfirmed(null); if (pendingRoll) openRoll({ ...pendingRoll }) }}
                       >
-                        Roll Again
+                        {t('dice.rollAgain')}
                       </button>
                     )}
                     <button
                       className="flex-1 py-4 border border-white/15 text-tertiary font-label text-sm uppercase tracking-widest rounded-xl hover:bg-white/5 hover:text-white transition-all cursor-pointer"
                       onClick={() => { close(); setCritConfirmed(null) }}
                     >
-                      Dismiss
+                      {t('dice.dismiss')}
                     </button>
                   </div>
                 )}

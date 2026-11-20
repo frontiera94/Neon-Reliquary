@@ -8,7 +8,7 @@ import { syncSessionsNow } from '../../lib/session-sync'
 import { SheetUploadForm } from '../sheets/SheetUploadForm'
 import { SheetQueueList } from '../sheets/SheetQueueList'
 import { LanguageToggle } from './LanguageToggle'
-import { useTranslation } from '../../lib/i18n'
+import { useTranslation } from '../../i18n'
 import type { DiceType } from '../../types/dice'
 
 const DICE_TYPES: DiceType[] = [4, 6, 8, 10, 12, 20, 100]
@@ -20,7 +20,8 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: SettingsPanelProps) {
-  const { t, language } = useTranslation()
+  const { t, locale } = useTranslation()
+  const language = locale
   const { history, clearHistory, openRoll } = useDiceStore()
   const clearChat = useChatStore((s) => s.clearChat)
   const chats = useChatStore((s) => s.chats)
@@ -180,7 +181,7 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
             </div>
             {/* Freeform Dice Roller */}
             <div className="px-6 py-4 border-b border-white/10 space-y-3">
-              <span className="font-label text-xs text-tertiary uppercase tracking-widest">Custom Roll</span>
+              <span className="font-label text-xs text-tertiary uppercase tracking-widest">{t('settings.customRoll')}</span>
               <div className="flex flex-wrap gap-1.5">
                 {DICE_TYPES.map((d) => (
                   <button

@@ -8,22 +8,32 @@ import type { DiceType } from '../types/dice'
 import { InventoryItemCard } from '../components/inventory/InventoryItemCard'
 import { CoinPurseWidget } from '../components/inventory/CoinPurseWidget'
 import { EquipmentSlotGrid } from '../components/inventory/EquipmentSlotGrid'
+import { useTranslation } from '../i18n'
 import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
-import { useTranslation } from '../lib/i18n'
 
 const CATEGORY_ORDER: ItemCategory[] = ['weapon', 'armor', 'consumable', 'gear', 'magic']
-const CATEGORY_LABELS: Record<ItemCategory, string> = {
+const CATEGORY_LABELS_EN: Record<ItemCategory, string> = {
   weapon: 'Weapons',
   armor: 'Armor & Shields',
   consumable: 'Consumables',
   gear: 'Adventuring Gear',
   magic: 'Magic Items',
 }
+const CATEGORY_LABELS_IT: Record<ItemCategory, string> = {
+  weapon: 'Armi',
+  armor: 'Armature e Scudi',
+  consumable: 'Consumabili',
+  gear: 'Equipaggiamento da Avventuriero',
+  magic: 'Oggetti Magici',
+}
 
 export function InventoryPage() {
-  const { t, language } = useTranslation()
   const char = useCharacterStore((s) => s.activeCharacter())
-  const {
+  const { locale, t } = useTranslation()
+  const language = locale
+  const categoryLabels = locale === 'it' ? CATEGORY_LABELS_IT : CATEGORY_LABELS_EN
+  const CATEGORY_LABELS = categoryLabels
+const {
     getSession,
     initSession,
     adjustItemQuantity,
@@ -52,7 +62,15 @@ export function InventoryPage() {
     }
   }, [char, initSession])
 
-  const session = char ? getSession(char.id) : null
+  if (!char) {
+    return (
+      <div className="flex items-center justify-center h-64 text-tertiary font-label text-sm uppercase tracking-widest">
+        {t('common.noCharacterSelected')}
+      </div>
+    )
+  }
+
+const session = char ? getSession(char.id) : null
   const coins: CoinPurse = session?.coins ?? char?.startingCoins ?? { gp: 0, sp: 0, cp: 0 }
 
   const baseInventory = char?.inventory ?? []
@@ -160,11 +178,19 @@ export function InventoryPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="font-headline text-2xl sm:text-3xl font-black text-on-surface mb-1.5 tracking-tight uppercase">
-            Inventory & <span className="text-secondary neon-glow-accent">Gear</span>
+            {locale === 'it' ? (
+              <>Inventario & <span className="text-secondary neon-glow-accent">Equipaggiamento</span></>
+            ) : (
+              <>Inventory & <span className="text-secondary neon-glow-accent">Gear</span></>
+            )}
           </h1>
           <div className="h-1 w-20 bg-gradient-to-r from-primary to-secondary rounded-full mb-3" />
           <p className="font-label text-xs sm:text-sm text-tertiary tracking-wide">
-            Equipment carried by <span className="text-white font-medium">{char.name}</span>.
+            {locale === 'it' ? (
+              <>Equipaggiamento trasportato da <span className="text-white font-medium">{char.name}</span>.</>
+            ) : (
+              <>Equipment carried by <span className="text-white font-medium">{char.name}</span>.</>
+            )}
           </p>
         </div>
 
@@ -172,18 +198,19 @@ export function InventoryPage() {
         <div className="flex items-center gap-3">
           <div className="px-3.5 py-2 rounded-xl bg-surface-container border border-white/10 flex items-center gap-2">
             <span className="material-symbols-outlined text-sm text-primary">fitness_center</span>
-            <span className="font-label text-xs text-tertiary uppercase tracking-wider">Weight:</span>
+            <span className="font-label text-xs text-tertiary uppercase tracking-wider">{locale === 'it' ? 'Peso:' : 'Weight:'}</span>
             <span className="font-label text-xs font-bold text-white tabular-nums">
               {totalWeight.toFixed(1)} lbs
             </span>
           </div>
           <button
             type="button"
+            aria-label="+ Aggiungi Loot"
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-primary/20 to-secondary/20 hover:from-primary/30 hover:to-secondary/30 border border-primary/40 text-white font-label text-xs font-bold uppercase tracking-wider shadow-[0_0_15px_rgba(0,240,255,0.2)] transition-all active:scale-95 cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm text-primary">add</span>
-            <span>+ Aggiungi Loot</span>
+            <span>{locale === 'it' ? '+ Aggiungi Loot' : '+ Add Loot'}</span>
           </button>
         </div>
       </div>
@@ -256,7 +283,9 @@ export function InventoryPage() {
         {/* Equipment slot grid */}
         <motion.section variants={STAGGER_ITEM}>
           <div className="flex items-center gap-3 mb-4">
-            <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">Equipment</h2>
+            <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">
+              {locale === 'it' ? 'Equipaggiamento' : 'Equipment'}
+            </h2>
             <div className="flex-1 h-px bg-white/10" />
           </div>
           <EquipmentSlotGrid
@@ -269,7 +298,9 @@ export function InventoryPage() {
         {/* Coin purse */}
         <motion.section variants={STAGGER_ITEM}>
           <div className="flex items-center gap-3 mb-4">
-            <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">Coin Purse</h2>
+            <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">
+              {t('inventory.coinPurse')}
+            </h2>
             <div className="flex-1 h-px bg-white/10" />
           </div>
           <CoinPurseWidget
@@ -283,8 +314,8 @@ export function InventoryPage() {
           <div className="py-12 text-center">
             <p className="font-body text-tertiary italic text-sm">
               {search || selectedCategory !== 'all'
-                ? 'Nessun oggetto corrispondente ai filtri.'
-                : 'No items in inventory.'}
+                ? (locale === 'it' ? 'Nessun oggetto corrispondente ai filtri.' : 'No items matching filters.')
+                : t('inventory.noItems')}
             </p>
           </div>
         ) : (
@@ -292,11 +323,13 @@ export function InventoryPage() {
             <motion.section variants={STAGGER_ITEM} key={cat}>
               <div className="flex items-center gap-3 mb-4">
                 <h2 className="font-headline text-lg sm:text-xl text-white font-bold uppercase tracking-wider">
-                  {CATEGORY_LABELS[cat]}
+                  {categoryLabels[cat]}
                 </h2>
                 <div className="flex-1 h-px bg-white/10" />
                 <span className="font-label text-[10px] text-primary/80 bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider font-semibold">
-                  {items.length} item{items.length !== 1 ? 's' : ''}
+                  {locale === 'it'
+                    ? `${items.length} ${items.length === 1 ? 'oggetto' : 'oggetti'}`
+                    : `${items.length} item${items.length !== 1 ? 's' : ''}`}
                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

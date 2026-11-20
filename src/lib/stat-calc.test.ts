@@ -13,6 +13,7 @@ import {
   checkBloodrageExitSafety,
   evaluateBloodrageExitRisk,
   getSpellFocusBonus,
+
   deriveBuffFromSpell,
 } from './stat-calc'
 import { spellToBuff } from './spell-buffs'
@@ -552,6 +553,28 @@ describe('stat-calc engine', () => {
     })
   })
 
+  describe('deriveBuffFromSpell', () => {
+    it('creates Haste buff with attackMod 1, acMod 1, and saveMod { ref: 1 }', () => {
+      const spell = {
+        id: 'spell-haste-3',
+        name: 'Haste',
+        level: 3,
+        school: 'Transmutation',
+        castingTime: '1 standard action',
+        range: 'Close',
+        duration: '1 round/level',
+        description: 'One creature/level moves faster, +1 on attack rolls, AC, and Reflex saves.',
+        components: 'V, S',
+        spellResistance: true,
+      }
+      const buff = deriveBuffFromSpell(spell)
+      expect(buff.id).toBe('spell-buff-spell-haste-3')
+      expect(buff.attackMod).toBe(1)
+      expect(buff.acMod).toBe(1)
+      expect(buff.saveMod).toEqual({ ref: 1 })
+    })
+  })
+
   describe('M1: AC Bonus Separation, Melding & Bloodrage HP Lifecycle', () => {
     const noorieBaseAc: ArmorClass = {
       total: 15,
@@ -923,3 +946,4 @@ describe('stat-calc engine', () => {
     })
   })
 })
+

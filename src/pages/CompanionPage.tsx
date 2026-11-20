@@ -5,14 +5,24 @@ import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { useDiceStore } from '../store/useDiceStore'
 import { abilityMod, parseDiceFormula } from '../lib/dice-engine'
-import { CONDITION_INFO } from '../lib/conditions'
 import { COMPANION_PRESETS } from '../data/companion-presets'
 import type { ConditionType } from '../types/combat'
 import type { Companion } from '../types/companion'
+import {
+  useTranslation,
+  getConditionInfo,
+  translateAbilityFull,
+  translateAbilityShort,
+  translateSkillName,
+  translateSize,
+  translateNaturalAttack,
+  translateTrick,
+  translateCompanionType,
+} from '../i18n'
 import { STAGGER_CONTAINER, STAGGER_ITEM, SNAPPY_SPRING } from '../lib/motion-presets'
 
 const ABILITY_KEYS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const
-const ABILITY_NAMES = {
+const ABILITY_NAMES: Record<string, string> = {
   str: 'Strength',
   dex: 'Dexterity',
   con: 'Constitution',
@@ -40,6 +50,8 @@ export function CompanionPage() {
     initSession,
   } = useSessionStore()
   const openRoll = useDiceStore((s) => s.openRoll)
+  const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
 
   const [hpDelta, setHpDelta] = useState(1)
   const [tempEdit, setTempEdit] = useState<string | null>(null)
@@ -70,7 +82,7 @@ export function CompanionPage() {
   if (!char) {
     return (
       <div className="flex items-center justify-center h-64 text-tertiary font-label text-sm uppercase tracking-widest">
-        No character selected
+        {t('common.noCharacterSelected')}
       </div>
     )
   }
@@ -90,10 +102,10 @@ export function CompanionPage() {
             <span className="material-symbols-outlined text-3xl">pets</span>
           </div>
           <h2 className="font-headline text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
-            Manifest a Companion
+            {t('companion.manifestTitle')}
           </h2>
           <p className="font-body text-xs sm:text-sm text-tertiary max-w-lg mx-auto leading-relaxed">
-            {char.name} does not currently have an active companion. Select a preset below to bond a familiar or companion to their neural weave.
+            {t('companion.manifestDesc', { name: char.name })}
           </p>
         </div>
 
@@ -118,24 +130,24 @@ export function CompanionPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-label text-[10px] uppercase px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/40 font-semibold">
-                      {preset.type.replace('_', ' ')}
+                      {translateCompanionType(preset.type, locale)}
                     </span>
                     <span className="font-label text-[10px] uppercase text-tertiary">
-                      {preset.size} {preset.species}
+                      {translateSize(preset.size, locale)} {preset.species}
                     </span>
                   </div>
                   <h3 className="font-headline text-xl font-bold text-white group-hover:text-primary transition-colors">
                     {preset.name}
                   </h3>
                   <p className="font-body text-xs text-tertiary mt-1">
-                    HP: {preset.maxHp} • AC: {preset.armorClass.total} • Speed: {preset.speed}
+                    {t('hud.hp')}: {preset.maxHp} • {t('hud.ac')}: {preset.armorClass.total} • {t('hud.speed')}: {preset.speed}
                   </p>
                 </div>
               </div>
 
               <div className="border-t border-white/5 pt-3 flex items-center justify-between">
                 <span className="font-label text-xs text-tertiary">
-                  Attacks: {preset.attacks.map((a) => a.name).join(', ')}
+                  {t('companion.attacks')}: {preset.attacks.map((a) => translateNaturalAttack(a.name, locale)).join(', ')}
                 </span>
                 <button
                   onClick={() => {
@@ -145,7 +157,7 @@ export function CompanionPage() {
                   className="px-4 py-2 bg-gradient-to-r from-primary to-cyan-400 text-surface-lowest font-label text-xs uppercase tracking-wider font-bold rounded-xl hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
                 >
                   <span className="material-symbols-outlined text-sm">add</span>
-                  Manifest
+                  {t('companion.manifest')}
                 </button>
               </div>
             </div>
@@ -206,10 +218,10 @@ export function CompanionPage() {
             <span className="material-symbols-outlined text-secondary text-lg">info</span>
             <div>
               <p className="font-headline text-xs font-bold text-white uppercase tracking-wider">
-                Multiple Companions ({companions.length})
+                {t('companion.multipleCompanions')} ({companions.length})
               </p>
               <p className="font-body text-[11px] text-tertiary">
-                Characters normally have 1 bonded companion. Switch active or dismiss redundant companions:
+                {t('companion.multipleDesc')}
               </p>
             </div>
           </div>
@@ -240,7 +252,7 @@ export function CompanionPage() {
         <div className="flex items-center gap-2.5">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.7)] animate-pulse" />
           <span className="font-label text-xs uppercase tracking-wider text-white font-bold">
-            Bonded Companion
+            {t('companion.bondedCompanion')}
           </span>
           <span className="text-white/20 text-xs">•</span>
           <span className="font-label text-xs text-secondary font-medium tracking-wide">
@@ -252,18 +264,18 @@ export function CompanionPage() {
           <button
             onClick={() => setShowManifestModal(true)}
             className="px-3 py-1.5 rounded-xl border border-primary/30 text-primary hover:bg-primary/10 font-label text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
-            title="Replace companion with another preset"
+            title={isIt ? 'Sostituisci compagno con un altro modello' : 'Replace companion with another preset'}
           >
             <span className="material-symbols-outlined text-sm">swap_horiz</span>
-            Replace Companion
+            {t('companion.replaceCompanion')}
           </button>
           <button
             onClick={() => setShowDismissModal(true)}
             className="px-3 py-1.5 rounded-xl border border-error/30 text-error hover:bg-error/10 font-label text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
-            title="Dismiss / release companion"
+            title={isIt ? 'Congeda compagno' : 'Dismiss / release companion'}
           >
             <span className="material-symbols-outlined text-sm">person_remove</span>
-            Dismiss
+            {t('companion.dismiss')}
           </button>
         </div>
       </div>
@@ -288,10 +300,10 @@ export function CompanionPage() {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-label text-[10px] uppercase px-2.5 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/40 font-semibold tracking-wider">
-                {activeCompanion.type.replace('_', ' ')}
+                {translateCompanionType(activeCompanion.type, locale)}
               </span>
               <span className="font-label text-[10px] uppercase px-2.5 py-0.5 rounded-full bg-secondary/20 text-secondary border border-secondary/40 font-semibold tracking-wider">
-                {activeCompanion.size} {activeCompanion.species}
+                {translateSize(activeCompanion.size, locale)} {activeCompanion.species}
               </span>
               {activeCompanion.hitDice && (
                 <span className="font-label text-[10px] uppercase px-2.5 py-0.5 rounded-full bg-surface-container-high text-tertiary border border-white/10">
@@ -304,8 +316,8 @@ export function CompanionPage() {
               {activeCompanion.name}
             </h1>
             <p className="font-label text-xs text-tertiary tracking-wider mt-0.5">
-              Speed: {activeCompanion.speed} • BAB: +{activeCompanion.baseAttackBonus}
-              {activeCompanion.senses ? ` • Senses: ${activeCompanion.senses}` : ''}
+              {t('hud.speed')}: {activeCompanion.speed} • {t('hud.bab')}: +{activeCompanion.baseAttackBonus}
+              {activeCompanion.senses ? ` • ${isIt ? 'Sensi' : 'Senses'}: ${activeCompanion.senses}` : ''}
             </p>
           </div>
         </div>
@@ -313,7 +325,7 @@ export function CompanionPage() {
         <div className="flex items-center gap-3 relative z-10 w-full md:w-auto justify-end">
           <div className="text-right">
             <span className="font-label text-[10px] text-tertiary uppercase tracking-widest block">
-              Bound Master
+              {t('companion.boundMaster')}
             </span>
             <span className="font-headline text-primary font-bold text-lg">{char.name}</span>
           </div>
@@ -333,7 +345,7 @@ export function CompanionPage() {
           className="lg:col-span-6 bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] flex flex-col items-center justify-center text-center relative overflow-hidden"
         >
           <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
-            Vitality Core
+            {t('companion.vitalityCore')}
           </h2>
 
           <motion.div
@@ -347,16 +359,16 @@ export function CompanionPage() {
             {currentHp}
           </motion.div>
           <div className="font-label text-tertiary tracking-widest uppercase mt-2 text-xs">
-            Hit Points / {activeCompanion.maxHp}
+            {t('companion.hitPoints')} / {activeCompanion.maxHp}
           </div>
 
           <div className="mt-6 flex items-center gap-3">
             <button
               onClick={() => adjustCompanionHp(char.id, activeCompanion.id, -hpDelta, activeCompanion.maxHp)}
               className="px-4 py-2 bg-error-container text-on-error-container hover:brightness-125 rounded-xl transition-all font-label text-xs uppercase tracking-widest cursor-pointer active:scale-95"
-              aria-label="Decrease companion HP"
+              aria-label={isIt ? 'Riduci PF compagno' : 'Decrease companion HP'}
             >
-              Damage
+              {t('companion.damageBtn')}
             </button>
             <input
               type="number"
@@ -368,9 +380,9 @@ export function CompanionPage() {
             <button
               onClick={() => adjustCompanionHp(char.id, activeCompanion.id, hpDelta, activeCompanion.maxHp)}
               className="px-4 py-2 bg-primary-container text-on-primary-container hover:brightness-125 rounded-xl transition-all font-label text-xs uppercase tracking-widest cursor-pointer active:scale-95"
-              aria-label="Increase companion HP"
+              aria-label={isIt ? 'Aumenta PF compagno' : 'Increase companion HP'}
             >
-              Heal
+              {t('hud.heal')}
             </button>
           </div>
 
@@ -380,11 +392,11 @@ export function CompanionPage() {
                 onClick={() => setTempEdit(String(tempHp))}
                 className="px-3 py-1.5 bg-surface-container-lowest font-label text-xs text-primary hover:bg-surface-container-high rounded-xl transition-all cursor-pointer border border-primary/20"
               >
-                TEMP HP: {tempHp}
+                {t('hud.temp').toUpperCase()} {t('hud.hp')}: {tempHp}
               </button>
             ) : (
               <div className="flex items-center gap-1 bg-surface-container-lowest px-2 py-1 rounded-xl border border-primary">
-                <span className="font-label text-xs text-primary">TEMP HP:</span>
+                <span className="font-label text-xs text-primary">{t('hud.temp').toUpperCase()} {t('hud.hp')}:</span>
                 <input
                   autoFocus
                   type="number"
@@ -410,13 +422,13 @@ export function CompanionPage() {
         >
           <div className="bg-surface-container-low/80 rounded-xl p-4 border border-white/5">
             <p className="font-label text-[10px] uppercase tracking-widest text-tertiary">
-              Armor Class
+              {t('companion.armorClass')}
             </p>
             <p className="font-label text-3xl sm:text-4xl font-black text-white mt-1">
               {activeCompanion.armorClass.total + conditionAcMod}
             </p>
             <p className="font-label text-[10px] text-tertiary mt-1">
-              TOUCH: {activeCompanion.armorClass.touch + conditionAcMod} | FLAT:{' '}
+              {isIt ? 'CONT' : 'TOUCH'}: {activeCompanion.armorClass.touch + conditionAcMod} | {isIt ? 'IMP' : 'FLAT'}:{' '}
               {activeCompanion.armorClass.flatFooted + conditionAcMod}
             </p>
           </div>
@@ -427,18 +439,20 @@ export function CompanionPage() {
                 diceType: 20,
                 count: 1,
                 modifier: activeCompanion.initiativeBonus,
-                label: `${activeCompanion.name} Initiative`,
+                label: isIt
+                  ? `Iniziativa di ${activeCompanion.name}`
+                  : `${activeCompanion.name} Initiative`,
               })
             }
             className="bg-surface-container-low/80 rounded-xl p-4 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-primary/40 transition-all cursor-pointer group"
           >
             <p className="font-label text-[10px] uppercase tracking-widest text-primary font-semibold">
-              Initiative
+              {t('companion.initiative')}
             </p>
             <p className="font-label text-3xl sm:text-4xl font-black text-primary mt-1">
               +{activeCompanion.initiativeBonus}
             </p>
-            <p className="font-label text-[10px] text-tertiary mt-1">Click to roll d20</p>
+            <p className="font-label text-[10px] text-tertiary mt-1">{t('companion.clickToRoll')}</p>
           </button>
 
           <button
@@ -447,22 +461,24 @@ export function CompanionPage() {
                 diceType: 20,
                 count: 1,
                 modifier: activeCompanion.savingThrows.fort + conditionSaveMod,
-                label: `${activeCompanion.name} Fortitude`,
+                label: isIt
+                  ? `TS Tempra di ${activeCompanion.name}`
+                  : `${activeCompanion.name} Fortitude`,
                 breakdown: [
-                  { label: 'Base Fort', value: activeCompanion.savingThrows.fort },
-                  ...(conditionSaveMod !== 0 ? [{ label: 'Conditions', value: conditionSaveMod }] : []),
+                  { label: isIt ? 'Tempra Base' : 'Base Fort', value: activeCompanion.savingThrows.fort },
+                  ...(conditionSaveMod !== 0 ? [{ label: isIt ? 'Condizioni' : 'Conditions', value: conditionSaveMod }] : []),
                 ],
               })
             }
             className="bg-surface-container-low/80 rounded-xl p-4 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-secondary/40 transition-all cursor-pointer group"
           >
             <p className="font-label text-[10px] uppercase tracking-widest text-secondary font-semibold">
-              Fortitude
+              {t('companion.fortitude')}
             </p>
             <p className="font-label text-3xl sm:text-4xl font-black text-white mt-1">
               +{activeCompanion.savingThrows.fort + conditionSaveMod}
             </p>
-            <p className="font-label text-[10px] text-tertiary mt-0.5">Fort Save</p>
+            <p className="font-label text-[10px] text-tertiary mt-0.5">{t('companion.fortSave')}</p>
           </button>
 
           <button
@@ -471,22 +487,24 @@ export function CompanionPage() {
                 diceType: 20,
                 count: 1,
                 modifier: activeCompanion.savingThrows.ref + conditionSaveMod,
-                label: `${activeCompanion.name} Reflex`,
+                label: isIt
+                  ? `TS Riflessi di ${activeCompanion.name}`
+                  : `${activeCompanion.name} Reflex`,
                 breakdown: [
-                  { label: 'Base Ref', value: activeCompanion.savingThrows.ref },
-                  ...(conditionSaveMod !== 0 ? [{ label: 'Conditions', value: conditionSaveMod }] : []),
+                  { label: isIt ? 'Riflessi Base' : 'Base Ref', value: activeCompanion.savingThrows.ref },
+                  ...(conditionSaveMod !== 0 ? [{ label: isIt ? 'Condizioni' : 'Conditions', value: conditionSaveMod }] : []),
                 ],
               })
             }
             className="bg-surface-container-low/80 rounded-xl p-4 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-secondary/40 transition-all cursor-pointer group"
           >
             <p className="font-label text-[10px] uppercase tracking-widest text-secondary font-semibold">
-              Reflex
+              {t('companion.reflex')}
             </p>
             <p className="font-label text-3xl sm:text-4xl font-black text-white mt-1">
               +{activeCompanion.savingThrows.ref + conditionSaveMod}
             </p>
-            <p className="font-label text-[10px] text-tertiary mt-0.5">Reflex Save</p>
+            <p className="font-label text-[10px] text-tertiary mt-0.5">{t('companion.refSave')}</p>
           </button>
 
           <button
@@ -495,22 +513,24 @@ export function CompanionPage() {
                 diceType: 20,
                 count: 1,
                 modifier: activeCompanion.savingThrows.will + conditionSaveMod,
-                label: `${activeCompanion.name} Will`,
+                label: isIt
+                  ? `TS Volontà di ${activeCompanion.name}`
+                  : `${activeCompanion.name} Will`,
                 breakdown: [
-                  { label: 'Base Will', value: activeCompanion.savingThrows.will },
-                  ...(conditionSaveMod !== 0 ? [{ label: 'Conditions', value: conditionSaveMod }] : []),
+                  { label: isIt ? 'Volontà Base' : 'Base Will', value: activeCompanion.savingThrows.will },
+                  ...(conditionSaveMod !== 0 ? [{ label: isIt ? 'Condizioni' : 'Conditions', value: conditionSaveMod }] : []),
                 ],
               })
             }
             className="col-span-2 bg-surface-container-low/80 rounded-xl p-4 text-left hover:bg-surface-container-high/80 border border-white/5 hover:border-secondary/40 transition-all cursor-pointer group"
           >
             <p className="font-label text-[10px] uppercase tracking-widest text-secondary font-semibold">
-              Willpower
+              {t('companion.willpower')}
             </p>
             <p className="font-label text-3xl sm:text-4xl font-black text-white mt-1">
               +{activeCompanion.savingThrows.will + conditionSaveMod}
             </p>
-            <p className="font-label text-[10px] text-tertiary mt-0.5">Will Save</p>
+            <p className="font-label text-[10px] text-tertiary mt-0.5">{t('companion.willSave')}</p>
           </button>
         </motion.section>
       </motion.div>
@@ -518,12 +538,13 @@ export function CompanionPage() {
       {/* Ability Scores Grid */}
       <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
         <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
-          Companion Ability Scores
+          {t('companion.abilityScores')}
         </h2>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
           {ABILITY_KEYS.map((key) => {
             const score = activeCompanion.abilities[key]
             const mod = abilityMod(score)
+            const fullAbility = isIt ? translateAbilityFull(key, locale) : ABILITY_NAMES[key]
             return (
               <button
                 key={key}
@@ -532,13 +553,15 @@ export function CompanionPage() {
                     diceType: 20,
                     count: 1,
                     modifier: mod,
-                    label: `${activeCompanion.name} ${ABILITY_NAMES[key]} Check`,
+                    label: isIt
+                      ? `Prova di ${fullAbility} di ${activeCompanion.name}`
+                      : `${activeCompanion.name} ${fullAbility} Check`,
                   })
                 }
                 className="bg-surface-container-low/80 rounded-xl p-3 hover:bg-surface-container-high/80 hover:shadow-[0_0_15px_rgba(0,240,255,0.2)] transition-all text-center cursor-pointer border border-white/5 hover:border-primary/40 active:scale-95"
               >
                 <span className="font-label text-[10px] text-tertiary uppercase block">
-                  {key.toUpperCase()}
+                  {translateAbilityShort(key, locale)}
                 </span>
                 <span className="font-label text-2xl sm:text-3xl font-black text-primary block my-1">
                   {mod >= 0 ? `+${mod}` : mod}
@@ -553,13 +576,14 @@ export function CompanionPage() {
       {/* Natural Attacks */}
       <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
         <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
-          Natural Attacks & Tactics
+          {t('companion.naturalAttacks')}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {activeCompanion.attacks.map((atk, index) => {
             const totalAttack = atk.bonus + conditionAttackMod
             const critRange = atk.critRange ?? 20
             const critMult = atk.critMultiplier ?? 2
+            const atkDisplayName = translateNaturalAttack(atk.name, locale)
 
             return (
               <div
@@ -568,7 +592,7 @@ export function CompanionPage() {
               >
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-headline text-base sm:text-lg font-bold text-white">{atk.name}</h3>
+                    <h3 className="font-headline text-base sm:text-lg font-bold text-white">{atkDisplayName}</h3>
                     <span className="font-label text-xs text-secondary border border-secondary/30 px-2.5 py-0.5 rounded-full font-semibold">
                       {critRange < 20 ? `${critRange}-20` : '20'}/x{critMult}
                     </span>
@@ -576,7 +600,7 @@ export function CompanionPage() {
 
                   {atk.damageType && (
                     <p className="font-label text-[11px] text-tertiary uppercase tracking-wider mb-2">
-                      Type: {atk.damageType}
+                      {isIt ? 'Tipo' : 'Type'}: {atk.damageType}
                     </p>
                   )}
 
@@ -594,19 +618,21 @@ export function CompanionPage() {
                         diceType: 20,
                         count: 1,
                         modifier: totalAttack,
-                        label: `${activeCompanion.name} ${atk.name} Attack`,
+                        label: isIt
+                          ? `${activeCompanion.name} - Attacco ${atkDisplayName}`
+                          : `${activeCompanion.name} ${atk.name} Attack`,
                         critRange,
                         breakdown: [
-                          { label: 'Base Attack', value: atk.bonus },
+                          { label: isIt ? 'Attacco Base' : 'Base Attack', value: atk.bonus },
                           ...(conditionAttackMod !== 0
-                            ? [{ label: 'Conditions', value: conditionAttackMod }]
+                            ? [{ label: isIt ? 'Condizioni' : 'Conditions', value: conditionAttackMod }]
                             : []),
                         ],
                       })
                     }
                     className="flex-1 py-3 bg-gradient-to-r from-primary to-cyan-400 text-surface-lowest font-label text-xs uppercase tracking-widest hover:shadow-[0_0_20px_rgba(0,240,255,0.3)] rounded-xl transition-all font-bold cursor-pointer active:scale-95"
                   >
-                    Strike (+{totalAttack})
+                    {t('companion.strike')} (+{totalAttack})
                   </button>
 
                   <button
@@ -620,18 +646,20 @@ export function CompanionPage() {
                         diceType: sides,
                         count,
                         modifier: totalDmgBonus,
-                        label: `${activeCompanion.name} ${atk.name} Damage`,
+                        label: isIt
+                          ? `${activeCompanion.name} - Danno ${atkDisplayName}`
+                          : `${activeCompanion.name} ${atk.name} Damage`,
                         breakdown: [
-                          { label: 'Base Damage', value: baseBonus },
+                          { label: isIt ? 'Danno Base' : 'Base Damage', value: baseBonus },
                           ...(conditionDamageMod !== 0
-                            ? [{ label: 'Conditions', value: conditionDamageMod }]
+                            ? [{ label: isIt ? 'Condizioni' : 'Conditions', value: conditionDamageMod }]
                             : []),
                         ],
                       })
                     }}
                     className="flex-1 py-3 border border-secondary text-secondary font-label text-xs uppercase tracking-widest hover:bg-secondary/10 rounded-xl transition-all font-semibold cursor-pointer active:scale-95"
                   >
-                    Dmg ({atk.damageDice})
+                    {isIt ? 'Danni' : 'Dmg'} ({atk.damageDice})
                   </button>
                 </div>
               </div>
@@ -645,11 +673,12 @@ export function CompanionPage() {
         {/* Skills */}
         <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
           <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
-            Trained Instincts & Skills
+            {t('companion.trainedInstincts')}
           </h2>
           <div className="space-y-2">
             {activeCompanion.skills.map((skill, i) => {
               const totalSkill = skill.bonus + conditionSkillMod
+              const skillDisplayName = translateSkillName(skill.name, locale)
               return (
                 <button
                   key={i}
@@ -658,11 +687,13 @@ export function CompanionPage() {
                       diceType: 20,
                       count: 1,
                       modifier: totalSkill,
-                      label: `${activeCompanion.name} ${skill.name} Check`,
+                      label: isIt
+                        ? `Prova di ${skillDisplayName} di ${activeCompanion.name}`
+                        : `${activeCompanion.name} ${skill.name} Check`,
                       breakdown: [
-                        { label: 'Base Skill', value: skill.bonus },
+                        { label: isIt ? 'Abilità Base' : 'Base Skill', value: skill.bonus },
                         ...(conditionSkillMod !== 0
-                          ? [{ label: 'Conditions', value: conditionSkillMod }]
+                          ? [{ label: isIt ? 'Condizioni' : 'Conditions', value: conditionSkillMod }]
                           : []),
                       ],
                     })
@@ -671,7 +702,7 @@ export function CompanionPage() {
                 >
                   <div>
                     <span className="font-headline text-sm font-bold text-white">
-                      {skill.name}
+                      {skillDisplayName}
                     </span>
                     {skill.notes && (
                       <span className="font-label text-[10px] text-tertiary block mt-0.5">
@@ -694,7 +725,7 @@ export function CompanionPage() {
           {activeCompanion.tricks && activeCompanion.tricks.length > 0 && (
             <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
               <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
-                Known Tricks ({activeCompanion.tricks.length})
+                {t('companion.knownTricks')} ({activeCompanion.tricks.length})
               </h2>
               <div className="flex flex-wrap gap-2">
                 {activeCompanion.tricks.map((trick, idx) => (
@@ -702,7 +733,7 @@ export function CompanionPage() {
                     key={idx}
                     className="px-3 py-1 bg-surface-container-low/80 border border-white/10 rounded-full font-label text-xs text-white"
                   >
-                    ✓ {trick}
+                    ✓ {translateTrick(trick, locale)}
                   </span>
                 ))}
               </div>
@@ -713,7 +744,7 @@ export function CompanionPage() {
           {activeCompanion.specialQualities && activeCompanion.specialQualities.length > 0 && (
             <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
               <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
-                Special Qualities & Abilities
+                {t('companion.specialQualitiesTitle')}
               </h2>
               <div className="space-y-3">
                 {activeCompanion.specialQualities.map((sq, idx) => (
@@ -735,12 +766,12 @@ export function CompanionPage() {
       {/* Companion Conditions */}
       <section className="bg-surface-container/70 backdrop-blur-md rounded-2xl p-6 border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)]">
         <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-4 neon-glow-accent">
-          Afflicted Conditions ({activeCompanion.name})
+          {t('companion.afflictedConditions')} ({activeCompanion.name})
         </h2>
         <div className="flex flex-wrap gap-2">
           {ALL_CONDITIONS.map((cond) => {
             const isActive = activeConditions.includes(cond)
-            const info = CONDITION_INFO[cond]
+            const info = getConditionInfo(cond, locale)
 
             return (
               <div key={cond} className="relative group">
@@ -752,7 +783,7 @@ export function CompanionPage() {
                       : 'bg-surface-container-low/80 text-tertiary hover:text-error hover:bg-error-container/30 border border-white/5'
                   }`}
                 >
-                  {cond}
+                  {isIt ? info.name : cond}
                 </button>
                 {/* Tooltip */}
                 <div className="pointer-events-none absolute bottom-full left-0 mb-2 w-56 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
@@ -787,11 +818,11 @@ export function CompanionPage() {
                   <div>
                     <h3 className="font-headline text-xl font-bold text-white uppercase tracking-tight flex items-center gap-2">
                       <span className="material-symbols-outlined text-primary">pets</span>
-                      {companions.length > 0 ? 'Replace Companion Preset' : 'Manifest Companion Preset'}
+                      {companions.length > 0 ? t('companion.replaceModalTitle') : t('companion.manifestTitle')}
                     </h3>
                     {companions.length > 0 && (
                       <p className="font-body text-xs text-tertiary mt-1">
-                        Selecting a preset will replace <strong className="text-white">{activeCompanion.name}</strong> as {char.name}&apos;s bonded companion.
+                        {t('companion.replaceModalDesc', { current: activeCompanion.name, master: char.name })}
                       </p>
                     )}
                   </div>
@@ -836,7 +867,7 @@ export function CompanionPage() {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-label text-[10px] uppercase text-primary font-bold">
-                                {preset.type.replace('_', ' ')} • {preset.species}
+                                {translateCompanionType(preset.type, locale)} • {preset.species}
                               </span>
                               {isCurrent && (
                                 <span className="font-label text-[9px] uppercase px-1.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/40 font-bold">
@@ -868,7 +899,7 @@ export function CompanionPage() {
                           <span className="material-symbols-outlined text-sm">
                             {isCurrent ? 'check' : companions.length > 0 ? 'swap_horiz' : 'add'}
                           </span>
-                          {isCurrent ? 'Currently Bonded' : companions.length > 0 ? 'Bond & Replace' : 'Manifest'}
+                          {isCurrent ? (isIt ? 'Attualmente Legato' : 'Currently Bonded') : companions.length > 0 ? t('companion.bondAndReplace') : t('companion.manifest')}
                         </button>
                       </div>
                     )
@@ -897,12 +928,11 @@ export function CompanionPage() {
                 <div className="flex items-center gap-3 text-error">
                   <span className="material-symbols-outlined text-2xl">warning</span>
                   <h3 className="font-headline text-lg font-bold text-white uppercase tracking-tight">
-                    Dismiss Companion?
+                    {t('companion.dismissCompanion')}
                   </h3>
                 </div>
                 <p className="font-body text-xs text-tertiary leading-relaxed">
-                  Are you sure you want to dismiss <strong className="text-white">{activeCompanion.name}</strong>?
-                  Their bond to {char.name} will be released. You can manifest another companion at any time.
+                  {t('companion.dismissDesc', { name: activeCompanion.name, master: char.name })}
                 </p>
                 <div className="flex items-center justify-end gap-3 pt-2">
                   <button
@@ -910,7 +940,7 @@ export function CompanionPage() {
                     onClick={() => setShowDismissModal(false)}
                     className="px-4 py-2 rounded-xl border border-white/10 text-tertiary hover:text-white font-label text-xs uppercase tracking-wider transition-colors cursor-pointer"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="button"
@@ -921,7 +951,7 @@ export function CompanionPage() {
                     }}
                     className="px-4 py-2 rounded-xl bg-error/20 hover:bg-error text-error hover:text-white border border-error/40 font-label text-xs uppercase tracking-wider font-bold transition-all cursor-pointer shadow-[0_0_15px_rgba(255,80,80,0.2)]"
                   >
-                    Confirm Dismiss
+                    {t('companion.confirmDismiss')}
                   </button>
                 </div>
               </div>

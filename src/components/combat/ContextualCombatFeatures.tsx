@@ -7,12 +7,12 @@ import type { SessionState } from '../../types/session'
 import type { InspectorItem } from '../../types/inspector'
 import type { DebilitatingInjuryType } from '../../types/class-mechanics'
 import {
-  ACTION_ECONOMY_LABEL,
   categorizeFeatures,
   getDefensiveBadges,
   type CategorizedFeature,
   type DefensiveBadge,
 } from '../../lib/action-economy'
+import { useTranslation, translateActionType, type Locale } from '../../i18n'
 
 const GROUP_ORDER = ['standard', 'swift', 'move', 'immediate', 'full-round', 'passive'] as const
 const COMBAT_RE = /flurry|ki pool|ki strike|ki dodge|judgment|bane|spell combat|spellstrike|power attack|stunning fist|fire bolt|wild shape|hex|bloodrage|sneak attack|smite|channel|rage|two.weapon|combat casting|weapon finesse|dodge|evasion|uncanny|deflect|natural armor|furious focus/i
@@ -24,38 +24,45 @@ function isSignatureFeature(character: FullCharacter, feature: CategorizedFeatur
 function featureInspectorItem(
   character: FullCharacter,
   feature: CategorizedFeature,
-  onSpend?: () => void
+  onSpend?: () => void,
+  locale: Locale = 'en'
 ): InspectorItem {
+  const isIt = locale === 'it'
   const actions: InspectorItem['actions'] = []
   if (feature.resourceId && (feature.remainingUses ?? 0) > 0 && onSpend) {
     const resourceName =
       character.dailyResources.find((resource) => resource.id === feature.resourceId)?.name ??
       feature.resourceId
-    actions.push({ label: `Spend 1 ${resourceName}`, onClick: onSpend, variant: 'primary' })
+    actions.push({
+      label: isIt ? `Spendi 1 ${resourceName}` : `Spend 1 ${resourceName}`,
+      onClick: onSpend,
+      variant: 'primary',
+    })
   }
 
   const signature = isSignatureFeature(character, feature)
+  const actionLabel = translateActionType(feature.actionType, locale)
   return {
     type: signature ? 'ability' : 'feat',
     id: feature.id,
     title: feature.name,
-    subtitle: `${ACTION_ECONOMY_LABEL[feature.actionType]} action${signature ? ' · Signature ability' : ''}`,
+    subtitle: `${actionLabel} ${isIt ? 'azione' : 'action'}${signature ? (isIt ? ' · Capacità distintiva' : ' · Signature ability') : ''}`,
     description: feature.fullDesc || feature.shortDesc,
     tags: [
-      ACTION_ECONOMY_LABEL[feature.actionType],
-      feature.source === 'classAbility' ? 'Class Ability' : 'Feat',
-      ...(feature.isDefensive ? ['Defensive'] : []),
+      actionLabel,
+      feature.source === 'classAbility' ? (isIt ? 'Capacità di Classe' : 'Class Ability') : (isIt ? 'Talento' : 'Feat'),
+      ...(feature.isDefensive ? [isIt ? 'Difensiva' : 'Defensive'] : []),
     ],
     meta:
       feature.resourceId && feature.maxUses !== undefined
         ? [
             {
-              label: 'Resource',
+              label: isIt ? 'Risorsa' : 'Resource',
               value:
                 character.dailyResources.find((resource) => resource.id === feature.resourceId)?.name ??
                 feature.resourceId,
             },
-            { label: 'Remaining', value: `${feature.remainingUses ?? 0} / ${feature.maxUses}` },
+            { label: isIt ? 'Rimanenti' : 'Remaining', value: `${feature.remainingUses ?? 0} / ${feature.maxUses}` },
           ]
         : undefined,
     actions,
@@ -88,6 +95,9 @@ export function ContextualCombatFeatures({
   collapsible = false,
   defaultCollapsed = false,
 }: ContextualCombatFeaturesProps) {
+  const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
+
   const [isCollapsed, setIsCollapsed] = useState(collapsible && defaultCollapsed)
   const storeCharacter = useCharacterStore((s) => s.activeCharacter())
   const character = characterProp ?? storeCharacter
@@ -131,7 +141,7 @@ export function ContextualCombatFeatures({
 
   const summary = GROUP_ORDER.map((actionType) => {
     const count = groups[actionType]?.length ?? 0
-    return count > 0 ? `${ACTION_ECONOMY_LABEL[actionType]} ${count}` : null
+    return count > 0 ? `${translateActionType(actionType, locale)} ${count}` : null
   })
     .filter(Boolean)
     .join(' · ')
@@ -153,17 +163,17 @@ export function ContextualCombatFeatures({
             : undefined
         }
         aria-expanded={collapsible ? !isCollapsed : undefined}
-        aria-label={collapsible ? (isCollapsed ? 'Show combat features' : 'Hide combat features') : undefined}
+        aria-label={collapsible ? (isCollapsed ? (isIt ? 'Mostra capacità da combattimento' : 'Show combat features') : (isIt ? 'Nascondi capacità da combattimento' : 'Hide combat features')) : undefined}
         className={`flex items-center justify-between gap-3 ${isCollapsed ? '' : 'mb-3'} ${
           collapsible ? 'cursor-pointer select-none rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60' : ''
         }`}
       >
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
           <h3 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
-            Combat Features
+            {t('combat.combatFeatures')}
           </h3>
           <span className="font-label text-[10px] tabular-nums text-tertiary">
-            {features.length} available
+            {t('combat.featuresAvailable', { count: features.length })}
           </span>
           {isCollapsed && summary && (
             <span className="w-full truncate font-label text-[10px] text-tertiary/80">
@@ -189,7 +199,7 @@ export function ContextualCombatFeatures({
             <div key={actionType}>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="font-label text-[10px] uppercase tracking-[0.18em] text-primary font-bold">
-                  {ACTION_ECONOMY_LABEL[actionType]}
+                  {translateActionType(actionType, locale)}
                 </span>
                 <div className="flex-1 h-px bg-white/5" />
               </div>
@@ -212,15 +222,20 @@ export function ContextualCombatFeatures({
                         type="button"
                         onClick={() => {
                           openInspector(
-                            featureInspectorItem(character, feature, () => {
-                              if (!feature.resourceId) return
-                              const spent = session.spentResources?.[feature.resourceId] ?? 0
-                              setResourceSpent(
-                                character.id,
-                                feature.resourceId,
-                                Math.min(feature.maxUses ?? 0, spent + 1)
-                              )
-                            })
+                            featureInspectorItem(
+                              character,
+                              feature,
+                              () => {
+                                if (!feature.resourceId) return
+                                const spent = session.spentResources?.[feature.resourceId] ?? 0
+                                setResourceSpent(
+                                  character.id,
+                                  feature.resourceId,
+                                  Math.min(feature.maxUses ?? 0, spent + 1)
+                                )
+                              },
+                              locale
+                            )
                           )
                         }}
                         className="text-left cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
@@ -241,7 +256,7 @@ export function ContextualCombatFeatures({
                               : 'border-primary/30 text-primary bg-primary/10'
                           }`}
                         >
-                          {ACTION_ECONOMY_LABEL[feature.actionType]}
+                          {translateActionType(feature.actionType, locale)}
                         </span>
 
                         {feature.resourceId ? (
@@ -254,13 +269,15 @@ export function ContextualCombatFeatures({
                                 ? 'border-white/10 text-tertiary/50 cursor-not-allowed'
                                 : 'border-primary/40 text-primary hover:bg-primary/15 cursor-pointer'
                             }`}
-                            aria-label={`Use ${feature.name}`}
+                            aria-label={`${isIt ? 'Usa' : 'Use'} ${feature.name}`}
                             title={resourceName}
                           >
                             {feature.remainingUses}/{feature.maxUses}
                           </button>
                         ) : feature.isDefensive ? (
-                          <span className="font-label text-[10px] text-[#00daf3] uppercase tracking-wider">Defensive</span>
+                          <span className="font-label text-[10px] text-[#00daf3] uppercase tracking-wider">
+                            {isIt ? 'Difensiva' : 'Defensive'}
+                          </span>
                         ) : null}
                       </div>
                     </div>
@@ -401,6 +418,9 @@ export function DefensiveBadges({
   className?: string
   compact?: boolean
 }) {
+  const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
+
   const storeCharacter = useCharacterStore((s) => s.activeCharacter())
   const character = characterProp ?? storeCharacter
   const openInspector = useInspectorStore((s) => s.openInspector)
@@ -408,7 +428,7 @@ export function DefensiveBadges({
   if (!character || badges.length === 0) return null
 
   return (
-    <div className={`flex flex-wrap items-center gap-1.5 ${compact ? 'mt-2' : ''} ${className}`} aria-label="Defensive abilities">
+    <div className={`flex flex-wrap items-center gap-1.5 ${compact ? 'mt-2' : ''} ${className}`} aria-label={t('combat.defensiveAbilities')}>
       {badges.map((badge) => {
         const tone = badgeTone(badge)
         return (
@@ -421,9 +441,9 @@ export function DefensiveBadges({
                 type: 'ability',
                 id: badge.id,
                 title: badge.name,
-                subtitle: `Defensive reaction · ${badge.stat}`,
+                subtitle: `${t('combat.defensiveReaction')} · ${badge.stat}`,
                 description: badge.description,
-                tags: ['Defensive', badge.stat],
+                tags: [isIt ? 'Difensiva' : 'Defensive', badge.stat],
               })
             }
             className={`min-h-[44px] px-2.5 py-1 rounded-lg border font-label text-[10px] uppercase tracking-wider font-bold cursor-pointer transition-all hover:brightness-125 ${

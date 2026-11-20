@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import type { CombatManeuversCalculated, CombatManeuverType } from '../../types/combat'
 import type { DiceRoll } from '../../types/dice'
+import { useTranslation, translateManeuverName } from '../../i18n'
 
 export interface CombatManeuversPanelProps {
   maneuversCalc: CombatManeuversCalculated
@@ -10,6 +11,9 @@ export interface CombatManeuversPanelProps {
 type ManeuverFilter = 'all' | 'noAoO' | 'provokes'
 
 export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuversPanelProps) {
+  const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
+
   const [isExpanded, setIsExpanded] = useState(false)
   const [selectedBreakdown, setSelectedBreakdown] = useState<'cmb' | 'cmd' | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -28,14 +32,16 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
 
       if (!searchQuery.trim()) return true
       const q = searchQuery.toLowerCase().trim()
+      const localizedName = translateManeuverName(m.name, locale).toLowerCase()
       return (
         m.name.toLowerCase().includes(q) ||
+        localizedName.includes(q) ||
         m.type.toLowerCase().includes(q) ||
         (m.featApplied && m.featApplied.toLowerCase().includes(q)) ||
         (m.description && m.description.toLowerCase().includes(q))
       )
     })
-  }, [maneuverList, activeFilter, searchQuery])
+  }, [maneuverList, activeFilter, searchQuery, locale])
 
   return (
     <div className="bg-surface-container/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.35)] overflow-hidden transition-all duration-300">
@@ -52,7 +58,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
         }}
         className="p-5 flex items-center justify-between cursor-pointer hover:bg-surface-container-high/60 transition-colors select-none group"
         aria-expanded={isExpanded}
-        aria-label="Maneuvers & Tactics Panel"
+        aria-label={t('combat.maneuversTactics')}
       >
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-secondary/15 border border-secondary/30 flex items-center justify-center text-secondary shadow-[0_0_12px_rgba(217,70,239,0.2)] group-hover:border-secondary/50 group-hover:shadow-[0_0_16px_rgba(217,70,239,0.35)] transition-all">
@@ -61,30 +67,30 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-white">
-                Maneuvers & Tactics (CMB / CMD)
+                {t('combat.maneuversTactics')}
               </h3>
               <span
                 className="rounded-md border border-secondary/30 bg-secondary/10 px-2 py-0.5 font-label text-[10px] font-bold text-secondary"
                 data-testid="header-cmb-value"
               >
-                CMB {maneuversCalc.cmb >= 0 ? `+${maneuversCalc.cmb}` : maneuversCalc.cmb}
+                {isIt ? 'BMC' : 'CMB'} {maneuversCalc.cmb >= 0 ? `+${maneuversCalc.cmb}` : maneuversCalc.cmb}
               </span>
               <span
                 className="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 font-label text-[10px] font-bold text-primary"
                 data-testid="header-cmd-value"
               >
-                CMD {maneuversCalc.cmd}
+                {isIt ? 'DMC' : 'CMD'} {maneuversCalc.cmd}
               </span>
             </div>
             <p className="mt-0.5 font-label text-[10px] text-tertiary">
-              Trip, disarm, grapple, bull rush & defensive counters
+              {t('combat.maneuversSub')}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="font-label text-xs text-tertiary uppercase tracking-wider hidden sm:inline group-hover:text-white transition-colors">
-            {isExpanded ? 'Hide' : 'Expand'}
+            {isExpanded ? t('combat.hide') : t('combat.expand')}
           </span>
           <span
             className={`material-symbols-outlined text-tertiary transition-transform duration-200 ${
@@ -112,7 +118,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
               aria-expanded={selectedBreakdown === 'cmb'}
             >
               <span className="w-2 h-2 rounded-full bg-secondary shadow-[0_0_6px_#d946ef]" />
-              <span>CMB Breakdown:</span>
+              <span>{t('combat.cmbBreakdown')}:</span>
               <span className="font-mono font-bold text-white">
                 {maneuversCalc.cmb >= 0 ? `+${maneuversCalc.cmb}` : maneuversCalc.cmb}
               </span>
@@ -129,7 +135,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
               aria-expanded={selectedBreakdown === 'cmd'}
             >
               <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_6px_#00f0ff]" />
-              <span>CMD Breakdown:</span>
+              <span>{t('combat.cmdBreakdown')}:</span>
               <span className="font-mono font-bold text-white">{maneuversCalc.cmd}</span>
             </button>
           </div>
@@ -144,14 +150,14 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-secondary text-sm">shield</span>
                   <span className="text-secondary font-headline font-bold text-xs uppercase tracking-wider">
-                    Base Combat Maneuver Bonus (CMB)
+                    {isIt ? 'Bonus Manovra in Combattimento Base (BMC)' : 'Base Combat Maneuver Bonus (CMB)'}
                   </span>
                 </div>
                 <span className="text-[10px] font-label text-tertiary tracking-wide hidden sm:inline">
-                  Formula: BAB + STR (or DEX) + Size + Buffs - Conditions
+                  {isIt ? 'Formula: BAB + FOR (o DES) + Taglia + Buff - Condizioni' : 'Formula: BAB + STR (or DEX) + Size + Buffs - Conditions'}
                 </span>
                 <span className="font-mono font-bold text-white bg-secondary/20 px-2 py-0.5 rounded-md border border-secondary/40 text-xs">
-                  Total: {maneuversCalc.cmb >= 0 ? `+${maneuversCalc.cmb}` : maneuversCalc.cmb}
+                  {t('status.total')}: {maneuversCalc.cmb >= 0 ? `+${maneuversCalc.cmb}` : maneuversCalc.cmb}
                 </span>
               </div>
               <div className="flex flex-wrap gap-2 text-xs font-label">
@@ -183,14 +189,14 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary text-sm">security</span>
                   <span className="text-primary font-headline font-bold text-xs uppercase tracking-wider">
-                    Combat Maneuver Defense (CMD)
+                    {isIt ? 'Difesa Manovre in Combattimento (DMC)' : 'Combat Maneuver Defense (CMD)'}
                   </span>
                 </div>
                 <span className="text-[10px] font-label text-tertiary tracking-wide hidden sm:inline">
-                  Formula: 10 + Base BAB + STR + DEX + Size + Dodge/Deflection + Buffs - Conditions
+                  {isIt ? 'Formula: 10 + BAB + FOR + DES + Taglia + Schivare/Deviazione + Buff - Condizioni' : 'Formula: 10 + Base BAB + STR + DEX + Size + Dodge/Deflection + Buffs - Conditions'}
                 </span>
                 <span className="font-mono font-bold text-white bg-primary/20 px-2 py-0.5 rounded-md border border-primary/40 text-xs">
-                  Total: {maneuversCalc.cmd}
+                  {t('status.total')}: {maneuversCalc.cmd}
                 </span>
               </div>
               <div className="flex flex-wrap gap-2 text-xs font-label">
@@ -223,15 +229,15 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search maneuvers (e.g. Trip, Disarm, Grapple)..."
-                aria-label="Search maneuvers"
+                placeholder={t('combat.searchManeuvers')}
+                aria-label={t('combat.searchManeuvers')}
                 className="w-full bg-surface-container-lowest/90 border border-white/10 focus:border-primary/60 focus:shadow-[0_0_15px_rgba(0,240,255,0.25)] rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-tertiary/70 outline-none transition-all font-label"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  aria-label="Clear search"
+                  aria-label={t('combat.clearSearch')}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-tertiary hover:text-white p-0.5 rounded transition-colors cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm leading-none">close</span>
@@ -249,7 +255,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
                     : 'bg-surface-container border-white/10 text-tertiary hover:text-white'
                 }`}
               >
-                All ({maneuverList.length})
+                {t('common.all')} ({maneuverList.length})
               </button>
               <button
                 type="button"
@@ -261,7 +267,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_4px_#d946ef]" />
-                <span>No AoO ({noAoOCount})</span>
+                <span>{t('combat.noAoO')} ({noAoOCount})</span>
               </button>
               <button
                 type="button"
@@ -273,7 +279,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
                 }`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-tertiary" />
-                <span>Provokes ({provokesCount})</span>
+                <span>{t('combat.provokes')} ({provokesCount})</span>
               </button>
             </div>
           </div>
@@ -283,7 +289,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
             <div className="py-8 px-4 text-center rounded-xl bg-surface-container-lowest/60 border border-white/5 space-y-2">
               <span className="material-symbols-outlined text-tertiary text-2xl">filter_list_off</span>
               <p className="text-xs font-label text-tertiary">
-                No maneuvers found matching your search.
+                {t('combat.noManeuversFound')}
               </p>
               <button
                 type="button"
@@ -293,7 +299,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
                 }}
                 className="px-3 py-1 text-xs font-label uppercase tracking-wider text-primary hover:underline cursor-pointer"
               >
-                Reset Filters
+                {t('combat.resetFilters')}
               </button>
             </div>
           )}
@@ -304,6 +310,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
               const hasFeat = !m.provokesAoO
               const isCardBreakdownOpen = expandedCardBreakdown === m.type
               const bonusDiff = m.bonus - maneuversCalc.cmb
+              const displayName = translateManeuverName(m.name, locale)
 
               return (
                 <div
@@ -314,22 +321,22 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h4 className="font-headline text-base sm:text-lg font-bold text-white group-hover:text-secondary transition-colors">
-                          {m.name}
+                          {displayName}
                         </h4>
                       </div>
                       {hasFeat ? (
                         <span
                           className="text-[10px] font-label font-bold px-2 py-0.5 rounded-lg bg-secondary/15 text-secondary border border-secondary/30 uppercase tracking-widest shadow-[0_0_8px_rgba(217,70,239,0.2)] flex-shrink-0"
-                          title={m.featApplied ?? 'Improved Feat applied'}
+                          title={m.featApplied ?? (isIt ? 'Talento applicato' : 'Improved Feat applied')}
                         >
-                          No AoO
+                          {t('combat.noAoO')}
                         </span>
                       ) : (
                         <span
                           className="text-[10px] font-label px-2 py-0.5 rounded-lg bg-white/5 text-tertiary border border-white/10 uppercase tracking-widest flex-shrink-0"
-                          title="Provokes Attack of Opportunity without Improved feat"
+                          title={isIt ? 'Provoca Attacco di Opportunità senza il talento migliorato' : 'Provokes Attack of Opportunity without Improved feat'}
                         >
-                          Provokes
+                          {t('combat.provokes')}
                         </span>
                       )}
                     </div>
@@ -346,7 +353,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
 
                     {m.cmdBonus && (
                       <div className="text-[10px] font-label text-primary/80">
-                        <span>CMD vs {m.type}: </span>
+                        <span>{isIt ? `DMC contro ${displayName}: ` : `CMD vs ${m.type}: `}</span>
                         <strong className="text-white font-mono">{maneuversCalc.cmd + m.cmdBonus}</strong>
                         <span className="text-tertiary"> (+{m.cmdBonus})</span>
                       </div>
@@ -371,7 +378,7 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
                         <span className="material-symbols-outlined text-[12px]">
                           {isCardBreakdownOpen ? 'expand_less' : 'expand_more'}
                         </span>
-                        <span>{isCardBreakdownOpen ? 'Hide Breakdown' : 'View Breakdown'}</span>
+                        <span>{isCardBreakdownOpen ? t('combat.hideBreakdown') : t('combat.viewBreakdown')}</span>
                       </button>
 
                       {isCardBreakdownOpen && (
@@ -406,16 +413,16 @@ export function CombatManeuversPanel({ maneuversCalc, openRoll }: CombatManeuver
                         diceType: 20,
                         count: 1,
                         modifier: m.bonus,
-                        label: `${m.name} Check`,
+                        label: isIt ? `Prova di ${displayName}` : `${m.name} Check`,
                         breakdown: m.breakdown,
                       })
                     }
                     className="w-full py-2.5 bg-gradient-to-r from-secondary/20 to-primary/20 hover:from-secondary/30 hover:to-primary/30 border border-secondary/40 hover:border-secondary/60 text-white font-label text-xs uppercase tracking-wider font-bold rounded-xl flex items-center justify-between px-3.5 hover:shadow-[0_0_15px_rgba(217,70,239,0.25)] transition-all cursor-pointer active:scale-95"
-                    aria-label={`Roll ${m.name} Check (${m.bonus >= 0 ? `+${m.bonus}` : m.bonus})`}
+                    aria-label={`${isIt ? 'Tira Prova di ' + displayName : 'Roll ' + m.name + ' Check'} (${m.bonus >= 0 ? `+${m.bonus}` : m.bonus})`}
                   >
                     <span className="text-secondary flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-sm">casino</span>
-                      Check
+                      {t('combat.maneuverCheck')}
                     </span>
                     <span className="font-mono text-base font-black text-white">
                       {m.bonus >= 0 ? `+${m.bonus}` : m.bonus}
