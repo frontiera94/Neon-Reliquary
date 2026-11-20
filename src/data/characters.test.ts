@@ -270,6 +270,7 @@ describe('Character JSON integrity', () => {
         { level: 1, total: 5 },
         { level: 2, total: 3 },
       ])
+      expect(shotrix.spells.filter((s) => s.level === 0)).toHaveLength(15)
       expect(shotrix.spells.find((s) => s.id === 'burning-hands')?.damageDice).toBe('5d4')
       expect(shotrix.spells.find((s) => s.id === 'shocking-grasp')?.damageDice).toBe('5d6')
       expect(shotrix.spells.find((s) => s.id === 'frostbite')?.damageBonus).toBe(5)
