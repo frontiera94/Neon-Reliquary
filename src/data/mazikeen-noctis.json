@@ -2,7 +2,7 @@
   "id": "mazikeen-noctis",
   "name": "Mazikeen Noctis",
   "class": "Witch",
-  "level": 4,
+  "level": 5,
   "race": "Tiefling",
   "alignment": "Lawful Evil",
   "portrait": "https://placehold.co/400x600/1f1f25/d946ef?text=Maze",
@@ -15,7 +15,7 @@
     "wis": 16,
     "cha": 11
   },
-  "maxHp": 38,
+  "maxHp": 48,
   "baseAttackBonus": [
     2
   ],
@@ -31,7 +31,8 @@
     "naturalArmor": 0,
     "deflection": 0,
     "misc": 0,
-    "spellFailureChance": 0
+    "spellFailureChance": 0,
+    "armorCheckPenalty": 0
   },
   "savingThrows": {
     "fort": 4,
@@ -46,17 +47,17 @@
       "id": "bluff",
       "name": "Bluff",
       "ability": "cha",
-      "ranks": 1,
+      "ranks": 0,
       "classSkill": false,
       "miscBonus": 2,
-      "trained": true,
+      "trained": false,
       "armorCheckPenalty": false
     },
     {
       "id": "diplomacy",
       "name": "Diplomacy",
       "ability": "cha",
-      "ranks": 3,
+      "ranks": 2,
       "classSkill": true,
       "miscBonus": 3,
       "trained": true,
@@ -66,11 +67,11 @@
       "id": "fly",
       "name": "Fly",
       "ability": "dex",
-      "ranks": 0,
+      "ranks": 1,
       "classSkill": true,
       "miscBonus": 0,
-      "trained": false,
-      "armorCheckPenalty": true
+      "trained": true,
+      "armorCheckPenalty": false
     },
     {
       "id": "heal",
@@ -86,7 +87,7 @@
       "id": "intimidate",
       "name": "Intimidate",
       "ability": "cha",
-      "ranks": 3,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 2,
       "trained": true,
@@ -96,7 +97,7 @@
       "id": "knowledge-arcana",
       "name": "Knowledge (Arcana)",
       "ability": "int",
-      "ranks": 1,
+      "ranks": 2,
       "classSkill": true,
       "miscBonus": 0,
       "trained": true,
@@ -146,7 +147,7 @@
       "id": "knowledge-religion",
       "name": "Knowledge (Religion)",
       "ability": "int",
-      "ranks": 1,
+      "ranks": 3,
       "classSkill": false,
       "miscBonus": 1,
       "trained": true,
@@ -156,7 +157,7 @@
       "id": "perception",
       "name": "Perception",
       "ability": "wis",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": false,
       "miscBonus": 2,
       "trained": true,
@@ -190,7 +191,7 @@
       "classSkill": false,
       "miscBonus": 7,
       "trained": true,
-      "armorCheckPenalty": true
+      "armorCheckPenalty": false
     },
     {
       "id": "survival",
@@ -203,10 +204,20 @@
       "armorCheckPenalty": false
     },
     {
+      "id": "swim",
+      "name": "Swim",
+      "ability": "str",
+      "ranks": 0,
+      "classSkill": false,
+      "miscBonus": 4,
+      "trained": false,
+      "armorCheckPenalty": false
+    },
+    {
       "id": "use-magic-device",
       "name": "Use Magic Device",
       "ability": "cha",
-      "ranks": 3,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 0,
       "trained": true,
@@ -243,7 +254,8 @@
       "critRange": 19,
       "critMultiplier": 2,
       "tags": [
-        "Cold Iron"
+        "Cold Iron",
+        "Throwable"
       ]
     }
   ],
@@ -264,6 +276,18 @@
       "name": "Darkness (SLA)",
       "total": 1,
       "label": "SLA: Darkness"
+    },
+    {
+      "id": "flight-fly",
+      "name": "Flight Hex: Fly (1-min increments)",
+      "total": 5,
+      "label": "Hex: Fly (min)"
+    },
+    {
+      "id": "flight-levitate",
+      "name": "Flight Hex: Levitate",
+      "total": 1,
+      "label": "Hex: Levitate"
     }
   ],
   "feats": [
@@ -271,8 +295,8 @@
       "id": "hex-evil-eye",
       "index": 1,
       "name": "Hex: Evil Eye",
-      "shortDesc": "Target within 30 ft. takes -2 on one chosen stat category for 8 rounds (Will DC 17 = 1 round).",
-      "fullDesc": "The witch can cause doubt in the mind of a foe within 30 feet that she can see. The target takes a -2 penalty on one of the following (witch's choice): AC, ability checks, attack rolls, saving throws, or skill checks. This hex lasts for 8 rounds. A Will save (DC 17) reduces this to just 1 round. This is a mind-affecting effect."
+      "shortDesc": "Target within 30 ft. takes −2 on one chosen stat category for 8 rounds (Will DC 17 = 1 round).",
+      "fullDesc": "The witch can cause doubt in the mind of a foe within 30 feet that she can see. The target takes a −2 penalty on one of the following (witch's choice): AC, ability checks, attack rolls, saving throws, or skill checks. This hex lasts for 8 rounds (3 + INT 5). A Will save (DC 17) reduces this to just 1 round. This is a mind-affecting effect."
     },
     {
       "id": "hex-misfortune",
@@ -285,8 +309,8 @@
       "id": "hex-slumber",
       "index": 3,
       "name": "Hex: Slumber",
-      "shortDesc": "Target of any HD falls into magical sleep for 4 rounds (Will DC 17 negates).",
-      "fullDesc": "If the creature fails a Will save (DC 17), it falls into a deep, magical sleep for 4 rounds. This hex can affect a creature of any Hit Dice. This is a standard action. The slumbering creature can be woken by damage or a successful Heal check, but not by loud noise alone."
+      "shortDesc": "Target of any HD falls into magical sleep for 5 rounds (Will DC 17 negates).",
+      "fullDesc": "If the creature fails a Will save (DC 17), it falls into a deep, magical sleep for 5 rounds (Witch level 5). This hex can affect a creature of any Hit Dice. This is a standard action. The slumbering creature can be woken by damage or a successful Heal check, but not by loud noise alone."
     },
     {
       "id": "hex-fortune",
@@ -303,22 +327,29 @@
       "fullDesc": "The witch can cackle madly as a move action. Any creature within 30 feet that is under the effects of an agony hex, charm hex, evil eye hex, fortune hex, or misfortune hex caused by the witch has the duration of that hex extended by 1 round. This hex can be used only once per round."
     },
     {
-      "id": "persuasive",
+      "id": "hex-flight",
       "index": 6,
+      "name": "Hex: Flight (Su)",
+      "shortDesc": "Feather Fall at will, +4 racial Swim, Levitate 1/day, and Fly 5 min/day (1-min increments).",
+      "fullDesc": "The witch grows lighter as she gains power. She can use Feather Fall on herself at will (DC 16), gains a +4 racial bonus on Swim checks, can cast Levitate on herself 1/day, and can Fly (as per the spell) for 5 minutes per day in 1-minute increments (non-consecutive). Selected via Extra Hex (3x)."
+    },
+    {
+      "id": "persuasive",
+      "index": 7,
       "name": "Persuasive",
       "shortDesc": "+2 bonus on Diplomacy and Intimidate checks.",
       "fullDesc": "You are skilled at swaying attitudes and intimidating others into your way of thinking. You get a +2 bonus on Diplomacy and Intimidate skill checks. If you have 10 or more ranks in one of these skills, the bonus increases to +4 for that skill."
     },
     {
       "id": "fiendish-resistance",
-      "index": 7,
+      "index": 8,
       "name": "Fiendish Resistance",
       "shortDesc": "Cold 5, Electricity 5, Fire 5 resistance (Tiefling racial).",
       "fullDesc": "As a Tiefling, Mazikeen has cold resistance 5, electricity resistance 5, and fire resistance 5. She ignores 5 points of damage from each of these energy types each time she takes that type of damage."
     },
     {
       "id": "alertness",
-      "index": 8,
+      "index": 9,
       "name": "Alertness (via Familiar)",
       "shortDesc": "+2 on Perception and Sense Motive while Salem is within arm's reach.",
       "fullDesc": "While Maze's familiar Salem is within arm's reach, she gains the Alertness feat: +2 bonus on Perception and Sense Motive skill checks. If she has 10 or more ranks in one of these skills, the bonus increases to +4 for that skill."
@@ -328,25 +359,25 @@
     {
       "id": "witchs-familiar",
       "name": "Witch's Familiar — Salem (a.k.a. Blackjack)",
-      "description": "Salem is Maze's black cat familiar (magical beast). He stores all of Maze's spells and grants Alertness while within arm's reach. At 4th level Salem can deliver Maze's touch spells. Empathic link up to 1 mile. Salem has Cold/Electricity/Fire resistance 1 (Bonus Familiar Resistance).",
+      "description": "Salem is Maze's black cat familiar (magical beast, 24 HP, INT 8). He stores all of Maze's spells, grants Alertness within arm's reach, delivers touch spells/hexes, shares an empathic link up to 1 mile, and at 5th level can Speak with Master verbally. Salem has Cold/Electricity/Fire resistance 1 (Bonus Familiar Resistance).",
       "isSignature": true
     },
     {
       "id": "healing-patron",
       "name": "Healing Patron",
-      "description": "Maze's patron is a mysterious force tied to Healing. At even levels the patron adds new spells to her familiar's list automatically. Current patron spells accessible: Lesser Restoration (level 2).",
+      "description": "Maze's patron is a mysterious force tied to Healing (Deity: Mammon). At even levels the patron adds new spells to her familiar's list automatically. Patron spells accessible: Remove Fear (level 1), Lesser Restoration (level 2).",
       "isSignature": false
     },
     {
       "id": "hex-dc",
       "name": "Hex Save DC",
-      "description": "All of Maze's hex save DCs are 17 (10 + 2 half-level + 5 INT modifier). Concentration check bonus: +9.",
+      "description": "All of Maze's hex save DCs are 17 (10 + 2 half-level + 5 INT modifier). Concentration check bonus: +10 (CL 5 + INT 5).",
       "isSignature": false
     },
     {
       "id": "fiendish-sla",
       "name": "Darkness (Spell-Like Ability)",
-      "description": "Maze can cast Darkness 1/day as a spell-like ability (Tiefling racial). Duration 4 minutes, range Touch, radiates darkness in a 20-ft. radius.",
+      "description": "Maze can cast Darkness 1/day as a spell-like ability (Tiefling racial). Duration 5 minutes (CL 5), range Touch, radiates darkness in a 20-ft. radius.",
       "isSignature": false
     }
   ],
@@ -358,9 +389,113 @@
     {
       "level": 2,
       "total": 3
+    },
+    {
+      "level": 3,
+      "total": 2
     }
   ],
   "spells": [
+    {
+      "id": "feather-fall-sla",
+      "name": "Feather Fall (Flight Hex)",
+      "level": 1,
+      "school": "Transmutation",
+      "castingTime": "1 immediate action",
+      "range": "Close (35 ft.)",
+      "duration": "Until landing or 5 rounds",
+      "savingThrow": "Will negates (harmless, DC 16)",
+      "spellResistance": true,
+      "components": "V",
+      "description": "Flight Hex at-will SLA on self (or up to 5 free-falling creatures/objects per sheet). Affected subjects fall slowly and take no falling damage.",
+      "source": "sla",
+      "atWill": true
+    },
+    {
+      "id": "levitate-sla",
+      "name": "Levitate (Flight Hex)",
+      "level": 2,
+      "school": "Transmutation",
+      "castingTime": "1 standard action",
+      "range": "Personal or Close",
+      "duration": "5 minutes (D)",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, S, F",
+      "description": "Flight Hex 1/day SLA. Move yourself up and down vertically as you wish (up to 20 ft. per move action).",
+      "source": "sla",
+      "resourceId": "flight-levitate"
+    },
+    {
+      "id": "darkness-sla-spell",
+      "name": "Darkness (Tiefling SLA)",
+      "level": 2,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Touch",
+      "duration": "5 minutes (D)",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, M/DF",
+      "description": "Tiefling racial 1/day SLA. Causes a touched object to radiate shadowy darkness out to a 20-ft. radius, lowering illumination by one step.",
+      "source": "sla",
+      "resourceId": "darkness-sla"
+    },
+    {
+      "id": "arcane-mark-m",
+      "name": "Arcane Mark",
+      "level": 0,
+      "school": "Universal",
+      "castingTime": "1 standard action",
+      "range": "Touch",
+      "duration": "Permanent",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, S",
+      "description": "Inscribe your personal rune or mark (visible or invisible) on an object or surface."
+    },
+    {
+      "id": "bleed",
+      "name": "Bleed",
+      "level": 0,
+      "school": "Necromancy",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "Instantaneous",
+      "savingThrow": "Will negates (DC 15)",
+      "spellResistance": true,
+      "components": "V, S",
+      "description": "You cause a living creature that is below 0 hit points but stabilized to resume dying.",
+      "isAttackSpell": true
+    },
+    {
+      "id": "dancing-lights-m",
+      "name": "Dancing Lights",
+      "level": 0,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Medium (150 ft.)",
+      "duration": "1 minute (D)",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, S",
+      "description": "Creates up to four lights within a 10-ft. radius resembling lanterns or torches."
+    },
+    {
+      "id": "daze",
+      "name": "Daze",
+      "level": 0,
+      "school": "Enchantment",
+      "subschool": "Compulsion",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "1 round",
+      "savingThrow": "Will negates (DC 15)",
+      "spellResistance": true,
+      "components": "V, S, M",
+      "description": "This spell clouds the mind of a humanoid creature with 4 or fewer Hit Dice so that it takes no actions. Humanoids of 5 or more HD are not affected.",
+      "isAttackSpell": true
+    },
     {
       "id": "detect-magic",
       "name": "Detect Magic",
@@ -368,11 +503,24 @@
       "school": "Divination",
       "castingTime": "1 standard action",
       "range": "60 ft. cone",
-      "duration": "Concentration, up to 4 min.",
+      "duration": "Concentration, up to 5 min.",
       "savingThrow": "None",
       "spellResistance": false,
       "components": "V, S",
       "description": "You detect magical auras within a 60-foot cone. The strength and school of each aura is revealed on subsequent rounds of concentration."
+    },
+    {
+      "id": "detect-poison-m",
+      "name": "Detect Poison",
+      "level": 0,
+      "school": "Divination",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "Instantaneous",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, S",
+      "description": "Determine whether a creature, object, or 5-ft. cube area has been poisoned or is poisonous."
     },
     {
       "id": "guidance",
@@ -388,6 +536,71 @@
       "description": "This spell imbues the subject with a touch of divine guidance, granting a +1 competence bonus on one attack roll, saving throw, or skill check of the target's choice."
     },
     {
+      "id": "light-m",
+      "name": "Light",
+      "level": 0,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Touch",
+      "duration": "50 minutes",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, M/DF",
+      "description": "Causes a touched object to glow like a torch."
+    },
+    {
+      "id": "mending-m",
+      "name": "Mending",
+      "level": 0,
+      "school": "Transmutation",
+      "castingTime": "10 minutes",
+      "range": "10 ft.",
+      "duration": "Instantaneous",
+      "savingThrow": "Will negates (harmless, object)",
+      "spellResistance": true,
+      "components": "V, S",
+      "description": "Repairs a damaged object of up to 5 lbs. (1 lb/CL), restoring 1d4 hit points to the object."
+    },
+    {
+      "id": "message-m",
+      "name": "Message",
+      "level": 0,
+      "school": "Transmutation",
+      "castingTime": "1 standard action",
+      "range": "Medium (150 ft.)",
+      "duration": "50 minutes",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, S, F",
+      "description": "Whisper messages to up to 5 creatures and receive whispered replies."
+    },
+    {
+      "id": "putrefy-food-and-drink",
+      "name": "Putrefy Food and Drink",
+      "level": 0,
+      "school": "Transmutation",
+      "castingTime": "1 standard action",
+      "range": "10 ft.",
+      "duration": "Instantaneous",
+      "savingThrow": "Will negates (object, DC 15)",
+      "spellResistance": true,
+      "components": "V, S",
+      "description": "Makes up to 5 cu. ft. of food and water (or one potion) spoiled and inedible."
+    },
+    {
+      "id": "read-magic-m",
+      "name": "Read Magic",
+      "level": 0,
+      "school": "Divination",
+      "castingTime": "1 standard action",
+      "range": "Personal",
+      "duration": "50 minutes",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, S, F",
+      "description": "Decipher magical inscriptions on books, scrolls, and weapons."
+    },
+    {
       "id": "resistance",
       "name": "Resistance",
       "level": 0,
@@ -399,6 +612,19 @@
       "spellResistance": true,
       "components": "V, S, M/DF",
       "description": "You imbue the subject with magical energy that protects it from harm, granting it a +1 resistance bonus on saves."
+    },
+    {
+      "id": "spark-m",
+      "name": "Spark",
+      "level": 0,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "Instantaneous",
+      "savingThrow": "Fortitude negates (object, DC 15)",
+      "spellResistance": true,
+      "components": "V or S",
+      "description": "Ignites one Fine unattended flammable object."
     },
     {
       "id": "stabilize",
@@ -421,42 +647,13 @@
       "school": "Necromancy",
       "castingTime": "1 standard action",
       "range": "Touch",
-      "duration": "4 rounds",
-      "savingThrow": "Fortitude negates",
+      "duration": "5 rounds",
+      "savingThrow": "Fortitude negates (DC 15)",
       "spellResistance": true,
       "components": "V, S, M",
-      "description": "You channel negative energy through your touch, fatiguing the target. A fatigued character can neither run nor charge and takes a -2 penalty to Strength and Dexterity.",
+      "description": "You channel negative energy through your touch, fatiguing the target for 5 rounds (CL 5). A fatigued character can neither run nor charge and takes a −2 penalty to Strength and Dexterity.",
       "isAttackSpell": true,
       "attackType": "meleeTouch"
-    },
-    {
-      "id": "bleed",
-      "name": "Bleed",
-      "level": 0,
-      "school": "Necromancy",
-      "castingTime": "1 standard action",
-      "range": "Close (35 ft.)",
-      "duration": "Instantaneous",
-      "savingThrow": "Will negates",
-      "spellResistance": true,
-      "components": "V, S",
-      "description": "You cause a living creature that is below 0 hit points but stabilized to resume dying.",
-      "isAttackSpell": true
-    },
-    {
-      "id": "daze",
-      "name": "Daze",
-      "level": 0,
-      "school": "Enchantment",
-      "subschool": "Compulsion",
-      "castingTime": "1 standard action",
-      "range": "Close (35 ft.)",
-      "duration": "1 round",
-      "savingThrow": "Will negates",
-      "spellResistance": true,
-      "components": "V, S, M",
-      "description": "This spell clouds the mind of a humanoid creature with 4 or fewer Hit Dice so that it takes no actions. Humanoids of 5 or more HD are not affected.",
-      "isAttackSpell": true
     },
     {
       "id": "cure-light-wounds",
@@ -467,12 +664,12 @@
       "castingTime": "1 standard action",
       "range": "Touch",
       "duration": "Instantaneous",
-      "savingThrow": "Will half (harmless)",
+      "savingThrow": "Will half (harmless, DC 16)",
       "spellResistance": true,
       "components": "V, S",
-      "description": "When laying your hand upon a living creature, you channel positive energy that cures 1d8+4 points of damage.",
+      "description": "When laying your hand upon a living creature, you channel positive energy that cures 1d8+5 points of damage (CL 5).",
       "damageDice": "1d8",
-      "damageBonus": 4
+      "damageBonus": 5
     },
     {
       "id": "mage-armor-spell",
@@ -482,11 +679,11 @@
       "subschool": "Creation",
       "castingTime": "1 standard action",
       "range": "Touch",
-      "duration": "4 hours",
+      "duration": "5 hours (D)",
       "savingThrow": "Will negates (harmless)",
       "spellResistance": false,
       "components": "V, S, F",
-      "description": "An invisible but tangible field of force surrounds the subject, providing a +4 armor bonus to AC. No armor check penalty or arcane spell failure. Replaces lighter armor bonuses (net +3 over Haramaki)."
+      "description": "An invisible but tangible field of force surrounds the subject for 5 hours (CL 5), providing a +4 armor bonus to AC. No armor check penalty or arcane spell failure. Replaces lighter armor bonuses (net +3 over Haramaki)."
     },
     {
       "id": "ray-of-enfeeblement",
@@ -495,11 +692,11 @@
       "school": "Necromancy",
       "castingTime": "1 standard action",
       "range": "Close (35 ft.)",
-      "duration": "4 rounds",
-      "savingThrow": "Fortitude half",
+      "duration": "5 rounds",
+      "savingThrow": "Fortitude half (DC 16)",
       "spellResistance": true,
       "components": "V, S",
-      "description": "A ray springs from your hand. On a successful ranged touch attack, the subject takes a Strength penalty equal to 1d6+2 (minimum 1). Fortitude save halves the penalty.",
+      "description": "A ray springs from your hand. On a successful ranged touch attack, the subject takes a Strength penalty equal to 1d6+2 (minimum 1) for 5 rounds. Fortitude DC 16 halves the penalty.",
       "isAttackSpell": true,
       "attackType": "rangedTouch"
     },
@@ -514,24 +711,7 @@
       "savingThrow": "Will negates (harmless)",
       "spellResistance": true,
       "components": "V, S",
-      "description": "You instill courage in the subject, granting it a +4 morale bonus against fear effects for 10 minutes. If already under a fear effect, the subject gets a new saving throw with the +4 bonus."
-    },
-    {
-      "id": "snowball",
-      "name": "Snowball",
-      "level": 1,
-      "school": "Conjuration",
-      "subschool": "Creation",
-      "castingTime": "1 standard action",
-      "range": "Close (35 ft.)",
-      "duration": "Instantaneous",
-      "savingThrow": "Fortitude partial",
-      "spellResistance": false,
-      "components": "V, S",
-      "description": "You conjure a ball of packed ice and snow as a ranged touch attack. Deals 4d6 cold damage on a hit. The target must make a Fortitude save or be staggered for 1 round.",
-      "isAttackSpell": true,
-      "attackType": "rangedTouch",
-      "damageDice": "4d6"
+      "description": "Affects up to 2 creatures within 30 ft. of each other (CL 5), granting a +4 morale bonus against fear effects for 10 minutes or suppressing an active fear effect."
     },
     {
       "id": "aggressive-thundercloud",
@@ -539,12 +719,12 @@
       "level": 2,
       "school": "Evocation",
       "castingTime": "1 standard action",
-      "range": "Medium (140 ft.)",
-      "duration": "4 rounds",
-      "savingThrow": "Reflex negates",
+      "range": "Medium (150 ft.)",
+      "duration": "5 rounds",
+      "savingThrow": "Reflex negates (DC 17)",
       "spellResistance": true,
       "components": "V, S, M/DF",
-      "description": "A 5-ft.-diameter flying storm cloud deals 3d6 electricity damage to any creature it moves over (Reflex DC 17 negates). You can direct the cloud as a move action.",
+      "description": "A 5-ft.-diameter flying storm cloud deals 3d6 electricity damage to any creature it moves over (Reflex DC 17 negates) for 5 rounds. You can direct the cloud as a move action.",
       "isAttackSpell": true,
       "attackType": "rangedTouch",
       "damageDice": "3d6"
@@ -555,9 +735,9 @@
       "level": 2,
       "school": "Necromancy",
       "castingTime": "1 standard action",
-      "range": "Medium (140 ft.)",
-      "duration": "Permanent",
-      "savingThrow": "Fortitude negates",
+      "range": "Medium (150 ft.)",
+      "duration": "Permanent (D)",
+      "savingThrow": "Fortitude negates (DC 17)",
       "spellResistance": true,
       "components": "V",
       "description": "You call upon the powers of unlife to render the subject blinded or deafened, as you choose (Fortitude DC 17 negates). The effect is permanent until magically cured.",
@@ -572,10 +752,10 @@
       "castingTime": "1 standard action",
       "range": "Touch",
       "duration": "Instantaneous",
-      "savingThrow": "Will half (harmless)",
+      "savingThrow": "Will half (harmless, DC 17)",
       "spellResistance": true,
       "components": "V, S",
-      "description": "When laying your hand upon a living creature, you channel positive energy that cures 2d8+4 points of damage.",
+      "description": "When laying your hand upon a living creature, you channel positive energy that cures 2d8+5 points of damage (CL 5).",
       "damageDice": "2d8",
       "damageBonus": 5
     },
@@ -586,12 +766,12 @@
       "school": "Conjuration",
       "subschool": "Creation",
       "castingTime": "1 standard action",
-      "range": "Medium (140 ft.)",
-      "duration": "4 rounds",
-      "savingThrow": "Will negates (blinding only)",
+      "range": "Medium (150 ft.)",
+      "duration": "5 rounds",
+      "savingThrow": "Will negates (blinding only, DC 17)",
       "spellResistance": false,
-      "components": "V, S, M",
-      "description": "A cloud of golden particles covers everyone in a 10-ft.-radius spread (Will DC 17 or be blinded for 4 rounds). Invisible creatures and objects are outlined, negating invisibility for the duration.",
+      "components": "V, S, M (ground mica)",
+      "description": "A cloud of golden particles covers everyone in a 10-ft.-radius spread (Will DC 17 or be blinded for 5 rounds). Invisible creatures and objects are outlined, negating invisibility for the duration.",
       "isAttackSpell": true
     },
     {
@@ -606,118 +786,214 @@
       "savingThrow": "Will negates (harmless)",
       "spellResistance": true,
       "components": "V, S",
-      "description": "Lesser restoration dispels any magical effects reducing one of the subject's ability scores or cures 1d4 points of temporary ability damage to one of the subject's ability scores. It also eliminates any fatigue suffered by the subject."
+      "description": "Healing Patron spell. Dispels any magical effects reducing one of the subject's ability scores or cures 1d4 points of temporary ability damage to one of the subject's ability scores, and eliminates fatigue."
+    },
+    {
+      "id": "vomit-swarm",
+      "name": "Vomit Swarm",
+      "level": 2,
+      "school": "Conjuration",
+      "subschool": "Summoning",
+      "castingTime": "1 standard action",
+      "range": "Personal",
+      "duration": "5 rounds",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "S",
+      "description": "You regurgitate a swarm of spiders in an adjacent square that attacks all other creatures in its area for 5 rounds (CL 5). Deals automatic swarm damage (1d6) + Distraction (Fort DC 11 nauseated) + Poison (Fort DC 11, 1d2 Str).",
+      "summonOptions": [
+        {
+          "id": "spider-swarm",
+          "name": "Spider Swarm",
+          "size": "Diminutive (Swarm)",
+          "ac": 17,
+          "hp": 9,
+          "attacks": [
+            {
+              "name": "Swarm (auto-hit)",
+              "bonus": 0,
+              "damageDice": "1d6",
+              "damageBonus": 0,
+              "notes": "Automatic damage + Distraction (Fort DC 11 nauseated 1 rd) + Poison (Fort DC 11, 1d2 Str)"
+            }
+          ],
+          "specialAbilities": "Immune to weapon damage, Swarm traits, Tremorsense 30 ft., Climb 20 ft., Distraction (DC 11), Poison (DC 11)"
+        }
+      ]
+    },
+    {
+      "id": "lightning-bolt",
+      "name": "Lightning Bolt",
+      "level": 3,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "120 ft.",
+      "duration": "Instantaneous",
+      "savingThrow": "Reflex half (DC 18)",
+      "spellResistance": true,
+      "components": "V, S, M",
+      "description": "You release a powerful stroke of electrical energy in a 120-ft. line that deals 5d6 points of electricity damage to each creature within its area (CL 5, Reflex DC 18 half).",
+      "isAttackSpell": true,
+      "damageDice": "5d6"
     }
   ],
   "inventory": [
     {
-      "id": "mz-robes",
-      "name": "Darkweave Robes",
-      "description": "Flowing black robes stitched with hexing sigils.",
-      "category": "armor",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "body"
-    },
-    {
-      "id": "mz-dagger",
-      "name": "Dagger",
-      "description": "The witch's only mundane weapon.",
+      "id": "mz-crossbow",
+      "name": "Crossbow, Light",
+      "description": "1d8 piercing, 19-20/×2 crit, 80 ft. range increment.",
       "category": "weapon",
-      "quantity": 2,
+      "quantity": 1,
+      "weight": 4,
       "equipped": true,
       "slot": "mainHand"
     },
     {
-      "id": "mz-cure-light",
-      "name": "Potion of Cure Light Wounds",
-      "description": "Heals 1d8+1 hit points.",
+      "id": "mz-haramaki",
+      "name": "Haramaki",
+      "description": "+1 AC light armor, 0 ACP, 0% arcane spell failure.",
+      "category": "armor",
+      "quantity": 1,
+      "weight": 1,
+      "equipped": true,
+      "slot": "body",
+      "armorBonus": 1,
+      "armorCheckPenalty": 0,
+      "spellFailureChance": 0
+    },
+    {
+      "id": "mz-weapon-cord",
+      "name": "Weapon Cord",
+      "description": "Allows recovering a dropped weapon as a move action.",
+      "category": "gear",
+      "quantity": 1,
+      "weight": 0,
+      "equipped": true,
+      "slot": "wrists"
+    },
+    {
+      "id": "mz-dagger",
+      "name": "Maze's Dagger (Cold Iron)",
+      "description": "1d4 piercing/slashing, 19-20/×2 crit, Cold Iron material.",
+      "category": "weapon",
+      "quantity": 1,
+      "weight": 1
+    },
+    {
+      "id": "mz-bolts",
+      "name": "Bolts, Crossbow",
+      "description": "20 light crossbow bolts (2 cases of 10).",
       "category": "consumable",
-      "quantity": 3
+      "quantity": 20,
+      "weight": 2
     },
     {
       "id": "mz-spell-comp",
       "name": "Spell Component Pouch",
-      "description": "Contains all common verbal and material components.",
+      "description": "Contains all common material components for witch spells.",
       "category": "gear",
-      "quantity": 1
+      "quantity": 1,
+      "weight": 2,
+      "equipped": true
     },
     {
-      "id": "mz-scroll-slumber",
-      "name": "Scroll of Slumber",
-      "description": "Casts the Slumber hex as a targeted sleep effect.",
-      "category": "consumable",
-      "quantity": 2
+      "id": "mz-belt-pouch",
+      "name": "Pouch, Belt",
+      "description": "Leather belt pouch for quick-access components and coins.",
+      "category": "gear",
+      "quantity": 1,
+      "weight": 0.5,
+      "equipped": true,
+      "slot": "belt"
     },
     {
       "id": "mz-backpack",
-      "name": "Backpack",
-      "description": "Filled with herbs, bones, and mysterious curios.",
+      "name": "Backpack, Common",
+      "description": "Contains writing gear, flint & steel, waterskin, parchment, chalk, and trail rations.",
+      "category": "gear",
+      "quantity": 1,
+      "weight": 2,
+      "equipped": true
+    },
+    {
+      "id": "mz-rations",
+      "name": "Rations, Trail",
+      "description": "5 days of preserved trail rations (1 in backpack, 4 carried).",
+      "category": "consumable",
+      "quantity": 5,
+      "weight": 5
+    },
+    {
+      "id": "mz-waterskin",
+      "name": "Waterskin, Filled",
+      "description": "Holds half a gallon of drinking water.",
+      "category": "gear",
+      "quantity": 1,
+      "weight": 4
+    },
+    {
+      "id": "mz-flint-steel",
+      "name": "Flint and Steel",
+      "description": "Fire-starting kit kept in backpack.",
       "category": "gear",
       "quantity": 1
     },
     {
-      "id": "mz-candles",
-      "name": "Black Candle",
-      "description": "Used in rituals and for light.",
+      "id": "mz-writing-kit",
+      "name": "Inkpen & Ink (1 oz. Vial)",
+      "description": "Writing pen and black ink vial for notes and occult scripts.",
+      "category": "gear",
+      "quantity": 1
+    },
+    {
+      "id": "mz-parchment",
+      "name": "Parchment (Sheets)",
+      "description": "5 sheets of parchment kept in backpack.",
+      "category": "gear",
+      "quantity": 5
+    },
+    {
+      "id": "mz-chalk",
+      "name": "Chalk",
+      "description": "10 pieces of chalk for marking dungeon walls or summoning circles.",
       "category": "gear",
       "quantity": 10
     },
     {
-      "id": "mz-familiar-satchel",
-      "name": "Familiar Satchel",
-      "description": "A woven bag for safely transporting a small familiar.",
+      "id": "mz-candles",
+      "name": "Candle",
+      "description": "10 ritual candles (1 hr duration, increases light level by one step in 5 ft.).",
+      "category": "consumable",
+      "quantity": 10
+    },
+    {
+      "id": "mz-torches",
+      "name": "Torch",
+      "description": "10 torches (20 ft. bright / 40 ft. shadowy illumination, 1 hr).",
+      "category": "consumable",
+      "quantity": 10,
+      "weight": 10
+    },
+    {
+      "id": "mz-camping-gear",
+      "name": "Bedroll, Iron Pot, Mess Kit & Soap",
+      "description": "Standard overland camp supplies (Bedroll 5 lbs, Iron Pot 4 lbs, Mess Kit 1 lb, Soap).",
+      "category": "gear",
+      "quantity": 1,
+      "weight": 10
+    },
+    {
+      "id": "mz-light-horse",
+      "name": "Light Horse",
+      "description": "Riding mount for overland travel.",
       "category": "gear",
       "quantity": 1
-    },
-    {
-      "id": "mz-headband-int",
-      "name": "Headband of Vast Intellect +2",
-      "description": "+2 enhancement bonus to Intelligence.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "headband"
-    },
-    {
-      "id": "mz-hex-wand",
-      "name": "Wand of Mage Armor",
-      "description": "Casts Mage Armor. 50 charges.",
-      "category": "magic",
-      "quantity": 1
-    },
-    {
-      "id": "mz-amulet-na",
-      "name": "Amulet of Natural Armor +1",
-      "description": "+1 natural armor bonus to AC.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "neck"
-    },
-    {
-      "id": "mz-cloak-res",
-      "name": "Cloak of Resistance +1",
-      "description": "+1 resistance bonus on all saving throws.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "shoulders"
-    },
-    {
-      "id": "mz-ring-prot",
-      "name": "Ring of Protection +1",
-      "description": "+1 deflection bonus to AC.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "ring1"
     }
   ],
   "startingCoins": {
-    "gp": 65,
-    "sp": 30,
-    "cp": 5
+    "gp": 134,
+    "sp": 0,
+    "cp": 0
   },
   "companions": [
     {
@@ -727,30 +1003,30 @@
       "species": "Cat",
       "portrait": "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=400&q=80",
       "size": "Tiny",
-      "hitDice": "4 HD",
-      "level": 4,
-      "maxHp": 19,
+      "hitDice": "5 HD",
+      "level": 5,
+      "maxHp": 24,
       "speed": "30 ft.",
       "initiativeBonus": 2,
       "armorClass": {
         "total": 17,
         "touch": 14,
         "flatFooted": 15,
-        "naturalArmor": 2,
+        "naturalArmor": 3,
         "dexBonus": 2,
         "sizeBonus": 2,
-        "misc": 1
+        "misc": 0
       },
       "savingThrows": {
-        "fort": 0,
-        "ref": 3,
+        "fort": 2,
+        "ref": 5,
         "will": 5
       },
       "abilities": {
         "str": 3,
         "dex": 15,
         "con": 8,
-        "int": 7,
+        "int": 8,
         "wis": 12,
         "cha": 7
       },
@@ -763,8 +1039,8 @@
           "damageBonus": 0,
           "critRange": 20,
           "critMultiplier": 2,
-          "damageType": "Piercing / Slashing",
-          "notes": "Weapon Finesse, min 1 dmg"
+          "damageType": "Bludgeoning / Piercing / Slashing",
+          "notes": "Weapon Finesse, 0 ft. reach, min 1 nonlethal/lethal per PF1e"
         },
         {
           "name": "2 Claws",
@@ -773,8 +1049,8 @@
           "damageBonus": 0,
           "critRange": 20,
           "critMultiplier": 2,
-          "damageType": "Slashing",
-          "notes": "Weapon Finesse, min 1 dmg"
+          "damageType": "Bludgeoning / Slashing",
+          "notes": "+6/+6 Weapon Finesse, 0 ft. reach"
         },
         {
           "name": "Deliver Touch Spell / Hex",
@@ -788,25 +1064,80 @@
       "skills": [
         {
           "name": "Stealth",
-          "bonus": 14,
+          "bonus": 18,
           "ability": "dex",
-          "notes": "+8 size, +4 racial"
+          "notes": "+2 DEX, 1 rank, +15 misc (+8 size, +4 racial, +3 class)"
         },
         {
           "name": "Perception",
-          "bonus": 5,
-          "ability": "wis"
+          "bonus": 9,
+          "ability": "wis",
+          "notes": "+1 WIS, 5 ranks (master), +3 misc"
+        },
+        {
+          "name": "Sense Motive",
+          "bonus": 6,
+          "ability": "wis",
+          "notes": "+1 WIS, 5 ranks"
         },
         {
           "name": "Acrobatics",
-          "bonus": 10,
+          "bonus": 6,
           "ability": "dex",
-          "notes": "+4 racial on jumping"
+          "notes": "+2 DEX, 1 rank, +3 misc"
         },
         {
           "name": "Climb",
           "bonus": 6,
-          "ability": "dex"
+          "ability": "str",
+          "notes": "−4 STR, +10 misc"
+        },
+        {
+          "name": "Fly",
+          "bonus": 6,
+          "ability": "dex",
+          "notes": "+2 DEX, +4 size"
+        },
+        {
+          "name": "Intimidate",
+          "bonus": 3,
+          "ability": "cha",
+          "notes": "−2 CHA, 5 ranks (master)"
+        },
+        {
+          "name": "Heal",
+          "bonus": 2,
+          "ability": "wis"
+        },
+        {
+          "name": "Spellcraft",
+          "bonus": 2,
+          "ability": "int"
+        },
+        {
+          "name": "Swim",
+          "bonus": 2,
+          "ability": "str"
+        },
+        {
+          "name": "Use Magic Device",
+          "bonus": 2,
+          "ability": "cha"
+        },
+        {
+          "name": "Knowledge (Arcana)",
+          "bonus": 1,
+          "ability": "int"
+        },
+        {
+          "name": "Knowledge (Religion)",
+          "bonus": 1,
+          "ability": "int"
+        },
+        {
+          "name": "Diplomacy",
+          "bonus": 0,
+          "ability": "cha"
         }
       ],
       "specialQualities": [
@@ -816,8 +1147,13 @@
           "type": "passive"
         },
         {
+          "name": "Speak with Master (Ex)",
+          "description": "At 5th level, Salem and Mazikeen can communicate verbally as if they were using a common language. Other creatures do not understand without magical help.",
+          "type": "ex"
+        },
+        {
           "name": "Deliver Touch Spells (Su)",
-          "description": "At 4th level, Salem can deliver touch spells or hexes for Mazikeen. If designated, Salem touches the target as an attack.",
+          "description": "Salem can deliver touch spells or hexes for Mazikeen. If designated, Salem touches the target as an attack.",
           "type": "su"
         },
         {
@@ -836,14 +1172,19 @@
           "type": "ex"
         },
         {
-          "name": "Bonus Familiar Resistance",
-          "description": "Salem gains Cold, Electricity, and Fire resistance 1.",
-          "type": "passive"
-        },
-        {
           "name": "Share Spells (Ex)",
           "description": "Mazikeen may cast a spell with a target of 'You' on Salem instead of herself.",
           "type": "ex"
+        },
+        {
+          "name": "Scent (Ex)",
+          "description": "Detect opponents within 30 ft. by smell (60 ft. upwind, 15 ft. downwind) and track by scent.",
+          "type": "ex"
+        },
+        {
+          "name": "Bonus Familiar Resistance",
+          "description": "Salem gains Cold, Electricity, and Fire resistance 1.",
+          "type": "passive"
         }
       ],
       "senses": "Low-light vision, scent",
@@ -852,7 +1193,7 @@
         "deliverTouchSpells": true,
         "empathicLink": true,
         "shareSpells": true,
-        "notes": "Salem stores all spells and delivers touch attacks/hexes."
+        "notes": "Salem stores all spells, delivers touch attacks/hexes, and speaks verbally with Mazikeen (Lv 5 Speak with Master)."
       }
     }
   ],

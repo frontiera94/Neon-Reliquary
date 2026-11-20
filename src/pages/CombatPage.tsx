@@ -269,7 +269,8 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
     if (buffId === 'arcane-pool-weapon' || buffId === 'arcane-weapon') {
       const nextActive = !arcanePoolActive
       if (nextActive) {
-        activateArcaneWeapon(char.id, 1)
+        const arcaneEnhancement = 1 + Math.floor(Math.max(0, (char.level ?? 1) - 1) / 4)
+        activateArcaneWeapon(char.id, arcaneEnhancement)
         spendResource(char.id, 'arcane-pool', arcanePoolMax)
       } else {
         activateArcaneWeapon(char.id, 0)
