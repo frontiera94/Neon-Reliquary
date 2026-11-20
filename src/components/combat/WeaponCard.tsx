@@ -1,8 +1,8 @@
 import { formatAttackBonus, formatDamage } from '../../lib/combat-calc'
 import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
-import { useTranslation } from '../../lib/i18n'
 import type { Weapon } from '../../types/combat'
 import type { EffectiveWeaponCalculated } from '../../lib/stat-calc'
+import { useTranslation } from '../../i18n'
 
 export interface SpellstrikeRider {
   spellName: string
@@ -84,7 +84,8 @@ export function WeaponCard({
   onAmmoChange?: (v: number) => void
   onFullAttackRoll?: () => void
 }) {
-  const { t } = useTranslation()
+const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
   const isHaste = hasteActive ?? effective.hasteActive ?? effective.activeBuffNames?.some((b) => /haste/i.test(b)) ?? false
   const isMelee = weapon.type === 'melee'
   const isKiFlurry = Boolean(kiFlurryRider?.active)
@@ -119,7 +120,7 @@ export function WeaponCard({
                     : 'border-secondary/30 bg-secondary/10 text-secondary'
                 }`}
               >
-                {isMelee ? 'Melee' : 'Ranged'}
+                {isMelee ? (isIt ? 'Mischia' : 'Melee') : (isIt ? 'Distanza' : 'Ranged')}
               </span>
             </div>
 
@@ -130,7 +131,7 @@ export function WeaponCard({
                 </span>
               ))}
               <span>
-                Critical <strong className="font-semibold text-secondary">{critText}</strong>
+                {isIt ? 'Critico' : 'Critical'} <strong className="font-semibold text-secondary">{critText}</strong>
               </span>
             </p>
           </div>
@@ -138,7 +139,9 @@ export function WeaponCard({
           {/* Ranged ammo, inline */}
           {weapon.type === 'ranged' && maxAmmo !== undefined && (
             <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-surface-container-lowest/60 px-2.5 py-1.5">
-              <span className="font-label text-[9px] uppercase tracking-wider text-tertiary">Ammo</span>
+              <span className="font-label text-[9px] uppercase tracking-wider text-tertiary">
+                {isIt ? 'Munizioni' : 'Ammo'}
+              </span>
               <span className="font-label text-[11px] font-bold tabular-nums text-secondary">
                 {ammo ?? 0}/{maxAmmo}
               </span>
@@ -194,11 +197,11 @@ export function WeaponCard({
                 key={idx}
                 type="button"
                 onClick={() => onAttackRoll(idx)}
-                title={`Roll attack ${idx + 1}`}
+                title={`${t('common.roll')} ${idx + 1}° ${t('combat.attack')}`}
                 className={`${attackClass} min-w-[78px]`}
               >
                 <span className="font-label text-[9px] uppercase tracking-wider text-primary/80">
-                  {idx + 1}° Attack
+                  {idx + 1}° {t('combat.attack')}
                 </span>
                 <span className="font-label text-lg font-black tabular-nums text-white">
                   {bonus >= 0 ? `+${bonus}` : bonus}
@@ -209,14 +212,14 @@ export function WeaponCard({
             <button
               type="button"
               onClick={() => onAttackRoll(0)}
-              title={`Roll attack (${formatAttackBonus(effective.attackBonus)})`}
+              title={`${t('common.roll')} ${t('combat.attack')} (${formatAttackBonus(effective.attackBonus)})`}
               className={`${attackClass} min-w-[108px]`}
             >
               <span className="font-label text-[9px] uppercase tracking-wider text-primary/80">
-                {showOffhand ? 'Primary Attack' : 'Attack'}
+                {showOffhand ? (isIt ? 'Attacco Primario' : 'Primary Attack') : t('combat.attack')}
               </span>
               <StatBreakdownTooltip
-                title={`${weapon.name} — Attack`}
+                title={`${weapon.name} — ${t('combat.attack')}`}
                 total={formatAttackBonus(effective.attackBonus)}
                 breakdown={effective.attackBreakdown}
               >
@@ -250,16 +253,16 @@ export function WeaponCard({
             <button
               type="button"
               onClick={onOffhandRoll}
-              title={`Roll off-hand attack (${offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus})`}
+              title={`${t('common.roll')} ${t('combat.offHand')} (${offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus})`}
               className={`${actionClass} min-w-[84px] border-secondary/35 bg-secondary/10 text-white hover:border-secondary/70 hover:bg-secondary/20`}
             >
               <span className="font-label text-[9px] uppercase tracking-wider text-secondary/80">
-                Off-hand
+                {t('combat.offHand')}
               </span>
               <StatBreakdownTooltip
-                title={`${weapon.name} — Off-hand`}
+                title={`${weapon.name} — ${t('combat.offHand')}`}
                 total={offhandBonus >= 0 ? `+${offhandBonus}` : `${offhandBonus}`}
-                breakdown={[...effective.attackBreakdown, { label: 'Off-hand Penalty', value: offhandPenalty }]}
+                breakdown={[...effective.attackBreakdown, { label: isIt ? 'Penalità Secondaria' : 'Off-hand Penalty', value: offhandPenalty }]}
               >
                 <span className="font-label text-lg font-black tabular-nums text-white underline decoration-secondary/20 decoration-dotted underline-offset-4">
                   {offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus}
@@ -272,12 +275,14 @@ export function WeaponCard({
           <button
             type="button"
             onClick={onDamageRoll}
-            title={`Roll damage (${damageText})`}
+            title={`${t('common.roll')} ${t('combat.damage')} (${damageText})`}
             className={`${damageClass} min-w-[104px]`}
           >
-            <span className="font-label text-[9px] uppercase tracking-wider text-secondary/80">Damage</span>
+            <span className="font-label text-[9px] uppercase tracking-wider text-secondary/80">
+              {t('combat.damage')}
+            </span>
             <StatBreakdownTooltip
-              title={`${weapon.name} — Damage`}
+              title={`${weapon.name} — ${t('combat.damage')}`}
               total={damageText}
               breakdown={effective.damageBreakdown}
             >
@@ -292,11 +297,11 @@ export function WeaponCard({
             <button
               type="button"
               onClick={onSneakAttackRoll}
-              title={`Roll ${extraDiceLabel ?? 'extra damage'}`}
+              title={`${t('common.roll')} ${extraDiceLabel ?? (isIt ? 'danni extra' : 'extra damage')}`}
               className={`${actionClass} min-w-[84px] border-error/35 bg-error/10 text-white hover:border-error/70 hover:bg-error/20`}
             >
               <span className="font-label text-[9px] uppercase tracking-wider text-error/90">
-                {extraDiceLabel ?? 'Extra Dmg'}
+                {extraDiceLabel ?? (isIt ? 'Danni Extra' : 'Extra Dmg')}
               </span>
               <span className="font-label text-lg font-black tabular-nums text-white">
                 {sneakAttackDice}
@@ -467,10 +472,10 @@ export function WeaponCard({
             <span className="flex items-center gap-1.5">
               <span className="material-symbols-outlined text-sm text-primary/80">fast_forward</span>
               <span>
-                Full Attack Routine ({formatAttackBonus(effective.attackBonus)}
-                {isHaste ? ` + Haste (${effective.attackBonus[0] >= 0 ? `+${effective.attackBonus[0]}` : effective.attackBonus[0]})` : ''}
+                {isIt ? 'Routine Attacco Completo' : 'Full Attack Routine'} ({formatAttackBonus(effective.attackBonus)}
+                {isHaste ? ` + ${t('combat.haste')} (${effective.attackBonus[0] >= 0 ? `+${effective.attackBonus[0]}` : effective.attackBonus[0]})` : ''}
                 {isKiFlurry && kiFlurryRider ? ` + Ki Flurry (${kiFlurryRider.bonus >= 0 ? `+${kiFlurryRider.bonus}` : kiFlurryRider.bonus})` : ''}
-                {showOffhand ? ` / Off ${offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus}` : ''})
+                {showOffhand ? ` / ${isIt ? 'Sec' : 'Off'} ${offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus}` : ''})
               </span>
             </span>
             <span className="material-symbols-outlined text-sm text-tertiary">chevron_right</span>

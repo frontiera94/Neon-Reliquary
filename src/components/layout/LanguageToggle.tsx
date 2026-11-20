@@ -1,4 +1,4 @@
-import { useLanguageStore } from '../../store/useLanguageStore'
+import { useLanguageStore, type LanguageStore } from '../../store/useLanguageStore'
 
 interface LanguageToggleProps {
   className?: string
@@ -6,8 +6,8 @@ interface LanguageToggleProps {
 }
 
 export function LanguageToggle({ className = '', variant = 'compact' }: LanguageToggleProps) {
-  const language = useLanguageStore((s) => s.language)
-  const setLanguage = useLanguageStore((s) => s.setLanguage)
+  const language = useLanguageStore((s: LanguageStore) => s.language)
+  const setLanguage = useLanguageStore((s: LanguageStore) => s.setLanguage)
 
   if (variant === 'full') {
     return (

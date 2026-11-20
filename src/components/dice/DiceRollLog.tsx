@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useDiceStore } from '../../store/useDiceStore'
 import type { DiceType } from '../../types/dice'
+import { useTranslation } from '../../i18n'
 
 const QUICK_DICE: DiceType[] = [4, 6, 8, 10, 12, 20, 100]
 
@@ -10,6 +11,7 @@ const QUICK_DICE: DiceType[] = [4, 6, 8, 10, 12, 20, 100]
 export function DiceRollLog({ compact = false }: { compact?: boolean }) {
   const history = useDiceStore((s) => s.history)
   const clearHistory = useDiceStore((s) => s.clearHistory)
+const { t } = useTranslation()
   const openRoll = useDiceStore((s) => s.openRoll)
   const [customMod, setCustomMod] = useState<number>(0)
 
@@ -24,12 +26,12 @@ export function DiceRollLog({ compact = false }: { compact?: boolean }) {
   }
 
   return (
-    <section aria-label="Dice roll log" className="rounded-2xl border border-white/10 bg-[#11131c] overflow-hidden">
+    <section aria-label={t('dice.rollLog')} className="rounded-2xl border border-white/10 bg-[#11131c] overflow-hidden">
       <header className="flex items-center justify-between gap-2 px-3.5 py-2.5 border-b border-white/10">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-primary text-sm">casino</span>
           <h3 className="font-headline text-xs uppercase tracking-widest text-secondary font-bold">
-            Roll Log
+            {t('dice.rollLog')}
           </h3>
           <span className="font-label text-[10px] text-tertiary tabular-nums">({history.length})</span>
         </div>
@@ -39,7 +41,7 @@ export function DiceRollLog({ compact = false }: { compact?: boolean }) {
             onClick={clearHistory}
             className="min-h-[28px] px-2 rounded-lg border border-white/10 text-tertiary hover:text-error hover:border-error/40 font-label text-[9px] uppercase tracking-widest transition-colors cursor-pointer"
           >
-            Clear
+            {t('common.clear')}
           </button>
         )}
       </header>
@@ -74,7 +76,7 @@ export function DiceRollLog({ compact = false }: { compact?: boolean }) {
 
       {history.length === 0 ? (
         <p className="px-3.5 py-5 text-center font-label text-[10px] uppercase tracking-widest text-tertiary/60">
-          No rolls yet
+          {t('settings.noRollsYet')}
         </p>
       ) : (
         <ul className={`divide-y divide-white/5 overflow-y-auto ${compact ? 'max-h-44' : 'max-h-72'}`}>

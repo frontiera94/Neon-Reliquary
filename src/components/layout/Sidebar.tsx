@@ -3,16 +3,16 @@ import { motion } from 'framer-motion'
 import { useCharacterStore } from '../../store/useCharacterStore'
 import { CharacterDropdown } from '../character/CharacterDropdown'
 import { TACTICAL_SPRING } from '../../lib/motion-presets'
-import { useTranslation, type TranslationKey } from '../../lib/i18n'
+import { useTranslation } from '../../i18n'
 
-const navItems: Array<{ to: string; icon: string; translationKey: TranslationKey }> = [
-  { to: '/status', icon: 'analytics', translationKey: 'nav.status' },
-  { to: '/skills', icon: 'auto_fix_high', translationKey: 'nav.skills' },
-  { to: '/combat', icon: 'swords', translationKey: 'nav.combat' },
-  { to: '/spells', icon: 'auto_stories', translationKey: 'nav.spells' },
-  { to: '/features', icon: 'auto_awesome', translationKey: 'nav.features' },
-  { to: '/inventory', icon: 'inventory_2', translationKey: 'nav.inventory' },
-  { to: '/companion', icon: 'pets', translationKey: 'nav.companion' },
+const navItems = [
+  { to: '/status', icon: 'analytics', key: 'nav.status' },
+  { to: '/skills', icon: 'auto_fix_high', key: 'nav.skills' },
+  { to: '/combat', icon: 'swords', key: 'nav.combat' },
+  { to: '/spells', icon: 'auto_stories', key: 'nav.spells' },
+  { to: '/features', icon: 'auto_awesome', key: 'nav.features' },
+  { to: '/inventory', icon: 'inventory_2', key: 'nav.inventory' },
+  { to: '/companion', icon: 'pets', key: 'nav.companion' },
 ]
 
 export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
@@ -21,60 +21,61 @@ export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
 
   return (
     <aside
-      className={`hidden md:flex flex-col h-screen w-64 bg-surface-container/90 backdrop-blur-md fixed left-0 top-0 pb-8 z-40 border-r border-white/[0.08] pt-20 ${forceHidden ? 'lg:hidden' : ''}`}
-      style={{ boxShadow: '4px 0 24px -8px rgba(0,240,255,0.08)' }}
+      className={`hidden md:flex flex-col w-56 flex-shrink-0 bg-surface-container/60 backdrop-blur-xl border-r border-white/5 ${
+        forceHidden ? 'md:hidden' : ''
+      }`}
     >
-      {char && (
-        <div className="px-6 mb-8">
-          <CharacterDropdown align="left" variant="sidebar" />
-        </div>
-      )}
+      <div className="p-4 border-b border-white/5">
+        <CharacterDropdown />
+      </div>
 
-      <nav className="flex flex-col gap-1 px-3">
-        {navItems.map(({ to, icon, translationKey }) => {
-          const compCount = to === '/companion' ? (char?.companions?.length ?? 0) : 0
-          const label = t(translationKey)
+      <nav aria-label="Main Navigation" className="flex-1 p-3 space-y-1">
+        {navItems.map(({ to, icon, key }) => {
+          const label = t(key)
           return (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
-                `relative flex items-center justify-between px-4 py-3 font-label text-xs uppercase tracking-widest rounded-xl transition-colors duration-150 ` +
+                `relative flex items-center gap-3 px-3 py-2.5 rounded-xl font-label text-xs uppercase tracking-wider transition-all duration-200 ` +
                 (isActive
-                  ? 'text-primary font-bold'
-                  : 'text-tertiary hover:text-white hover:bg-white/[0.04]')
+                  ? 'text-primary font-bold shadow-[0_0_15px_rgba(0,240,255,0.15)]'
+                  : 'text-tertiary hover:text-white hover:bg-white/5')
               }
             >
               {({ isActive }) => (
                 <>
                   {isActive && (
                     <motion.div
-                      layoutId="sidebar-active-pill"
+                      layoutId="active-sidebar-pill"
                       transition={TACTICAL_SPRING}
-                      className="absolute inset-0 bg-primary/10 border border-primary/30 rounded-xl shadow-[0_0_15px_rgba(0,240,255,0.15)] pointer-events-none"
+                      className="absolute inset-0 rounded-xl bg-primary/10 border border-primary/30 pointer-events-none"
                     />
                   )}
-                  <div className="relative z-10 flex items-center gap-3">
-                    <motion.span
-                      animate={{ scale: isActive ? 1.08 : 1 }}
-                      transition={TACTICAL_SPRING}
-                      className="material-symbols-outlined text-lg"
-                    >
-                      {icon}
-                    </motion.span>
-                    {label}
-                  </div>
-                  {compCount > 0 && (
-                    <span className="relative z-10 text-[10px] px-2 py-0.5 bg-primary/15 text-primary border border-primary/30 font-label rounded-full">
-                      {compCount}
-                    </span>
-                  )}
+                  <span
+                    className="material-symbols-outlined text-lg"
+                    style={isActive ? { filter: 'drop-shadow(0 0 6px #00f0ff)' } : undefined}
+                  >
+                    {icon}
+                  </span>
+                  <span>{label}</span>
                 </>
               )}
             </NavLink>
           )
         })}
       </nav>
+
+      <div className="p-4 border-t border-white/5 text-[10px] font-label text-tertiary/50 uppercase tracking-widest text-center">
+        {char ? (
+          <div>
+            <span className="text-secondary font-bold">{char.name}</span>
+            <div className="text-[9px] text-tertiary/40">PF1e Companion</div>
+          </div>
+        ) : (
+          <span>Neon Reliquary</span>
+        )}
+      </div>
     </aside>
   )
 }

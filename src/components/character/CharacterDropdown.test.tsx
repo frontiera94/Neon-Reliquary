@@ -253,7 +253,7 @@ describe('CharacterDropdown Component', () => {
 
     // Active character updated in store
     expect(useCharacterStore.getState().activeCharacterId).toBe('shotrix-blackburn')
-    expect(initSessionSpy).toHaveBeenCalledWith('shotrix-blackburn', 52)
+    expect(initSessionSpy).toHaveBeenCalledWith('shotrix-blackburn', 52, undefined, [])
 
     // Dropdown closed
     expect(screen.queryByTestId('character-dropdown-menu')).not.toBeInTheDocument()

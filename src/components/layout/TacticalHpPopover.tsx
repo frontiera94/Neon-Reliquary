@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useSessionStore } from '../../store/useSessionStore'
+import { useTranslation } from '../../i18n'
 
 export interface TacticalHpPopoverProps {
   isOpen: boolean
@@ -32,6 +33,7 @@ export function TacticalHpPopover({
 }: TacticalHpPopoverProps) {
   const [customAmount, setCustomAmount] = useState<string>('5')
   const popoverRef = useRef<HTMLDivElement>(null)
+  const { locale, t } = useTranslation()
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -102,12 +104,12 @@ export function TacticalHpPopover({
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-primary text-sm">favorite</span>
           <h3 className="font-headline text-xs font-bold uppercase tracking-wider text-white">
-            Tactical HP Adjust
+            {locale === 'it' ? 'Gestione Tattica PF' : 'Tactical HP Adjust'}
           </h3>
         </div>
         <button
           onClick={onClose}
-          aria-label="Close HP popover"
+          aria-label={locale === 'it' ? 'Chiudi pannello PF' : 'Close HP popover'}
           className="text-tertiary hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5 cursor-pointer"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -119,7 +121,7 @@ export function TacticalHpPopover({
       {/* Vitals Summary Pill Row */}
       <div className="flex items-center justify-between py-2.5 px-3 my-3 rounded-xl bg-surface-container-lowest/70 border border-white/5">
         <div className="flex flex-col">
-          <span className="font-label text-[10px] text-tertiary uppercase tracking-wider">Current HP</span>
+          <span className="font-label text-[10px] text-tertiary uppercase tracking-wider">{t('hud.currentHp')}</span>
           <span className="font-label text-base font-bold text-white">
             <span className={currentHp <= 0 ? 'text-error' : currentHp < maxHp / 2 ? 'text-amber-400' : 'text-primary'}>
               {currentHp}
@@ -129,46 +131,52 @@ export function TacticalHpPopover({
         </div>
         {tempHp > 0 && (
           <div className="flex flex-col items-center">
-            <span className="font-label text-[10px] text-cyan-300 uppercase tracking-wider">Temp</span>
+            <span className="font-label text-[10px] text-cyan-300 uppercase tracking-wider">{t('hud.temp')}</span>
             <span className="font-label text-xs font-bold text-cyan-300">+{tempHp}</span>
           </div>
         )}
         {nonlethalDamage > 0 && (
           <div className="flex flex-col items-center">
-            <span className="font-label text-[10px] text-[#ffb4ab] uppercase tracking-wider">Nonlethal</span>
+            <span className="font-label text-[10px] text-[#ffb4ab] uppercase tracking-wider">{t('hud.nonlethal')}</span>
             <span className="font-label text-xs font-bold text-[#ffb4ab]">{nonlethalDamage} NL</span>
           </div>
         )}
         <div className="flex flex-col items-end">
-          <span className="font-label text-[10px] text-tertiary uppercase tracking-wider">Death At</span>
-          <span className="font-label text-xs font-medium text-error">-{conScore} HP</span>
+          <span className="font-label text-[10px] text-tertiary uppercase tracking-wider">
+            {locale === 'it' ? 'Morte A' : 'Death At'}
+          </span>
+          <span className="font-label text-xs font-medium text-error">-{conScore} {t('hud.hp')}</span>
         </div>
       </div>
 
       {/* Critical Status Banners */}
       {isDead && (
         <div className="mb-3 px-3 py-1.5 rounded-lg bg-error text-white font-label text-xs font-black uppercase tracking-wider text-center animate-pulse">
-          💀 Character is Dead (≤ -{conScore} HP)
+          {locale === 'it' ? `💀 Personaggio Morto (≤ -${conScore} PF)` : `💀 Character is Dead (≤ -${conScore} HP)`}
         </div>
       )}
       {isDying && (
         <div className="mb-3 px-3 py-1.5 rounded-lg bg-error/80 text-white font-label text-xs font-bold uppercase tracking-wider text-center animate-pulse">
-          🩸 Character is Dying ({currentHp} HP)
+          {locale === 'it' ? `🩸 Personaggio Morente (${currentHp} PF)` : `🩸 Character is Dying (${currentHp} HP)`}
         </div>
       )}
       {isDisabled && (
         <div className="mb-3 px-3 py-1.5 rounded-lg bg-amber-500/80 text-black font-label text-xs font-bold uppercase tracking-wider text-center">
-          ⚠ Character is Disabled (0 HP)
+          {locale === 'it' ? '⚠ Personaggio Inabile (0 PF)' : '⚠ Character is Disabled (0 HP)'}
         </div>
       )}
       {isUnconscious && (
         <div className="mb-3 px-3 py-1.5 rounded-lg bg-[#ffb4ab] text-black font-label text-xs font-bold uppercase tracking-wider text-center animate-pulse">
-          💤 Unconscious (NL Damage {nonlethalDamage} &gt; Current HP {currentHp})
+          {locale === 'it'
+            ? `💤 Privo di Sensi (Danni NL ${nonlethalDamage} > PF Attuali ${currentHp})`
+            : `💤 Unconscious (NL Damage ${nonlethalDamage} > Current HP ${currentHp})`}
         </div>
       )}
       {isStaggered && (
         <div className="mb-3 px-3 py-1.5 rounded-lg bg-amber-400 text-black font-label text-xs font-bold uppercase tracking-wider text-center">
-          ⚡ Staggered (NL Damage {nonlethalDamage} = Current HP {currentHp})
+          {locale === 'it'
+            ? `⚡ Barcollante (Danni NL ${nonlethalDamage} = PF Attuali ${currentHp})`
+            : `⚡ Staggered (NL Damage ${nonlethalDamage} = Current HP ${currentHp})`}
         </div>
       )}
 
@@ -177,14 +185,14 @@ export function TacticalHpPopover({
         {/* Damage Presets */}
         <div className="flex items-center gap-2">
           <span className="font-label text-[10px] uppercase tracking-wider text-error font-semibold w-14">
-            Damage
+            {t('hud.damage')}
           </span>
           <div className="flex-1 grid grid-cols-3 gap-2">
             {[1, 5, 10].map((dmg) => (
               <button
                 key={dmg}
                 onClick={() => applyDamage(characterId, dmg, conScore)}
-                aria-label={`Damage ${dmg}`}
+                aria-label={`${t('hud.damage')} ${dmg}`}
                 className="py-1.5 px-2 rounded-xl bg-error/15 border border-error/30 text-error hover:bg-error/30 hover:border-error/60 active:scale-95 transition-all font-label text-xs font-bold cursor-pointer text-center"
               >
                 -{dmg}
@@ -196,14 +204,14 @@ export function TacticalHpPopover({
         {/* Healing Presets */}
         <div className="flex items-center gap-2">
           <span className="font-label text-[10px] uppercase tracking-wider text-primary font-semibold w-14">
-            Heal
+            {t('hud.heal')}
           </span>
           <div className="flex-1 grid grid-cols-3 gap-2">
             {[1, 5, 10].map((hl) => (
               <button
                 key={hl}
                 onClick={() => applyHealing(characterId, hl, maxHp)}
-                aria-label={`Heal ${hl}`}
+                aria-label={`${t('hud.heal')} ${hl}`}
                 className="py-1.5 px-2 rounded-xl bg-primary/15 border border-primary/30 text-primary hover:bg-primary/30 hover:border-primary/60 active:scale-95 transition-all font-label text-xs font-bold cursor-pointer text-center"
               >
                 +{hl}
@@ -232,45 +240,45 @@ export function TacticalHpPopover({
           aria-label="Damage custom amount"
           className="flex-1 py-1.5 px-3 rounded-xl bg-error/20 border border-error/40 text-error hover:bg-error/30 active:scale-95 transition-all font-label text-xs font-bold cursor-pointer"
         >
-          Damage
+          {t('hud.damage')}
         </button>
         <button
           onClick={handleCustomHeal}
           aria-label="Heal custom amount"
           className="flex-1 py-1.5 px-3 rounded-xl bg-primary/20 border border-primary/40 text-primary hover:bg-primary/30 active:scale-95 transition-all font-label text-xs font-bold cursor-pointer"
         >
-          Heal
+          {t('hud.heal')}
         </button>
       </div>
 
       {/* Temp HP and Nonlethal Direct Controls */}
       <div className="pt-2 border-t border-white/5 space-y-2">
         <div className="flex items-center justify-between gap-1 text-[11px] font-label">
-          <span className="text-cyan-300 font-semibold w-16">Temp HP</span>
+          <span className="text-cyan-300 font-semibold w-16">{t('hud.tempHp')}</span>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => handleAddTemp(5)}
               className="px-2 py-0.5 rounded-lg bg-surface-container-high border border-white/10 hover:border-cyan-400 text-cyan-300 transition-all cursor-pointer"
             >
-              +5 Temp
+              +5 {t('hud.temp')}
             </button>
             <button
               onClick={() => handleAddTemp(10)}
               className="px-2 py-0.5 rounded-lg bg-surface-container-high border border-white/10 hover:border-cyan-400 text-cyan-300 transition-all cursor-pointer"
             >
-              +10 Temp
+              +10 {t('hud.temp')}
             </button>
             <button
               onClick={handleClearTemp}
               className="px-2 py-0.5 rounded-lg bg-surface-container-high border border-white/10 hover:border-error/40 text-tertiary hover:text-error transition-all cursor-pointer"
             >
-              Clear
+              {t('common.clear')}
             </button>
           </div>
         </div>
 
         <div className="flex items-center justify-between gap-1 text-[11px] font-label">
-          <span className="text-[#ffb4ab] font-semibold w-16">Nonlethal</span>
+          <span className="text-[#ffb4ab] font-semibold w-16">{t('hud.nonlethal')}</span>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => handleAddNonlethal(5)}
@@ -288,7 +296,7 @@ export function TacticalHpPopover({
               onClick={handleClearNonlethal}
               className="px-2 py-0.5 rounded-lg bg-surface-container-high border border-white/10 hover:border-error/40 text-tertiary hover:text-error transition-all cursor-pointer"
             >
-              Clear
+              {t('common.clear')}
             </button>
           </div>
         </div>

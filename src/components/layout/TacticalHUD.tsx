@@ -14,7 +14,6 @@ import {
 } from '../../lib/stat-calc'
 import { abilityMod } from '../../lib/dice-engine'
 import { getWildShapeView } from '../../lib/class-combat'
-import { CONDITION_INFO } from '../../lib/conditions'
 import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
 import { TacticalHpPopover } from './TacticalHpPopover'
 import { SettingsPanel } from './SettingsPanel'
@@ -24,6 +23,7 @@ import { useInspectorStore } from '../../store/useInspectorStore'
 import { CharacterDropdown } from '../character/CharacterDropdown'
 import { CharacterEmblem } from '../character/CharacterEmblem'
 import { getCharacterLore } from '../../lib/character-lore'
+import { useTranslation, getConditionInfo, translateSaveName } from '../../i18n'
 
 export function TacticalHUD() {
   const navigate = useNavigate()
@@ -34,6 +34,7 @@ export function TacticalHUD() {
   const initSession = useSessionStore((s) => s.initSession)
   const toggleCondition = useSessionStore((s) => s.toggleCondition)
   const openInspector = useInspectorStore((s) => s.openInspector)
+  const { locale, t } = useTranslation()
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [hpPopoverOpen, setHpPopoverOpen] = useState(false)
@@ -51,7 +52,8 @@ export function TacticalHUD() {
     if (idx < 0 || characters.length < 2) return
     const next = characters[(idx + offset + characters.length) % characters.length]
     setActiveCharacter(next.id)
-    initSession(next.id, next.maxHp)
+    const initialEquipped = (next.inventory ?? []).filter((i) => i.equipped).map((i) => i.id)
+    initSession(next.id, next.maxHp, next.startingCoins, initialEquipped)
   }
 
   // Active Buffs & Conditions aggregation
@@ -104,7 +106,7 @@ export function TacticalHUD() {
   // If no character is active, render fallback TopBar
   if (!char) {
     return (
-      <>
+<>
         <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-surface/90 border-b border-white/[0.08] px-6 py-4 flex justify-between items-center" style={{ boxShadow: '0 4px 24px -6px rgba(0,240,255,0.1)' }}>
           <span
             className="text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft"
@@ -112,19 +114,20 @@ export function TacticalHUD() {
           >
             NEON RELIQUARY
           </span>
-          <span className="font-label text-xs text-tertiary">No Active Character</span>
+          <span className="font-label text-xs text-tertiary">{t('hud.noActiveCharacter')}</span>
           <div className="flex items-center gap-4">
+            <LanguageToggle />
             <CloudSyncBadge />
             <button
               onClick={() => navigate('/characters')}
               className="flex items-center gap-2 px-4 py-2 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-sm rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm text-primary">account_circle</span>
-              <span>Character Switcher</span>
+              <span>{t('hud.characterSwitcher')}</span>
             </button>
             <button
               onClick={() => setSettingsOpen(true)}
-              aria-label="Settings"
+              aria-label={t('hud.settings')}
               className="p-1.5 text-tertiary hover:text-primary transition-all duration-300 rounded-lg hover:bg-white/5 cursor-pointer relative"
             >
               <span className="material-symbols-outlined text-base md:text-lg">settings</span>
@@ -204,8 +207,8 @@ export function TacticalHUD() {
                 <h1 className="font-headline text-xs sm:text-base leading-none text-white font-bold truncate max-w-[85px] sm:max-w-none">
                   {char.name}
                 </h1>
-                <p className="font-label text-[8px] sm:text-xs tracking-wider sm:tracking-widest text-tertiary uppercase mt-0.5 truncate max-w-[85px] sm:max-w-none">
-                  Level {char.level} {char.class}
+<p className="font-label text-[8px] sm:text-xs tracking-wider sm:tracking-widest text-tertiary uppercase mt-0.5 truncate max-w-[85px] sm:max-w-none">
+                  {t('common.level')} {char.level} {char.class}
                 </p>
               </div>
             </div>
@@ -223,7 +226,7 @@ export function TacticalHUD() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') setHpPopoverOpen((prev) => !prev)
                 }}
-                aria-label="Adjust hit points"
+                aria-label={t('hud.manageHp')}
                 className="cursor-pointer group py-1 px-2 rounded-xl hover:bg-white/[0.04] transition-all"
               >
                 {/* Multi-Track Progress Bar */}
@@ -276,11 +279,11 @@ export function TacticalHUD() {
                 <div className="flex items-center justify-between mt-1 px-0.5">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="font-label text-xs font-bold text-primary">
-                      {hp} / {maxHp} HP
+                      {hp} / {maxHp} {t('hud.hp')}
                     </span>
                     {tempHp > 0 && (
                       <span className="font-label text-[10px] text-cyan-300 font-semibold bg-cyan-950/60 border border-cyan-500/30 px-1 rounded">
-                        +{tempHp} TEMP
+                        +{tempHp} {t('hud.temp').toUpperCase()}
                       </span>
                     )}
                     {nonlethalDamage > 0 && (
@@ -294,27 +297,27 @@ export function TacticalHUD() {
                   <div className="flex items-center gap-1">
                     {isDead && (
                       <span className="font-label text-[10px] font-black uppercase text-error bg-error/20 border border-error/50 px-1.5 py-0.2 rounded animate-pulse">
-                        DEAD
+                        {locale === 'it' ? 'MORTO' : 'DEAD'}
                       </span>
                     )}
                     {isDying && (
                       <span className="font-label text-[10px] font-black uppercase text-error bg-error/20 border border-error/50 px-1.5 py-0.2 rounded animate-pulse">
-                        DYING
+                        {locale === 'it' ? 'MORENTE' : 'DYING'}
                       </span>
                     )}
                     {isDisabled && (
                       <span className="font-label text-[10px] font-bold uppercase text-amber-400 bg-amber-950/60 border border-amber-500/30 px-1.5 py-0.2 rounded">
-                        DISABLED
+                        {locale === 'it' ? 'INABILE' : 'DISABLED'}
                       </span>
                     )}
                     {isUnconscious && (
                       <span className="font-label text-[10px] font-bold uppercase text-[#ffb4ab] bg-[#ffb4ab]/10 border border-[#ffb4ab]/30 px-1.5 py-0.2 rounded animate-pulse">
-                        UNCONSCIOUS
+                        {locale === 'it' ? 'PRIVO DI SENSI' : 'UNCONSCIOUS'}
                       </span>
                     )}
                     {isStaggered && (
                       <span className="font-label text-[10px] font-bold uppercase text-amber-300 bg-amber-950/60 border border-amber-500/30 px-1.5 py-0.2 rounded">
-                        STAGGERED
+                        {locale === 'it' ? 'BARCOLLANTE' : 'STAGGERED'}
                       </span>
                     )}
                     {exitSafety && exitSafety.severity !== 'none' && (
@@ -351,11 +354,11 @@ export function TacticalHUD() {
               <div
                 className="flex flex-nowrap items-center shrink-0 rounded-xl bg-surface-container/70 border border-white/10 p-0.5"
                 role="group"
-                aria-label="Armor Class"
+                aria-label={locale === 'it' ? 'Classe Armatura' : 'Armor Class'}
               >
                 {/* Total AC */}
                 <StatBreakdownTooltip
-                  title="Armor Class (Total)"
+                  title={locale === 'it' ? 'Classe Armatura (Totale)' : 'Armor Class (Total)'}
                   total={effectiveAc.total}
                   breakdown={detailedAc.totalBreakdown}
                   notes={effectiveAc.notes}
@@ -365,7 +368,7 @@ export function TacticalHUD() {
                     className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[36px] sm:min-w-[40px] cursor-pointer"
                   >
                     <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-tertiary font-semibold">
-                      AC
+                      {t('hud.ac')}
                     </span>
                     <span
                       className={`font-label text-xs sm:text-sm leading-none mt-0.5 ${
@@ -385,7 +388,7 @@ export function TacticalHUD() {
 
                 {/* Touch AC */}
                 <StatBreakdownTooltip
-                  title="Touch Armor Class"
+                  title={locale === 'it' ? 'Classe Armatura a Contatto' : 'Touch Armor Class'}
                   total={effectiveAc.touch}
                   breakdown={detailedAc.touchBreakdown}
                   notes={effectiveAc.notes}
@@ -396,7 +399,7 @@ export function TacticalHUD() {
                     className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[34px] sm:min-w-[38px] cursor-pointer"
                   >
                     <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-tertiary font-semibold">
-                      TOUCH
+                      {locale === 'it' ? 'CONT' : 'TOUCH'}
                     </span>
                     <span
                       className={`font-label text-xs sm:text-sm leading-none mt-0.5 ${
@@ -416,7 +419,7 @@ export function TacticalHUD() {
 
                 {/* Flat-Footed AC */}
                 <StatBreakdownTooltip
-                  title="Flat-Footed Armor Class"
+                  title={locale === 'it' ? 'Classe Armatura Impreparato' : 'Flat-Footed Armor Class'}
                   total={effectiveAc.flatFooted}
                   breakdown={detailedAc.flatFootedBreakdown}
                   notes={effectiveAc.notes}
@@ -427,7 +430,7 @@ export function TacticalHUD() {
                     className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[34px] sm:min-w-[38px] cursor-pointer"
                   >
                     <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-tertiary font-semibold">
-                      FLAT
+                      {locale === 'it' ? 'IMP' : 'FLAT'}
                     </span>
                     <span
                       className={`font-label text-xs sm:text-sm leading-none mt-0.5 ${
@@ -450,30 +453,30 @@ export function TacticalHUD() {
               <div
                 className="flex flex-nowrap items-center shrink-0 rounded-xl bg-surface-container/70 border border-white/10 p-0.5"
                 role="group"
-                aria-label="Saving Throws"
+                aria-label={locale === 'it' ? 'Tiri Salvezza' : 'Saving Throws'}
               >
                 {(
                   [
                     {
                       key: 'fort',
-                      label: 'FORT',
-                      fullName: 'Fortitude Save',
+                      label: translateSaveName('fort', locale, true).toUpperCase(),
+                      fullName: locale === 'it' ? 'Tiro Salvezza Tempra' : 'Fortitude Save',
                       val: effectiveSaves.fort,
                       base: char.savingThrows.fort,
                       bkd: effectiveSaves.breakdowns.fortitude,
                     },
                     {
                       key: 'ref',
-                      label: 'REF',
-                      fullName: 'Reflex Save',
+                      label: translateSaveName('ref', locale, true).toUpperCase(),
+                      fullName: locale === 'it' ? 'Tiro Salvezza Riflessi' : 'Reflex Save',
                       val: effectiveSaves.ref,
                       base: char.savingThrows.ref,
                       bkd: effectiveSaves.breakdowns.reflex,
                     },
                     {
                       key: 'will',
-                      label: 'WILL',
-                      fullName: 'Will Save',
+                      label: translateSaveName('will', locale, true).toUpperCase(),
+                      fullName: locale === 'it' ? 'Tiro Salvezza Volontà' : 'Will Save',
                       val: effectiveSaves.will,
                       base: char.savingThrows.will,
                       bkd: effectiveSaves.breakdowns.will,
@@ -506,7 +509,7 @@ export function TacticalHUD() {
                               breakdown: save.bkd,
                             })
                           }}
-                          aria-label={`Roll ${save.fullName}`}
+                          aria-label={`${t('common.roll')} ${save.fullName}`}
                           className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-secondary/60 hover:bg-secondary/10 active:scale-95 transition-all flex flex-col items-center justify-center min-w-[34px] sm:min-w-[38px] cursor-pointer group"
                         >
                           <div className="flex items-center gap-0.5">
@@ -530,9 +533,9 @@ export function TacticalHUD() {
 
             {/* Active Conditions (Integrated in Cockpit — Zero layout shift) */}
             {conditions.length > 0 && (
-              <div className="flex flex-nowrap items-center gap-1 sm:gap-1.5 shrink-0" role="group" aria-label="Active Conditions">
+              <div className="flex flex-nowrap items-center gap-1 sm:gap-1.5 shrink-0" role="group" aria-label={t('hud.activeConditions')}>
                 {conditions.map((cond) => {
-                  const info = CONDITION_INFO[cond]
+                  const info = getConditionInfo(cond, locale)
                   return (
                     <div
                       key={cond}
@@ -540,7 +543,7 @@ export function TacticalHUD() {
                     >
                       <StatBreakdownTooltip
                         title={info?.name ?? cond}
-                        total="CONDITION"
+                        total={t('hud.conditionTag').toUpperCase()}
                         breakdown={[]}
                         notes={info?.penalties}
                       >
@@ -551,25 +554,25 @@ export function TacticalHUD() {
                               type: 'condition',
                               id: cond,
                               title: info?.name ?? cond,
-                              subtitle: 'Active Condition',
-                              description: info?.summary ?? 'Condition details.',
-                              tags: ['Condition'],
+                              subtitle: t('hud.activeCondition'),
+                              description: info?.summary ?? t('hud.conditionDetails'),
+                              tags: [t('hud.conditionTag')],
                               notes: info?.penalties,
                             })
                           }}
-                          aria-label={`Inspect condition ${cond}`}
+                          aria-label={`${t('hud.inspectCondition')} ${info?.name ?? cond}`}
                           className="flex items-center gap-1 pl-2 pr-1 py-1 cursor-pointer hover:text-white transition-colors"
                         >
                           <span className="material-symbols-outlined text-[11px] sm:text-[12px]">warning</span>
-                          <span className="text-[9px] sm:text-[10px] leading-none">{cond}</span>
+                          <span className="text-[9px] sm:text-[10px] leading-none">{locale === 'it' ? (info?.name ?? cond) : cond}</span>
                         </button>
                       </StatBreakdownTooltip>
                       <button
                         type="button"
                         onClick={() => toggleCondition(char.id, cond)}
-                        aria-label={`Remove condition ${cond}`}
+                        aria-label={`${t('hud.removeCondition')} ${cond}`}
                         className="pr-2 pl-0.5 py-1 text-error/60 hover:text-white cursor-pointer transition-colors"
-                        title="Remove condition"
+                        title={t('hud.removeCondition')}
                       >
                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -582,22 +585,22 @@ export function TacticalHUD() {
             )}
           </div>
 
-          {/* Right Cockpit: Cycler & Switcher & Settings */}
+          {/* Right Cockpit: Language & Cycler & Switcher & Settings */}
           <div className="col-start-2 row-start-1 flex flex-shrink-0 items-center gap-2 justify-self-end md:gap-3">
-            <LanguageToggle />
+<LanguageToggle />
             <CloudSyncBadge />
             {characters.length >= 2 && (
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => cycleTo(-1)}
-                  aria-label="Previous character"
+                  aria-label={t('hud.previousCharacter')}
                   className="p-1.5 text-tertiary hover:text-primary transition-all duration-300 rounded-lg hover:bg-white/5 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-base md:text-lg">chevron_left</span>
                 </button>
                 <button
                   onClick={() => cycleTo(1)}
-                  aria-label="Next character"
+                  aria-label={t('hud.nextCharacter')}
                   className="p-1.5 text-tertiary hover:text-primary transition-all duration-300 rounded-lg hover:bg-white/5 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-base md:text-lg">chevron_right</span>
@@ -609,7 +612,7 @@ export function TacticalHUD() {
 
             <button
               onClick={() => setSettingsOpen(true)}
-              aria-label="Settings"
+aria-label={t('hud.settings')}
               className="p-1.5 text-tertiary hover:text-primary transition-all duration-300 rounded-lg hover:bg-white/5 cursor-pointer relative"
             >
               <span className="material-symbols-outlined text-base md:text-lg">settings</span>

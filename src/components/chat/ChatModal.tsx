@@ -6,15 +6,18 @@ import { useCharacterStore } from '../../store/useCharacterStore'
 import { useSessionStore } from '../../store/useSessionStore'
 import { callChatApi } from '../../lib/chat-client'
 import type { ChatMessage } from '../../store/useChatStore'
-
-const SUGGESTIONS = [
-  'Quali feat ho e cosa fanno?',
-  'Come funziona Power Attack con questa build?',
-  'Quante risorse giornaliere mi restano?',
-  'Che incantesimi posso ancora lanciare?',
-]
+import { useTranslation } from '../../i18n'
 
 export function ChatModal() {
+  const { t } = useTranslation()
+
+  const suggestions = useMemo(() => [
+    t('chat.suggestion1'),
+    t('chat.suggestion2'),
+    t('chat.suggestion3'),
+    t('chat.suggestion4'),
+  ], [t])
+
   const isOpen = useChatStore((s) => s.isOpen)
   const isLoading = useChatStore((s) => s.isLoading)
   const closeChat = useChatStore((s) => s.closeChat)
@@ -81,7 +84,7 @@ export function ChatModal() {
       const errMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: `Errore: impossibile contattare l'oracolo.\n${detail}`,
+        content: `${t('chat.errorOracle')}\n${detail}`,
         ts: Date.now(),
       }
       appendMessage(characterId, errMsg)
@@ -120,7 +123,7 @@ export function ChatModal() {
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0 bg-surface-container-high/50">
               <div>
                 <h2 className="font-headline text-secondary text-sm uppercase tracking-widest neon-glow-accent font-bold">
-                  Oracolo
+                  {t('chat.oracle')}
                 </h2>
                 {character && (
                   <p className="font-label text-[10px] text-tertiary uppercase tracking-widest mt-0.5">
@@ -131,7 +134,7 @@ export function ChatModal() {
               <button
                 onClick={closeChat}
                 className="text-tertiary hover:text-primary transition-colors p-1 rounded-lg hover:bg-white/5 cursor-pointer"
-                aria-label="Chiudi"
+                aria-label={t('chat.close')}
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
@@ -145,13 +148,13 @@ export function ChatModal() {
                     psychology
                   </span>
                   <p className="font-headline text-on-surface text-base mb-1">
-                    Interroga l'Oracolo
+                    {t('chat.askOracle')}
                   </p>
                   <p className="font-body text-xs text-tertiary max-w-sm mb-6">
-                    Chiedi regole, chiarimenti sulle abilità, incantesimi o lo stato della tua scheda Pathfinder 1e.
+                    {t('chat.askSubtitle')}
                   </p>
                   <div className="flex flex-col gap-2 w-full max-w-sm">
-                    {SUGGESTIONS.map((s) => (
+                    {suggestions.map((s) => (
                       <button
                         key={s}
                         onClick={() => void sendMessage(s)}
@@ -211,7 +214,7 @@ export function ChatModal() {
                           flexShrink: 0,
                         }} />
                         <span className="font-label text-[10px] text-tertiary uppercase tracking-widest">
-                          In elaborazione…
+                          {t('chat.processing')}
                         </span>
                       </div>
                     </div>
@@ -228,7 +231,7 @@ export function ChatModal() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Scrivi una domanda… (Invio per inviare, Shift+Invio per andare a capo)"
+                placeholder={t('chat.placeholder')}
                 rows={2}
                 disabled={isLoading || !character}
                 className="flex-1 bg-surface-container-high text-on-surface font-body text-sm px-4 py-3 resize-none rounded-xl placeholder:text-tertiary/60 focus:outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-40 border border-white/10 focus:border-primary/50"
@@ -236,7 +239,7 @@ export function ChatModal() {
               <button
                 onClick={() => void sendMessage(text)}
                 disabled={isLoading || !text.trim() || !character}
-                aria-label="Invia"
+                aria-label={t('chat.send')}
                 className="flex-shrink-0 w-12 h-12 bg-primary text-black rounded-xl font-bold flex items-center justify-center hover:shadow-[0_0_20px_rgba(0,240,255,0.45)] transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none cursor-pointer"
               >
                 {isLoading ? (

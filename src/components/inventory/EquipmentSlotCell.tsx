@@ -1,21 +1,22 @@
 import type { EquipmentSlot, InventoryItem } from '../../types/inventory'
+import { useTranslation } from '../../i18n'
 
-const SLOT_META: Record<EquipmentSlot, { label: string; icon: string }> = {
-  head:      { label: 'Head',      icon: 'military_tech' },
-  headband:  { label: 'Headband',  icon: 'psychology' },
-  eyes:      { label: 'Eyes',      icon: 'visibility' },
-  neck:      { label: 'Neck',      icon: 'diamond' },
-  shoulders: { label: 'Shoulders', icon: 'dry_cleaning' },
-  chest:     { label: 'Chest',     icon: 'checkroom' },
-  body:      { label: 'Body',      icon: 'shield' },
-  belt:      { label: 'Belt',      icon: 'linear_scale' },
-  wrists:    { label: 'Wrists',    icon: 'watch' },
-  hands:     { label: 'Hands',     icon: 'pan_tool_alt' },
-  feet:      { label: 'Feet',      icon: 'footprint' },
-  ring1:     { label: 'Ring I',    icon: 'radio_button_unchecked' },
-  ring2:     { label: 'Ring II',   icon: 'radio_button_unchecked' },
-  mainHand:  { label: 'Main Hand', icon: 'swords' },
-  offHand:   { label: 'Off Hand',  icon: 'security' },
+const SLOT_META: Record<EquipmentSlot, { labelEn: string; labelIt: string; icon: string }> = {
+  head:      { labelEn: 'Head',      labelIt: 'Testa',          icon: 'military_tech' },
+  headband:  { labelEn: 'Headband',  labelIt: 'Fascia',         icon: 'psychology' },
+  eyes:      { labelEn: 'Eyes',      labelIt: 'Occhi',          icon: 'visibility' },
+  neck:      { labelEn: 'Neck',      labelIt: 'Collo',          icon: 'diamond' },
+  shoulders: { labelEn: 'Shoulders', labelIt: 'Spalle',         icon: 'dry_cleaning' },
+  chest:     { labelEn: 'Chest',     labelIt: 'Torace',         icon: 'checkroom' },
+  body:      { labelEn: 'Body',      labelIt: 'Corpo',          icon: 'shield' },
+  belt:      { labelEn: 'Belt',      labelIt: 'Cintura',        icon: 'linear_scale' },
+  wrists:    { labelEn: 'Wrists',    labelIt: 'Polsi',          icon: 'watch' },
+  hands:     { labelEn: 'Hands',     labelIt: 'Mani',           icon: 'pan_tool_alt' },
+  feet:      { labelEn: 'Feet',      labelIt: 'Piedi',          icon: 'footprint' },
+  ring1:     { labelEn: 'Ring I',    labelIt: 'Anello I',       icon: 'radio_button_unchecked' },
+  ring2:     { labelEn: 'Ring II',   labelIt: 'Anello II',      icon: 'radio_button_unchecked' },
+  mainHand:  { labelEn: 'Main Hand', labelIt: 'Mano Primaria',  icon: 'swords' },
+  offHand:   { labelEn: 'Off Hand',  labelIt: 'Mano Secondaria',icon: 'security' },
 }
 
 export function EquipmentSlotCell({
@@ -27,7 +28,10 @@ export function EquipmentSlotCell({
   item?: InventoryItem
   onUnequip?: (itemId: string) => void
 }) {
-  const { label, icon } = SLOT_META[slot]
+  const { locale } = useTranslation()
+  const meta = SLOT_META[slot]
+  const label = locale === 'it' ? meta.labelIt : meta.labelEn
+  const icon = meta.icon
 
   if (item) {
     return (
@@ -42,7 +46,7 @@ export function EquipmentSlotCell({
               <button
                 onClick={() => onUnequip(item.id)}
                 className="opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100 transition-opacity text-tertiary hover:text-error p-0.5 rounded cursor-pointer"
-                title={`Unequip ${item.name}`}
+                title={locale === 'it' ? `Rimuovi ${item.name}` : `Unequip ${item.name}`}
                 aria-label={`Unequip ${item.name}`}
               >
                 <span className="material-symbols-outlined text-sm">close</span>

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import type { Weapon } from '../../types/combat'
 import type { EffectiveWeaponCalculated } from '../../lib/stat-calc'
 import { parseDiceFormula, rollDie } from '../../lib/dice-engine'
+import { useTranslation, type Locale } from '../../i18n'
 
 export interface AttackResult {
   index: number
@@ -73,8 +74,10 @@ function generateAttackResults(
       critRange?: number
       critMultiplier?: number
     }
-  }
+  },
+  locale: Locale = 'en'
 ): AttackResult[] {
+  const isIt = locale === 'it'
   const attacks: {
     label: string
     bonus: number
@@ -85,13 +88,13 @@ function generateAttackResults(
     isSecondary?: boolean
     damageOverride?: { dice: string; bonus: number }
   }[] = effective.attackBonus.map((bonus, i) => ({
-    label: `${i + 1}° Attack`,
+    label: `${i + 1}° ${isIt ? 'Attacco' : 'Attack'}`,
     bonus,
   }))
 
   if (hasteActive) {
     attacks.splice(1, 0, {
-      label: 'Haste Attack',
+      label: isIt ? 'Attacco Velocità' : 'Haste Attack',
       bonus: effective.attackBonus[0] ?? 0,
       isHaste: true,
     })
@@ -106,7 +109,7 @@ function generateAttackResults(
 
   if (twfActive && weapon.type === 'melee') {
     attacks.push({
-      label: 'Off-hand Attack',
+      label: isIt ? 'Attacco Mano Secondaria' : 'Off-hand Attack',
       bonus: (effective.attackBonus[0] ?? 0) + offhandPenalty,
       isOffhand: true,
     })
@@ -171,6 +174,9 @@ export function FullAttackModal({
   onRollDamage,
   onRollExtraDice,
 }: FullAttackModalProps) {
+  const { locale, t } = useTranslation()
+  const isIt = locale === 'it'
+
   const isTestEnv = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
   const isAnimated = animated ?? !isTestEnv
 
@@ -178,10 +184,10 @@ export function FullAttackModal({
     hasteActive ?? effective.hasteActive ?? effective.activeBuffNames?.some((b) => /haste/i.test(b)) ?? false
 
   const [results, setResults] = useState<AttackResult[]>(() =>
-    generateAttackResults(weapon, effective, twfActive, offhandPenalty, isHaste, {
+generateAttackResults(weapon, effective, twfActive, offhandPenalty, isHaste, {
       kiExtraAttackActive,
       secondaryAttack,
-    })
+    }, locale)
   )
 
   const [revealedCount, setRevealedCount] = useState<number>(() => (isAnimated ? 0 : 999))
@@ -195,11 +201,11 @@ export function FullAttackModal({
   if (isOpen !== prevOpen) {
     setPrevOpen(isOpen)
     if (isOpen) {
-      setResults(
+setResults(
         generateAttackResults(weapon, effective, twfActive, offhandPenalty, isHaste, {
           kiExtraAttackActive,
           secondaryAttack,
-        })
+        }, locale)
       )
       setRevealedCount(isAnimated ? 0 : 999)
       setIsPaused(false)
@@ -224,16 +230,16 @@ export function FullAttackModal({
   }
 
   const rollSequence = useCallback(() => {
-    setResults(
+setResults(
       generateAttackResults(weapon, effective, twfActive, offhandPenalty, isHaste, {
         kiExtraAttackActive,
         secondaryAttack,
-      })
+      }, locale)
     )
     setRevealedCount(isAnimated ? 0 : 999)
     setIsPaused(false)
     setConfirmingIndex(null)
-  }, [weapon, effective, twfActive, offhandPenalty, isHaste, isAnimated, kiExtraAttackActive, secondaryAttack, setResults, setRevealedCount, setIsPaused, setConfirmingIndex])
+  }, [weapon, effective, twfActive, offhandPenalty, isHaste, isAnimated, kiExtraAttackActive, secondaryAttack, locale, setResults, setRevealedCount, setIsPaused, setConfirmingIndex])
 
   const handleSkipAnimation = useCallback(() => {
     setRevealedCount(results.length)
@@ -250,28 +256,26 @@ export function FullAttackModal({
 
     const tickerInterval = setInterval(() => {
       setTickerNumber(Math.floor(Math.random() * 20) + 1)
-    }, 50)
+    }, 45)
 
-    const stepTimer = setTimeout(() => {
+    const timer = setTimeout(() => {
       setRevealedCount((prev) => prev + 1)
     }, rollDuration)
 
     return () => {
       clearInterval(tickerInterval)
-      clearTimeout(stepTimer)
+      clearTimeout(timer)
     }
   }, [isOpen, isAnimated, revealedCount, results.length, isPaused, rollDuration])
 
-  // Cleanup confirming timeout on unmount
+
   useEffect(() => {
     return () => {
-      if (confirmTimeoutRef.current) {
-        clearTimeout(confirmTimeoutRef.current)
-      }
+      if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current)
     }
   }, [])
 
-  function handleConfirmCrit(index: number) {
+function handleConfirmCrit(index: number) {
     const atk = results[index]
     if (!atk) return
 
@@ -321,13 +325,8 @@ export function FullAttackModal({
 
   const { bonus: diceBonus } = parseDiceFormula(weapon.damageDice)
   const totalDmgMod = effective.damageBonus + diceBonus
-
   const isRollingSequence = isAnimated && revealedCount < results.length
   const currentRollingAttack = isRollingSequence ? results[revealedCount] : null
-
-  const threatCount = results.filter((r) => r.isCritThreat).length
-  const nat20Count = results.filter((r) => r.isNat20).length
-  const fumbleCount = results.filter((r) => r.isNat1).length
 
   return (
     <AnimatePresence>
@@ -336,8 +335,7 @@ export function FullAttackModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4"
-          style={{ backdropFilter: 'blur(16px)', background: 'rgba(10,10,18,0.85)' }}
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 md:p-6 overflow-y-auto"
           onClick={onClose}
         >
           <motion.div
@@ -353,12 +351,12 @@ export function FullAttackModal({
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 text-[10px] font-label uppercase tracking-widest font-bold">
-                    Full Attack Sequence
+                    {t('combat.fullAttackSequence')}
                   </span>
                   {isHaste && (
                     <span className="px-2.5 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/40 text-[10px] font-label font-bold uppercase tracking-wider shadow-[0_0_8px_rgba(0,240,255,0.25)] flex items-center gap-1">
                       <span className="material-symbols-outlined text-[12px]">bolt</span>
-                      Haste Active
+                      {isIt ? 'Velocità Attiva' : 'Haste Active'}
                     </span>
                   )}
                   {kiExtraAttackActive && (
@@ -407,24 +405,24 @@ export function FullAttackModal({
                   <button
                     onClick={handleSkipAnimation}
                     className="px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-white/10 border border-white/20 text-white font-label text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
-                    aria-label="Skip dice animation"
+                    aria-label={isIt ? 'Salta animazione dadi' : 'Skip dice animation'}
                   >
                     <span className="material-symbols-outlined text-sm">fast_forward</span>
-                    <span className="hidden xs:inline">Skip</span>
+                    <span className="hidden xs:inline">{isIt ? 'Salta' : 'Skip'}</span>
                   </button>
                 )}
                 <button
                   onClick={rollSequence}
                   className="px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-primary/20 border border-primary/40 text-primary font-label text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-[0_0_12px_rgba(0,240,255,0.15)]"
-                  aria-label="Re-roll attack sequence"
+                  aria-label={isIt ? 'Ritira sequenza di attacco' : 'Re-roll attack sequence'}
                 >
                   <span className="material-symbols-outlined text-sm">casino</span>
-                  <span className="hidden xs:inline">Re-roll</span>
+                  <span className="hidden xs:inline">{isIt ? 'Ritira' : 'Re-roll'}</span>
                 </button>
                 <button
                   onClick={onClose}
                   className="p-1.5 text-tertiary hover:text-white hover:bg-white/5 rounded-xl transition-colors cursor-pointer"
-                  aria-label="Close modal"
+                  aria-label={isIt ? 'Chiudi modale' : 'Close modal'}
                 >
                   <span className="material-symbols-outlined text-2xl">close</span>
                 </button>
@@ -456,14 +454,18 @@ export function FullAttackModal({
                           <div className="flex items-center gap-2">
                             <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/40 font-label text-[10px] font-bold uppercase tracking-wider animate-pulse flex items-center gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-                              Rolling Attack {revealedCount + 1} of {results.length}
+                              {isIt
+                                ? `Tiro Attacco ${revealedCount + 1} di ${results.length}`
+                                : `Rolling Attack ${revealedCount + 1} of ${results.length}`}
                             </span>
                           </div>
                           <h3 className="font-headline text-base sm:text-lg font-bold text-white mt-1 truncate">
                             {currentRollingAttack.label} ({currentRollingAttack.bonus >= 0 ? `+${currentRollingAttack.bonus}` : currentRollingAttack.bonus})
                           </h3>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="font-label text-xs text-primary/80">Rolling d20:</span>
+                            <span className="font-label text-xs text-primary/80">
+                              {isIt ? 'Tiro d20:' : 'Rolling d20:'}
+                            </span>
                             <span className="font-label text-xs font-black tabular-nums text-white bg-black/60 px-2 py-0.5 rounded-md border border-primary/40 shadow-[0_0_8px_rgba(0,240,255,0.3)]">
                               {tickerNumber}
                             </span>
@@ -480,12 +482,14 @@ export function FullAttackModal({
                           type="button"
                           onClick={() => setIsPaused((p) => !p)}
                           className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-surface-container hover:bg-white/10 border border-white/10 text-white font-label text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
-                          title={isPaused ? 'Resume auto-roll' : 'Pause sequence'}
+                          title={isPaused ? (isIt ? 'Riprendi tiro automatico' : 'Resume auto-roll') : (isIt ? 'Pausa sequenza' : 'Pause sequence')}
                         >
                           <span className="material-symbols-outlined text-sm">
                             {isPaused ? 'play_arrow' : 'pause'}
                           </span>
-                          <span className="hidden sm:inline">{isPaused ? 'Resume' : 'Pause'}</span>
+                          <span className="hidden sm:inline">
+                            {isPaused ? (isIt ? 'Riprendi' : 'Resume') : (isIt ? 'Pausa' : 'Pause')}
+                          </span>
                         </button>
                         {isPaused && (
                           <button
@@ -494,85 +498,54 @@ export function FullAttackModal({
                             className="px-3 py-1.5 rounded-xl bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary font-label text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-[0_0_10px_rgba(0,240,255,0.2)]"
                           >
                             <span className="material-symbols-outlined text-sm">skip_next</span>
-                            <span className="hidden sm:inline">Next</span>
+                            <span className="hidden sm:inline">{isIt ? 'Avanti' : 'Next'}</span>
                           </button>
                         )}
-                        <button
-                          type="button"
-                          onClick={handleSkipAnimation}
-                          className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-label text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
-                        >
-                          <span className="material-symbols-outlined text-sm">fast_forward</span>
-                          <span>Skip</span>
-                        </button>
                       </div>
                     </div>
                   ) : (
                     <div className="flex items-center justify-between gap-3 text-xs font-label">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary flex-shrink-0 shadow-[0_0_12px_rgba(0,240,255,0.2)]">
-                          <span className="material-symbols-outlined text-xl">casino</span>
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-white font-bold block truncate">
-                            Routine Complete ({results.length} Attacks Rolled)
-                          </span>
-                          <span className="text-tertiary flex items-center gap-2 flex-wrap">
-                            {threatCount > 0 && (
-                              <span className="text-secondary font-bold">
-                                {threatCount} Threat{threatCount > 1 ? 's' : ''}
-                              </span>
-                            )}
-                            {nat20Count > 0 && (
-                              <span className="text-primary font-bold">{nat20Count} Nat 20</span>
-                            )}
-                            {fumbleCount > 0 && (
-                              <span className="text-error font-bold">{fumbleCount} Fumble</span>
-                            )}
-                            {threatCount === 0 && nat20Count === 0 && fumbleCount === 0 && (
-                              <span>All attacks resolved</span>
-                            )}
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-2 text-primary">
+                        <span className="material-symbols-outlined text-sm text-primary">check_circle</span>
+                        <span className="font-bold">
+                          {isIt
+                            ? `Routine completata: ${results.length} attacchi eseguiti`
+                            : `Routine Complete: ${results.length} attacks resolved`}
+                        </span>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={rollSequence}
-                        className="px-3.5 py-1.5 rounded-xl bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary font-label text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-[0_0_12px_rgba(0,240,255,0.2)] flex-shrink-0"
-                      >
-                        <span className="material-symbols-outlined text-sm">replay</span>
-                        <span>Re-roll Routine</span>
-                      </button>
+                      <span className="text-tertiary">
+                        {isIt ? 'Clicca sotto per tirare i danni o confermare i critici' : 'Click below to roll damage or confirm threats'}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Attack Cards List */}
+            {/* Attacks List */}
             <div className="p-4 sm:p-6 overflow-y-auto space-y-3 flex-1">
               {results.map((r) => {
-                const isCurrentlyRolling = isAnimated && isRollingSequence && r.index === revealedCount
-                const isQueued = isAnimated && isRollingSequence && r.index > revealedCount
-                const isCritConfirmed = r.isCritThreat && !!r.critConfirmation
+                const isRolling = isAnimated && revealedCount === r.index
+                const isQueued = isAnimated && revealedCount < r.index
                 const isConfirming = confirmingIndex === r.index
+                const isCritConfirmed =
+                  r.critConfirmation && r.critConfirmation.naturalRoll !== 1
 
-                if (isCurrentlyRolling) {
+                if (isRolling) {
                   return (
                     <motion.div
                       key={r.index}
                       initial={{ scale: 0.98, opacity: 0.8 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      className="p-3.5 sm:p-4 rounded-2xl border border-primary/60 bg-gradient-to-r from-primary/15 via-primary/5 to-surface-container-high/90 shadow-[0_0_25px_rgba(0,240,255,0.25)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 transition-all"
+                      className="p-3.5 sm:p-4 rounded-2xl border border-primary/50 bg-primary/5 shadow-[0_0_20px_rgba(0,240,255,0.2)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 transition-all"
                     >
                       <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                         <motion.div
-                          animate={{ scale: [1, 1.1, 1] }}
-                          transition={{ duration: 0.35, repeat: Infinity }}
-                          className="w-12 h-12 rounded-xl flex items-center justify-center border border-primary/60 bg-primary/25 shadow-[0_0_15px_rgba(0,240,255,0.4)] flex-shrink-0"
+                          animate={{ rotate: [0, 15, -15, 0] }}
+                          transition={{ repeat: Infinity, duration: 0.3 }}
+                          className="w-12 h-12 rounded-xl flex items-center justify-center border border-primary/60 bg-primary/20 text-primary shadow-[0_0_12px_rgba(0,240,255,0.4)] flex-shrink-0"
                         >
-                          <span className="font-label text-xl font-black text-primary animate-pulse tabular-nums">
+                          <span className="font-label text-xl font-black tabular-nums">
                             {tickerNumber}
                           </span>
                         </motion.div>
@@ -588,7 +561,7 @@ export function FullAttackModal({
                               </span>
                             )}
                             <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/40 text-[10px] font-label font-bold uppercase tracking-wider animate-pulse">
-                              Rolling...
+                              {isIt ? 'In corso...' : 'Rolling...'}
                             </span>
                           </div>
                           <p className="font-label text-xs text-primary/80 mt-0.5">
@@ -600,7 +573,7 @@ export function FullAttackModal({
                       <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 border-white/5">
                         <div className="text-left sm:text-right min-w-[54px] sm:min-w-[60px]">
                           <p className="font-label text-[10px] text-primary/70 uppercase tracking-widest">
-                            Rolling
+                            {isIt ? 'Tiro' : 'Rolling'}
                           </p>
                           <p className="font-label text-2xl sm:text-3xl font-black text-primary/70 animate-pulse tabular-nums">
                             {tickerNumber + r.bonus}
@@ -626,7 +599,7 @@ export function FullAttackModal({
                             {r.label}
                           </h4>
                           <p className="font-label text-xs text-tertiary mt-0.5">
-                            Queued ({r.bonus >= 0 ? `+${r.bonus}` : r.bonus})
+                            {isIt ? 'In coda' : 'Queued'} ({r.bonus >= 0 ? `+${r.bonus}` : r.bonus})
                           </p>
                         </div>
                       </div>
@@ -634,7 +607,7 @@ export function FullAttackModal({
                       <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 border-white/5">
                         <div className="text-left sm:text-right min-w-[54px] sm:min-w-[60px]">
                           <p className="font-label text-[10px] text-tertiary/60 uppercase tracking-widest">
-                            Total
+                            {isIt ? 'Totale' : 'Total'}
                           </p>
                           <p className="font-label text-2xl sm:text-3xl font-black text-tertiary/40">
                             —
@@ -696,27 +669,27 @@ export function FullAttackModal({
                           )}
                           {r.isCritThreat && (
                             <span className="px-2 py-0.5 rounded-full bg-secondary text-black font-label text-[10px] font-black uppercase tracking-wider shadow-[0_0_10px_#d946ef] animate-pulse">
-                              Crit Threat!
+                              {isIt ? 'Minaccia Critico!' : 'Crit Threat!'}
                             </span>
                           )}
                           {r.isNat1 && (
                             <span className="px-2 py-0.5 rounded-full bg-error/20 text-error border border-error/40 font-label text-[10px] font-bold uppercase tracking-wider">
-                              Fumble
+                              {isIt ? 'Fallimento Critico' : 'Fumble'}
                             </span>
                           )}
                           {r.isNat20 && (
                             <span className="px-2 py-0.5 rounded-full bg-primary text-black font-label text-[10px] font-black uppercase tracking-wider shadow-[0_0_8px_#00f0ff]">
-                              Nat 20
+                              {isIt ? '20 Naturale' : 'Nat 20'}
                             </span>
                           )}
                           {r.isHaste && (
                             <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/40 font-label text-[10px] font-bold uppercase tracking-wider">
-                              Haste Bonus
+                              {isIt ? 'Bonus Velocità' : 'Haste Bonus'}
                             </span>
                           )}
                           {r.isOffhand && (
                             <span className="px-2 py-0.5 rounded-full bg-secondary/20 text-secondary border border-secondary/40 font-label text-[10px] font-bold uppercase tracking-wider">
-                              Off-hand
+                              {isIt ? 'Mano Secondaria' : 'Off-hand'}
                             </span>
                           )}
                         </div>
@@ -731,16 +704,23 @@ export function FullAttackModal({
                               <span className="material-symbols-outlined text-sm animate-spin">
                                 progress_activity
                               </span>
-                              <span>Rolling confirmation dice...</span>
+                              <span>{isIt ? 'Tiro dado di conferma...' : 'Rolling confirmation dice...'}</span>
                             </span>
                           </div>
                         )}
                         {!isConfirming && r.critConfirmation && (
                           <div className="mt-2 flex items-center gap-2 flex-wrap">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-secondary/20 border border-secondary/50 text-secondary font-label text-xs font-bold shadow-[0_0_12px_rgba(217,70,239,0.3)]">
-                              <span className="material-symbols-outlined text-sm">verified</span>
-                              <span>Confirm Roll: {r.critConfirmation.total}</span>
-                            </span>
+                            {r.critConfirmation.naturalRoll === 1 ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-error/20 border border-error/50 text-error font-label text-xs font-bold shadow-[0_0_12px_rgba(255,75,96,0.3)]">
+                                <span className="material-symbols-outlined text-sm">cancel</span>
+                                <span>{isIt ? 'Nat 1 — Non Confermato' : 'Nat 1 — Not Confirmed'}</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-secondary/20 border border-secondary/50 text-secondary font-label text-xs font-bold shadow-[0_0_12px_rgba(217,70,239,0.3)]">
+                                <span className="material-symbols-outlined text-sm">verified</span>
+                                <span>{isIt ? 'Tiro di Conferma:' : 'Confirm Roll:'} {r.critConfirmation.total}</span>
+                              </span>
+                            )}
                             <span className="text-xs font-label text-tertiary">
                               (d20: {r.critConfirmation.naturalRoll} {r.bonus >= 0 ? `+ ${r.bonus}` : `- ${Math.abs(r.bonus)}`}
                               {r.critConfirmation.critConfirmBonus ? ` + ${r.critConfirmation.critConfirmBonus} Favored Class` : ''})
@@ -754,7 +734,7 @@ export function FullAttackModal({
                     <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 border-white/5">
                       <div className="text-left sm:text-right min-w-[54px] sm:min-w-[60px]">
                         <p className="font-label text-[10px] text-tertiary uppercase tracking-widest">
-                          Total
+                          {isIt ? 'Totale' : 'Total'}
                         </p>
                         <p
                           className={`font-label text-2xl sm:text-3xl font-black ${
@@ -774,14 +754,15 @@ export function FullAttackModal({
                             className="w-full sm:w-auto px-3.5 py-1.5 bg-gradient-to-r from-secondary to-fuchsia-600 hover:from-secondary hover:to-pink-500 text-black font-label text-[11px] font-black uppercase tracking-wider rounded-lg shadow-[0_0_14px_rgba(217,70,239,0.5)] hover:shadow-[0_0_20px_rgba(217,70,239,0.8)] transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
                           >
                             <span className="material-symbols-outlined text-xs font-bold">verified</span>
-                            <span>Confirm Crit</span>
+                            <span>{isIt ? 'Conferma Critico' : 'Confirm Crit'}</span>
                           </button>
                         )}
                         {isCritConfirmed ? (
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <button
-                              onClick={() => {
-                                const label = `${r.isSecondary ? r.label : weapon.name} (${r.label}) Dmg`
+onClick={() => {
+                                const dmgSuffix = isIt ? 'Danno' : 'Dmg'
+                                const label = `${r.isSecondary ? r.label : weapon.name} (${r.label}) ${dmgSuffix}`
                                 const bonus = r.damageOverride ? r.damageOverride.bonus : totalDmgMod
                                 if (r.damageOverride?.dice) {
                                   onRollDamage(label, bonus, true, r.damageOverride.dice)
@@ -792,11 +773,12 @@ export function FullAttackModal({
                               className="w-full sm:w-auto px-3 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 bg-secondary/25 hover:bg-secondary/35 border border-secondary text-secondary shadow-[0_0_12px_rgba(217,70,239,0.3)] hover:shadow-[0_0_18px_rgba(217,70,239,0.5)]"
                             >
                               <span className="material-symbols-outlined text-xs">swords</span>
-                              <span>Roll Crit Dmg (x{weapon.critMultiplier})</span>
+                              <span>{isIt ? `Tira Danno Critico (x${weapon.critMultiplier})` : `Roll Crit Dmg (x${weapon.critMultiplier})`}</span>
                             </button>
                             <button
-                              onClick={() => {
-                                const label = `${r.isSecondary ? r.label : weapon.name} (${r.label}) Dmg`
+onClick={() => {
+                                const dmgSuffix = isIt ? 'Danno' : 'Dmg'
+                                const label = `${r.isSecondary ? r.label : weapon.name} (${r.label}) ${dmgSuffix}`
                                 const bonus = r.damageOverride ? r.damageOverride.bonus : totalDmgMod
                                 if (r.damageOverride?.dice) {
                                   onRollDamage(label, bonus, false, r.damageOverride.dice)
@@ -807,13 +789,14 @@ export function FullAttackModal({
                               className="w-full sm:w-auto px-3 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 bg-surface-container-high hover:bg-surface-container-highest border border-white/10 hover:border-primary/40 text-primary"
                             >
                               <span className="material-symbols-outlined text-xs">swords</span>
-                              <span>Roll Normal Dmg</span>
+                              <span>{isIt ? 'Tira Danno Normale' : 'Roll Normal Dmg'}</span>
                             </button>
                           </div>
                         ) : (
                           <button
-                            onClick={() => {
-                              const label = `${r.isSecondary ? r.label : weapon.name} (${r.label}) Dmg`
+onClick={() => {
+                              const dmgSuffix = isIt ? 'Danno' : 'Dmg'
+                              const label = `${r.isSecondary ? r.label : weapon.name} (${r.label}) ${dmgSuffix}`
                               const bonus = r.damageOverride ? r.damageOverride.bonus : totalDmgMod
                               if (r.damageOverride?.dice) {
                                 onRollDamage(label, bonus, false, r.damageOverride.dice)
@@ -824,7 +807,7 @@ export function FullAttackModal({
                             className="w-full sm:w-auto px-3.5 py-1.5 font-label text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 bg-primary/20 hover:bg-primary/30 border border-primary/40 text-primary hover:shadow-[0_0_12px_rgba(0,240,255,0.25)]"
                           >
                             <span className="material-symbols-outlined text-xs">swords</span>
-                            <span>Roll Dmg ({r.damageOverride ? r.damageOverride.dice : weapon.damageDice}{(r.damageOverride ? r.damageOverride.bonus : totalDmgMod) >= 0 ? `+${r.damageOverride ? r.damageOverride.bonus : totalDmgMod}` : (r.damageOverride ? r.damageOverride.bonus : totalDmgMod)})</span>
+                            <span>{isIt ? 'Tira Danno' : 'Roll Dmg'} ({r.damageOverride ? r.damageOverride.dice : weapon.damageDice}{(r.damageOverride ? r.damageOverride.bonus : totalDmgMod) >= 0 ? `+${r.damageOverride ? r.damageOverride.bonus : totalDmgMod}` : (r.damageOverride ? r.damageOverride.bonus : totalDmgMod)})</span>
                           </button>
                         )}
                       </div>
@@ -843,7 +826,7 @@ export function FullAttackModal({
                     className="px-3.5 py-1.5 rounded-xl bg-surface-container-high border border-secondary/40 text-secondary hover:bg-secondary/20 font-label text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
                   >
                     <span className="material-symbols-outlined text-sm">casino</span>
-                    <span>Roll {extraDiceLabel ?? 'Extra'} ({sneakAttackDice})</span>
+                    <span>{isIt ? `Tira ${extraDiceLabel ?? 'Extra'} (${sneakAttackDice})` : `Roll ${extraDiceLabel ?? 'Extra'} (${sneakAttackDice})`}</span>
                   </button>
                 )}
               </div>
@@ -852,7 +835,7 @@ export function FullAttackModal({
                 onClick={onClose}
                 className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-label text-xs uppercase tracking-wider transition-all cursor-pointer ml-auto"
               >
-                Close Routine
+                {isIt ? 'Chiudi Routine' : 'Close Routine'}
               </button>
             </div>
           </motion.div>

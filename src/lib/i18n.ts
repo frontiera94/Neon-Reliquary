@@ -1,4 +1,4 @@
-import { useLanguageStore, type Language } from '../store/useLanguageStore'
+import { useLanguageStore, type Language, type LanguageStore } from '../store/useLanguageStore'
 
 export const translations = {
   en: {
@@ -147,7 +147,7 @@ export const translations = {
       languageDesc: 'Lingua interfaccia (regole, abilità e incantesimi rimangono in inglese)',
       english: 'English',
       italian: 'Italiano',
-      customRoll: 'Lancio Libero',
+      customRoll: 'Tiro Personalizzato',
       clearRollHistory: 'Cancella Cronologia',
       diceRollLog: 'Registro Dadi',
       noRolls: 'Nessun lancio registrato',
@@ -299,9 +299,9 @@ export function translate(
 }
 
 export function useTranslation() {
-  const language = useLanguageStore((s) => s.language)
-  const setLanguage = useLanguageStore((s) => s.setLanguage)
-  const toggleLanguage = useLanguageStore((s) => s.toggleLanguage)
+  const language = useLanguageStore((s: LanguageStore) => s.language)
+  const setLanguage = useLanguageStore((s: LanguageStore) => s.setLanguage)
+  const toggleLanguage = useLanguageStore((s: LanguageStore) => s.toggleLanguage)
 
   const t = (key: TranslationKey, params?: Record<string, string | number>): string => {
     return translate(key, language, params)
