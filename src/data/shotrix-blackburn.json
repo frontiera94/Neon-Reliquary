@@ -482,6 +482,33 @@
       "damageDice": "1d6"
     },
     {
+      "id": "flare-s",
+      "name": "Flare",
+      "level": 0,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "Instantaneous",
+      "savingThrow": "Fortitude negates (DC 14)",
+      "spellResistance": true,
+      "components": "V",
+      "description": "Creates a burst of light in front of a single creature's eyes, causing it to become dazzled for 1 minute (Fortitude DC 14 negates)."
+    },
+    {
+      "id": "ghost-sound-s",
+      "name": "Ghost Sound",
+      "level": 0,
+      "school": "Illusion",
+      "subschool": "Figment",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "5 rounds (D)",
+      "savingThrow": "Will disbelief (DC 14)",
+      "spellResistance": false,
+      "components": "V, S, M",
+      "description": "Creates a volume of illusory sound (equivalent to up to 20 humans at CL 5) that rises, recedes, approaches, or remains at a fixed place."
+    },
+    {
       "id": "light-s",
       "name": "Light",
       "level": 0,
@@ -506,6 +533,19 @@
       "spellResistance": false,
       "components": "V, S",
       "description": "Telekinetically lift and move one nonmagical, unattended object weighing up to 5 lbs."
+    },
+    {
+      "id": "open-close-s",
+      "name": "Open/Close",
+      "level": 0,
+      "school": "Transmutation",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "Instantaneous",
+      "savingThrow": "Will negates (object, DC 14)",
+      "spellResistance": true,
+      "components": "V, S, F",
+      "description": "Opens or closes a door, chest, box, window, bag, pouch, bottle, barrel, or other container weighing up to 30 lbs."
     },
     {
       "id": "prestidigitation",
