@@ -107,6 +107,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
   const heldSpellstrike = magusState?.heldSpellstrike
   const isSpellCombatActive = Boolean(magusState?.spellCombatActive)
   const defensiveSacrifice = magusState?.defensiveCastingSacrifice ?? 0
+  const arcaneEnhancement = 1 + Math.floor(Math.max(0, (char.level ?? 1) - 1) / 4)
   const arcanePoolActive = Boolean(
     magusState?.arcanePoolWeapon?.active ||
     (magusState?.arcaneWeaponActive && (magusState?.arcaneWeaponRoundsLeft ?? 0) > 0) ||
@@ -178,7 +179,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
     activeSummaryBadges.push({ label: `Spellstrike: ${heldSpellstrike.spellName} (${heldSpellstrike.chargesRemaining})`, color: 'secondary' })
   }
   if (arcanePoolActive) {
-    activeSummaryBadges.push({ label: 'Arma Arcana +1', color: 'primary' })
+    activeSummaryBadges.push({ label: `Arma Arcana +${arcaneEnhancement}`, color: 'primary' })
   }
   if (activeHexes.length > 0) {
     activeSummaryBadges.push({ label: `${activeHexes.length} Fatture Attive`, color: 'secondary' })
@@ -263,7 +264,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
               </h3>
             </div>
             <span className="font-label text-[10px] uppercase text-tertiary">
-              4 ore per uso · Lv 4
+              {char.level ?? 5} ore per uso · Lv {char.level ?? 5}
             </span>
           </div>
 
@@ -513,7 +514,7 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
                   if (arcanePoolActive) {
                     activateArcaneWeapon(char.id, 0)
                   } else {
-                    activateArcaneWeapon(char.id, 1)
+                    activateArcaneWeapon(char.id, arcaneEnhancement)
                     spendResource(char.id, 'arcane-pool', arcanePoolMax)
                   }
                 }}
@@ -523,7 +524,9 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
                     : 'border-primary/30 bg-primary/10 text-primary hover:bg-primary/20'
                 }`}
               >
-                {arcanePoolActive ? 'Arma Arcana +1 (Attiva · Disattiva)' : 'Potenzia Arma (+1)'}
+                {arcanePoolActive
+                  ? `Arma Arcana +${arcaneEnhancement} (Attiva · Disattiva)`
+                  : `Potenzia Arma (+${arcaneEnhancement})`}
               </button>
             </div>
 

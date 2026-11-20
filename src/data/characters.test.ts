@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import type { FullCharacter } from '../store/useCharacterStore'
+import { calcEffectiveAbilities, calcEffectiveSkills } from '../lib/stat-calc'
 
 const dataDir = path.resolve(__dirname)
 const jsonFiles = fs
@@ -226,6 +227,160 @@ describe('Character JSON integrity', () => {
       const spin = agelmund.buffs.find((b) => b.id === 'defensive-spin')
       expect(spin).toBeDefined()
       expect(spin?.acMod).toBe(4)
+    })
+  })
+
+  describe('Shotrix Blackburn Level 5 specific checks', () => {
+    const raw = fs.readFileSync(path.join(dataDir, 'shotrix-blackburn.json'), 'utf8')
+    const shotrix = JSON.parse(raw) as FullCharacter
+
+    it('has level 5, 54 HP, Rapier +8, and Arcane Pool +2 weapon buff', () => {
+      expect(shotrix.level).toBe(5)
+      expect(shotrix.maxHp).toBe(54)
+      expect(shotrix.weapons.find((w) => w.id === 'rapier')?.attackBonus).toEqual([8])
+      const poolBuff = shotrix.buffs.find((b) => b.id === 'arcane-pool-weapon')
+      expect(poolBuff?.attackMod).toBe(2)
+      expect(poolBuff?.damageMod).toBe(2)
+      expect(shotrix.dailyResources.find((r) => r.id === 'arcane-pool')?.total).toBe(6)
+    })
+
+    it('allocates exactly 35 skill ranks and matches Level 5 PDF totals with ACP -1', () => {
+      const totalRanks = shotrix.skills.reduce((sum, s) => sum + s.ranks, 0)
+      expect(totalRanks).toBe(35)
+      const effAb = calcEffectiveAbilities(shotrix.abilities, [], [])
+      const computed = calcEffectiveSkills(shotrix.skills, shotrix.abilities, effAb, [], -1)
+      const byId = Object.fromEntries(computed.map((s) => [s.id, s.effectiveTotal]))
+      expect(byId['acrobatics']).toBe(8)
+      expect(byId['bluff']).toBe(-1)
+      expect(byId['diplomacy']).toBe(5)
+      expect(byId['fly']).toBe(7)
+      expect(byId['knowledge-arcana']).toBe(12)
+      expect(byId['knowledge-planes']).toBe(8)
+      expect(byId['perception']).toBe(6)
+      expect(byId['spellcraft']).toBe(12)
+      expect(byId['stealth']).toBe(7)
+      expect(byId['swim']).toBe(1)
+      expect(byId['use-magic-device']).toBe(6)
+    })
+
+    it('has Level 5 feats, scaled CL 5 spells, slots 5/3, and handwritten coins/potions', () => {
+      expect(shotrix.feats.some((f) => f.id === 'intensified-spell')).toBe(true)
+      expect(shotrix.feats.some((f) => f.id === 'weapon-focus-rapier')).toBe(true)
+      expect(shotrix.spellSlots).toEqual([
+        { level: 1, total: 5 },
+        { level: 2, total: 3 },
+      ])
+      expect(shotrix.spells.find((s) => s.id === 'burning-hands')?.damageDice).toBe('5d4')
+      expect(shotrix.spells.find((s) => s.id === 'shocking-grasp')?.damageDice).toBe('5d6')
+      expect(shotrix.spells.find((s) => s.id === 'frostbite')?.damageBonus).toBe(5)
+      expect(shotrix.spells.find((s) => s.id === 'magic-missile')?.damageDice).toBe('3d4')
+      expect(shotrix.startingCoins).toEqual({ gp: 2106, sp: 5, cp: 1 })
+      expect(shotrix.inventory.some((i) => i.id === 'sb-cure-light' && i.quantity === 1)).toBe(true)
+      expect(shotrix.inventory.some((i) => i.id === 'sb-cure-mod' && i.quantity === 1)).toBe(true)
+      expect(shotrix.inventory.some((i) => i.id === 'sb-tarocchi')).toBe(true)
+    })
+  })
+
+  describe('Noorie Level 5 specific checks', () => {
+    const raw = fs.readFileSync(path.join(dataDir, 'noorie.json'), 'utf8')
+    const noorie = JSON.parse(raw) as FullCharacter
+
+    it('has level 5, 45 HP, Natural Spell, and 5-hour Wild Shape', () => {
+      expect(noorie.level).toBe(5)
+      expect(noorie.maxHp).toBe(45)
+      expect(noorie.feats.some((f) => f.id === 'natural-spell')).toBe(true)
+      expect(noorie.feats.some((f) => f.id === 'endure-pain')).toBe(true)
+      expect(noorie.feats.some((f) => f.id === 'flame-tested-survivor')).toBe(true)
+      expect(noorie.dailyResources.find((r) => r.id === 'wild-shape')?.name).toContain('5 hrs')
+    })
+
+    it('allocates exactly 30 skill ranks and matches Level 5 PDF totals', () => {
+      const totalRanks = noorie.skills.reduce((sum, s) => sum + s.ranks, 0)
+      expect(totalRanks).toBe(30)
+      const effAb = calcEffectiveAbilities(noorie.abilities, [], [])
+      const computed = calcEffectiveSkills(noorie.skills, noorie.abilities, effAb, [], 0)
+      const byId = Object.fromEntries(computed.map((s) => [s.id, s.effectiveTotal]))
+      expect(byId['acrobatics']).toBe(7)
+      expect(byId['diplomacy']).toBe(2)
+      expect(byId['knowledge-local']).toBe(6)
+      expect(byId['knowledge-nature']).toBe(12)
+      expect(byId['perception']).toBe(13)
+      expect(byId['spellcraft']).toBe(7)
+      expect(byId['stealth']).toBe(10)
+      expect(byId['survival']).toBe(14)
+    })
+
+    it('has Level 3 spell slots, Fireball domain spell, SNA III, PDF gear, and Level 5 Ignis', () => {
+      expect(noorie.spellSlots).toEqual([
+        { level: 1, total: 6 },
+        { level: 2, total: 4 },
+        { level: 3, total: 3 },
+      ])
+      const fireball = noorie.spells.find((s) => s.id === 'fireball-n')
+      expect(fireball?.level).toBe(3)
+      expect(fireball?.source).toBe('domain')
+      expect(fireball?.alwaysPrepared).toBe(true)
+      expect(fireball?.damageDice).toBe('5d6')
+      const sna3 = noorie.spells.find((s) => s.id === 'summon-natures-ally-3')
+      expect(sna3?.summonOptions?.length).toBeGreaterThanOrEqual(3)
+      expect(noorie.startingCoins).toEqual({ gp: 55, sp: 9, cp: 0 })
+      expect(noorie.companions?.[0]?.level).toBe(5)
+      expect(noorie.companions?.[0]?.maxHp).toBe(32)
+    })
+  })
+
+  describe('Mazikeen Noctis & Salem Level 5 specific checks', () => {
+    const raw = fs.readFileSync(path.join(dataDir, 'mazikeen-noctis.json'), 'utf8')
+    const maze = JSON.parse(raw) as FullCharacter
+
+    it('has level 5, 48 HP, Flight Hex, and Flight daily resources', () => {
+      expect(maze.level).toBe(5)
+      expect(maze.maxHp).toBe(48)
+      expect(maze.feats.some((f) => f.id === 'hex-flight')).toBe(true)
+      expect(maze.dailyResources.find((r) => r.id === 'flight-fly')?.total).toBe(5)
+      expect(maze.dailyResources.find((r) => r.id === 'flight-levitate')?.total).toBe(1)
+    })
+
+    it('allocates exactly 35 skill ranks and matches Level 5 PDF totals including Swim +4', () => {
+      const totalRanks = maze.skills.reduce((sum, s) => sum + s.ranks, 0)
+      expect(totalRanks).toBe(35)
+      const effAb = calcEffectiveAbilities(maze.abilities, [], [])
+      const computed = calcEffectiveSkills(maze.skills, maze.abilities, effAb, [], 0)
+      const byId = Object.fromEntries(computed.map((s) => [s.id, s.effectiveTotal]))
+      expect(byId['bluff']).toBe(2)
+      expect(byId['diplomacy']).toBe(8)
+      expect(byId['fly']).toBe(8)
+      expect(byId['intimidate']).toBe(10)
+      expect(byId['knowledge-arcana']).toBe(10)
+      expect(byId['knowledge-religion']).toBe(9)
+      expect(byId['perception']).toBe(10)
+      expect(byId['spellcraft']).toBe(12)
+      expect(byId['stealth']).toBe(12)
+      expect(byId['swim']).toBe(4)
+      expect(byId['use-magic-device']).toBe(8)
+    })
+
+    it('has Level 3 Lightning Bolt, Vomit Swarm, no Snowball, 134 gp, and Level 5 Salem', () => {
+      expect(maze.spellSlots).toEqual([
+        { level: 1, total: 5 },
+        { level: 2, total: 3 },
+        { level: 3, total: 2 },
+      ])
+      const lb = maze.spells.find((s) => s.id === 'lightning-bolt')
+      expect(lb?.level).toBe(3)
+      expect(lb?.damageDice).toBe('5d6')
+      expect(maze.spells.some((s) => s.id === 'vomit-swarm')).toBe(true)
+      expect(maze.spells.some((s) => s.id === 'snowball')).toBe(false)
+      expect(maze.startingCoins).toEqual({ gp: 134, sp: 0, cp: 0 })
+
+      const salem = maze.companions?.[0]
+      expect(salem?.maxHp).toBe(24)
+      expect(salem?.abilities.int).toBe(8)
+      expect(salem?.armorClass.naturalArmor).toBe(3)
+      expect(salem?.savingThrows).toEqual({ fort: 2, ref: 5, will: 5 })
+      expect(salem?.skills.find((s) => s.name === 'Stealth')?.bonus).toBe(18)
+      expect(salem?.skills.find((s) => s.name === 'Perception')?.bonus).toBe(9)
+      expect(salem?.specialQualities.some((q) => q.name.includes('Speak with Master'))).toBe(true)
     })
   })
 

@@ -2,7 +2,7 @@
   "id": "shotrix-blackburn",
   "name": "Shotrix Blackburn",
   "class": "Magus",
-  "level": 4,
+  "level": 5,
   "race": "Human (Chelaxian)",
   "alignment": "Lawful Evil",
   "portrait": "https://placehold.co/400x600/1f1f25/00daf3?text=Shotrix",
@@ -15,7 +15,7 @@
     "wis": 13,
     "cha": 7
   },
-  "maxHp": 43,
+  "maxHp": 54,
   "baseAttackBonus": [
     3
   ],
@@ -31,7 +31,8 @@
     "naturalArmor": 0,
     "deflection": 0,
     "misc": 0,
-    "spellFailureChance": 15
+    "spellFailureChance": 15,
+    "armorCheckPenalty": -1
   },
   "savingThrows": {
     "fort": 7,
@@ -46,9 +47,9 @@
       "id": "acrobatics",
       "name": "Acrobatics",
       "ability": "dex",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": false,
-      "miscBonus": -1,
+      "miscBonus": 0,
       "trained": true,
       "armorCheckPenalty": true
     },
@@ -61,6 +62,26 @@
       "miscBonus": 2,
       "trained": false,
       "armorCheckPenalty": false
+    },
+    {
+      "id": "bluff",
+      "name": "Bluff",
+      "ability": "cha",
+      "ranks": 1,
+      "classSkill": false,
+      "miscBonus": 0,
+      "trained": true,
+      "armorCheckPenalty": false
+    },
+    {
+      "id": "climb",
+      "name": "Climb",
+      "ability": "str",
+      "ranks": 0,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": false,
+      "armorCheckPenalty": true
     },
     {
       "id": "diplomacy",
@@ -83,20 +104,30 @@
       "armorCheckPenalty": false
     },
     {
+      "id": "escape-artist",
+      "name": "Escape Artist",
+      "ability": "dex",
+      "ranks": 0,
+      "classSkill": false,
+      "miscBonus": 0,
+      "trained": false,
+      "armorCheckPenalty": true
+    },
+    {
       "id": "fly",
       "name": "Fly",
       "ability": "dex",
-      "ranks": 0,
+      "ranks": 1,
       "classSkill": true,
-      "miscBonus": -1,
-      "trained": false,
+      "miscBonus": 0,
+      "trained": true,
       "armorCheckPenalty": true
     },
     {
       "id": "knowledge-arcana",
       "name": "Knowledge (Arcana)",
       "ability": "int",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 0,
       "trained": true,
@@ -116,11 +147,21 @@
       "id": "perception",
       "name": "Perception",
       "ability": "wis",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": false,
       "miscBonus": 0,
       "trained": true,
       "armorCheckPenalty": false
+    },
+    {
+      "id": "ride",
+      "name": "Ride",
+      "ability": "dex",
+      "ranks": 0,
+      "classSkill": true,
+      "miscBonus": 0,
+      "trained": false,
+      "armorCheckPenalty": true
     },
     {
       "id": "sense-motive",
@@ -136,7 +177,7 @@
       "id": "spellcraft",
       "name": "Spellcraft",
       "ability": "int",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 0,
       "trained": true,
@@ -148,7 +189,7 @@
       "ability": "dex",
       "ranks": 4,
       "classSkill": false,
-      "miscBonus": -1,
+      "miscBonus": 0,
       "trained": true,
       "armorCheckPenalty": true
     },
@@ -163,10 +204,20 @@
       "armorCheckPenalty": false
     },
     {
+      "id": "swim",
+      "name": "Swim",
+      "ability": "str",
+      "ranks": 0,
+      "classSkill": true,
+      "miscBonus": 2,
+      "trained": false,
+      "armorCheckPenalty": true
+    },
+    {
       "id": "use-magic-device",
       "name": "Use Magic Device",
       "ability": "cha",
-      "ranks": 4,
+      "ranks": 5,
       "classSkill": true,
       "miscBonus": 0,
       "trained": true,
@@ -179,7 +230,7 @@
       "name": "Rapier",
       "type": "melee",
       "attackBonus": [
-        7
+        8
       ],
       "damageDice": "1d6",
       "damageBonus": 0,
@@ -187,6 +238,7 @@
       "critMultiplier": 2,
       "tags": [
         "Weapon Finesse",
+        "Weapon Focus",
         "Spellstrike"
       ]
     },
@@ -202,6 +254,7 @@
       "critRange": 19,
       "critMultiplier": 2,
       "tags": [
+        "Weapon Finesse",
         "Throwable"
       ],
       "maxAmmo": 1,
@@ -211,10 +264,10 @@
   "buffs": [
     {
       "id": "arcane-pool-weapon",
-      "name": "Arcane Pool (+1 weapon)",
+      "name": "Arcane Pool (+2 weapon)",
       "active": false,
-      "attackMod": 1,
-      "damageMod": 1,
+      "attackMod": 2,
+      "damageMod": 2,
       "acMod": 0,
       "color": "primary"
     },
@@ -260,32 +313,46 @@
       "index": 1,
       "name": "Weapon Finesse",
       "shortDesc": "Use DEX modifier instead of STR on attack rolls with light weapons and rapier.",
-      "fullDesc": "With a light weapon, rapier, whip, or spiked chain made for a creature of your size, you may use your Dexterity modifier instead of your Strength modifier on attack rolls. This is why Shotrix's rapier and dagger both use +7 (BAB 3 + DEX 4)."
+      "fullDesc": "With a light weapon, rapier, whip, or spiked chain made for a creature of your size, you may use your Dexterity modifier instead of your Strength modifier on attack rolls. Rapier uses +8 (BAB 3 + DEX 4 + Weapon Focus 1) and Dagger uses +7 (BAB 3 + DEX 4)."
+    },
+    {
+      "id": "weapon-focus-rapier",
+      "index": 2,
+      "name": "Weapon Focus (Rapier)",
+      "shortDesc": "+1 bonus on all attack rolls made using a Rapier (already included in +8).",
+      "fullDesc": "You are especially good at using your chosen weapon. You gain a +1 bonus on all attack rolls you make using the Rapier. Selected as Magus 5th-level bonus combat feat."
     },
     {
       "id": "combat-casting",
-      "index": 2,
+      "index": 3,
       "name": "Combat Casting",
       "shortDesc": "+4 on concentration checks when casting defensively or while grappled.",
-      "fullDesc": "You get a +4 bonus on concentration checks made to cast a spell or use a spell-like ability when casting on the defensive or while grappled. Combined with Spell Combat, Shotrix's concentration bonus is +10 (+4 INT + 4 level + 4 this feat vs. defensively)."
+      "fullDesc": "You get a +4 bonus on concentration checks made to cast a spell or use a spell-like ability when casting on the defensive or while grappled. Combined with Shotrix's base concentration of +11 (CL 5 + INT 4 + 2 Trait), his defensive concentration check is +15."
     },
     {
       "id": "lamashtu-mark",
-      "index": 3,
+      "index": 4,
       "name": "Lamashtu's Mark",
-      "shortDesc": "1/day on a melee hit against a nonevil foe: target's CHA reduced by 1d4 for 1 hour (Fort DC 10+level+CHA mod negates).",
-      "fullDesc": "Your abdomen bears ugly scars marking you as Lamashtu's favored. If visible, you gain +2 Intimidate but -2 Diplomacy. Once per day as a free action when striking a nonevil foe in melee, the target is temporarily deformed, reducing CHA by 1d4 for 1 hour. Fortitude DC (10 + character level + CHA modifier) negates."
+      "shortDesc": "1/day on a melee hit against a nonevil foe: target's CHA reduced by 1d4 for 1 hour (Fort DC 13 negates).",
+      "fullDesc": "Your abdomen bears ugly scars marking you as Lamashtu's favored. If visible, you gain +2 Intimidate but -2 Diplomacy. Once per day as a free action when striking a nonevil foe in melee, the target is temporarily deformed, reducing CHA by 1d4 for 1 hour. Fortitude DC (10 + character level 5 + CHA mod -2 = 13) negates."
     },
     {
       "id": "burning-spell",
-      "index": 4,
+      "index": 5,
       "name": "Burning Spell (Metamagic)",
-      "shortDesc": "Acid/fire spells deal additional damage equal to 2× spell level at the start of the target's next turn.",
+      "shortDesc": "Acid/fire spells deal additional damage equal to 2× spell level at the start of the target's next turn (+2 slot level).",
       "fullDesc": "When a creature takes acid or fire damage from the affected spell, that creature takes damage equal to 2× the spell's actual level at the start of its next turn. A burning spell uses a slot two levels higher. If a spell has both acid and fire descriptors, the caster chooses which type the burning damage is."
     },
     {
+      "id": "intensified-spell",
+      "index": 6,
+      "name": "Intensified Spell (Metamagic)",
+      "shortDesc": "Increases the maximum number of damage dice of a spell by 5 levels (+1 slot level).",
+      "fullDesc": "An intensified spell increases the maximum number of damage dice by 5 levels. You must actually have sufficient caster levels to surpass the maximum in order to benefit from this feat (e.g., Shocking Grasp scales up to 10d6 at higher CL). An intensified spell uses up a spell slot one level higher than the spell's actual level."
+    },
+    {
       "id": "craft-wondrous",
-      "index": 5,
+      "index": 7,
       "name": "Craft Wondrous Item",
       "shortDesc": "Can create wondrous magic items. Costs half the base price in raw materials.",
       "fullDesc": "You can create a wide variety of magic wondrous items. Crafting takes 1 day for each 1,000 gp in price, consuming raw materials costing half the base price. You can also mend a broken wondrous item you could make, at half the materials and time."
@@ -294,31 +361,37 @@
   "classAbilities": [
     {
       "id": "arcane-pool",
-      "name": "Arcane Pool (6 pts/day)",
-      "description": "Spend 1 point as a swift action to grant a held weapon +1 enhancement bonus for 1 minute. Bonuses stack up to +5. Also: Spell Recall — spend points equal to spell level to re-prepare a cast spell as a swift action.",
+      "name": "Arcane Pool (6 pts/day · +2)",
+      "description": "Spend 1 point as a swift action to grant a held weapon a +2 enhancement bonus for 1 minute (stacking up to +5). Can trade bonus for weapon properties (Flaming, Frost, Shock, Keen, etc., leaving at least +1 on nonmagical weapons). Also: Spell Recall — spend points equal to spell level (min 1) to re-prepare a cast spell as a swift action.",
       "isSignature": true
     },
     {
       "id": "spell-combat",
       "name": "Spell Combat",
-      "description": "As a full-round action, make all melee weapon attacks at −2 and cast one Magus spell (casting time 1 standard action). Can cast defensively by adding up to INT bonus as a circumstance bonus to concentration and as additional penalty to attacks.",
+      "description": "As a full-round action, make all melee weapon attacks at −2 and cast one Magus spell (casting time 1 standard action). Can cast defensively by adding up to INT bonus (+4) as a circumstance bonus to concentration and as additional penalty to attacks.",
       "isSignature": true
     },
     {
       "id": "spellstrike",
       "name": "Spellstrike",
-      "description": "When casting a touch spell from the Magus list, deliver it through your weapon as a free melee attack at highest BAB (instead of the normal free touch attack). On a hit, deals weapon damage + spell effects. Uses weapon's critical range but spell only crits at ×2.",
+      "description": "When casting a touch spell from the Magus list, deliver it through your weapon as a free melee attack at highest BAB (instead of the normal free touch attack). On a hit, deals weapon damage + spell effects. Uses weapon's critical range (18-20 on Rapier) but spell only crits at ×2.",
+      "isSignature": false
+    },
+    {
+      "id": "armor-proficiency-light",
+      "name": "Armor Proficiency (Light)",
+      "description": "Can cast Magus spells while wearing light armor (Studded Leather Armor) without incurring arcane spell failure chance.",
       "isSignature": false
     }
   ],
   "spellSlots": [
     {
       "level": 1,
-      "total": 4
+      "total": 5
     },
     {
       "level": 2,
-      "total": 2
+      "total": 3
     }
   ],
   "spells": [
@@ -327,6 +400,7 @@
       "name": "Acid Splash",
       "level": 0,
       "school": "Conjuration",
+      "subschool": "Creation",
       "castingTime": "1 standard action",
       "range": "Close (35 ft.)",
       "duration": "Instantaneous",
@@ -339,17 +413,112 @@
       "damageDice": "1d3"
     },
     {
+      "id": "arcane-mark",
+      "name": "Arcane Mark",
+      "level": 0,
+      "school": "Universal",
+      "castingTime": "1 standard action",
+      "range": "Touch",
+      "duration": "Permanent",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, S",
+      "description": "Allows you to inscribe your personal rune or mark (visible or invisible). Can be delivered via Spellstrike for an extra melee attack with Spell Combat."
+    },
+    {
+      "id": "dancing-lights",
+      "name": "Dancing Lights",
+      "level": 0,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Medium (150 ft.)",
+      "duration": "1 minute (D)",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, S",
+      "description": "You create up to four lights within a 10-ft.-radius area that resemble lanterns or torches."
+    },
+    {
+      "id": "daze-s",
+      "name": "Daze",
+      "level": 0,
+      "school": "Enchantment",
+      "subschool": "Compulsion",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "1 round",
+      "savingThrow": "Will negates (DC 14)",
+      "spellResistance": true,
+      "components": "V, S, M",
+      "description": "Clouds the mind of a humanoid creature of 4 HD or less so that it takes no actions."
+    },
+    {
       "id": "detect-magic-0",
       "name": "Detect Magic",
       "level": 0,
       "school": "Divination",
       "castingTime": "1 standard action",
       "range": "60 ft. cone",
-      "duration": "Concentration, up to 4 min.",
+      "duration": "Concentration, up to 5 min.",
       "savingThrow": "None",
       "spellResistance": false,
       "components": "V, S",
       "description": "You detect magical auras within a 60-foot cone."
+    },
+    {
+      "id": "disrupt-undead",
+      "name": "Disrupt Undead",
+      "level": 0,
+      "school": "Necromancy",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "Instantaneous",
+      "savingThrow": "None",
+      "spellResistance": true,
+      "components": "V, S",
+      "description": "Direct a ray of positive energy dealing 1d6 damage to Undead on a ranged touch attack.",
+      "isAttackSpell": true,
+      "attackType": "rangedTouch",
+      "damageDice": "1d6"
+    },
+    {
+      "id": "light-s",
+      "name": "Light",
+      "level": 0,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Touch",
+      "duration": "50 minutes",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, M/DF",
+      "description": "Causes a touched object to glow like a torch."
+    },
+    {
+      "id": "mage-hand",
+      "name": "Mage Hand",
+      "level": 0,
+      "school": "Transmutation",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "Concentration",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, S",
+      "description": "Telekinetically lift and move one nonmagical, unattended object weighing up to 5 lbs."
+    },
+    {
+      "id": "prestidigitation",
+      "name": "Prestidigitation",
+      "level": 0,
+      "school": "Universal",
+      "castingTime": "1 standard action",
+      "range": "10 ft.",
+      "duration": "1 hour",
+      "savingThrow": "See text (DC 14)",
+      "spellResistance": false,
+      "components": "V, S",
+      "description": "Perform minor magical tricks for up to 1 hour."
     },
     {
       "id": "ray-of-frost",
@@ -368,6 +537,32 @@
       "damageDice": "1d3"
     },
     {
+      "id": "read-magic-s",
+      "name": "Read Magic",
+      "level": 0,
+      "school": "Divination",
+      "castingTime": "1 standard action",
+      "range": "Personal",
+      "duration": "50 minutes",
+      "savingThrow": "None",
+      "spellResistance": false,
+      "components": "V, S, F",
+      "description": "Decipher magical inscriptions on books, scrolls, and weapons."
+    },
+    {
+      "id": "spark-s",
+      "name": "Spark",
+      "level": 0,
+      "school": "Evocation",
+      "castingTime": "1 standard action",
+      "range": "Close (35 ft.)",
+      "duration": "Instantaneous",
+      "savingThrow": "Fortitude negates (object, DC 14)",
+      "spellResistance": true,
+      "components": "V or S",
+      "description": "Ignites one Fine unattended flammable object."
+    },
+    {
       "id": "burning-hands",
       "name": "Burning Hands",
       "level": 1,
@@ -378,9 +573,9 @@
       "savingThrow": "Reflex half (DC 15)",
       "spellResistance": true,
       "components": "V, S",
-      "description": "A cone of searing flame deals 4d4 points of fire damage to all creatures in the area.",
+      "description": "A cone of searing flame deals 5d4 points of fire damage to all creatures in the area.",
       "isAttackSpell": true,
-      "damageDice": "4d4"
+      "damageDice": "5d4"
     },
     {
       "id": "chill-touch",
@@ -390,10 +585,10 @@
       "castingTime": "1 standard action",
       "range": "Touch",
       "duration": "Instantaneous",
-      "savingThrow": "Fortitude partial or Will negates",
+      "savingThrow": "Fortitude partial or Will negates (DC 15)",
       "spellResistance": true,
       "components": "V, S",
-      "description": "A touch from your hand deals 1d6 damage to living creatures and 1 point of STR damage (Fort negates STR). Ideal for Spellstrike delivery.",
+      "description": "A touch from your hand deals 1d6 damage to living creatures and 1 point of STR damage (Fort DC 15 negates STR). Up to 5 creatures touched (CL 5). Ideal for Spellstrike delivery.",
       "isAttackSpell": true,
       "attackType": "meleeTouch",
       "damageDice": "1d6"
@@ -409,11 +604,11 @@
       "savingThrow": "None",
       "spellResistance": true,
       "components": "V, S",
-      "description": "Target takes 1d6+4 nonlethal cold damage and is fatigued. Can touch up to 4 creatures (one charge per creature). Ideal for Spellstrike.",
+      "description": "Target takes 1d6+5 nonlethal cold damage and is fatigued. Can touch up to 5 creatures (CL 5, one charge per creature). Ideal for Spellstrike.",
       "isAttackSpell": true,
       "attackType": "meleeTouch",
       "damageDice": "1d6",
-      "damageBonus": 4
+      "damageBonus": 5
     },
     {
       "id": "magic-missile",
@@ -421,15 +616,15 @@
       "level": 1,
       "school": "Evocation",
       "castingTime": "1 standard action",
-      "range": "Medium (140 ft.)",
+      "range": "Medium (150 ft.)",
       "duration": "Instantaneous",
       "savingThrow": "None",
       "spellResistance": true,
       "components": "V, S",
-      "description": "2 missiles each deal 1d4+1 force damage automatically (no attack roll needed).",
+      "description": "3 missiles each deal 1d4+1 force damage automatically (3d4+3 total, no attack roll needed).",
       "isAttackSpell": true,
-      "damageDice": "2d4",
-      "damageBonus": 2
+      "damageDice": "3d4",
+      "damageBonus": 3
     },
     {
       "id": "shield",
@@ -438,7 +633,7 @@
       "school": "Abjuration",
       "castingTime": "1 standard action",
       "range": "Personal",
-      "duration": "4 minutes",
+      "duration": "5 minutes (D)",
       "savingThrow": "None",
       "spellResistance": false,
       "components": "V, S",
@@ -455,10 +650,10 @@
       "savingThrow": "None",
       "spellResistance": true,
       "components": "V, S",
-      "description": "Melee touch attack deals 4d6 electricity damage. +3 bonus on the attack roll if the target is wearing metal armor. Ideal for Spellstrike.",
+      "description": "Melee touch attack deals 5d6 electricity damage (CL 5). +3 bonus on the attack roll if the target is wearing metal armor. Ideal for Spellstrike.",
       "isAttackSpell": true,
       "attackType": "meleeTouch",
-      "damageDice": "4d6"
+      "damageDice": "5d6"
     },
     {
       "id": "true-strike",
@@ -479,12 +674,12 @@
       "level": 2,
       "school": "Evocation",
       "castingTime": "1 standard action",
-      "range": "Medium (140 ft.)",
-      "duration": "4 rounds",
+      "range": "Medium (150 ft.)",
+      "duration": "5 rounds",
       "savingThrow": "Reflex negates (DC 16)",
       "spellResistance": true,
       "components": "V, S, M/DF",
-      "description": "A 5-ft.-diameter flying storm cloud deals 3d6 electricity damage to any creature it moves over. You can direct the cloud as a move action.",
+      "description": "A 5-ft.-diameter flying storm cloud deals 3d6 electricity damage to any creature it moves over (Reflex DC 16 negates). You can direct the cloud as a move action.",
       "isAttackSpell": true,
       "attackType": "rangedTouch",
       "damageDice": "3d6"
@@ -495,12 +690,12 @@
       "level": 2,
       "school": "Evocation",
       "castingTime": "1 standard action",
-      "range": "Medium (140 ft.)",
-      "duration": "4 rounds",
+      "range": "Medium (150 ft.)",
+      "duration": "5 rounds",
       "savingThrow": "Reflex negates (DC 16)",
       "spellResistance": true,
       "components": "V, S, M/DF",
-      "description": "A 5-ft.-diameter burning globe rolls in whichever direction you point. Any creature it strikes takes 2d6 fire damage (Reflex DC 16 negates). You can move it 30 ft. per round as a move action.",
+      "description": "A 5-ft.-diameter burning globe rolls in whichever direction you point. Any creature it strikes takes 3d6 fire damage (Reflex DC 16 negates). You can move it 30 ft. per round as a move action.",
       "isAttackSpell": true,
       "attackType": "rangedTouch",
       "damageDice": "3d6"
@@ -508,122 +703,104 @@
   ],
   "inventory": [
     {
-      "id": "sb-armor",
-      "name": "Mithral Shirt",
-      "description": "+4 AC, counts as light armor. Allows arcane casting.",
-      "category": "armor",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "body"
-    },
-    {
-      "id": "sb-longsword",
-      "name": "Longsword +1",
-      "description": "The magus's bonded weapon, 1d8+1, ×2 crit.",
+      "id": "sb-rapier",
+      "name": "Rapier",
+      "description": "1d6 piercing, 18-20/×2 crit. Primary Spellstrike and Weapon Finesse blade.",
       "category": "weapon",
       "quantity": 1,
+      "weight": 2,
       "equipped": true,
       "slot": "mainHand"
     },
     {
-      "id": "sb-dagger",
-      "name": "Dagger",
-      "description": "A reliable backup blade.",
-      "category": "weapon",
-      "quantity": 2
+      "id": "sb-studded-leather",
+      "name": "Studded Leather Armor",
+      "description": "+3 AC, Max DEX +5, ACP −1, 15% ASF (ignored by Magus light armor proficiency).",
+      "category": "armor",
+      "quantity": 1,
+      "weight": 20,
+      "equipped": true,
+      "slot": "body",
+      "armorBonus": 3,
+      "armorCheckPenalty": -1,
+      "spellFailureChance": 15
     },
     {
-      "id": "sb-cure-mod",
-      "name": "Potion of Cure Moderate Wounds",
-      "description": "Heals 2d8+3 hit points.",
-      "category": "consumable",
-      "quantity": 3
+      "id": "sb-dagger",
+      "name": "Dagger",
+      "description": "1d4 piercing/slashing, 19-20/×2 crit. Throwable backup blade (10 ft. range increment).",
+      "category": "weapon",
+      "quantity": 1,
+      "weight": 1
     },
     {
       "id": "sb-cure-light",
       "name": "Potion of Cure Light Wounds",
-      "description": "Heals 1d8+1 hit points.",
-      "category": "consumable",
-      "quantity": 2
-    },
-    {
-      "id": "sb-scroll-haste",
-      "name": "Scroll of Haste",
-      "description": "Grants Haste for 4 rounds. Useful before a big fight.",
+      "description": "Heals 1d8+1 hit points (handwritten sheet note: 1 Cura Ferite Leggere).",
       "category": "consumable",
       "quantity": 1
+    },
+    {
+      "id": "sb-cure-mod",
+      "name": "Potion of Cure Moderate Wounds",
+      "description": "Heals 2d8+3 hit points (handwritten sheet note: 1 Cura Ferite Moderate).",
+      "category": "consumable",
+      "quantity": 1
+    },
+    {
+      "id": "sb-tarocchi",
+      "name": "Tarocchi Shotrix",
+      "description": "Personal deck of tarot cards kept inside the backpack.",
+      "category": "gear",
+      "quantity": 1,
+      "weight": 0.2
     },
     {
       "id": "sb-spellbook",
       "name": "Spellbook",
-      "description": "Contains all prepared magus spells, bound in black leather.",
+      "description": "Contains all prepared magus spells.",
       "category": "gear",
-      "quantity": 1
+      "quantity": 1,
+      "weight": 3
     },
     {
       "id": "sb-components",
       "name": "Spell Component Pouch",
       "description": "Contains all common material components.",
       "category": "gear",
-      "quantity": 1
+      "quantity": 1,
+      "weight": 2,
+      "equipped": true
     },
     {
       "id": "sb-backpack",
-      "name": "Backpack",
-      "description": "Worn over the shoulder, always packed for quick departure.",
+      "name": "Backpack, Common",
+      "description": "Sturdy adventuring backpack holding the Tarocchi Shotrix and travel supplies.",
+      "category": "gear",
+      "quantity": 1,
+      "weight": 2,
+      "equipped": true
+    },
+    {
+      "id": "sb-waterskin",
+      "name": "Waterskin, Filled",
+      "description": "Holds half a gallon of water.",
+      "category": "gear",
+      "quantity": 1,
+      "weight": 4
+    },
+    {
+      "id": "sb-light-horse",
+      "name": "Light Horse",
+      "description": "Riding mount for overland travel.",
       "category": "gear",
       "quantity": 1
-    },
-    {
-      "id": "sb-headband",
-      "name": "Headband of Vast Intellect +2",
-      "description": "+2 enhancement bonus to Intelligence.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "headband"
-    },
-    {
-      "id": "sb-amulet-na",
-      "name": "Amulet of Natural Armor +1",
-      "description": "+1 natural armor bonus to AC.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "neck"
-    },
-    {
-      "id": "sb-cloak-res",
-      "name": "Cloak of Resistance +1",
-      "description": "+1 resistance bonus on all saving throws.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "shoulders"
-    },
-    {
-      "id": "sb-ring-prot",
-      "name": "Ring of Protection +1",
-      "description": "+1 deflection bonus to AC.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "ring1"
-    },
-    {
-      "id": "sb-belt-str",
-      "name": "Belt of Giant Strength +2",
-      "description": "+2 enhancement bonus to Strength.",
-      "category": "magic",
-      "quantity": 1,
-      "equipped": true,
-      "slot": "belt"
     }
   ],
   "startingCoins": {
-    "gp": 95,
-    "sp": 60,
-    "cp": 10
+    "gp": 2106,
+    "sp": 5,
+    "cp": 1
   },
   "spellcasting": {
     "mode": "prepared",

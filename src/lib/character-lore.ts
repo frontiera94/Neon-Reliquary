@@ -12,20 +12,20 @@ export const CHARACTER_LORE_MAP: Record<string, CharacterLore> = {
   'mazikeen-noctis': {
     archetype: 'Hexcrafter & Occult Controller',
     quote: '"Le ombre sussurrano verità che la luce preferisce nascondere."',
-    bio: 'Tiefling devota ai segreti oscuri, Mazikeen manipola i fili del destino e le maledizioni ancestrali insieme al suo inseparabile famiglio Salem.',
-    highlights: ['Patrono dell’Inganno', 'Malefici Ipotizzanti (Slumber & Evil Eye)', 'Famiglio Arcano (Salem)'],
+    bio: 'Tiefling di Cheliax devota a Mammon, Mazikeen manipola i fili del destino, i malefici di volo e sonno e le arti curative oscure insieme al suo famiglio Salem.',
+    highlights: ['Patrono della Guarigione (Healing)', 'Malefici (Slumber, Evil Eye, Flight)', 'Famiglio Arcano (Salem · Speak with Master)'],
     accentColor: 'magenta',
     classIcon: 'auto_awesome',
-    deityOrPatron: 'Patrono dell’Inganno (Deception)',
+    deityOrPatron: 'Patrono della Guarigione · Mammon',
   },
   'shotrix-blackburn': {
     archetype: 'Arcane Blade & Spellstriker',
     quote: '"Acciaio e incantesimo: nessuno dei due perdona."',
-    bio: 'Nobile decaduto di Cheliax, Shotrix fonde la scherma di precisione con letali scariche magiche incanalate direttamente attraverso la sua lama lunga.',
-    highlights: ['Magus Spadaccino', 'Spellstrike Elettrico (Shocking Grasp)', 'Armatura di Maglia Mithral'],
+    bio: 'Informatore di Casa Thrune segnato dal marchio di Lamashtu, Shotrix fonde la scherma con lo stocco a letali scariche elettriche incanalate via Spellstrike e Arcane Pool (+2).',
+    highlights: ['Magus Spadaccino (Rapier +8)', 'Spellstrike & Intensified Spell', 'Arcane Pool +2 & Marchio di Lamashtu'],
     accentColor: 'cyan',
     classIcon: 'swords',
-    deityOrPatron: 'Ordine Arcano di Cheliax',
+    deityOrPatron: 'Lamashtu · Cheliax',
   },
   'knam': {
     archetype: 'Primal Bloodrager & Juggernaut',
@@ -57,11 +57,11 @@ export const CHARACTER_LORE_MAP: Record<string, CharacterLore> = {
   'noorie': {
     archetype: 'Wild Summoner & Pack Mistress',
     quote: '"La natura selvaggia non conosce pietà, solo la legge del branco."',
-    bio: 'Druida ferale legata alle forze elementali e alle creature delle profondità boschive, Noorie guida il suo lupo cenerino Ignis e richiama alleati feroci in battaglia.',
-    highlights: ['Evocazione Naturale Spontanea', 'Lupo Guardiano (Ignis)', 'Padronanza Elementale Selvatica'],
+    bio: 'Druida delle ceneri devota ad Asmodeus, Noorie scatena fuoco divino e incantesimi anche in Forma Selvatica grazie a Natural Spell, affiancata dal lupo Ignis.',
+    highlights: ['Dominio della Cenere (Fireball & Fire Bolt)', 'Forma Selvatica + Natural Spell', 'Evocazione Naturale III & Lupo Ignis'],
     accentColor: 'emerald',
     classIcon: 'nature',
-    deityOrPatron: 'Natura Primordiale',
+    deityOrPatron: 'Asmodeus · Sottodominio Cenere',
   },
 }
 
