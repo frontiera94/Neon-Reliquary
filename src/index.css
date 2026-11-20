@@ -34,6 +34,12 @@
   --color-inverse-primary: #008fa3;
   --color-primary-container: #005260;
   --color-secondary-container: #701a75;
+  --color-on-primary-container: #e0f2fe;
+  --color-on-secondary-container: #fdf4ff;
+  --color-error-container: #881337;
+  --color-on-error-container: #ffe4e6;
+  --color-tertiary-container: #334155;
+  --color-on-tertiary-container: #f1f5f9;
   --font-headline: 'Noto Serif', serif;
   --font-body: 'Manrope', 'Inter', sans-serif;
   --font-label: 'Space Grotesk', 'JetBrains Mono', monospace;
