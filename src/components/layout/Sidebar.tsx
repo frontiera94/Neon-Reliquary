@@ -21,12 +21,12 @@ export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
 
   return (
     <aside
-      className={`hidden md:flex flex-col w-56 flex-shrink-0 bg-surface-container/60 backdrop-blur-xl border-r border-white/5 ${
+      className={`relative z-30 hidden md:flex flex-col w-56 flex-shrink-0 bg-surface-container/60 backdrop-blur-xl border-r border-white/5 ${
         forceHidden ? 'md:hidden' : ''
       }`}
     >
       <div className="p-4 border-b border-white/5">
-        <CharacterDropdown />
+        <CharacterDropdown align="left" />
       </div>
 
       <nav aria-label="Main Navigation" className="flex-1 p-3 space-y-1">
