@@ -12,7 +12,29 @@ import {
   type CategorizedFeature,
   type DefensiveBadge,
 } from '../../lib/action-economy'
-import { useTranslation, translateActionType, type Locale } from '../../i18n'
+import {
+  useTranslation,
+  translateActionType,
+  translateFeat,
+  translateClassAbility,
+  translateResourceName,
+  type Locale,
+} from '../../i18n'
+
+function translateCategorizedFeature(feature: CategorizedFeature, locale: Locale): {
+  name: string
+  shortDesc: string
+  fullDesc: string
+} {
+  if (locale !== 'it') {
+    return { name: feature.name, shortDesc: feature.shortDesc, fullDesc: feature.fullDesc }
+  }
+  if (feature.source === 'classAbility') {
+    const tr = translateClassAbility({ name: feature.name, description: feature.fullDesc || feature.shortDesc }, locale)
+    return { name: tr.name, shortDesc: tr.description, fullDesc: tr.description }
+  }
+  return translateFeat({ name: feature.name, shortDesc: feature.shortDesc, fullDesc: feature.fullDesc }, locale)
+}
 
 const GROUP_ORDER = ['standard', 'swift', 'move', 'immediate', 'full-round', 'passive'] as const
 const COMBAT_RE = /flurry|ki pool|ki strike|ki dodge|judgment|bane|spell combat|spellstrike|power attack|stunning fist|fire bolt|wild shape|hex|bloodrage|sneak attack|smite|channel|rage|two.weapon|combat casting|weapon finesse|dodge|evasion|uncanny|deflect|natural armor|furious focus/i
@@ -28,11 +50,13 @@ function featureInspectorItem(
   locale: Locale = 'en'
 ): InspectorItem {
   const isIt = locale === 'it'
+  const trFeature = translateCategorizedFeature(feature, locale)
   const actions: InspectorItem['actions'] = []
   if (feature.resourceId && (feature.remainingUses ?? 0) > 0 && onSpend) {
-    const resourceName =
+    const rawResourceName =
       character.dailyResources.find((resource) => resource.id === feature.resourceId)?.name ??
       feature.resourceId
+    const resourceName = translateResourceName(rawResourceName, locale)
     actions.push({
       label: isIt ? `Spendi 1 ${resourceName}` : `Spend 1 ${resourceName}`,
       onClick: onSpend,
@@ -45,9 +69,9 @@ function featureInspectorItem(
   return {
     type: signature ? 'ability' : 'feat',
     id: feature.id,
-    title: feature.name,
+    title: trFeature.name,
     subtitle: `${actionLabel} ${isIt ? 'azione' : 'action'}${signature ? (isIt ? ' · Capacità distintiva' : ' · Signature ability') : ''}`,
-    description: feature.fullDesc || feature.shortDesc,
+    description: trFeature.fullDesc || trFeature.shortDesc,
     tags: [
       actionLabel,
       feature.source === 'classAbility' ? (isIt ? 'Capacità di Classe' : 'Class Ability') : (isIt ? 'Talento' : 'Feat'),
@@ -207,9 +231,11 @@ export function ContextualCombatFeatures({
                 {group.map((feature) => {
                   const empty = feature.resourceId !== undefined && (feature.remainingUses ?? 0) <= 0
                   const signature = isSignatureFeature(character, feature)
-                  const resourceName = feature.resourceId
+                  const trFeature = translateCategorizedFeature(feature, locale)
+                  const rawResourceName = feature.resourceId
                     ? character.dailyResources.find((resource) => resource.id === feature.resourceId)?.name
                     : undefined
+                  const resourceName = rawResourceName ? translateResourceName(rawResourceName, locale) : undefined
                   return (
                     <div
                       key={feature.id}
@@ -241,10 +267,10 @@ export function ContextualCombatFeatures({
                         className="text-left cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 rounded"
                       >
                         <p className="font-label text-[11px] font-bold text-white group-hover:text-primary transition-colors leading-tight">
-                          {feature.name}
+                          {trFeature.name}
                         </p>
                         <p className="font-body text-[10px] text-tertiary leading-snug line-clamp-2 mt-0.5">
-                          {feature.shortDesc}
+                          {trFeature.shortDesc}
                         </p>
                       </button>
 
@@ -269,7 +295,7 @@ export function ContextualCombatFeatures({
                                 ? 'border-white/10 text-tertiary/50 cursor-not-allowed'
                                 : 'border-primary/40 text-primary hover:bg-primary/15 cursor-pointer'
                             }`}
-                            aria-label={`${isIt ? 'Usa' : 'Use'} ${feature.name}`}
+                            aria-label={`${isIt ? 'Usa' : 'Use'} ${trFeature.name}`}
                             title={resourceName}
                           >
                             {feature.remainingUses}/{feature.maxUses}

@@ -23,7 +23,7 @@ import { useInspectorStore } from '../../store/useInspectorStore'
 import { CharacterDropdown } from '../character/CharacterDropdown'
 import { CharacterEmblem } from '../character/CharacterEmblem'
 import { getCharacterLore } from '../../lib/character-lore'
-import { useTranslation, getConditionInfo, translateSaveName } from '../../i18n'
+import { useTranslation, getConditionInfo, translateSaveName, translateClassName } from '../../i18n'
 
 export function TacticalHUD() {
   const navigate = useNavigate()
@@ -208,7 +208,7 @@ export function TacticalHUD() {
                   {char.name}
                 </h1>
 <p className="font-label text-[8px] sm:text-xs tracking-wider sm:tracking-widest text-tertiary uppercase mt-0.5 truncate max-w-[85px] sm:max-w-none">
-                  {t('common.level')} {char.level} {char.class}
+                  {t('common.level')} {char.level} {translateClassName(char.class, locale)}
                 </p>
               </div>
             </div>

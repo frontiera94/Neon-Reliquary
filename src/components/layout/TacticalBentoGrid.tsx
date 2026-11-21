@@ -18,6 +18,7 @@ import {
 import { abilityMod } from '../../lib/dice-engine'
 import { getSpellAvailability } from '../../lib/spell-availability'
 import { CONDITION_INFO } from '../../lib/conditions'
+import { translateClassName } from '../../i18n'
 import { categorizeFeatures } from '../../lib/action-economy'
 import { StatBreakdownTooltip } from '../ui/StatBreakdownTooltip'
 import { DefensiveBadges } from '../combat/ContextualCombatFeatures'
@@ -165,7 +166,7 @@ function BentoStatusColumn() {
           <div className="min-w-0">
             <h2 className="font-headline text-sm font-bold text-white truncate">{char.name}</h2>
             <p className="font-label text-[9px] uppercase tracking-widest text-tertiary">
-              {isIt ? 'Liv' : 'Lv'} {char.level} · {char.class}
+              {isIt ? 'Liv' : 'Lv'} {char.level} · {translateClassName(char.class, locale)}
             </p>
           </div>
         </div>

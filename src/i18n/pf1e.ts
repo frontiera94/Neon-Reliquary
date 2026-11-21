@@ -543,3 +543,5 @@ export function translateCastingTime(time: string, locale: Locale): string {
     .replace(/\b1 round\b/gi, '1 round')
     .replace(/\b1 minute\b/gi, '1 minuto')
 }
+
+export * from './pf1e-features'

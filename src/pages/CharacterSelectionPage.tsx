@@ -11,7 +11,7 @@ import { LanguageToggle } from '../components/layout/LanguageToggle'
 import { useSheetQueueStore } from '../store/useSheetQueueStore'
 import { getCharacterLore, isPlaceholderPortrait } from '../lib/character-lore'
 import type { FullCharacter } from '../store/useCharacterStore'
-import { useTranslation } from '../i18n'
+import { useTranslation, translateClassName, translateRaceName } from '../i18n'
 
 import mazeData from '../data/mazikeen-noctis.json'
 import shotrixData from '../data/shotrix-blackburn.json'
@@ -224,7 +224,7 @@ const [settingsOpen, setSettingsOpen] = useState(false)
                       )}
                     </div>
                     <p className="font-label text-[10px] text-tertiary tracking-wider uppercase">
-                      {t('common.lvl')} {char.level} {char.class}
+                      {t('common.lvl')} {char.level} {translateClassName(char.class, locale)}
                     </p>
                   </div>
                 </button>
@@ -356,10 +356,10 @@ const [settingsOpen, setSettingsOpen] = useState(false)
                   {/* Core Identity Pills: Race, Alignment, Level & Class */}
                   <div className="flex flex-wrap gap-2 items-center">
                     <span className="px-3 py-1 rounded-lg bg-surface-container-high border border-white/10 font-label text-xs text-white uppercase tracking-wider font-semibold">
-                      {t('common.lvl')} {activeChar.level} {activeChar.class}
+                      {t('common.lvl')} {activeChar.level} {translateClassName(activeChar.class, locale)}
                     </span>
                     <span className="px-3 py-1 rounded-lg bg-primary/10 border border-primary/30 font-label text-xs text-primary uppercase tracking-wider font-semibold">
-                      {activeChar.race}
+                      {translateRaceName(activeChar.race, locale)}
                     </span>
                     <span
                       className={`px-3 py-1 rounded-lg border font-label text-xs uppercase tracking-wider font-bold ${
@@ -523,11 +523,11 @@ function RosterItemCard({
 
         <div className="flex items-center gap-2 mt-0.5">
           <p className="font-label text-xs text-primary font-medium tracking-wide">
-            {t('common.lvl')} {char.level} {char.class}
+            {t('common.lvl')} {char.level} {translateClassName(char.class, locale)}
           </p>
           <span className="text-white/20 text-xs">•</span>
           <p className="font-label text-xs text-tertiary truncate">
-            {char.race}
+            {translateRaceName(char.race, locale)}
           </p>
         </div>
 

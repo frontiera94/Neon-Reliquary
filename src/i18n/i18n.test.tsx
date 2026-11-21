@@ -23,7 +23,15 @@ import {
   translateSpellSave,
   translateCastingTime,
   getConditionInfo,
+  translateClassName,
+  translateRaceName,
+  translateBuffName,
+  translateResourceName,
+  translateClassAbility,
+  translateFeat,
 } from './index'
+import { en } from './en'
+import { it as itDict } from './it'
 import { LanguageFlagSwitcher } from '../components/layout/LanguageFlagButton'
 import { Sidebar } from '../components/layout/Sidebar'
 import { SettingsPanel } from '../components/layout/SettingsPanel'
@@ -184,5 +192,48 @@ describe('i18n & Italian Flag Switcher', () => {
     // With no active companion, displays Italian empty manifest state
     expect(screen.getByText('Evoca un Compagno')).toBeInTheDocument()
     expect(screen.getByText(/non ha al momento un compagno attivo/i)).toBeInTheDocument()
+  })
+
+  it('has complete key parity between en and it dictionaries', () => {
+    function collectKeys(obj: Record<string, unknown>, prefix = ''): string[] {
+      const keys: string[] = []
+      for (const [k, v] of Object.entries(obj)) {
+        const path = prefix ? `${prefix}.${k}` : k
+        if (v && typeof v === 'object') {
+          keys.push(...collectKeys(v as Record<string, unknown>, path))
+        } else {
+          keys.push(path)
+        }
+      }
+      return keys
+    }
+
+    const enKeys = collectKeys(en as unknown as Record<string, unknown>)
+    const itKeys = new Set(collectKeys(itDict as unknown as Record<string, unknown>))
+    const missing = enKeys.filter((k) => !itKeys.has(k))
+    expect(missing).toEqual([])
+  })
+
+  it('translates PF1e classes, races, buffs, resources, class abilities, and feats into Italian', () => {
+    expect(translateClassName('Monk', 'it')).toBe('Monaco')
+    expect(translateClassName('Witch', 'it')).toBe('Strega')
+    expect(translateRaceName('Human', 'it')).toBe('Umano')
+    expect(translateRaceName('Half-Elf', 'it')).toBe('Mezzelfo')
+    expect(translateBuffName('Mage Armor', 'it')).toBe('Armatura Magica')
+    expect(translateResourceName('Ki Pool', 'it')).toBe('Riserva Ki')
+
+    const ability = translateClassAbility(
+      { name: 'Evasion', description: 'If Agelmund succeeds on a Reflex saving throw...' },
+      'it'
+    )
+    expect(ability.name).toBe('Eludere')
+    expect(ability.description).toContain('Riflessi')
+
+    const feat = translateFeat(
+      { name: 'Power Attack', shortDesc: '...', fullDesc: '...' },
+      'it'
+    )
+    expect(feat.name).toBe('Attacco Poderoso')
+    expect(feat.shortDesc).toContain('tiro per colpire')
   })
 })

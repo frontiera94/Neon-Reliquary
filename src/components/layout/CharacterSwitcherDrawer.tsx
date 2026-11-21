@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useCharacterStore } from '../../store/useCharacterStore'
 import { useSessionStore } from '../../store/useSessionStore'
+import { useTranslation, translateClassName, translateRaceName } from '../../i18n'
 
 const DESKTOP_QUERY = '(min-width: 1024px)'
 
@@ -29,6 +30,7 @@ interface CharacterSwitcherDrawerProps {
 
 export function CharacterSwitcherDrawer({ isOpen, onClose }: CharacterSwitcherDrawerProps) {
   const navigate = useNavigate()
+  const { locale, t } = useTranslation()
   const characters = useCharacterStore((s) => s.characters)
   const activeCharacterId = useCharacterStore((s) => s.activeCharacterId)
   const setActiveCharacter = useCharacterStore((s) => s.setActiveCharacter)
@@ -74,7 +76,7 @@ export function CharacterSwitcherDrawer({ isOpen, onClose }: CharacterSwitcherDr
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15 }}
-        aria-label="Close character menu backdrop"
+        aria-label={t('drawer.closeBackdropAria')}
         onClick={onClose}
         className="absolute inset-0 w-full h-full bg-black/70 backdrop-blur-sm cursor-default"
       />
@@ -100,21 +102,21 @@ export function CharacterSwitcherDrawer({ isOpen, onClose }: CharacterSwitcherDr
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-label text-[10px] uppercase tracking-[0.2em] text-secondary font-bold">
-                Party Roster
+                {t('drawer.partyRoster')}
               </span>
               <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary font-label text-[10px] font-bold">
                 {characters.length}
               </span>
             </div>
             <h2 id="character-switcher-title" className="font-headline text-lg font-bold text-white mt-0.5 truncate">
-              Switch Character
+              {t('drawer.switchCharacter')}
             </h2>
           </div>
           <button
             ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            aria-label="Close character menu"
+            aria-label={t('drawer.closeMenuAria')}
             className="text-tertiary hover:text-primary transition-colors p-1.5 rounded-xl hover:bg-white/5 cursor-pointer"
           >
             <span className="material-symbols-outlined text-xl">close</span>
@@ -147,7 +149,7 @@ export function CharacterSwitcherDrawer({ isOpen, onClose }: CharacterSwitcherDr
                 key={char.id}
                 type="button"
                 onClick={() => handleSelectCharacter(char.id, char.maxHp)}
-                aria-label={`Select ${char.name}${isActive ? ' (currently active)' : ''}`}
+                aria-label={`${t('drawer.selectCharAria', { name: char.name })}${isActive ? t('drawer.currentlyActiveSuffix') : ''}`}
                 className={`w-full text-left p-3 rounded-2xl transition-all duration-200 cursor-pointer border relative overflow-hidden group ${
                   isActive
                     ? 'bg-primary/10 border-primary/50 shadow-[0_0_20px_rgba(0,240,255,0.15)] ring-1 ring-primary/40'
@@ -157,7 +159,7 @@ export function CharacterSwitcherDrawer({ isOpen, onClose }: CharacterSwitcherDr
                 {isActive && (
                   <div className="absolute top-0 right-0 w-16 h-16 pointer-events-none overflow-hidden">
                     <div className="absolute transform rotate-45 bg-primary text-black text-[9px] font-label font-black uppercase py-0.5 right-[-35px] top-[18px] w-[120px] text-center shadow-sm">
-                      Active
+                      {t('drawer.active')}
                     </div>
                   </div>
                 )}
@@ -184,7 +186,7 @@ export function CharacterSwitcherDrawer({ isOpen, onClose }: CharacterSwitcherDr
                       </h3>
                     </div>
                     <p className="font-label text-[10px] text-tertiary uppercase tracking-wider truncate mt-0.5">
-                      Lv {char.level} {char.class} · {char.race}
+                      {t('common.lvl')} {char.level} {translateClassName(char.class, locale)} · {translateRaceName(char.race, locale)}
                     </p>
 
                     {/* Mini HP bar & numbers */}
@@ -213,32 +215,34 @@ export function CharacterSwitcherDrawer({ isOpen, onClose }: CharacterSwitcherDr
                     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                       {isDead && (
                         <span className="font-label text-[8px] font-black uppercase text-error bg-error/20 border border-error/50 px-1 rounded">
-                          DEAD
+                          {t('drawer.dead')}
                         </span>
                       )}
                       {isDying && (
                         <span className="font-label text-[8px] font-black uppercase text-error bg-error/20 border border-error/50 px-1 rounded animate-pulse">
-                          DYING
+                          {t('drawer.dying')}
                         </span>
                       )}
                       {isDisabled && (
                         <span className="font-label text-[8px] font-bold uppercase text-amber-400 bg-amber-950/60 border border-amber-500/30 px-1 rounded">
-                          DISABLED
+                          {t('drawer.disabled')}
                         </span>
                       )}
                       {isUnconscious && (
                         <span className="font-label text-[8px] font-bold uppercase text-[#ffb4ab] bg-[#ffb4ab]/10 border border-[#ffb4ab]/30 px-1 rounded animate-pulse">
-                          UNCONSCIOUS
+                          {t('drawer.unconscious')}
                         </span>
                       )}
                       {conditions.length > 0 && (
                         <span className="font-label text-[8px] text-error bg-error/15 border border-error/30 px-1 rounded uppercase">
-                          {conditions.length} cond
+                          {t('drawer.condShort', { count: conditions.length })}
                         </span>
                       )}
                       {activeBuffs > 0 && (
                         <span className="font-label text-[8px] text-primary bg-primary/10 border border-primary/30 px-1 rounded uppercase">
-                          {activeBuffs} buff{activeBuffs > 1 ? 's' : ''}
+                          {activeBuffs === 1
+                            ? t('drawer.buffSingular')
+                            : t('drawer.buffPlural', { count: activeBuffs })}
                         </span>
                       )}
                     </div>
@@ -259,7 +263,7 @@ export function CharacterSwitcherDrawer({ isOpen, onClose }: CharacterSwitcherDr
             <span className="material-symbols-outlined text-base group-hover:scale-110 transition-transform">
               grid_view
             </span>
-            <span>Open Full Roster Page</span>
+            <span>{t('drawer.openFullRoster')}</span>
           </button>
         </div>
       </motion.aside>

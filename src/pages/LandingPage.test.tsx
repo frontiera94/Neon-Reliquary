@@ -147,7 +147,7 @@ describe('LandingPage component', () => {
 
     const resumeBtn = screen.getByRole('button', { name: /Resume session with Mazikeen Noctis/i })
     expect(resumeBtn).toBeInTheDocument()
-    expect(screen.getByText(/25\/38 HP • Lv 4/i)).toBeInTheDocument()
+    expect(screen.getByText(/25\/38 HP • Lvl? 4/i)).toBeInTheDocument()
 
     fireEvent.click(resumeBtn)
 
