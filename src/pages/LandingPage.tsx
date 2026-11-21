@@ -5,9 +5,11 @@ import { useCharacterStore } from '../store/useCharacterStore'
 import { useSessionStore } from '../store/useSessionStore'
 import { CloudSyncBadge } from '../components/sync/CloudSyncBadge'
 import { useSyncRoster } from '../lib/useSyncRoster'
+import { useTranslation } from '../i18n'
 
 export function LandingPage() {
   const navigate = useNavigate()
+  const { locale, t } = useTranslation()
   useSyncRoster()
 
   const characters = useCharacterStore((s) => s.characters)
@@ -186,7 +188,7 @@ export function LandingPage() {
           className="mb-3"
         >
           <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/30 font-label text-[11px] text-primary uppercase tracking-[0.25em]">
-            // Pathfinder 1E Tactical Archive
+            {t('landing.tagline')}
           </span>
         </motion.div>
 
@@ -215,7 +217,7 @@ export function LandingPage() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="font-body text-sm sm:text-base text-tertiary max-w-lg mb-8 leading-relaxed"
         >
-          Synchronize your soul-bound dossier. Command every roll, spell, and tactical state in real time.
+          {t('landing.subtitle')}
         </motion.p>
 
         {/* CTAs */}
@@ -228,10 +230,10 @@ export function LandingPage() {
           {/* Main Enter Button */}
           <button
             onClick={() => navigate('/characters')}
-            aria-label="Enter the Reliquary"
+            aria-label={t('landing.enterAria')}
             className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-primary to-primary-container text-black font-label font-bold text-sm uppercase tracking-widest rounded-xl hover:shadow-[0_0_35px_rgba(0,240,255,0.45)] transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 group"
           >
-            <span>ENTER THE RELIQUARY</span>
+            <span>{t('landing.enterBtn')}</span>
             <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
               arrow_forward
             </span>
@@ -241,14 +243,14 @@ export function LandingPage() {
           {activeChar && (
             <button
               onClick={handleResume}
-              aria-label={`Resume session with ${activeChar.name}`}
+              aria-label={t('landing.resumeAria', { name: activeChar.name })}
               className="w-full sm:w-auto px-6 py-3.5 bg-surface-container/90 border border-white/15 hover:border-secondary/60 text-white font-label text-xs uppercase tracking-wider rounded-xl hover:bg-secondary/10 hover:shadow-[0_0_25px_rgba(217,70,239,0.25)] transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-secondary text-sm">play_arrow</span>
               <div className="flex flex-col items-start text-left leading-tight">
-                <span className="font-bold text-white">Resume — {activeChar.name}</span>
+                <span className="font-bold text-white">{t('landing.resume', { name: activeChar.name })}</span>
                 <span className="text-[10px] text-tertiary font-mono">
-                  {currentHp}/{maxHp} HP • Lv {activeChar.level}
+                  {currentHp}/{maxHp} {t('hud.hp')} • {locale === 'it' ? 'Liv' : 'Lv'} {activeChar.level}
                 </span>
               </div>
             </button>
@@ -259,10 +261,10 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="relative z-20 flex flex-col sm:flex-row items-center justify-between gap-2 text-center text-xs font-label text-tertiary/70 pt-4 border-t border-white/[0.06]">
         <div className="flex items-center gap-2 tracking-widest text-[11px] uppercase">
-          <span className="text-primary font-mono">{characters.length}</span> RELICS INDEXED // PARTY ARCHIVE
+          <span className="text-primary font-mono">{characters.length}</span> {t('landing.relicsIndexed')}
         </div>
         <div className="font-mono text-[10px] text-tertiary/50 tracking-wider">
-          [PRESS <span className="text-primary font-bold">ENTER</span> TO ACCESS]
+          {t('landing.press')} <span className="text-primary font-bold">{t('landing.enterKey')}</span> {t('landing.toAccess')}
         </div>
       </footer>
     </div>

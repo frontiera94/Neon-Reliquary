@@ -5,7 +5,7 @@ import { useSessionStore } from '../../store/useSessionStore'
 import { CharacterEmblem } from './CharacterEmblem'
 import { getCharacterLore } from '../../lib/character-lore'
 import type { FullCharacter } from '../../store/useCharacterStore'
-import { useTranslation } from '../../i18n'
+import { useTranslation, translateClassName } from '../../i18n'
 
 export interface CharacterDropdownProps {
   align?: 'left' | 'right'
@@ -157,7 +157,7 @@ export function CharacterDropdown({
                 {activeChar.name}
               </h3>
               <p className="font-label text-tertiary text-[10px] uppercase tracking-wider truncate">
-                {t('common.lvl')} {activeChar.level} {activeChar.class}
+                {t('common.lvl')} {activeChar.level} {translateClassName(activeChar.class, locale)}
               </p>
             </div>
           </div>

@@ -3,7 +3,13 @@ import type { ConditionType } from '../types/combat'
 import type { Spell } from '../types/resources'
 import type { Feat, ClassAbility } from '../types/features'
 import { useLocaleStore } from '../store/useLocaleStore'
-import { getConditionInfo, translate, translateSchool } from '../i18n'
+import {
+  getConditionInfo,
+  translate,
+  translateSchool,
+  translateFeat,
+  translateClassAbility,
+} from '../i18n'
 
 export function conditionInspectorItem(condition: ConditionType, onRemove?: () => void): InspectorItem {
   const locale = useLocaleStore.getState().locale
@@ -56,12 +62,13 @@ export function spellInspectorItem(
 
 export function featInspectorItem(feat: Feat): InspectorItem {
   const locale = useLocaleStore.getState().locale
+  const tr = translateFeat(feat, locale)
   return {
     type: 'feat',
     id: feat.id,
-    title: feat.name,
-    subtitle: feat.shortDesc,
-    description: feat.fullDesc || feat.shortDesc,
+    title: tr.name,
+    subtitle: tr.shortDesc,
+    description: tr.fullDesc || tr.shortDesc,
     tags: [locale === 'it' ? 'Talento' : 'Feat'],
     meta:
       feat.bonusValue !== undefined && feat.bonusMax !== undefined
@@ -73,14 +80,15 @@ export function featInspectorItem(feat: Feat): InspectorItem {
 export function classAbilityInspectorItem(ability: ClassAbility): InspectorItem {
   const locale = useLocaleStore.getState().locale
   const isIt = locale === 'it'
+  const tr = translateClassAbility(ability, locale)
   return {
     type: 'ability',
     id: ability.id,
-    title: ability.name,
+    title: tr.name,
     subtitle: ability.isSignature
       ? isIt ? 'Capacità di classe distintiva' : 'Signature class ability'
       : isIt ? 'Capacità di classe' : 'Class ability',
-    description: ability.description,
+    description: tr.description,
     tags: [
       isIt ? 'Capacità di Classe' : 'Class Ability',
       ...(ability.isSignature ? [isIt ? 'Distintiva' : 'Signature'] : []),

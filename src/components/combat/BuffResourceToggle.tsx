@@ -6,6 +6,7 @@ import type { DailyResource } from '../../types/resources'
 import { summarizeBuffModifiers, buffModifierTokens, modifierColor } from '../../lib/buff-summary'
 import { resolveBuffResource } from '../../lib/stat-calc'
 import { TACTICAL_SPRING, SNAPPY_SPRING } from '../../lib/motion-presets'
+import { useTranslation, translateBuffName, translateResourceName } from '../../i18n'
 
 export interface DailyResourcePipsProps {
   characterId: string
@@ -20,9 +21,11 @@ export interface DailyResourcePipsProps {
  * with a smaller visual core, so it remains usable on mobile.
  */
 export function DailyResourcePips({ characterId, resource, spent, compact = false, extraAction }: DailyResourcePipsProps) {
+  const { locale, t } = useTranslation()
   const setResourceSpent = useSessionStore((s) => s.setResourceSpent)
   const spendResource = useSessionStore((s) => s.spendResource)
   const remaining = Math.max(0, resource.total - spent)
+  const displayName = translateResourceName(resource.name, locale)
 
   const handleClick = (index: number) => {
     if (index < spent) {
@@ -34,7 +37,7 @@ export function DailyResourcePips({ characterId, resource, spent, compact = fals
     }
   }
 
-  const labelText = resource.label ?? resource.name
+  const labelText = resource.label ? translateResourceName(resource.label, locale) : displayName
   const colonIndex = labelText.indexOf(':')
   const prefix = colonIndex > 0 ? labelText.slice(0, colonIndex).trim() : null
   const mainLabel = colonIndex > 0 ? labelText.slice(colonIndex + 1).trim() : labelText
@@ -44,8 +47,8 @@ export function DailyResourcePips({ characterId, resource, spent, compact = fals
       className="flex flex-wrap items-center gap-1"
       onClick={(event) => event.stopPropagation()}
       role="group"
-      aria-label={`${resource.name}: ${remaining} of ${resource.total} remaining`}
-      title={resource.name}
+      aria-label={t('buffToggle.remainingAria', { name: displayName, remaining, total: resource.total })}
+      title={displayName}
     >
       <span className="inline-flex items-center gap-1 font-label text-[9px] uppercase tracking-wider mr-1">
         {prefix ? (
@@ -68,7 +71,12 @@ export function DailyResourcePips({ characterId, resource, spent, compact = fals
               type="button"
               onClick={() => handleClick(index)}
               whileTap={{ scale: 0.88 }}
-              aria-label={`${isSpent ? 'Recover' : 'Spend'} ${resource.name} ${index + 1} of ${resource.total}`}
+              aria-label={t('buffToggle.pipAria', {
+                action: isSpent ? t('buffToggle.recover') : t('buffToggle.spend'),
+                name: displayName,
+                index: index + 1,
+                total: resource.total,
+              })}
               aria-pressed={isSpent}
               className="min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
             >
@@ -117,6 +125,8 @@ export function BuffResourceToggle({
   onToggle,
   onInspect,
 }: BuffResourceToggleProps) {
+  const { locale, t } = useTranslation()
+  const displayBuffName = translateBuffName(buff.name, locale)
   const hex =
     ({ primary: '#00f0ff', secondary: '#d946ef', error: '#ff4b60' } as const)[buff.color ?? 'primary'] ??
     '#00f0ff'
@@ -164,7 +174,7 @@ export function BuffResourceToggle({
               className="font-headline text-sm font-bold uppercase tracking-wider truncate"
               style={{ color: isActive ? hex : undefined }}
             >
-              {buff.name}
+              {displayBuffName}
             </p>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
               {tokens.length > 0 ? (
@@ -180,12 +190,12 @@ export function BuffResourceToggle({
                 ))
               ) : (
                 <span className="font-label text-[10px] text-tertiary">
-                  {buff.description ? 'Situational' : 'No numeric modifiers'}
+                  {buff.description ? t('buffToggle.situational') : t('buffToggle.noNumericModifiers')}
                 </span>
               )}
             </div>
             {!isActive && summary && (
-              <p className="font-label text-[9px] text-tertiary mt-1 truncate">{buff.duration ?? 'Ready to toggle'}</p>
+              <p className="font-label text-[9px] text-tertiary mt-1 truncate">{buff.duration ?? t('buffToggle.readyToToggle')}</p>
             )}
           </div>
         </div>
@@ -218,11 +228,11 @@ export function BuffResourceToggle({
             <button
               type="button"
               onClick={onInspect}
-              aria-label={`Inspect ${buff.name}`}
+              aria-label={t('buffToggle.inspectBuffAria', { name: displayBuffName })}
               className="min-h-[44px] min-w-[44px] px-2 flex items-center justify-center gap-1 font-label text-[10px] uppercase tracking-wider text-tertiary hover:text-primary border border-white/10 rounded-xl cursor-pointer transition-colors"
             >
               <span className="material-symbols-outlined text-sm">open_in_new</span>
-              <span className="hidden xl:inline">Details</span>
+              <span className="hidden xl:inline">{t('buffToggle.details')}</span>
             </button>
           )}
         </div>

@@ -4,7 +4,7 @@ import { useCharacterStore } from '../store/useCharacterStore'
 import { useInspectorStore } from '../store/useInspectorStore'
 import { featInspectorItem, classAbilityInspectorItem } from '../lib/inspector-items'
 import type { Feat, ClassAbility } from '../types/features'
-import { useTranslation } from '../i18n'
+import { useTranslation, translateClassAbility, translateFeat } from '../i18n'
 import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
 export function FeaturesPage() {
@@ -22,23 +22,37 @@ export function FeaturesPage() {
     )
   }
 
-  const signatureAbility = char.classAbilities.find((a) => a.isSignature)
+  const rawSignatureAbility = char.classAbilities.find((a) => a.isSignature)
+  const signatureAbility = rawSignatureAbility ? translateClassAbility(rawSignatureAbility, locale) : undefined
 
   const query = searchQuery.trim().toLowerCase()
-  const filteredFeats = char.feats.filter(
-    (f) =>
-      !query ||
-      f.name.toLowerCase().includes(query) ||
-      f.shortDesc.toLowerCase().includes(query) ||
-      f.fullDesc.toLowerCase().includes(query)
-  )
+  const filteredFeats = char.feats
+    .filter((f) => {
+      if (!query) return true
+      const tf = translateFeat(f, locale)
+      return (
+        f.name.toLowerCase().includes(query) ||
+        f.shortDesc.toLowerCase().includes(query) ||
+        f.fullDesc.toLowerCase().includes(query) ||
+        tf.name.toLowerCase().includes(query) ||
+        tf.shortDesc.toLowerCase().includes(query) ||
+        tf.fullDesc.toLowerCase().includes(query)
+      )
+    })
+    .map((f) => translateFeat(f, locale))
 
-  const filteredAbilities = (char.classAbilities ?? []).filter(
-    (a) =>
-      !query ||
-      a.name.toLowerCase().includes(query) ||
-      a.description.toLowerCase().includes(query)
-  )
+  const filteredAbilities = (char.classAbilities ?? [])
+    .filter((a) => {
+      if (!query) return true
+      const ta = translateClassAbility(a, locale)
+      return (
+        a.name.toLowerCase().includes(query) ||
+        a.description.toLowerCase().includes(query) ||
+        ta.name.toLowerCase().includes(query) ||
+        ta.description.toLowerCase().includes(query)
+      )
+    })
+    .map((a) => translateClassAbility(a, locale))
 
   const showFeats = activeTab === 'all' || activeTab === 'feats'
   const showAbilities = activeTab === 'all' || activeTab === 'class'
@@ -111,7 +125,7 @@ export function FeaturesPage() {
             </div>
           </div>
           <button
-            onClick={() => openInspector(classAbilityInspectorItem(signatureAbility))}
+            onClick={() => openInspector(classAbilityInspectorItem(rawSignatureAbility!))}
             className="px-2.5 py-1 bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary rounded-lg font-label text-[10px] sm:text-[11px] uppercase tracking-wider flex items-center gap-1 flex-shrink-0 transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm">info</span>
