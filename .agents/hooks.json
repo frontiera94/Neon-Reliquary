@@ -12,5 +12,14 @@
         ]
       }
     ]
+  },
+  "build-and-test-on-stop": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node ../scripts/validate-build-and-tests.mjs",
+        "timeout": 300
+      }
+    ]
   }
 }
