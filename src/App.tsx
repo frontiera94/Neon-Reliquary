@@ -11,6 +11,7 @@ import { SpellsPage } from './pages/SpellsPage'
 import { FeaturesPage } from './pages/FeaturesPage'
 import { InventoryPage } from './pages/InventoryPage'
 import { CompanionPage } from './pages/CompanionPage'
+import { NotesPage } from './pages/NotesPage'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/features" element={<FeaturesPage />} />
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/companion" element={<CompanionPage />} />
+          <Route path="/notes" element={<NotesPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

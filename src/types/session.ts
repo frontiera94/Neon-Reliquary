@@ -8,6 +8,15 @@ export interface ActiveSummon {
   currentHp: number
 }
 
+export interface CharacterNote {
+  id: string
+  title: string
+  content: string
+  pinned: boolean
+  createdAt: number
+  updatedAt: number
+}
+
 export interface SessionState {
   characterId: string
   currentHp: number
@@ -37,4 +46,5 @@ export interface SessionState {
   actionEconomy?: ActionEconomyState
   currentRound?: number
   classMechanics?: ClassMechanicsState
+  notes?: CharacterNote[]
 }

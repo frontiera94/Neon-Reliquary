@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { SessionState, ActiveSummon } from '../types/session'
+import { nanoid } from 'nanoid'
+import type { SessionState, ActiveSummon, CharacterNote } from '../types/session'
 import type { ConditionType, BuffToggle, ActionEconomyState } from '../types/combat'
 import type { CoinPurse, InventoryItem } from '../types/inventory'
 import type { Spell } from '../types/resources'
@@ -98,6 +99,10 @@ interface SessionStore {
   declareStunningFist: (characterId: string, condition?: 'stunned' | 'fatigued' | null) => void
   applyDebilitatingInjury: (characterId: string, type: DebilitatingInjuryType | null, targetName?: string) => void
   setUnderhanded: (characterId: string, ready: boolean) => void
+  addNote: (characterId: string, initial?: { title?: string; content?: string }) => string
+  updateNote: (characterId: string, noteId: string, patch: { title?: string; content?: string }) => void
+  togglePinNote: (characterId: string, noteId: string) => void
+  deleteNote: (characterId: string, noteId: string) => void
 }
 
 export const defaultActionEconomy = (): ActionEconomyState => ({
@@ -176,6 +181,7 @@ const defaultSession = (characterId: string, maxHp = 0, startingCoins?: CoinPurs
   actionEconomy: defaultActionEconomy(),
   currentRound: 1,
   classMechanics: createDefaultClassMechanics(characterId),
+  notes: [],
 })
 
 /** Drops keys whose value is `undefined`/`null` so they cannot shadow defaults when spread. */
@@ -208,6 +214,18 @@ export function normalizePersistedSession(sess: SessionState): SessionState {
       .map(([id, count]) => [id, Math.max(0, Math.floor(Number(count) || 0))] as const)
       .filter(([, count]) => count > 0)
   )
+  const notes: CharacterNote[] = Array.isArray(sess.notes)
+    ? sess.notes
+        .filter((n): n is CharacterNote => typeof n === 'object' && n !== null && typeof n.id === 'string')
+        .map((n) => ({
+          id: n.id,
+          title: typeof n.title === 'string' ? n.title : '',
+          content: typeof n.content === 'string' ? n.content : '',
+          pinned: Boolean(n.pinned),
+          createdAt: typeof n.createdAt === 'number' && Number.isFinite(n.createdAt) ? n.createdAt : Date.now(),
+          updatedAt: typeof n.updatedAt === 'number' && Number.isFinite(n.updatedAt) ? n.updatedAt : Date.now(),
+        }))
+    : []
   return {
     ...merged,
     spentResources,
@@ -215,6 +233,7 @@ export function normalizePersistedSession(sess: SessionState): SessionState {
     preparedSpellIds: expandPreparedSpells(preparedSpells),
     spentPreparedSpells,
     classMechanics: normalizeClassMechanics(sess.classMechanics, sess.characterId),
+    notes,
   }
 }
 
@@ -1347,6 +1366,61 @@ export const useSessionStore = create<SessionStore>()(
                 },
               },
             },
+          }
+        }),
+
+      // ─── Character Notes ───────────────────────────────────────────────────
+
+      addNote: (id, initial) => {
+        const noteId = nanoid()
+        const now = Date.now()
+        const newNote: CharacterNote = {
+          id: noteId,
+          title: initial?.title ?? '',
+          content: initial?.content ?? '',
+          pinned: false,
+          createdAt: now,
+          updatedAt: now,
+        }
+        update(id, (sess) => ({
+          notes: [newNote, ...(sess.notes ?? [])],
+        }))
+        return noteId
+      },
+
+      updateNote: (id, noteId, patch) =>
+        update(id, (sess) => {
+          const list = sess.notes ?? []
+          const existing = list.find((n) => n.id === noteId)
+          if (!existing) return null
+          const nextTitle = patch.title !== undefined ? patch.title : existing.title
+          const nextContent = patch.content !== undefined ? patch.content : existing.content
+          if (nextTitle === existing.title && nextContent === existing.content) {
+            return null
+          }
+          const now = Date.now()
+          return {
+            notes: list.map((n) =>
+              n.id === noteId ? { ...n, title: nextTitle, content: nextContent, updatedAt: now } : n
+            ),
+          }
+        }),
+
+      togglePinNote: (id, noteId) =>
+        update(id, (sess) => {
+          const list = sess.notes ?? []
+          if (!list.some((n) => n.id === noteId)) return null
+          return {
+            notes: list.map((n) => (n.id === noteId ? { ...n, pinned: !n.pinned } : n)),
+          }
+        }),
+
+      deleteNote: (id, noteId) =>
+        update(id, (sess) => {
+          const list = sess.notes ?? []
+          if (!list.some((n) => n.id === noteId)) return null
+          return {
+            notes: list.filter((n) => n.id !== noteId),
           }
         }),
       }
