@@ -13,6 +13,7 @@ const navItems = [
   { to: '/features', icon: 'auto_awesome', key: 'nav.features' },
   { to: '/inventory', icon: 'inventory_2', key: 'nav.inventory' },
   { to: '/companion', icon: 'pets', key: 'nav.companion' },
+  { to: '/notes', icon: 'edit_note', key: 'nav.notes' },
 ]
 
 export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {

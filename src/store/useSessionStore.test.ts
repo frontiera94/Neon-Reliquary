@@ -660,3 +660,68 @@ describe('normalizePersistedSession, toggleSpellBuff & no-op state preservation'
     expect(useSessionStore.getState()).toBe(beforeNoSlotPrepare)
   })
 })
+
+describe('character notes', () => {
+  beforeEach(() => {
+    resetStore()
+    useSessionStore.getState().initSession(CHAR, MAX_HP)
+  })
+
+  it('adds, updates, pins, and deletes notes per character', () => {
+    const id1 = useSessionStore.getState().addNote(CHAR, { title: 'Session 1', content: 'Met the innkeeper' })
+    const id2 = useSessionStore.getState().addNote(CHAR, { title: 'Loot', content: '200 gp' })
+
+    let notes = useSessionStore.getState().getSession(CHAR).notes ?? []
+    expect(notes).toHaveLength(2)
+    expect(notes.find((n) => n.id === id1)?.title).toBe('Session 1')
+    expect(notes.find((n) => n.id === id2)?.pinned).toBe(false)
+
+    useSessionStore.getState().updateNote(CHAR, id1, { content: 'Met the innkeeper in Sandpoint' })
+    notes = useSessionStore.getState().getSession(CHAR).notes ?? []
+    expect(notes.find((n) => n.id === id1)?.content).toBe('Met the innkeeper in Sandpoint')
+
+    useSessionStore.getState().togglePinNote(CHAR, id2)
+    notes = useSessionStore.getState().getSession(CHAR).notes ?? []
+    expect(notes.find((n) => n.id === id2)?.pinned).toBe(true)
+
+    useSessionStore.getState().deleteNote(CHAR, id1)
+    notes = useSessionStore.getState().getSession(CHAR).notes ?? []
+    expect(notes).toHaveLength(1)
+    expect(notes[0].id).toBe(id2)
+  })
+
+  it('preserves store reference on no-op note updates and deletes', () => {
+    const id = useSessionStore.getState().addNote(CHAR, { title: 'Clue', content: 'Red rune' })
+    const before = useSessionStore.getState()
+
+    useSessionStore.getState().updateNote(CHAR, id, { title: 'Clue', content: 'Red rune' })
+    expect(useSessionStore.getState()).toBe(before)
+
+    useSessionStore.getState().updateNote(CHAR, 'missing-id', { title: 'X' })
+    expect(useSessionStore.getState()).toBe(before)
+
+    useSessionStore.getState().togglePinNote(CHAR, 'missing-id')
+    expect(useSessionStore.getState()).toBe(before)
+
+    useSessionStore.getState().deleteNote(CHAR, 'missing-id')
+    expect(useSessionStore.getState()).toBe(before)
+  })
+
+  it('preserves notes across longRest and normalizes legacy notes', () => {
+    useSessionStore.getState().addNote(CHAR, { title: 'Quest', content: 'Find the relic' })
+    useSessionStore.getState().longRest(CHAR, MAX_HP)
+    expect(useSessionStore.getState().getSession(CHAR).notes).toHaveLength(1)
+
+    const normalized = normalizePersistedSession({
+      characterId: CHAR,
+      notes: [
+        { id: 'n1', title: 'Valid', content: 'Body', pinned: true, createdAt: 100, updatedAt: 200 },
+        { id: 123 } as unknown as NonNullable<ReturnType<typeof useSessionStore.getState>['sessions'][string]['notes']>[number],
+      ],
+    } as unknown as ReturnType<typeof useSessionStore.getState>['sessions'][string])
+
+    expect(normalized.notes).toEqual([
+      { id: 'n1', title: 'Valid', content: 'Body', pinned: true, createdAt: 100, updatedAt: 200 },
+    ])
+  })
+})
