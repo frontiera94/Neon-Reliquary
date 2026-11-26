@@ -11,6 +11,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e:mechanics": "vitest run tests/e2e/class-mechanics-e2e.test.ts",
+    "test:browser": "playwright test",
+    "test:mutation": "stryker run",
     "test:watch": "vitest",
     "test:watch-all": "node scripts/watch-and-test.mjs",
     "test:validate": "node scripts/validate-tests.mjs",
@@ -30,7 +32,11 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.65.1",
+    "@stryker-mutator/core": "^9.6.1",
+    "@stryker-mutator/vitest-runner": "^9.6.1",
     "@tailwindcss/vite": "^4.2.2",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^6.9.1",
