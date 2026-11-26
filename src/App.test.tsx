@@ -25,8 +25,8 @@ describe('App routing integration', () => {
     expect(screen.getAllByText(agelmund.name).length).toBeGreaterThanOrEqual(1)
   })
 
-  it('renders MainLayout routes (/status, /skills, /combat, /spells, /features, /inventory, /companion, /notes)', () => {
-    for (const route of ['/status', '/skills', '/combat', '/spells', '/features', '/inventory', '/companion', '/notes']) {
+  it('renders MainLayout routes (/status, /skills, /combat, /spells, /features, /inventory, /companion, /notes, /map) and standalone /master-map', () => {
+    for (const route of ['/status', '/skills', '/combat', '/spells', '/features', '/inventory', '/companion', '/notes', '/map', '/master-map']) {
       window.history.pushState({}, '', route)
       const { unmount } = render(<App />)
       expect(document.body.textContent?.length).toBeGreaterThan(0)
