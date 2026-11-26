@@ -22,7 +22,7 @@ import { STAGGER_CONTAINER, STAGGER_ITEM } from '../lib/motion-presets'
 
 export function SpellsPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
-  const session = useSessionStore((s) => char ? s.getSession(char.id) : null)
+  const session = useSessionStore((s) => (char ? s.sessions[char.id] ?? null : null))
   const {
     toggleSpellPrepared,
     prepareSpell,

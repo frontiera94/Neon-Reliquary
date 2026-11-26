@@ -67,7 +67,7 @@ export function TacticalBentoGrid() {
             }
           >
             <span className="material-symbols-outlined text-base">{item.icon}</span>
-            {t(`bento.${item.key}` as any)}
+            {t(`bento.${item.key}`)}
           </NavLink>
         ))}
       </nav>
@@ -486,7 +486,7 @@ const availability = getSpellAvailability(
                   : 'border-transparent text-tertiary hover:text-white'
               }`}
             >
-              {t(`bento.${entry}` as any)}
+              {t(`bento.${entry}`)}
             </button>
           ))}
         </div>

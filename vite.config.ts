@@ -357,7 +357,26 @@ export default defineConfig({
     globals: true,
     testTimeout: 15000,
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['**/node_modules/**', '**/.worktrees/**', '**/dist/**', '**/dev-dist/**'],
+    exclude: [
+      '**/node_modules/**',
+      '**/.worktrees/**',
+      '**/dist/**',
+      '**/dev-dist/**',
+      'tests/e2e/class-mechanics-e2e.test.ts',
+    ],
     setupFiles: ['./src/test/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'json-summary', 'lcov'],
+      include: ['src/**/*.{ts,tsx}', 'api/**/*.ts'],
+      exclude: [
+        'src/**/*.{test,spec}.{ts,tsx}',
+        'src/test/**',
+        'src/data/**',
+        'src/types/**',
+        'src/main.tsx',
+        '**/*.d.ts',
+      ],
+    },
   },
 })

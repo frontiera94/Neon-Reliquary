@@ -22,6 +22,11 @@ function formatTimestamp(ts: number, locale: 'en' | 'it'): string {
 export function NotesPage() {
   const char = useCharacterStore((s) => s.activeCharacter())
   const charId = char?.id ?? ''
+  return <NotesWorkspace key={charId} charId={charId} />
+}
+
+function NotesWorkspace({ charId }: { charId: string }) {
+  const char = useCharacterStore((s) => s.activeCharacter())
 
   const rawNotes = useSessionStore((s) => (charId ? s.sessions[charId]?.notes ?? EMPTY_NOTES : EMPTY_NOTES))
   const addNote = useSessionStore((s) => s.addNote)
@@ -37,13 +42,6 @@ export function NotesPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
   const titleInputRef = useRef<HTMLInputElement | null>(null)
-
-  useEffect(() => {
-    setSelectedNoteId(null)
-    setMobileEditorOpen(false)
-    setPendingDeleteId(null)
-    setSearchQuery('')
-  }, [charId])
 
   const sortedNotes = useMemo(() => {
     return [...rawNotes].sort((a, b) => {

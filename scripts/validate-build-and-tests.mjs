@@ -110,13 +110,14 @@ async function main() {
   }
 
   const totalStart = Date.now();
+  const lintResult = runNpmStep('Lint', ['run', 'lint']);
   const buildResult = runNpmStep('Build', ['run', 'build']);
   const testResult = runNpmStep('Test', ['test']);
   const totalElapsed = ((Date.now() - totalStart) / 1000).toFixed(2);
 
-  if (buildResult.ok && testResult.ok) {
+  if (lintResult.ok && buildResult.ok && testResult.ok) {
     process.stderr.write(
-      `\n✅ [Post Hook] Build e tutti i test superati con successo in ${totalElapsed}s!\n`
+      `\n✅ [Post Hook] Lint, Build e tutti i test superati con successo in ${totalElapsed}s!\n`
     );
     process.stdout.write(`${JSON.stringify({ decision: 'allow' })}\n`);
     process.exit(0);
@@ -125,6 +126,10 @@ async function main() {
   const failures = [];
   const details = [];
 
+  if (!lintResult.ok) {
+    failures.push('lint (`npm run lint`)');
+    details.push(`--- Output Lint ---\n${truncateTail(lintResult.output)}`);
+  }
   if (!buildResult.ok) {
     failures.push('build (`npm run build`)');
     details.push(`--- Output Build ---\n${truncateTail(buildResult.output)}`);

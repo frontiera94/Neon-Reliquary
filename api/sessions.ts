@@ -20,6 +20,9 @@ export type SqlTagFn = (
   ...values: unknown[]
 ) => Promise<Record<string, unknown>[]>
 
+export const MAX_SESSION_BATCH = 50
+export const MAX_SESSION_JSON_BYTES = 256 * 1024
+
 const ensuredUrls = new Set<string>()
 
 export function getDatabaseUrl(
@@ -138,6 +141,18 @@ export async function handleSessionsRequest(
         isPlainObject(state)
     )
 
+    if (entries.length > MAX_SESSION_BATCH) {
+      res.status(400).json({ error: `Too many sessions in batch (max ${MAX_SESSION_BATCH})` })
+      return
+    }
+
+    for (const [charId, state] of entries) {
+      if (Buffer.byteLength(JSON.stringify(state), 'utf8') > MAX_SESSION_JSON_BYTES) {
+        res.status(400).json({ error: `Session payload too large for "${charId}"` })
+        return
+      }
+    }
+
     if (entries.length === 0) {
       res.status(200).json({ ok: true, updated: {} })
       return
@@ -173,9 +188,10 @@ export async function handleSessionsRequest(
     res.status(200).json({ ok: true, updated })
   } catch (err) {
     console.error('Sessions DB handler error:', err)
+    const isProd = (options?.env ?? process.env).NODE_ENV === 'production'
     res.status(500).json({
       error: 'Database error',
-      detail: err instanceof Error ? err.message : String(err),
+      ...(isProd ? {} : { detail: err instanceof Error ? err.message : String(err) }),
     })
   }
 }

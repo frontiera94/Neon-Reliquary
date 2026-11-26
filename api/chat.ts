@@ -157,6 +157,7 @@ export async function handleChatRequest(
         system: buildSystemPrompt(parsed.character, parsed.session),
         messages: parsed.messages,
       }),
+      signal: typeof AbortSignal?.timeout === 'function' ? AbortSignal.timeout(15_000) : undefined,
     })
 
     if (!response.ok) {
