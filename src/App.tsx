@@ -12,6 +12,8 @@ import { FeaturesPage } from './pages/FeaturesPage'
 import { InventoryPage } from './pages/InventoryPage'
 import { CompanionPage } from './pages/CompanionPage'
 import { NotesPage } from './pages/NotesPage'
+import { PlayerMapPage } from './pages/PlayerMapPage'
+import { MasterMapPage } from './pages/MasterMapPage'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -31,6 +33,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/characters" element={<CharacterSelectionPage />} />
+        <Route path="/master-map" element={<MasterMapPage />} />
         <Route element={<MainLayout />}>
           <Route path="/status" element={<StatusPage />} />
           <Route path="/skills" element={<SkillsPage />} />
@@ -40,6 +43,7 @@ export default function App() {
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/companion" element={<CompanionPage />} />
           <Route path="/notes" element={<NotesPage />} />
+          <Route path="/map" element={<PlayerMapPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

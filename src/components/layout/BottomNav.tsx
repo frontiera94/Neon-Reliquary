@@ -12,6 +12,7 @@ const navItems = [
   { to: '/inventory', icon: 'inventory_2', key: 'nav.inventory' },
   { to: '/companion', icon: 'pets', key: 'nav.companion' },
   { to: '/notes', icon: 'edit_note', key: 'nav.notes' },
+  { to: '/map', icon: 'map', key: 'nav.map' },
 ]
 
 export function BottomNav() {
