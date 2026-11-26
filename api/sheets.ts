@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto'
 import { neon } from '@neondatabase/serverless'
 import type { ApiRequest, ApiResponse, SqlTagFn } from './sessions'
 
@@ -61,6 +62,26 @@ function escapeHtml(str: string): string {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const bufA = Buffer.from(a, 'utf8')
+  const bufB = Buffer.from(b, 'utf8')
+  if (bufA.length !== bufB.length) return false
+  return timingSafeEqual(bufA, bufB)
+}
+
+function isPdfBuffer(buf: Buffer): boolean {
+  return (
+    buf.length >= 5 &&
+    buf[0] === 0x25 && // %
+    buf[1] === 0x50 && // P
+    buf[2] === 0x44 && // D
+    buf[3] === 0x46 && // F
+    buf[4] === 0x2d // -
+  )
 }
 
 // In-memory fallback for local development or when DATABASE_URL is not set
@@ -144,9 +165,15 @@ function resolveBaseAppUrl(req: ApiRequest, env: Record<string, string | undefin
     ? forwardedHost[0]
     : forwardedHost ?? (Array.isArray(req.headers?.host) ? req.headers?.host[0] : req.headers?.host)
 
-  if (hostHeader && typeof hostHeader === 'string' && !hostHeader.startsWith('localhost')) {
+  if (
+    hostHeader &&
+    typeof hostHeader === 'string' &&
+    !hostHeader.startsWith('localhost') &&
+    /^[a-zA-Z0-9.-]+(:\d+)?$/.test(hostHeader)
+  ) {
     const protoHeader = req.headers?.['x-forwarded-proto']
-    const proto = Array.isArray(protoHeader) ? protoHeader[0] : protoHeader || 'https'
+    const rawProto = Array.isArray(protoHeader) ? protoHeader[0] : protoHeader || 'https'
+    const proto = rawProto === 'http' || rawProto === 'https' ? rawProto : 'https'
     return `${proto}://${hostHeader}`
   }
 
@@ -475,9 +502,9 @@ export async function handleSheetsRequest(
       const pdfBase64 = typeof body.pdfBase64 === 'string' ? body.pdfBase64 : ''
       const password = typeof body.password === 'string' ? body.password : ''
 
-      // Password verification
+      // Password verification (constant-time)
       const expectedPassphrase = getUploadPassphrase(env)
-      if (password !== expectedPassphrase) {
+      if (!timingSafeEqualStr(password, expectedPassphrase)) {
         res.status(401).json({ error: 'Password di caricamento non corretta' })
         return
       }
@@ -501,6 +528,17 @@ export async function handleSheetsRequest(
       }
       if (!pdfBase64) {
         res.status(400).json({ error: 'Contenuto del file PDF mancante' })
+        return
+      }
+
+      const rawBase64 = pdfBase64.includes(',') ? pdfBase64.split(',')[1] ?? '' : pdfBase64
+      const decodedPdf = Buffer.from(rawBase64, 'base64')
+      if (decodedPdf.byteLength === 0 || decodedPdf.byteLength > MAX_PDF_SIZE_BYTES) {
+        res.status(400).json({ error: 'La dimensione del file supera il limite massimo di 3.2 MB' })
+        return
+      }
+      if (!isPdfBuffer(decodedPdf)) {
+        res.status(400).json({ error: 'Il file non è un documento PDF valido (%PDF- mancante)' })
         return
       }
 
@@ -645,9 +683,10 @@ export async function handleSheetsRequest(
     res.status(405).json({ error: 'Method not allowed' })
   } catch (err) {
     console.error('Sheets API error:', err)
+    const isProd = env.NODE_ENV === 'production'
     res.status(500).json({
       error: 'Errore interno del server',
-      detail: err instanceof Error ? err.message : String(err),
+      ...(isProd ? {} : { detail: err instanceof Error ? err.message : String(err) }),
     })
   }
 }

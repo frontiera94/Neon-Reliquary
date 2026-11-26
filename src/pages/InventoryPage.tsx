@@ -62,19 +62,11 @@ const {
     }
   }, [char, initSession])
 
-  if (!char) {
-    return (
-      <div className="flex items-center justify-center h-64 text-tertiary font-label text-sm uppercase tracking-widest">
-        {t('common.noCharacterSelected')}
-      </div>
-    )
-  }
-
-const session = char ? getSession(char.id) : null
+  const session = char ? getSession(char.id) : null
   const coins: CoinPurse = session?.coins ?? char?.startingCoins ?? { gp: 0, sp: 0, cp: 0 }
 
-  const baseInventory = char?.inventory ?? []
-  const customItems = session?.customItems ?? []
+  const baseInventory = useMemo(() => char?.inventory ?? [], [char?.inventory])
+  const customItems = useMemo(() => session?.customItems ?? [], [session?.customItems])
   const allItems: InventoryItem[] = useMemo(
     () => [...baseInventory, ...customItems],
     [baseInventory, customItems]
@@ -120,7 +112,7 @@ const session = char ? getSession(char.id) : null
   if (!char || !session) {
     return (
       <div className="flex items-center justify-center h-64 text-tertiary font-label text-sm uppercase tracking-widest">
-        No character selected
+        {t('common.noCharacterSelected')}
       </div>
     )
   }

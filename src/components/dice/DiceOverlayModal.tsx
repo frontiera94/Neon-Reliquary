@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useDiceStore } from '../../store/useDiceStore'
 import type { DiceRoll } from '../../types/dice'
@@ -15,7 +15,7 @@ export function DiceOverlayModal() {
   const [confirmationResult, setConfirmationResult] = useState<number | null>(null)
   const { locale, t } = useTranslation()
 
-  const resolveRollImmediately = () => {
+  const resolveRollImmediately = useCallback(() => {
     if (!pendingRoll) return
     if (timerRef.current) {
       clearTimeout(timerRef.current)
@@ -28,7 +28,7 @@ export function DiceOverlayModal() {
       isConfirmingRef.current = false
     }
     setResult(result)
-  }
+  }, [pendingRoll, setResult])
 
   useEffect(() => {
     if (!isOpen || !pendingRoll) return
@@ -41,7 +41,7 @@ export function DiceOverlayModal() {
         timerRef.current = null
       }
     }
-  }, [isOpen, pendingRoll, setResult])
+  }, [isOpen, pendingRoll, resolveRollImmediately])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
