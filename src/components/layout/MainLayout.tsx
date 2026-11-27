@@ -25,9 +25,9 @@ export function MainLayout() {
           style={{ width: '480px', height: '480px', bottom: '-100px', left: '-120px' }}
         />
       </div>
-      <div className="relative z-10">
+      <div className="relative z-10 min-h-screen flex flex-col">
         <TopBar />
-        <div className="flex">
+        <div className="flex flex-1">
           <Sidebar />
           <main className="flex-1 min-w-0 pb-20 md:pb-0">
             <motion.div

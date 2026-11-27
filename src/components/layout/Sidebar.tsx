@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useCharacterStore } from '../../store/useCharacterStore'
@@ -20,18 +21,36 @@ const navItems = [
 export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
   const char = useCharacterStore((s) => s.activeCharacter())
   const { t } = useTranslation()
+  const asideRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const header = document.querySelector('header')
+    if (!header) return
+    const updateTopBarHeight = () => {
+      const h = header.getBoundingClientRect().height
+      if (h > 0) {
+        asideRef.current?.style.setProperty('--topbar-h', `${h}px`)
+      }
+    }
+    updateTopBarHeight()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(updateTopBarHeight)
+    observer.observe(header)
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <aside
-      className={`relative z-30 hidden md:flex flex-col w-56 flex-shrink-0 bg-surface-container/60 backdrop-blur-xl border-r border-white/5 ${
+      ref={asideRef}
+      className={`sticky top-[var(--topbar-h,4rem)] h-[calc(100dvh-var(--topbar-h,4rem))] self-start z-30 hidden md:flex flex-col w-56 flex-shrink-0 bg-surface-container/60 backdrop-blur-xl border-r border-white/5 ${
         forceHidden ? 'md:hidden' : ''
       }`}
     >
-      <div className="p-4 border-b border-white/5">
+      <div className="relative z-40 p-4 border-b border-white/5 shrink-0">
         <CharacterDropdown align="left" />
       </div>
 
-      <nav aria-label="Main Navigation" className="flex-1 p-3 space-y-1">
+      <nav aria-label="Main Navigation" className="flex-1 min-h-0 overflow-y-auto p-3 space-y-1">
         {navItems.map(({ to, icon, key }) => {
           const label = t(key)
           return (
@@ -68,7 +87,10 @@ export function Sidebar({ forceHidden = false }: { forceHidden?: boolean }) {
         })}
       </nav>
 
-      <div className="p-4 border-t border-white/5 text-[10px] font-label text-tertiary/50 uppercase tracking-widest text-center">
+      <div
+        data-testid="sidebar-footer"
+        className="mt-auto shrink-0 p-4 border-t border-white/5 text-[10px] font-label text-tertiary/50 uppercase tracking-widest text-center"
+      >
         {char ? (
           <div>
             <span className="text-secondary font-bold">{char.name}</span>
