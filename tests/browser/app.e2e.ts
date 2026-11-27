@@ -33,6 +33,21 @@ test.describe('Neon Reliquary — Real Browser E2E & Accessibility', () => {
     await page.reload()
     await expect(page.getByTestId('hp-popover-trigger')).toBeVisible()
     await expect(page.locator('text=/Mazikeen|Shotrix|Agelmund|Knam|Mariano|Noorie/i >> visible=true').first()).toBeVisible()
+
+    // Verify sidebar footer ("<Character> / PF1e Companion") stays fixed at exact same position across short & tall pages
+    const footer = page.getByTestId('sidebar-footer')
+    await expect(footer).toBeVisible()
+    const combatBox = await footer.boundingBox()
+    expect(combatBox).not.toBeNull()
+
+    for (const href of ['/status', '/notes', '/map', '/spells']) {
+      await page.locator(`a[href="${href}"]:visible`).first().click()
+      await page.waitForURL(new RegExp(href))
+      const nextBox = await footer.boundingBox()
+      expect(nextBox).not.toBeNull()
+      expect(Math.round(nextBox!.x)).toBe(Math.round(combatBox!.x))
+      expect(Math.round(nextBox!.y)).toBe(Math.round(combatBox!.y))
+    }
   })
 
   test('Mobile viewport (390x844): no horizontal overflow and HUD visible', async ({ page }) => {
