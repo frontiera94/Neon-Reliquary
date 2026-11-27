@@ -89,6 +89,9 @@ export const en = {
     damage: 'Damage',
     heal: 'Heal',
     fullHeal: 'Full Heal',
+    sheets: 'Sheets',
+    manageSheetsAria: 'Manage character sheets',
+    manageSheetsTitle: 'Open character sheet queue & upload',
   },
   settings: {
     title: 'Settings',

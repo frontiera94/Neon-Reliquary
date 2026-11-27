@@ -374,8 +374,9 @@ export function CompanionPage() {
               type="number"
               min={1}
               value={hpDelta}
+              aria-label={isIt ? 'Quantità punti ferita compagno' : 'Companion HP delta amount'}
               onChange={(e) => setHpDelta(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-16 bg-surface-container-high text-on-surface font-label text-lg font-bold text-center py-2 rounded-xl border border-white/10 focus:border-primary focus:outline-none"
+              className="w-16 bg-surface-container-high text-on-surface font-label text-lg font-bold text-center py-2 rounded-xl border border-white/15 focus:border-primary focus:outline-none"
             />
             <button
               onClick={() => adjustCompanionHp(char.id, activeCompanion.id, hpDelta, activeCompanion.maxHp)}
@@ -748,11 +749,11 @@ export function CompanionPage() {
               </h2>
               <div className="space-y-3">
                 {activeCompanion.specialQualities.map((sq, idx) => (
-                  <div key={idx} className="bg-surface-container-low/80 p-3.5 rounded-xl border-l-4 border-l-primary border border-white/5">
-                    <h4 className="font-headline text-xs uppercase tracking-wider text-primary font-bold">
+                  <div key={idx} className="bg-surface-container-low/80 p-3.5 rounded-xl border-l-4 border-l-primary border border-white/10">
+                    <h3 className="font-headline text-xs uppercase tracking-wider text-primary font-bold">
                       {sq.name}
-                    </h4>
-                    <p className="font-body text-xs text-tertiary mt-1 leading-relaxed">
+                    </h3>
+                    <p className="font-body text-xs sm:text-sm text-on-surface-variant mt-1 leading-relaxed">
                       {sq.description}
                     </p>
                   </div>
@@ -779,19 +780,19 @@ export function CompanionPage() {
                   onClick={() => toggleCompanionCondition(char.id, activeCompanion.id, cond)}
                   className={`px-3 py-1.5 font-label text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-error text-on-error shadow-[0_0_10px_rgba(255,180,171,0.4)] font-bold'
-                      : 'bg-surface-container-low/80 text-tertiary hover:text-error hover:bg-error-container/30 border border-white/5'
+                      ? 'bg-error-container text-white border border-error shadow-[0_0_12px_rgba(255,107,125,0.4)] font-bold'
+                      : 'bg-surface-container-low/80 text-tertiary hover:text-error hover:bg-error-container/30 border border-white/10'
                   }`}
                 >
                   {isIt ? info.name : cond}
                 </button>
-                {/* Tooltip */}
-                <div className="pointer-events-none absolute bottom-full left-0 mb-2 w-56 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                {/* Desktop-only Tooltip */}
+                <div className="hidden md:block pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                   <div className="bg-[#0e0e18] border border-error/40 p-2.5 rounded-xl shadow-[0_4px_24px_rgba(0,0,0,0.8)] backdrop-blur-md">
                     <p className="font-headline text-error text-[11px] uppercase tracking-wider font-bold mb-1">
                       {info.name}
                     </p>
-                    <p className="font-body text-tertiary text-[10px] leading-snug">{info.summary}</p>
+                    <p className="font-body text-on-surface-variant text-xs leading-snug">{info.summary}</p>
                   </div>
                 </div>
               </div>

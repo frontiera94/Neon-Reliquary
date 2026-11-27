@@ -50,18 +50,18 @@ export function SpellUsePips({
       aria-label={`${label}: ${remaining} of ${total} remaining`}
       title={label}
     >
-      <span className="inline-flex items-center gap-1 font-label text-[9px] uppercase tracking-wider mr-1">
+      <span className="inline-flex items-center gap-1.5 font-label text-[11px] uppercase tracking-wider mr-1">
         {prefix ? (
           <>
-            <span className="px-1 py-0.5 rounded bg-white/5 border border-white/10 text-secondary text-[8px] font-bold shrink-0">
+            <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/15 text-secondary text-[10px] font-bold shrink-0">
               {prefix}
             </span>
-            <span className="text-tertiary font-semibold truncate max-w-[140px] sm:max-w-[200px]">
+            <span className="text-on-surface-variant font-semibold truncate max-w-[150px] sm:max-w-[210px]">
               {label}
             </span>
           </>
         ) : (
-          <span className="text-tertiary truncate max-w-[140px] sm:max-w-[200px]">{label}</span>
+          <span className="text-on-surface-variant font-semibold truncate max-w-[150px] sm:max-w-[210px]">{label}</span>
         )}
       </span>
       <div className={`flex flex-wrap items-center ${compact ? 'gap-0.5' : 'gap-1'}`}>

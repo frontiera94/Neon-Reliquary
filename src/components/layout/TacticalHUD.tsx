@@ -106,24 +106,24 @@ export function TacticalHUD() {
   // If no character is active, render fallback TopBar
   if (!char) {
     return (
-<>
-        <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-surface/90 border-b border-white/[0.08] px-6 py-4 flex justify-between items-center" style={{ boxShadow: '0 4px 24px -6px rgba(0,240,255,0.1)' }}>
+      <>
+        <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-surface/95 border-b border-white/[0.1] px-3 sm:px-6 py-2.5 md:h-16 md:py-0 flex flex-wrap justify-between items-center gap-2" style={{ boxShadow: '0 4px 24px -6px rgba(0,240,255,0.1)' }}>
           <span
-            className="text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft"
+            className="text-lg sm:text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft whitespace-nowrap"
             onClick={() => navigate('/')}
           >
             NEON RELIQUARY
           </span>
-          <span className="font-label text-xs text-tertiary">{t('hud.noActiveCharacter')}</span>
-          <div className="flex items-center gap-4">
+          <span className="sr-only md:not-sr-only font-label text-xs text-tertiary">{t('hud.noActiveCharacter')}</span>
+          <div className="flex items-center gap-2 sm:gap-3">
             <LanguageToggle />
             <CloudSyncBadge />
             <button
               onClick={() => navigate('/characters')}
-              className="flex items-center gap-2 px-4 py-2 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-sm rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-surface-container/90 backdrop-blur-sm border border-white/15 text-white font-label text-xs sm:text-sm rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm text-primary">account_circle</span>
-              <span>{t('hud.characterSwitcher')}</span>
+              <span className="hidden sm:inline">{t('hud.characterSwitcher')}</span>
             </button>
             <button
               onClick={() => setSettingsOpen(true)}
@@ -134,7 +134,7 @@ export function TacticalHUD() {
               {newSheetsCount > 0 && (
                 <span
                   data-testid="sheets-notification-badge"
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-black font-label text-[9px] font-black flex items-center justify-center shadow-[0_0_8px_rgba(0,240,255,0.6)] animate-pulse"
+                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-black font-label text-[10px] font-black flex items-center justify-center shadow-[0_0_8px_rgba(0,240,255,0.6)] animate-pulse"
                 >
                   {newSheetsCount}
                 </span>
@@ -180,22 +180,30 @@ export function TacticalHUD() {
   return (
     <>
       <header
-        className="sticky top-0 z-50 w-full backdrop-blur-md bg-surface/90 border-b border-white/[0.08] md:h-16 flex flex-col justify-center"
+        className="sticky top-0 z-50 w-full backdrop-blur-md bg-surface/95 border-b border-white/[0.1] xl:min-h-16 flex flex-col justify-center"
         style={{ boxShadow: '0 4px 24px -6px rgba(0,240,255,0.1)' }}
       >
         {/* Main Cockpit Bar */}
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 py-2.5 md:flex md:flex-nowrap md:justify-between md:gap-4 md:px-6">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1.5 px-3 py-2 sm:px-4 xl:flex xl:flex-nowrap xl:justify-between xl:gap-4 xl:px-6 xl:py-2.5">
           {/* Left Cockpit: App Branding & Character Identity */}
-          <div className="col-start-1 row-start-1 flex flex-shrink-0 items-center gap-3">
+          <div className="col-start-1 row-start-1 flex min-w-0 items-center gap-2 sm:gap-3 xl:flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              aria-label="Home"
+              className="lg:hidden w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 text-primary flex items-center justify-center flex-shrink-0 hover:bg-primary/20 transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">hexagon</span>
+            </button>
             <span
-              className="text-xl md:text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft select-none"
+              className="hidden lg:inline text-xl xl:text-2xl font-black tracking-tighter text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft select-none whitespace-nowrap"
               onClick={() => navigate('/')}
             >
               NEON RELIQUARY
             </span>
-            <div className="h-5 md:h-8 w-px bg-white/10 mx-1 shrink-0" />
-            <div className="flex items-center gap-1.5 sm:gap-2.5 select-none min-w-0">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg overflow-hidden flex-shrink-0">
+            <div className="hidden lg:block h-7 w-px bg-white/10 mx-0.5 shrink-0" />
+            <div className="flex items-center gap-2 sm:gap-2.5 select-none min-w-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
                 <CharacterEmblem
                   characterId={char.id}
                   lore={getCharacterLore(char.id)}
@@ -204,20 +212,20 @@ export function TacticalHUD() {
                 />
               </div>
               <div className="min-w-0">
-                <h1 className="font-headline text-xs sm:text-base leading-none text-white font-bold truncate max-w-[85px] sm:max-w-none">
+                <h1 className="font-headline text-sm sm:text-base leading-tight text-white font-bold truncate">
                   {char.name}
                 </h1>
-<p className="font-label text-[8px] sm:text-xs tracking-wider sm:tracking-widest text-tertiary uppercase mt-0.5 truncate max-w-[85px] sm:max-w-none">
+                <p className="font-label text-[11px] sm:text-xs tracking-wide text-on-surface-variant uppercase truncate">
                   {t('common.level')} {char.level} {translateClassName(char.class, locale)}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Center Cockpit: Tactical Vitals (HP Bar, AC, Saves) */}
-          <div className="col-span-2 row-start-2 flex w-full flex-nowrap items-center justify-center gap-1.5 sm:gap-2 md:col-span-1 md:row-start-auto md:mx-2 md:max-w-2xl md:flex-1 md:gap-3">
+          {/* Center Cockpit: Tactical Vitals (HP Bar, AC, Saves, Conditions) */}
+          <div className="col-span-2 row-start-2 flex w-full flex-col gap-1.5 xl:col-span-1 xl:row-start-auto xl:mx-2 xl:max-w-3xl xl:flex-1 xl:flex-row xl:flex-nowrap xl:items-center xl:justify-center xl:gap-3">
             {/* Multi-Track HP Bar Container with Popover Trigger */}
-            <div className="relative flex-1 min-w-[120px] sm:min-w-[140px] max-w-sm">
+            <div className="relative w-full xl:flex-1 xl:min-w-[150px] xl:max-w-xs">
               <div
                 role="button"
                 tabIndex={0}
@@ -227,10 +235,10 @@ export function TacticalHUD() {
                   if (e.key === 'Enter' || e.key === ' ') setHpPopoverOpen((prev) => !prev)
                 }}
                 aria-label={t('hud.manageHp')}
-                className="cursor-pointer group py-1 px-2 rounded-xl hover:bg-white/[0.04] transition-all"
+                className="cursor-pointer group py-1 px-2 rounded-xl bg-surface-container/50 xl:bg-transparent border border-white/[0.06] xl:border-transparent hover:bg-white/[0.05] transition-all"
               >
                 {/* Multi-Track Progress Bar */}
-                <div className="h-2.5 w-full bg-surface-container-lowest rounded-full overflow-hidden border border-white/[0.08] relative">
+                <div className="h-2.5 w-full bg-surface-container-lowest rounded-full overflow-hidden border border-white/[0.1] relative">
                   {/* Current HP Fill */}
                   <div
                     className="h-full rounded-full transition-all duration-300"
@@ -276,57 +284,57 @@ export function TacticalHUD() {
                 </div>
 
                 {/* HP Numbers & Status Chips */}
-                <div className="flex items-center justify-between mt-1 px-0.5">
+                <div className="flex items-center justify-between gap-2 mt-1 px-0.5">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="font-label text-xs font-bold text-primary">
                       {hp} / {maxHp} {t('hud.hp')}
                     </span>
                     {tempHp > 0 && (
-                      <span className="font-label text-[10px] text-cyan-300 font-semibold bg-cyan-950/60 border border-cyan-500/30 px-1 rounded">
+                      <span className="font-label text-[11px] text-cyan-200 font-semibold bg-cyan-950/70 border border-cyan-400/35 px-1.5 rounded">
                         +{tempHp} {t('hud.temp').toUpperCase()}
                       </span>
                     )}
                     {nonlethalDamage > 0 && (
-                      <span className="font-label text-[10px] text-[#ffb4ab] font-semibold bg-[#ffb4ab]/10 border border-[#ffb4ab]/30 px-1 rounded tabular-nums">
+                      <span className="font-label text-[11px] text-[#ffb4ab] font-semibold bg-[#ffb4ab]/15 border border-[#ffb4ab]/35 px-1.5 rounded tabular-nums">
                         {nonlethalDamage} NL
                       </span>
                     )}
                   </div>
 
                   {/* Status Alerts */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-wrap justify-end">
                     {isDead && (
-                      <span className="font-label text-[10px] font-black uppercase text-error bg-error/20 border border-error/50 px-1.5 py-0.2 rounded animate-pulse">
+                      <span className="font-label text-[11px] font-black uppercase text-error bg-error/20 border border-error/50 px-1.5 py-0.5 rounded animate-pulse">
                         {locale === 'it' ? 'MORTO' : 'DEAD'}
                       </span>
                     )}
                     {isDying && (
-                      <span className="font-label text-[10px] font-black uppercase text-error bg-error/20 border border-error/50 px-1.5 py-0.2 rounded animate-pulse">
+                      <span className="font-label text-[11px] font-black uppercase text-error bg-error/20 border border-error/50 px-1.5 py-0.5 rounded animate-pulse">
                         {locale === 'it' ? 'MORENTE' : 'DYING'}
                       </span>
                     )}
                     {isDisabled && (
-                      <span className="font-label text-[10px] font-bold uppercase text-amber-400 bg-amber-950/60 border border-amber-500/30 px-1.5 py-0.2 rounded">
+                      <span className="font-label text-[11px] font-bold uppercase text-amber-300 bg-amber-950/70 border border-amber-400/40 px-1.5 py-0.5 rounded">
                         {locale === 'it' ? 'INABILE' : 'DISABLED'}
                       </span>
                     )}
                     {isUnconscious && (
-                      <span className="font-label text-[10px] font-bold uppercase text-[#ffb4ab] bg-[#ffb4ab]/10 border border-[#ffb4ab]/30 px-1.5 py-0.2 rounded animate-pulse">
+                      <span className="font-label text-[11px] font-bold uppercase text-[#ffb4ab] bg-[#ffb4ab]/15 border border-[#ffb4ab]/35 px-1.5 py-0.5 rounded animate-pulse">
                         {locale === 'it' ? 'PRIVO DI SENSI' : 'UNCONSCIOUS'}
                       </span>
                     )}
                     {isStaggered && (
-                      <span className="font-label text-[10px] font-bold uppercase text-amber-300 bg-amber-950/60 border border-amber-500/30 px-1.5 py-0.2 rounded">
+                      <span className="font-label text-[11px] font-bold uppercase text-amber-300 bg-amber-950/70 border border-amber-400/40 px-1.5 py-0.5 rounded">
                         {locale === 'it' ? 'BARCOLLANTE' : 'STAGGERED'}
                       </span>
                     )}
                     {exitSafety && exitSafety.severity !== 'none' && (
                       <span
                         title={exitSafety.message}
-                        className={`font-label text-[10px] font-black uppercase px-1.5 py-0.2 rounded animate-pulse cursor-help ${
+                        className={`font-label text-[11px] font-black uppercase px-1.5 py-0.5 rounded animate-pulse cursor-help ${
                           exitSafety.severity === 'danger'
                             ? 'text-error bg-error/20 border border-error/50'
-                            : 'text-amber-400 bg-amber-950/60 border border-amber-500/30'
+                            : 'text-amber-300 bg-amber-950/70 border border-amber-400/40'
                         }`}
                       >
                         {exitSafety.isInstantDeath ? 'RAGE: LETHAL' : 'RAGE: RISK'}
@@ -349,203 +357,217 @@ export function TacticalHUD() {
               />
             </div>
 
-            {/* AC Capsule (Total, Touch, Flat-Footed) */}
-            {effectiveAc && detailedAc && (
-              <div
-                className="flex flex-nowrap items-center shrink-0 rounded-xl bg-surface-container/70 border border-white/10 p-0.5"
-                role="group"
-                aria-label={locale === 'it' ? 'Classe Armatura' : 'Armor Class'}
-              >
-                {/* Total AC */}
-                <StatBreakdownTooltip
-                  title={locale === 'it' ? 'Classe Armatura (Totale)' : 'Armor Class (Total)'}
-                  total={effectiveAc.total}
-                  breakdown={detailedAc.totalBreakdown}
-                  notes={effectiveAc.notes}
+            {/* Defenses Row: AC Capsule + Saving Throws Capsule */}
+            <div className="flex w-full items-center justify-between gap-1.5 sm:justify-start sm:gap-2.5 xl:w-auto xl:shrink-0">
+              {/* AC Capsule (Total, Touch, Flat-Footed) */}
+              {effectiveAc && detailedAc && (
+                <div
+                  className="flex flex-1 sm:flex-initial justify-around flex-nowrap items-center shrink-0 rounded-xl bg-surface-container/85 border border-white/10 p-0.5"
+                  role="group"
+                  aria-label={locale === 'it' ? 'Classe Armatura' : 'Armor Class'}
                 >
-                  <div
-                    data-testid="ac-total"
-                    className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[36px] sm:min-w-[40px] cursor-pointer"
+                  {/* Total AC */}
+                  <StatBreakdownTooltip
+                    title={locale === 'it' ? 'Classe Armatura (Totale)' : 'Armor Class (Total)'}
+                    total={effectiveAc.total}
+                    breakdown={detailedAc.totalBreakdown}
+                    notes={effectiveAc.notes}
+                    align="left"
                   >
-                    <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-tertiary font-semibold">
-                      {t('hud.ac')}
-                    </span>
-                    <span
-                      className={`font-label text-xs sm:text-sm leading-none mt-0.5 ${
-                        effectiveAc.total > char.armorClass.total
-                          ? 'text-[#00daf3] font-black'
-                          : effectiveAc.total < char.armorClass.total
-                          ? 'text-[#ffb4ab] font-black'
-                          : 'text-on-surface font-bold'
-                      }`}
+                    <div
+                      data-testid="ac-total"
+                      className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[38px] sm:min-w-[42px] cursor-pointer"
                     >
-                      {effectiveAc.total}
-                    </span>
-                  </div>
-                </StatBreakdownTooltip>
-
-                <div className="h-4 w-px bg-white/10 my-auto" />
-
-                {/* Touch AC */}
-                <StatBreakdownTooltip
-                  title={locale === 'it' ? 'Classe Armatura a Contatto' : 'Touch Armor Class'}
-                  total={effectiveAc.touch}
-                  breakdown={detailedAc.touchBreakdown}
-                  notes={effectiveAc.notes}
-                  className="inline-flex"
-                >
-                  <div
-                    data-testid="ac-touch"
-                    className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[34px] sm:min-w-[38px] cursor-pointer"
-                  >
-                    <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-tertiary font-semibold">
-                      {locale === 'it' ? 'CONT' : 'TOUCH'}
-                    </span>
-                    <span
-                      className={`font-label text-xs sm:text-sm leading-none mt-0.5 ${
-                        effectiveAc.touch > char.armorClass.touch
-                          ? 'text-[#00daf3] font-black'
-                          : effectiveAc.touch < char.armorClass.touch
-                          ? 'text-[#ffb4ab] font-black'
-                          : 'text-on-surface font-bold'
-                      }`}
-                    >
-                      {effectiveAc.touch}
-                    </span>
-                  </div>
-                </StatBreakdownTooltip>
-
-                <div className="h-4 w-px bg-white/10 my-auto" />
-
-                {/* Flat-Footed AC */}
-                <StatBreakdownTooltip
-                  title={locale === 'it' ? 'Classe Armatura Impreparato' : 'Flat-Footed Armor Class'}
-                  total={effectiveAc.flatFooted}
-                  breakdown={detailedAc.flatFootedBreakdown}
-                  notes={effectiveAc.notes}
-                  className="inline-flex"
-                >
-                  <div
-                    data-testid="ac-flat-footed"
-                    className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[34px] sm:min-w-[38px] cursor-pointer"
-                  >
-                    <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-tertiary font-semibold">
-                      {locale === 'it' ? 'IMP' : 'FLAT'}
-                    </span>
-                    <span
-                      className={`font-label text-xs sm:text-sm leading-none mt-0.5 ${
-                        effectiveAc.flatFooted > char.armorClass.flatFooted
-                          ? 'text-[#00daf3] font-black'
-                          : effectiveAc.flatFooted < char.armorClass.flatFooted
-                          ? 'text-[#ffb4ab] font-black'
-                          : 'text-on-surface font-bold'
-                      }`}
-                    >
-                      {effectiveAc.flatFooted}
-                    </span>
-                  </div>
-                </StatBreakdownTooltip>
-              </div>
-            )}
-
-            {/* Interactive Saving Throws Capsule (Fort, Ref, Will) */}
-            {effectiveSaves && (
-              <div
-                className="flex flex-nowrap items-center shrink-0 rounded-xl bg-surface-container/70 border border-white/10 p-0.5"
-                role="group"
-                aria-label={locale === 'it' ? 'Tiri Salvezza' : 'Saving Throws'}
-              >
-                {(
-                  [
-                    {
-                      key: 'fort',
-                      label: translateSaveName('fort', locale, true).toUpperCase(),
-                      fullName: locale === 'it' ? 'Tiro Salvezza Tempra' : 'Fortitude Save',
-                      val: effectiveSaves.fort,
-                      base: char.savingThrows.fort,
-                      bkd: effectiveSaves.breakdowns.fortitude,
-                    },
-                    {
-                      key: 'ref',
-                      label: translateSaveName('ref', locale, true).toUpperCase(),
-                      fullName: locale === 'it' ? 'Tiro Salvezza Riflessi' : 'Reflex Save',
-                      val: effectiveSaves.ref,
-                      base: char.savingThrows.ref,
-                      bkd: effectiveSaves.breakdowns.reflex,
-                    },
-                    {
-                      key: 'will',
-                      label: translateSaveName('will', locale, true).toUpperCase(),
-                      fullName: locale === 'it' ? 'Tiro Salvezza Volontà' : 'Will Save',
-                      val: effectiveSaves.will,
-                      base: char.savingThrows.will,
-                      bkd: effectiveSaves.breakdowns.will,
-                    },
-                  ] as const
-                ).map((save, idx) => {
-                  const isBuffed = save.val > save.base
-                  const isPenalized = save.val < save.base
-                  const valColor = isBuffed
-                    ? 'text-[#00daf3] font-black'
-                    : isPenalized
-                    ? 'text-[#ffb4ab] font-black'
-                    : 'text-on-surface font-bold'
-
-                  return (
-                    <div key={save.key} className="flex items-center">
-                      {idx > 0 && <div className="h-4 w-px bg-white/10 my-auto" />}
-                      <StatBreakdownTooltip
-                        title={save.fullName}
-                        total={save.val >= 0 ? `+${save.val}` : `${save.val}`}
-                        breakdown={save.bkd}
+                      <span className="font-label text-[10px] uppercase tracking-wider text-tertiary font-semibold leading-none">
+                        {t('hud.ac')}
+                      </span>
+                      <span
+                        className={`font-label text-xs sm:text-sm leading-tight mt-0.5 ${
+                          effectiveAc.total > char.armorClass.total
+                            ? 'text-[#00daf3] font-black'
+                            : effectiveAc.total < char.armorClass.total
+                            ? 'text-[#ffb4ab] font-black'
+                            : 'text-on-surface font-bold'
+                        }`}
                       >
-                        <button
-                          onClick={() => {
-                            useDiceStore.getState().openRoll({
-                              diceType: 20,
-                              count: 1,
-                              modifier: save.val,
-                              label: save.fullName,
-                              breakdown: save.bkd,
-                            })
-                          }}
-                          aria-label={`${t('common.roll')} ${save.fullName}`}
-                          className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-secondary/60 hover:bg-secondary/10 active:scale-95 transition-all flex flex-col items-center justify-center min-w-[34px] sm:min-w-[38px] cursor-pointer group"
-                        >
-                          <div className="flex items-center gap-0.5">
-                            <span className="font-label text-[8px] sm:text-[9px] uppercase tracking-widest text-secondary group-hover:text-primary transition-colors font-semibold">
-                              {save.label}
-                            </span>
-                            <span className="material-symbols-outlined text-[9px] sm:text-[10px] text-tertiary/60 group-hover:text-primary transition-colors">
-                              casino
-                            </span>
-                          </div>
-                          <span className={`font-label text-xs sm:text-sm leading-none mt-0.5 ${valColor}`}>
-                            {save.val >= 0 ? `+${save.val}` : save.val}
-                          </span>
-                        </button>
-                      </StatBreakdownTooltip>
+                        {effectiveAc.total}
+                      </span>
                     </div>
-                  )
-                })}
-              </div>
-            )}
+                  </StatBreakdownTooltip>
 
-            {/* Active Conditions (Integrated in Cockpit — Zero layout shift) */}
+                  <div className="h-4 w-px bg-white/10 my-auto" />
+
+                  {/* Touch AC */}
+                  <StatBreakdownTooltip
+                    title={locale === 'it' ? 'Classe Armatura a Contatto' : 'Touch Armor Class'}
+                    total={effectiveAc.touch}
+                    breakdown={detailedAc.touchBreakdown}
+                    notes={effectiveAc.notes}
+                    className="inline-flex"
+                    align="left"
+                  >
+                    <div
+                      data-testid="ac-touch"
+                      className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[38px] sm:min-w-[42px] cursor-pointer"
+                    >
+                      <span className="font-label text-[10px] uppercase tracking-wider text-tertiary font-semibold leading-none">
+                        {locale === 'it' ? 'CONT' : 'TOUCH'}
+                      </span>
+                      <span
+                        className={`font-label text-xs sm:text-sm leading-tight mt-0.5 ${
+                          effectiveAc.touch > char.armorClass.touch
+                            ? 'text-[#00daf3] font-black'
+                            : effectiveAc.touch < char.armorClass.touch
+                            ? 'text-[#ffb4ab] font-black'
+                            : 'text-on-surface font-bold'
+                        }`}
+                      >
+                        {effectiveAc.touch}
+                      </span>
+                    </div>
+                  </StatBreakdownTooltip>
+
+                  <div className="h-4 w-px bg-white/10 my-auto" />
+
+                  {/* Flat-Footed AC */}
+                  <StatBreakdownTooltip
+                    title={locale === 'it' ? 'Classe Armatura Impreparato' : 'Flat-Footed Armor Class'}
+                    total={effectiveAc.flatFooted}
+                    breakdown={detailedAc.flatFootedBreakdown}
+                    notes={effectiveAc.notes}
+                    className="inline-flex"
+                  >
+                    <div
+                      data-testid="ac-flat-footed"
+                      className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-primary/40 hover:bg-surface-container-high transition-all flex flex-col items-center justify-center min-w-[38px] sm:min-w-[42px] cursor-pointer"
+                    >
+                      <span className="font-label text-[10px] uppercase tracking-wider text-tertiary font-semibold leading-none">
+                        {locale === 'it' ? 'IMP' : 'FLAT'}
+                      </span>
+                      <span
+                        className={`font-label text-xs sm:text-sm leading-tight mt-0.5 ${
+                          effectiveAc.flatFooted > char.armorClass.flatFooted
+                            ? 'text-[#00daf3] font-black'
+                            : effectiveAc.flatFooted < char.armorClass.flatFooted
+                            ? 'text-[#ffb4ab] font-black'
+                            : 'text-on-surface font-bold'
+                        }`}
+                      >
+                        {effectiveAc.flatFooted}
+                      </span>
+                    </div>
+                  </StatBreakdownTooltip>
+                </div>
+              )}
+
+              {/* Interactive Saving Throws Capsule (Fort, Ref, Will) */}
+              {effectiveSaves && (
+                <div
+                  className="flex flex-1 sm:flex-initial justify-around flex-nowrap items-center shrink-0 rounded-xl bg-surface-container/85 border border-white/10 p-0.5"
+                  role="group"
+                  aria-label={locale === 'it' ? 'Tiri Salvezza' : 'Saving Throws'}
+                >
+                  {(
+                    [
+                      {
+                        key: 'fort',
+                        label: translateSaveName('fort', locale, true).toUpperCase(),
+                        fullName: locale === 'it' ? 'Tiro Salvezza Tempra' : 'Fortitude Save',
+                        val: effectiveSaves.fort,
+                        base: char.savingThrows.fort,
+                        bkd: effectiveSaves.breakdowns.fortitude,
+                        align: 'center' as const,
+                      },
+                      {
+                        key: 'ref',
+                        label: translateSaveName('ref', locale, true).toUpperCase(),
+                        fullName: locale === 'it' ? 'Tiro Salvezza Riflessi' : 'Reflex Save',
+                        val: effectiveSaves.ref,
+                        base: char.savingThrows.ref,
+                        bkd: effectiveSaves.breakdowns.reflex,
+                        align: 'right' as const,
+                      },
+                      {
+                        key: 'will',
+                        label: translateSaveName('will', locale, true).toUpperCase(),
+                        fullName: locale === 'it' ? 'Tiro Salvezza Volontà' : 'Will Save',
+                        val: effectiveSaves.will,
+                        base: char.savingThrows.will,
+                        bkd: effectiveSaves.breakdowns.will,
+                        align: 'right' as const,
+                      },
+                    ] as const
+                  ).map((save, sIdx) => {
+                    const isBuffed = save.val > save.base
+                    const isPenalized = save.val < save.base
+                    const valColor = isBuffed
+                      ? 'text-[#00daf3] font-black'
+                      : isPenalized
+                      ? 'text-[#ffb4ab] font-black'
+                      : 'text-on-surface font-bold'
+
+                    return (
+                      <div key={save.key} className="flex items-center">
+                        {sIdx > 0 && <div className="h-4 w-px bg-white/10 my-auto" />}
+                        <StatBreakdownTooltip
+                          title={save.fullName}
+                          total={save.val >= 0 ? `+${save.val}` : `${save.val}`}
+                          breakdown={save.bkd}
+                          align={save.align}
+                        >
+                          <button
+                            onClick={() => {
+                              useDiceStore.getState().openRoll({
+                                diceType: 20,
+                                count: 1,
+                                modifier: save.val,
+                                label: save.fullName,
+                                breakdown: save.bkd,
+                              })
+                            }}
+                            aria-label={`${t('common.roll')} ${save.fullName}`}
+                            className="px-1.5 sm:px-2 py-1 rounded-lg hover:border-secondary/60 hover:bg-secondary/10 active:scale-95 transition-all flex flex-col items-center justify-center min-w-[42px] sm:min-w-[46px] cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-0.5">
+                              <span className="font-label text-[10px] uppercase tracking-wider text-secondary group-hover:text-primary transition-colors font-semibold leading-none">
+                                {save.label}
+                              </span>
+                              <span className="material-symbols-outlined text-[10px] text-tertiary group-hover:text-primary transition-colors leading-none">
+                                casino
+                              </span>
+                            </div>
+                            <span className={`font-label text-xs sm:text-sm leading-tight mt-0.5 ${valColor}`}>
+                              {save.val >= 0 ? `+${save.val}` : save.val}
+                            </span>
+                          </button>
+                        </StatBreakdownTooltip>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Active Conditions (Scrollable strip on mobile — never pushes HP or AC off-screen) */}
             {conditions.length > 0 && (
-              <div className="flex flex-nowrap items-center gap-1 sm:gap-1.5 shrink-0" role="group" aria-label={t('hud.activeConditions')}>
+              <div
+                className="flex w-full xl:w-auto flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 xl:shrink-0 xl:max-w-[220px]"
+                role="group"
+                aria-label={t('hud.activeConditions')}
+              >
                 {conditions.map((cond) => {
                   const info = getConditionInfo(cond, locale)
                   return (
                     <div
                       key={cond}
-                      className="group inline-flex items-center rounded-xl text-[10px] font-label font-bold uppercase tracking-wider bg-error/15 border border-error/40 text-error shadow-[0_0_8px_rgba(255,75,96,0.25)] hover:bg-error/25 hover:border-error/70 transition-all flex-shrink-0"
+                      className="group inline-flex items-center rounded-xl text-[11px] font-label font-bold uppercase tracking-wider bg-error/15 border border-error/45 text-error shadow-[0_0_8px_rgba(255,75,96,0.2)] hover:bg-error/25 hover:border-error/70 transition-all flex-shrink-0"
                     >
                       <StatBreakdownTooltip
                         title={info?.name ?? cond}
                         total={t('hud.conditionTag').toUpperCase()}
                         breakdown={[]}
                         notes={info?.penalties}
+                        align="left"
                       >
                         <button
                           type="button"
@@ -563,18 +585,18 @@ export function TacticalHUD() {
                           aria-label={`${t('hud.inspectCondition')} ${info?.name ?? cond}`}
                           className="flex items-center gap-1 pl-2 pr-1 py-1 cursor-pointer hover:text-white transition-colors"
                         >
-                          <span className="material-symbols-outlined text-[11px] sm:text-[12px]">warning</span>
-                          <span className="text-[9px] sm:text-[10px] leading-none">{locale === 'it' ? (info?.name ?? cond) : cond}</span>
+                          <span className="material-symbols-outlined text-xs">warning</span>
+                          <span className="text-[11px] leading-none">{locale === 'it' ? (info?.name ?? cond) : cond}</span>
                         </button>
                       </StatBreakdownTooltip>
                       <button
                         type="button"
                         onClick={() => toggleCondition(char.id, cond)}
                         aria-label={`${t('hud.removeCondition')} ${cond}`}
-                        className="pr-2 pl-0.5 py-1 text-error/60 hover:text-white cursor-pointer transition-colors"
+                        className="pr-2 pl-1 py-1 text-error/80 hover:text-white cursor-pointer transition-colors"
                         title={t('hud.removeCondition')}
                       >
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
@@ -586,11 +608,13 @@ export function TacticalHUD() {
           </div>
 
           {/* Right Cockpit: Language & Cycler & Switcher & Settings */}
-          <div className="col-start-2 row-start-1 flex flex-shrink-0 items-center gap-2 justify-self-end md:gap-3">
-<LanguageToggle />
+          <div className="col-start-2 row-start-1 flex flex-shrink-0 items-center gap-1.5 sm:gap-2 justify-self-end xl:gap-2.5">
+            <div className="hidden sm:block">
+              <LanguageToggle />
+            </div>
             <CloudSyncBadge />
             {characters.length >= 2 && (
-              <div className="flex items-center gap-1">
+              <div className="hidden sm:flex items-center gap-0.5">
                 <button
                   onClick={() => cycleTo(-1)}
                   aria-label={t('hud.previousCharacter')}
@@ -612,14 +636,14 @@ export function TacticalHUD() {
 
             <button
               onClick={() => setSettingsOpen(true)}
-aria-label={t('hud.settings')}
+              aria-label={t('hud.settings')}
               className="p-1.5 text-tertiary hover:text-primary transition-all duration-300 rounded-lg hover:bg-white/5 cursor-pointer relative"
             >
               <span className="material-symbols-outlined text-base md:text-lg">settings</span>
               {newSheetsCount > 0 && (
                 <span
                   data-testid="sheets-notification-badge"
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-black font-label text-[9px] font-black flex items-center justify-center shadow-[0_0_8px_rgba(0,240,255,0.6)] animate-pulse"
+                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-black font-label text-[10px] font-black flex items-center justify-center shadow-[0_0_8px_rgba(0,240,255,0.6)] animate-pulse"
                 >
                   {newSheetsCount}
                 </span>

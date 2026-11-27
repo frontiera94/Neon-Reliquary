@@ -48,10 +48,12 @@ export function TacticalHpPopover({
     }
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('touchstart', handleClickOutside as EventListener)
       document.addEventListener('keydown', handleKeyDown)
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside as EventListener)
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen, onClose])
@@ -97,15 +99,15 @@ export function TacticalHpPopover({
     <div
       ref={popoverRef}
       data-testid="hp-popover"
-      className="absolute top-full left-1/2 -translate-x-1/2 mt-3 z-50 w-80 sm:w-96 p-4 rounded-2xl backdrop-blur-xl bg-surface-container/95 border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.85)] shadow-primary/10 animate-in fade-in zoom-in-95"
+      className="fixed inset-x-3 top-24 z-[70] w-auto max-w-sm mx-auto sm:absolute sm:inset-x-auto sm:top-full sm:left-0 xl:left-1/2 xl:-translate-x-1/2 sm:mt-3 sm:w-96 p-4 rounded-2xl backdrop-blur-xl bg-surface-container/98 border border-white/15 shadow-[0_16px_48px_rgba(0,0,0,0.9)] shadow-primary/10 animate-in fade-in zoom-in-95"
     >
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-primary text-sm">favorite</span>
-          <h3 className="font-headline text-xs font-bold uppercase tracking-wider text-white">
+          <h2 className="font-headline text-xs font-bold uppercase tracking-wider text-white">
             {locale === 'it' ? 'Gestione Tattica PF' : 'Tactical HP Adjust'}
-          </h3>
+          </h2>
         </div>
         <button
           onClick={onClose}

@@ -10,21 +10,21 @@
   --color-surface-base: #0a0a0f;
   --color-surface-group: #11131c;
   --color-surface-card: #181b26;
-  --color-secondary: #d946ef;
-  --color-tertiary: #94a3b8;
-  --color-error: #ff4b60;
+  --color-secondary: #e879f9;
+  --color-tertiary: #adbdd1;
+  --color-error: #ff6b7d;
   --color-surface: #0a0a0f;
-  --color-surface-container: #121424;
-  --color-surface-container-low: #0e0f1a;
-  --color-surface-container-high: #1a1c32;
-  --color-surface-container-highest: #242745;
+  --color-surface-container: #131629;
+  --color-surface-container-low: #0e101d;
+  --color-surface-container-high: #1b1f36;
+  --color-surface-container-highest: #252a48;
   --color-surface-container-lowest: #07070d;
   --color-surface-variant: #1e213a;
   --color-surface-bright: #2b2f52;
-  --color-outline: #475569;
-  --color-outline-variant: #334155;
-  --color-on-surface: #f1f5f9;
-  --color-on-surface-variant: #cbd5e1;
+  --color-outline: #64748b;
+  --color-outline-variant: #3e4c63;
+  --color-on-surface: #f8fafc;
+  --color-on-surface-variant: #dce5f2;
   --color-on-primary: #000000;
   --color-on-secondary: #ffffff;
   --color-on-tertiary: #0f172a;
@@ -58,12 +58,23 @@
 body {
   background-color: #0a0a0f;
   font-family: 'Manrope', 'Inter', sans-serif;
-  color: #f1f5f9;
+  color: #f8fafc;
   margin: 0;
   overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   /* Tactical data legibility: every number aligns to the same grid. */
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 .material-symbols-outlined {
@@ -105,44 +116,53 @@ body {
 }
 .glow-orb-cyan {
   background: #00f0ff;
-  opacity: 0.15;
+  opacity: 0.14;
 }
 .glow-orb-magenta {
   background: #d946ef;
-  opacity: 0.12;
+  opacity: 0.11;
+}
+
+@media (max-width: 767px) {
+  .glow-orb-cyan {
+    opacity: 0.07;
+  }
+  .glow-orb-magenta {
+    opacity: 0.06;
+  }
 }
 
 /* Glassmorphic card styling */
 .glass-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(19, 22, 41, 0.86);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.11);
 }
 .glass-card-interactive {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(19, 22, 41, 0.86);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.11);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .glass-card-interactive:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(27, 31, 54, 0.92);
   border-color: rgba(0, 240, 255, 0.35);
   box-shadow: 0 0 25px rgba(0, 240, 255, 0.15);
 }
 
 .neon-glow {
-  text-shadow: 0 0 12px rgba(0,240,255,0.6), 0 0 24px rgba(0,240,255,0.3);
+  text-shadow: 0 0 10px rgba(0,240,255,0.45), 0 0 20px rgba(0,240,255,0.2);
 }
 
 /* Redesigned accent glow: vibrant cyber violet/magenta instead of muddy gold */
 .neon-glow-accent, .neon-glow-gold {
-  text-shadow: 0 0 10px rgba(217,70,239,0.55), 0 0 22px rgba(217,70,239,0.25);
+  text-shadow: 0 0 8px rgba(232,121,249,0.38), 0 0 18px rgba(217,70,239,0.18);
 }
 
 .neon-glow-cyan-soft {
-  text-shadow: 0 0 8px rgba(0,240,255,0.5), 0 0 18px rgba(0,240,255,0.2);
+  text-shadow: 0 0 8px rgba(0,240,255,0.4), 0 0 16px rgba(0,240,255,0.16);
 }
 
 /* Tactical Combat Flash & Shockwave Animations */

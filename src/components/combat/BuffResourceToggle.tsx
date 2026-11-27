@@ -50,16 +50,16 @@ export function DailyResourcePips({ characterId, resource, spent, compact = fals
       aria-label={t('buffToggle.remainingAria', { name: displayName, remaining, total: resource.total })}
       title={displayName}
     >
-      <span className="inline-flex items-center gap-1 font-label text-[9px] uppercase tracking-wider mr-1">
+      <span className="inline-flex items-center gap-1.5 font-label text-[11px] uppercase tracking-wider mr-1">
         {prefix ? (
           <>
-            <span className="px-1 py-0.5 rounded bg-white/5 border border-white/10 text-secondary text-[8px] font-bold">
+            <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/15 text-secondary text-[10px] font-bold">
               {prefix}
             </span>
-            <span className="text-tertiary font-semibold">{mainLabel}</span>
+            <span className="text-on-surface-variant font-semibold">{mainLabel}</span>
           </>
         ) : (
-          <span className="text-tertiary">{mainLabel}</span>
+          <span className="text-on-surface-variant font-semibold">{mainLabel}</span>
         )}
       </span>
       <div className={`flex flex-wrap items-center ${compact ? 'gap-0.5' : 'gap-1'}`}>

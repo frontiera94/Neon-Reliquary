@@ -29,7 +29,7 @@ export function MainLayout() {
         <TopBar />
         <div className="flex flex-1">
           <Sidebar />
-          <main className="flex-1 min-w-0 pb-20 md:pb-0">
+          <main className="flex-1 min-w-0 pb-36 md:pb-8">
             <motion.div
               key={location.pathname}
               variants={PAGE_VARIANTS}

@@ -102,7 +102,7 @@ export function CharacterDropdown({
           aria-expanded={isOpen}
           aria-label={t('hud.characterSwitcher')}
           data-testid="character-dropdown-trigger"
-          className="flex items-center gap-2 px-3 py-1.5 bg-surface-container/80 backdrop-blur-sm border border-white/10 text-white font-label text-xs rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_20px_rgba(0,240,255,0.25)] transition-all duration-300 cursor-pointer"
+          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-surface-container/85 backdrop-blur-sm border border-white/15 text-white font-label text-xs rounded-xl hover:border-primary/50 hover:bg-primary/10 hover:text-primary hover:shadow-[0_0_20px_rgba(0,240,255,0.25)] transition-all duration-300 cursor-pointer"
         >
           {/* Active character cyber emblem symbol */}
           <div className="w-5 h-5 rounded-md overflow-hidden flex-shrink-0">

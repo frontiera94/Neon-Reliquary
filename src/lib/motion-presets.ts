@@ -65,8 +65,8 @@ export const STAGGER_CONTAINER: Variants = {
   initial: {},
   animate: {
     transition: {
-      staggerChildren: 0.04,
-      delayChildren: 0.02,
+      staggerChildren: 0.015,
+      delayChildren: 0,
     },
   },
 }

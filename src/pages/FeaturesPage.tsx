@@ -105,28 +105,28 @@ export function FeaturesPage() {
 
       {/* Signature Ability Highlight */}
       {signatureAbility && (
-        <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 sm:p-3.5 flex items-center justify-between gap-3 shadow-[0_0_15px_rgba(0,240,255,0.08)]">
+        <div className="bg-surface-container-high/90 border border-primary/35 rounded-xl p-3.5 flex items-center justify-between gap-3 shadow-[0_0_15px_rgba(0,240,255,0.08)]">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center flex-shrink-0 text-primary">
               <span className="material-symbols-outlined text-lg">star</span>
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="font-label text-[10px] uppercase tracking-wider text-primary font-bold">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <span className="font-label text-[11px] uppercase tracking-wider text-primary font-bold">
                   {locale === 'it' ? 'Capacità Distintiva' : 'Signature Ability'}
                 </span>
                 <h2 className="font-headline text-base sm:text-lg font-bold text-white truncate">
                   {signatureAbility.name}
                 </h2>
               </div>
-              <p className="font-body text-xs text-tertiary truncate max-w-xl">
+              <p className="font-body text-xs text-on-surface-variant line-clamp-2 max-w-xl mt-0.5">
                 {signatureAbility.description}
               </p>
             </div>
           </div>
           <button
             onClick={() => openInspector(classAbilityInspectorItem(rawSignatureAbility!))}
-            className="px-2.5 py-1 bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary rounded-lg font-label text-[10px] sm:text-[11px] uppercase tracking-wider flex items-center gap-1 flex-shrink-0 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 bg-primary/15 hover:bg-primary/25 border border-primary/35 text-primary rounded-lg font-label text-[11px] uppercase tracking-wider flex items-center gap-1 flex-shrink-0 transition-colors cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm">info</span>
             <span className="hidden sm:inline">{locale === 'it' ? 'Ispeziona' : 'Inspect'}</span>
@@ -270,7 +270,7 @@ function ClassAbilityItem({
                   </span>
                 )}
               </div>
-              <p className="font-body text-xs text-tertiary line-clamp-2 mt-0.5 leading-snug">
+              <p className="font-body text-xs sm:text-sm text-on-surface-variant line-clamp-2 mt-0.5 leading-snug">
                 {ability.description}
               </p>
             </div>
@@ -285,7 +285,7 @@ function ClassAbilityItem({
               }}
               title={locale === 'it' ? 'Ispeziona dettagli' : 'Inspect details'}
               aria-label={`Inspect ${ability.name}`}
-              className="p-1 rounded-md text-tertiary hover:text-secondary hover:bg-white/5 transition-colors cursor-pointer"
+              className="p-1.5 rounded-md text-tertiary hover:text-secondary hover:bg-white/5 transition-colors cursor-pointer"
             >
               <span className="material-symbols-outlined text-base">info</span>
             </button>
@@ -294,7 +294,7 @@ function ClassAbilityItem({
             </span>
           </div>
         </summary>
-        <div className="px-3.5 pb-3.5 pt-2 border-t border-white/5 font-body text-xs sm:text-sm text-tertiary leading-relaxed">
+        <div className="px-3.5 pb-3.5 pt-2.5 border-t border-white/10 font-body text-sm text-on-surface-variant leading-relaxed">
           {ability.description}
         </div>
       </details>
@@ -322,7 +322,7 @@ function FeatAccordionItem({
               <span className="font-headline text-base sm:text-lg font-bold text-white group-hover:text-primary uppercase tracking-tight transition-colors">
                 {feat.name}
               </span>
-              <p className="font-body text-xs text-tertiary line-clamp-2 mt-0.5 leading-snug">
+              <p className="font-body text-xs sm:text-sm text-on-surface-variant line-clamp-2 mt-0.5 leading-snug">
                 {feat.shortDesc}
               </p>
             </div>
@@ -337,7 +337,7 @@ function FeatAccordionItem({
               }}
               title={locale === 'it' ? 'Ispeziona dettagli' : 'Inspect details'}
               aria-label={`Inspect ${feat.name}`}
-              className="p-1 rounded-md text-tertiary hover:text-primary hover:bg-white/5 transition-colors cursor-pointer"
+              className="p-1.5 rounded-md text-tertiary hover:text-primary hover:bg-white/5 transition-colors cursor-pointer"
             >
               <span className="material-symbols-outlined text-base">info</span>
             </button>
@@ -346,7 +346,7 @@ function FeatAccordionItem({
             </span>
           </div>
         </summary>
-        <div className="px-3.5 pb-3.5 pt-2 border-t border-white/5 space-y-2.5 font-body text-xs sm:text-sm text-tertiary leading-relaxed">
+        <div className="px-3.5 pb-3.5 pt-2.5 border-t border-white/10 space-y-2.5 font-body text-sm text-on-surface-variant leading-relaxed">
           <div>{feat.fullDesc}</div>
           {feat.bonusValue !== undefined && feat.bonusMax !== undefined && (
             <div className="bg-surface-container-lowest p-2.5 sm:p-3 border border-white/10 rounded-lg">

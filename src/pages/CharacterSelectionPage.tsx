@@ -107,41 +107,43 @@ const [settingsOpen, setSettingsOpen] = useState(false)
       <div className="glow-orb glow-orb-magenta -bottom-32 -left-32 w-96 h-96 pointer-events-none opacity-15" />
 
       {/* Header bar: Responsive Flex layout */}
-      <header className="w-full z-20 px-4 md:px-8 py-4 border-b border-white/[0.06] bg-surface/75 backdrop-blur-md sticky top-0 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-black/60 border border-primary/25 font-mono text-xs text-primary">
+      <header className="w-full z-20 px-3 sm:px-4 md:px-8 py-3 sm:py-4 border-b border-white/[0.08] bg-surface/90 backdrop-blur-md sticky top-0 flex items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-black/60 border border-primary/25 font-mono text-xs text-primary">
             <span className="text-secondary">&gt;</span>
             <span>reliquary:ready</span>
           </div>
           <span
-            className="text-xl md:text-2xl font-black tracking-tight text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft hover:opacity-90 transition-opacity"
+            className="text-base sm:text-xl md:text-2xl font-black tracking-tight text-primary uppercase font-headline cursor-pointer neon-glow-cyan-soft hover:opacity-90 transition-opacity whitespace-nowrap"
             onClick={() => navigate('/')}
           >
             NEON RELIQUARY
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <LanguageFlagSwitcher variant="pill" />
-          <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.03] border border-white/10 font-label text-[11px] text-tertiary uppercase tracking-widest">
+        <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+          <div className="hidden xl:block">
+            <LanguageFlagSwitcher variant="pill" />
+          </div>
+          <span className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 font-label text-[11px] text-tertiary uppercase tracking-widest">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
             {t('characterSelection.rosterBadge')}
           </span>
           <LanguageToggle />
-          <CloudSyncBadge compact={false} />
+          <CloudSyncBadge compact />
           <button
             type="button"
             onClick={() => setSettingsOpen(true)}
             aria-label={t('hud.manageSheetsAria')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-primary/40 hover:bg-primary/10 text-tertiary hover:text-primary font-label text-xs uppercase tracking-wider transition-all cursor-pointer relative"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/[0.05] border border-white/10 hover:border-primary/40 hover:bg-primary/10 text-on-surface-variant hover:text-primary font-label text-xs uppercase tracking-wider transition-all cursor-pointer relative"
             title={t('hud.manageSheetsTitle')}
           >
-            <span className="material-symbols-outlined text-sm">folder_shared</span>
+            <span className="material-symbols-outlined text-sm text-primary">folder_shared</span>
             <span className="hidden sm:inline">{t('hud.sheets')}</span>
             {newSheetsCount > 0 && (
               <span
                 data-testid="sheets-notification-badge-roster"
-                className="w-4 h-4 rounded-full bg-primary text-black font-label text-[9px] font-black flex items-center justify-center shadow-[0_0_8px_rgba(0,240,255,0.6)] animate-pulse"
+                className="w-4 h-4 rounded-full bg-primary text-black font-label text-[10px] font-black flex items-center justify-center shadow-[0_0_8px_rgba(0,240,255,0.6)] animate-pulse"
               >
                 {newSheetsCount}
               </span>
@@ -636,7 +638,7 @@ function VitalitySummaryStrip({ char }: { char: FullCharacter }) {
           </span>
         )}
         {activeBuffs === 0 && conditions === 0 && !isDead && !isDying && !isDisabled && (
-          <span className="text-tertiary/60 font-label text-[10px] uppercase tracking-wider">
+          <span className="text-tertiary font-label text-[11px] uppercase tracking-wider">
             {locale === 'it' ? 'Condizioni stabili • Nessun debuff attivo' : 'Stable conditions • No active debuffs'}
           </span>
         )}

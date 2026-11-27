@@ -87,7 +87,7 @@ export function InventoryItemCard({
       </div>
 
       {item.description && (
-        <p className="font-body text-tertiary text-xs sm:text-sm leading-relaxed">{item.description}</p>
+        <p className="font-body text-on-surface-variant text-xs sm:text-sm leading-relaxed">{item.description}</p>
       )}
 
       {(isEquippable || item.weight !== undefined || onRemove) && (

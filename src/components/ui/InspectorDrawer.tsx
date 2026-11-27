@@ -125,7 +125,7 @@ export function InspectorDrawer() {
                   {item.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="font-label text-[9px] uppercase tracking-wider px-2 py-1 border border-primary/30 bg-primary/10 text-primary rounded"
+                      className="font-label text-[11px] uppercase tracking-wider px-2 py-1 border border-primary/35 bg-primary/10 text-primary rounded-md font-semibold"
                     >
                       {tag}
                     </span>
@@ -141,7 +141,7 @@ export function InspectorDrawer() {
                 <div className="grid grid-cols-2 gap-2">
                   {item.meta.map((entry) => (
                     <div key={entry.label} className="bg-[#181b26] border border-white/10 rounded-xl p-3">
-                      <p className="font-label text-[9px] uppercase tracking-widest text-tertiary">{entry.label}</p>
+                      <p className="font-label text-[10px] uppercase tracking-wider text-tertiary">{entry.label}</p>
                       <p className="font-label text-sm font-bold text-white tabular-nums mt-0.5">{entry.value}</p>
                     </div>
                   ))}

@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { MotionConfig } from 'framer-motion'
 import { MainLayout } from './components/layout/MainLayout'
 import { SessionSyncManager } from './components/sync/SessionSyncManager'
 import { LandingPage } from './pages/LandingPage'
@@ -27,26 +28,28 @@ function ScrollToTop() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <ScrollToTop />
-      <SessionSyncManager />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/characters" element={<CharacterSelectionPage />} />
-        <Route path="/master-map" element={<MasterMapPage />} />
-        <Route element={<MainLayout />}>
-          <Route path="/status" element={<StatusPage />} />
-          <Route path="/skills" element={<SkillsPage />} />
-          <Route path="/combat" element={<CombatPage />} />
-          <Route path="/spells" element={<SpellsPage />} />
-          <Route path="/features" element={<FeaturesPage />} />
-          <Route path="/inventory" element={<InventoryPage />} />
-          <Route path="/companion" element={<CompanionPage />} />
-          <Route path="/notes" element={<NotesPage />} />
-          <Route path="/map" element={<PlayerMapPage />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <MotionConfig reducedMotion="user">
+      <BrowserRouter>
+        <ScrollToTop />
+        <SessionSyncManager />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/characters" element={<CharacterSelectionPage />} />
+          <Route path="/master-map" element={<MasterMapPage />} />
+          <Route element={<MainLayout />}>
+            <Route path="/status" element={<StatusPage />} />
+            <Route path="/skills" element={<SkillsPage />} />
+            <Route path="/combat" element={<CombatPage />} />
+            <Route path="/spells" element={<SpellsPage />} />
+            <Route path="/features" element={<FeaturesPage />} />
+            <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/companion" element={<CompanionPage />} />
+            <Route path="/notes" element={<NotesPage />} />
+            <Route path="/map" element={<PlayerMapPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </MotionConfig>
   )
 }

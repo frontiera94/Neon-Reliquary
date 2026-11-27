@@ -63,12 +63,12 @@ export function EquipmentSlotCell({
   }
 
   return (
-    <div className="bg-surface-container/30 border border-white/5 border-l-4 border-l-outline-variant/30 rounded-xl p-3 min-h-[88px] flex flex-col gap-1 opacity-40">
+    <div className="bg-surface-container/55 border border-white/10 border-l-4 border-l-outline-variant/50 rounded-xl p-3 min-h-[88px] flex flex-col gap-1">
       <div className="flex items-center gap-1.5">
         <span className="material-symbols-outlined text-tertiary text-base">{icon}</span>
-        <span className="font-label text-[10px] uppercase tracking-wider text-tertiary">{label}</span>
+        <span className="font-label text-[11px] uppercase tracking-wider text-tertiary">{label}</span>
       </div>
-      <span className="font-headline text-base text-tertiary">—</span>
+      <span className="font-headline text-base text-tertiary/80">—</span>
     </div>
   )
 }

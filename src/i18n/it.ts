@@ -89,6 +89,9 @@ export const it = {
     damage: 'Danno',
     heal: 'Cura',
     fullHeal: 'Cura Completa',
+    sheets: 'Schede',
+    manageSheetsAria: 'Gestisci schede personaggio',
+    manageSheetsTitle: 'Apri coda e caricamento schede',
   },
   settings: {
     title: 'Impostazioni',

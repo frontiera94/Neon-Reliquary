@@ -1123,8 +1123,8 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                           <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                             {tokens.map((token, index) => (
                               <span key={`${token.label}-${index}`} className="contents">
-                                {index > 0 && <span className="font-label text-[10px] text-tertiary/40">|</span>}
-                                <span className={`font-label text-[10px] tabular-nums ${isActive ? `font-bold ${modifierColor(token.value)}` : 'text-tertiary/50'}`}>
+                                {index > 0 && <span className="font-label text-[10px] text-tertiary/60">|</span>}
+                                <span className={`font-label text-[11px] tabular-nums ${isActive ? `font-bold ${modifierColor(token.value)}` : 'text-tertiary'}`}>
                                   {token.value !== null ? `${token.value > 0 ? '+' : ''}${token.value} ${token.label}` : `+${token.label}`}
                                 </span>
                               </span>
@@ -1151,8 +1151,8 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         </span>
                       </span>
                       <span
-                        className="flex-shrink-0 font-label text-[10px] font-bold uppercase tracking-wider"
-                        style={{ color: isActive ? hex : 'rgba(255,255,255,0.32)' }}
+                        className="flex-shrink-0 font-label text-[11px] font-bold uppercase tracking-wider"
+                        style={{ color: isActive ? hex : '#adbdd1' }}
                       >
                         {isActive ? 'On' : 'Off'}
                       </span>
@@ -1357,10 +1357,10 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         .map((lvl) => (
                           <div
                             key={`unprep-${lvl.level}`}
-                            className="flex items-center justify-between text-tertiary/60 font-label text-[10px] uppercase tracking-wider px-1 py-0.5"
+                            className="flex items-center justify-between text-tertiary font-label text-[11px] uppercase tracking-wider px-1 py-0.5"
                           >
                             <span className="flex items-center gap-1.5">
-                              <span className="px-1 py-0.5 rounded bg-white/5 border border-white/5 text-[10px] font-bold">
+                              <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-on-surface-variant font-bold">
                                 L{lvl.level}
                               </span>
                               <span>
@@ -1372,7 +1372,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                             </span>
                             <Link
                               to="/spells"
-                              className="text-primary hover:underline text-[10px] capitalize"
+                              className="text-primary hover:underline text-[11px] capitalize font-semibold"
                             >
                               {isIt ? 'prepara +' : 'prepare +'}
                             </Link>
@@ -1380,7 +1380,7 @@ export function CombatPage({ embedded = false }: { embedded?: boolean } = {}) {
                         ))}
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between px-1 py-1 text-tertiary/60 font-label text-[10px]">
+                    <div className="flex items-center justify-between px-1 py-1 text-tertiary font-label text-[11px]">
                       <span>
                         {spellAvailability.totalSlots}{' '}
                         {isIt ? 'slot liberi da preparare' : 'slots free to prepare'}

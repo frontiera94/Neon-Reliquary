@@ -114,19 +114,19 @@ const { locale, t } = useTranslation()
                 {weapon.name}
               </h3>
               <span
-                className={`rounded-full border px-2 py-0.5 font-label text-[9px] font-bold uppercase tracking-[0.14em] ${
+                className={`rounded-full border px-2 py-0.5 font-label text-[10px] font-bold uppercase tracking-wider ${
                   isMelee
-                    ? 'border-primary/30 bg-primary/10 text-primary'
-                    : 'border-secondary/30 bg-secondary/10 text-secondary'
+                    ? 'border-primary/35 bg-primary/10 text-primary'
+                    : 'border-secondary/35 bg-secondary/10 text-secondary'
                 }`}
               >
                 {isMelee ? (isIt ? 'Mischia' : 'Melee') : (isIt ? 'Distanza' : 'Ranged')}
               </span>
             </div>
 
-            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-label text-[10px] text-tertiary">
+            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-label text-[11px] text-on-surface-variant">
               {weapon.tags.map((tag) => (
-                <span key={tag} className="after:ml-2 after:text-white/15 after:content-['·'] last:after:content-['']">
+                <span key={tag} className="after:ml-2 after:text-white/20 after:content-['·'] last:after:content-['']">
                   {tag}
                 </span>
               ))}
@@ -138,8 +138,8 @@ const { locale, t } = useTranslation()
 
           {/* Ranged ammo, inline */}
           {weapon.type === 'ranged' && maxAmmo !== undefined && (
-            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-surface-container-lowest/60 px-2.5 py-1.5">
-              <span className="font-label text-[9px] uppercase tracking-wider text-tertiary">
+            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-surface-container-lowest/70 px-2.5 py-1.5">
+              <span className="font-label text-[10px] uppercase tracking-wider text-tertiary">
                 {isIt ? 'Munizioni' : 'Ammo'}
               </span>
               <span className="font-label text-[11px] font-bold tabular-nums text-secondary">
@@ -198,9 +198,9 @@ const { locale, t } = useTranslation()
                 type="button"
                 onClick={() => onAttackRoll(idx)}
                 title={`${t('common.roll')} ${idx + 1}° ${t('combat.attack')}`}
-                className={`${attackClass} min-w-[78px]`}
+                className={`${attackClass} min-w-[78px] flex-1 sm:flex-initial`}
               >
-                <span className="font-label text-[9px] uppercase tracking-wider text-primary/80">
+                <span className="font-label text-[10px] uppercase tracking-wider text-primary font-semibold">
                   {idx + 1}° {t('combat.attack')}
                 </span>
                 <span className="font-label text-lg font-black tabular-nums text-white">
@@ -213,9 +213,9 @@ const { locale, t } = useTranslation()
               type="button"
               onClick={() => onAttackRoll(0)}
               title={`${t('common.roll')} ${t('combat.attack')} (${formatAttackBonus(effective.attackBonus)})`}
-              className={`${attackClass} min-w-[108px]`}
+              className={`${attackClass} min-w-[108px] flex-1 sm:flex-initial`}
             >
-              <span className="font-label text-[9px] uppercase tracking-wider text-primary/80">
+              <span className="font-label text-[10px] uppercase tracking-wider text-primary font-semibold">
                 {showOffhand ? (isIt ? 'Attacco Primario' : 'Primary Attack') : t('combat.attack')}
               </span>
               <StatBreakdownTooltip
@@ -254,9 +254,9 @@ const { locale, t } = useTranslation()
               type="button"
               onClick={onOffhandRoll}
               title={`${t('common.roll')} ${t('combat.offHand')} (${offhandBonus >= 0 ? `+${offhandBonus}` : offhandBonus})`}
-              className={`${actionClass} min-w-[84px] border-secondary/35 bg-secondary/10 text-white hover:border-secondary/70 hover:bg-secondary/20`}
+              className={`${actionClass} min-w-[84px] flex-1 sm:flex-initial border-secondary/35 bg-secondary/10 text-white hover:border-secondary/70 hover:bg-secondary/20`}
             >
-              <span className="font-label text-[9px] uppercase tracking-wider text-secondary/80">
+              <span className="font-label text-[10px] uppercase tracking-wider text-secondary font-semibold">
                 {t('combat.offHand')}
               </span>
               <StatBreakdownTooltip
@@ -276,9 +276,9 @@ const { locale, t } = useTranslation()
             type="button"
             onClick={onDamageRoll}
             title={`${t('common.roll')} ${t('combat.damage')} (${damageText})`}
-            className={`${damageClass} min-w-[104px]`}
+            className={`${damageClass} min-w-[104px] flex-1 sm:flex-initial`}
           >
-            <span className="font-label text-[9px] uppercase tracking-wider text-secondary/80">
+            <span className="font-label text-[10px] uppercase tracking-wider text-secondary font-semibold">
               {t('combat.damage')}
             </span>
             <StatBreakdownTooltip
