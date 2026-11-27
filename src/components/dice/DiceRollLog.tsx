@@ -62,33 +62,34 @@ const { t } = useTranslation()
           ))}
         </div>
         <div className="flex items-center gap-1.5 ml-auto">
-          <span className="font-label text-[9px] uppercase tracking-wider text-tertiary">Mod:</span>
+          <span className="font-label text-[10px] uppercase tracking-wider text-tertiary">Mod:</span>
           <input
             type="number"
             value={customMod || ''}
             placeholder="+0"
+            aria-label="Quick roll modifier"
             onChange={(e) => setCustomMod(parseInt(e.target.value) || 0)}
-            className="w-12 px-1.5 py-0.5 rounded bg-surface-container-lowest border border-white/10 font-label text-xs text-center text-primary focus:outline-none focus:border-primary"
+            className="w-12 px-1.5 py-0.5 rounded bg-surface-container-lowest border border-white/15 font-label text-xs text-center text-primary focus:outline-none focus:border-primary"
             title="Modifier to apply to quick roll"
           />
         </div>
       </div>
 
       {history.length === 0 ? (
-        <p className="px-3.5 py-5 text-center font-label text-[10px] uppercase tracking-widest text-tertiary/60">
+        <p className="px-3.5 py-5 text-center font-label text-[11px] uppercase tracking-widest text-tertiary">
           {t('settings.noRollsYet')}
         </p>
       ) : (
-        <ul className={`divide-y divide-white/5 overflow-y-auto ${compact ? 'max-h-44' : 'max-h-72'}`}>
+        <ul className={`divide-y divide-white/5 overflow-y-auto ${compact ? 'max-h-48' : 'max-h-72'}`}>
           {history.map((roll) => (
             <li key={roll.id} className="px-3.5 py-2 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <p className="font-label text-[10px] text-on-surface truncate">{roll.label}</p>
-                <p className="font-label text-[9px] text-tertiary truncate tabular-nums">{roll.formula}</p>
+                <p className="font-label text-xs text-on-surface truncate">{roll.label}</p>
+                <p className="font-label text-[11px] text-tertiary truncate tabular-nums">{roll.formula}</p>
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 {roll.isCriticalThreat && (
-                  <span className="font-label text-[8px] uppercase tracking-widest text-secondary border border-secondary/50 bg-secondary/15 px-1.5 py-0.5 rounded-full">
+                  <span className="font-label text-[10px] uppercase tracking-wider font-bold text-secondary border border-secondary/50 bg-secondary/15 px-1.5 py-0.5 rounded-full">
                     CRIT
                   </span>
                 )}

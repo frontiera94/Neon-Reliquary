@@ -750,13 +750,14 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
             <div className="flex flex-wrap items-center gap-2 pt-1">
               {selectedHexType === 'fortune' ? (
                 <select
+                  aria-label="Seleziona compagno per Fortune"
                   value={fortuneAllyId}
                   onChange={(e) => {
                     setFortuneAllyId(e.target.value)
                     const found = allCharacters.find((c) => c.id === e.target.value)
                     if (found) setHexTargetName(found.name)
                   }}
-                  className="rounded border border-white/10 bg-surface-container-high px-2 py-1 font-label text-xs text-white focus:outline-none"
+                  className="rounded border border-white/15 bg-surface-container-high px-2 py-1 font-label text-xs text-white focus:outline-none"
                 >
                   <option value="">Seleziona Compagno</option>
                   {allCharacters.map((c) => (
@@ -768,19 +769,21 @@ export function ClassMechanicsPanel({ char, effectiveAbilities }: ClassMechanics
               ) : (
                 <input
                   type="text"
+                  aria-label="Nome bersaglio fattura"
                   placeholder="Nome Bersaglio"
                   value={hexTargetName}
                   onChange={(e) => setHexTargetName(e.target.value)}
-                  className="rounded border border-white/10 bg-surface-container-high px-2.5 py-1 font-label text-xs text-white focus:border-secondary focus:outline-none"
+                  className="rounded border border-white/15 bg-surface-container-high px-2.5 py-1 font-label text-xs text-white focus:border-secondary focus:outline-none"
                 />
               )}
 
               {selectedHexType === 'evil-eye' && (
                 <>
                   <select
+                    aria-label="Statistica penalizzata da Evil Eye"
                     value={evilEyeStat}
                     onChange={(e) => setEvilEyeStat(e.target.value as EvilEyeTargetStat)}
-                    className="rounded border border-white/10 bg-surface-container-high px-2 py-1 font-label text-xs text-white focus:outline-none"
+                    className="rounded border border-white/15 bg-surface-container-high px-2 py-1 font-label text-xs text-white focus:outline-none"
                   >
                     <option value="ac">CA (-2)</option>
                     <option value="attacks">Attacchi (-2)</option>

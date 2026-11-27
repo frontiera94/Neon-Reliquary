@@ -69,9 +69,9 @@ export function StatBreakdownTooltip({
       {isOpen && (
         <div
           role="tooltip"
-          className={`absolute top-full ${alignmentClass} mt-2 z-[140] w-64 max-w-[82vw] animate-in fade-in zoom-in-95`}
+          className={`absolute top-full ${alignmentClass} mt-2 z-[140] w-60 sm:w-64 max-w-[calc(100vw-1.5rem)] animate-in fade-in zoom-in-95 pointer-events-none`}
         >
-          <div className="backdrop-blur-md bg-[#181b26]/95 border border-white/10 rounded-xl p-3 shadow-2xl shadow-primary/5 text-left">
+          <div className="backdrop-blur-md bg-[#16192b]/98 border border-white/15 rounded-xl p-3 shadow-2xl shadow-primary/10 text-left">
             {/* Header */}
             <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/10">
               <span className="font-headline text-xs font-bold uppercase tracking-wider text-secondary">

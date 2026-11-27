@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { TACTICAL_SPRING } from '../../lib/motion-presets'
 import { useTranslation } from '../../i18n'
@@ -17,12 +18,22 @@ const navItems = [
 
 export function BottomNav() {
   const { t } = useTranslation()
+  const { pathname } = useLocation()
+  const navRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const activeEl = navRef.current?.querySelector('[aria-current="page"]')
+    if (activeEl && typeof activeEl.scrollIntoView === 'function') {
+      activeEl.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+    }
+  }, [pathname])
 
   return (
     <nav
+      ref={navRef}
       aria-label="Navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex overflow-x-auto border-t border-white/[0.08]"
-      style={{ backdropFilter: 'blur(16px)', background: 'rgba(10,10,18,0.92)', boxShadow: '0 -4px 20px -8px rgba(0,240,255,0.15)' }}
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch overflow-x-auto scrollbar-none snap-x border-t border-white/[0.12] px-1.5 pb-[env(safe-area-inset-bottom)]"
+      style={{ backdropFilter: 'blur(20px)', background: 'rgba(10,11,20,0.96)', boxShadow: '0 -4px 24px -8px rgba(0,240,255,0.18)' }}
     >
       {navItems.map(({ to, icon, key }) => {
         const label = t(key)
@@ -31,8 +42,8 @@ export function BottomNav() {
             key={to}
             to={to}
             className={({ isActive }) =>
-              `relative flex-1 min-w-[50px] flex flex-col items-center justify-center py-2.5 gap-0.5 font-label text-[9px] uppercase tracking-wider transition-all duration-200 ` +
-              (isActive ? 'text-primary' : 'text-tertiary hover:text-white')
+              `relative shrink-0 snap-center min-w-[64px] px-2 py-2 flex flex-col items-center justify-center gap-0.5 font-label text-[10px] font-semibold uppercase tracking-wide transition-all duration-200 ` +
+              (isActive ? 'text-primary' : 'text-on-surface-variant/80 hover:text-white')
             }
           >
             {({ isActive }) => (
@@ -41,17 +52,17 @@ export function BottomNav() {
                   <motion.span
                     layoutId="active-bottom-nav-pill"
                     transition={TACTICAL_SPRING}
-                    className="absolute inset-x-2 inset-y-1.5 rounded-lg bg-primary/10 border border-primary/30 pointer-events-none"
-                    style={{ filter: 'drop-shadow(0 0 8px rgba(0,240,255,0.3))' }}
+                    className="absolute inset-x-1 inset-y-1 rounded-xl bg-primary/12 border border-primary/35 pointer-events-none"
+                    style={{ filter: 'drop-shadow(0 0 8px rgba(0,240,255,0.25))' }}
                   />
                 )}
                 <span
-                  className="material-symbols-outlined text-xl"
-                  style={isActive ? { filter: 'drop-shadow(0 0 8px #00f0ff)' } : undefined}
+                  className="material-symbols-outlined text-xl relative z-10"
+                  style={isActive ? { filter: 'drop-shadow(0 0 6px #00f0ff)' } : undefined}
                 >
                   {icon}
                 </span>
-                <span className="truncate max-w-[54px]">{label}</span>
+                <span className="truncate max-w-[68px] relative z-10 leading-tight">{label}</span>
               </>
             )}
           </NavLink>

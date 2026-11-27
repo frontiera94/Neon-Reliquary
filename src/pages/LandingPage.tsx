@@ -41,7 +41,7 @@ export function LandingPage() {
   }
 
   return (
-    <div className="relative min-h-screen h-screen w-full bg-surface text-on-surface flex flex-col justify-between p-6 md:p-12 overflow-hidden select-none dark">
+    <div className="relative min-h-[100svh] w-full bg-surface text-on-surface flex flex-col justify-between p-5 sm:p-6 md:p-12 overflow-x-clip overflow-y-auto select-none dark">
       {/* Ambient background glow orbs */}
       <div className="glow-orb glow-orb-cyan -top-28 -right-28 w-96 h-96 md:w-[500px] md:h-[500px] opacity-20" />
       <div className="glow-orb glow-orb-magenta -bottom-32 -left-32 w-80 h-80 md:w-[450px] md:h-[450px] opacity-15" />
@@ -215,7 +215,7 @@ export function LandingPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="font-body text-sm sm:text-base text-tertiary max-w-lg mb-8 leading-relaxed"
+          className="font-body text-sm sm:text-base text-on-surface-variant max-w-lg mb-8 leading-relaxed"
         >
           {t('landing.subtitle')}
         </motion.p>
@@ -259,11 +259,11 @@ export function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-20 flex flex-col sm:flex-row items-center justify-between gap-2 text-center text-xs font-label text-tertiary/70 pt-4 border-t border-white/[0.06]">
+      <footer className="relative z-20 flex flex-col sm:flex-row items-center justify-between gap-2 text-center text-xs font-label text-tertiary pt-4 border-t border-white/[0.08]">
         <div className="flex items-center gap-2 tracking-widest text-[11px] uppercase">
           <span className="text-primary font-mono">{characters.length}</span> {t('landing.relicsIndexed')}
         </div>
-        <div className="font-mono text-[10px] text-tertiary/50 tracking-wider">
+        <div className="font-mono text-[11px] text-tertiary/80 tracking-wider">
           {t('landing.press')} <span className="text-primary font-bold">{t('landing.enterKey')}</span> {t('landing.toAccess')}
         </div>
       </footer>

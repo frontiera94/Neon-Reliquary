@@ -197,10 +197,10 @@ export function StatusPage() {
         {/* Vitality Core */}
         <motion.section
           variants={STAGGER_ITEM}
-          className="lg:col-span-12 flex flex-col items-center justify-center bg-surface-container/90 backdrop-blur-sm p-8 relative overflow-hidden group rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] transition-all"
+          className="lg:col-span-12 flex flex-col items-center justify-center bg-surface-container/95 backdrop-blur-sm p-5 sm:p-8 relative overflow-hidden group rounded-2xl border border-white/10 shadow-[0_0_20px_rgba(0,240,255,0.08)] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] transition-all"
         >
           <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent pointer-events-none" />
-          <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-8 neon-glow-accent">
+          <h2 className="font-headline text-lg sm:text-xl font-bold uppercase tracking-wider text-secondary mb-6 sm:mb-8 neon-glow-accent">
             {locale === 'it' ? 'Nucleo Vitale' : 'Vitality Core'}
           </h2>
           <div className="text-center">
@@ -243,10 +243,10 @@ export function StatusPage() {
             </div>
             <div className="font-label text-on-surface-variant text-sm mt-1">/ {maxHp}</div>
           </div>
-          <div className="mt-8 flex items-center gap-3">
+          <div className="mt-6 sm:mt-8 flex items-center justify-center gap-2.5 sm:gap-3 w-full">
             <button
               onClick={() => applyDamage(char.id, hpDelta, effectiveAbilities.scores.con)}
-              className="px-5 py-3 bg-error-container text-on-error-container hover:brightness-125 transition-all active:scale-95 font-label text-sm uppercase tracking-widest rounded-xl cursor-pointer"
+              className="px-4 sm:px-5 py-3 bg-error-container text-on-error-container hover:brightness-125 transition-all active:scale-95 font-label text-xs sm:text-sm font-bold uppercase tracking-wider sm:tracking-widest rounded-xl cursor-pointer"
               aria-label="Decrease HP"
             >
               {t('hud.damage')}
@@ -255,18 +255,19 @@ export function StatusPage() {
               type="number"
               min={1}
               value={hpDelta}
+              aria-label={locale === 'it' ? 'Quantità punti ferita' : 'HP delta amount'}
               onChange={(e) => setHpDelta(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-20 bg-surface-container-high text-on-surface font-label text-xl font-bold text-center py-3 rounded-xl border border-white/10 focus:border-primary focus:outline-none"
+              className="w-16 sm:w-20 bg-surface-container-high text-on-surface font-label text-xl font-bold text-center py-3 rounded-xl border border-white/15 focus:border-primary focus:outline-none"
             />
             <button
               onClick={() => applyHealing(char.id, hpDelta, maxHp)}
-              className="px-5 py-3 bg-primary-container text-on-primary-container hover:brightness-125 transition-all active:scale-95 font-label text-sm uppercase tracking-widest rounded-xl cursor-pointer"
+              className="px-4 sm:px-5 py-3 bg-primary-container text-on-primary-container hover:brightness-125 transition-all active:scale-95 font-label text-xs sm:text-sm font-bold uppercase tracking-wider sm:tracking-widest rounded-xl cursor-pointer"
               aria-label="Increase HP"
             >
               {t('hud.heal')}
             </button>
           </div>
-          <div className="mt-8 flex gap-4">
+          <div className="mt-5 sm:mt-6 flex flex-wrap justify-center gap-3">
             {tempEdit === null ? (
               <button
                 onClick={() => setTempEdit(String(session.tempHp))}
@@ -322,17 +323,17 @@ export function StatusPage() {
               </div>
             )}
           </div>
-          <div className="mt-4 flex items-center gap-3">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={() => longRest(char.id, maxHp)}
-              className="px-6 py-2.5 bg-surface-container-highest border border-white/10 rounded-xl font-label text-xs text-secondary uppercase tracking-widest hover:bg-primary/10 hover:text-primary hover:border-primary/40 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all cursor-pointer"
+              className="px-5 py-2.5 bg-surface-container-highest border border-white/15 rounded-xl font-label text-xs font-semibold text-secondary uppercase tracking-wider hover:bg-primary/10 hover:text-primary hover:border-primary/40 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm align-middle mr-1">bedtime</span>
               {locale === 'it' ? 'Riposo Lungo' : 'Long Rest'}
             </button>
             <button
               onClick={() => setShowBuffModal(true)}
-              className="px-5 py-2.5 bg-primary/10 border border-primary/40 text-primary font-label text-xs uppercase tracking-widest rounded-xl hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2.5 bg-primary/15 border border-primary/45 text-primary font-label text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-primary/25 hover:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm">tune</span>
               {locale === 'it' ? 'Buff e Preset' : 'Buffs & Presets'}
@@ -458,15 +459,15 @@ export function StatusPage() {
                     breakdown: effectiveAbilities.breakdowns[key],
                   })
                 }
-                className="bg-surface-container hover:bg-surface-container-high rounded-xl p-4 transition-all cursor-pointer group relative border border-white/5 hover:border-primary/40 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)] text-left"
+                className="bg-surface-container hover:bg-surface-container-high rounded-xl p-3.5 sm:p-4 transition-all cursor-pointer group relative border border-white/10 hover:border-primary/40 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)] text-left"
               >
                 <div className="flex justify-between items-center mb-1">
-                  <p className="font-label text-[10px] text-tertiary uppercase tracking-widest font-bold">
+                  <p className="font-label text-[11px] text-tertiary uppercase tracking-wider font-bold">
                     {translateAbilityShort(key, locale)}
                   </p>
                   {delta !== 0 && (
                     <span
-                      className={`font-label text-[10px] font-bold ${
+                      className={`font-label text-[11px] font-bold ${
                         delta > 0 ? 'text-primary' : 'text-error'
                       }`}
                     >
@@ -546,8 +547,8 @@ export function StatusPage() {
                     onClick={() => toggleCondition(char.id, condition)}
                     className={`px-3.5 py-1.5 font-label text-xs uppercase tracking-widest rounded-lg transition-all cursor-pointer ${
                       active
-                        ? 'bg-error text-white shadow-[0_0_12px_rgba(255,75,96,0.4)] font-bold border border-error'
-                        : 'bg-surface-container-high text-tertiary hover:text-error hover:bg-error-container/20 border border-white/5'
+                        ? 'bg-error-container text-white shadow-[0_0_12px_rgba(255,107,125,0.4)] font-bold border border-error'
+                        : 'bg-surface-container-high text-tertiary hover:text-error hover:bg-error-container/20 border border-white/10'
                     }`}
                   >
                     {info.name}
@@ -564,22 +565,22 @@ export function StatusPage() {
                   >
                     <span className="material-symbols-outlined text-sm">info</span>
                   </button>
-                  {/* Hover tooltip */}
-                  <div className="pointer-events-none absolute bottom-full left-0 mb-2 w-64 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                  {/* Desktop-only hover tooltip (on mobile, tap (i) opens bottom-sheet InspectorDrawer without sticky-hover covering UI) */}
+                  <div className="hidden md:block pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                     <div className="bg-black/95 backdrop-blur-md border border-error/40 p-3.5 rounded-xl shadow-[0_4px_24px_rgba(0,0,0,0.8)]">
                       <p className="font-headline text-error text-xs uppercase tracking-widest mb-1 font-bold">
                         {info.name}
                       </p>
-                      <p className="font-body text-tertiary text-[11px] mb-2 leading-snug">
+                      <p className="font-body text-on-surface-variant text-xs mb-2 leading-snug">
                         {info.summary}
                       </p>
                       <ul className="space-y-0.5">
                         {info.penalties.map((p, i) => (
                           <li key={i} className="flex items-start gap-1.5">
-                            <span className="text-error/70 font-label text-[10px] mt-px flex-shrink-0">
+                            <span className="text-error font-label text-[11px] mt-px flex-shrink-0">
                               ▸
                             </span>
-                            <span className="font-label text-[10px] text-on-surface-variant leading-snug">
+                            <span className="font-label text-[11px] text-on-surface-variant leading-snug">
                               {p}
                             </span>
                           </li>
@@ -592,7 +593,7 @@ export function StatusPage() {
             })}
           </div>
           {session.conditions.length === 0 && (
-            <p className="font-label text-xs text-tertiary/60 uppercase tracking-widest mt-2">
+            <p className="font-label text-xs text-tertiary uppercase tracking-widest mt-3">
               {t('status.noConditions')}
             </p>
           )}
@@ -643,23 +644,23 @@ function DefenseCard({
 
   const cardContent = (
     <>
-      <p className={`font-label text-[10px] uppercase tracking-widest ${textColor} font-bold`}>{label}</p>
+      <p className={`font-label text-[11px] uppercase tracking-wider ${textColor} font-bold`}>{label}</p>
       <p className={`font-label text-3xl sm:text-4xl font-black ${valColor}`}>
         {displayVal}
       </p>
-      <p className="font-label text-[10px] text-on-surface-variant mt-1 font-mono">{sub}</p>
+      <p className="font-label text-[11px] text-on-surface-variant mt-1 font-mono leading-snug">{sub}</p>
     </>
   )
 
   const card = onRoll ? (
     <button
       onClick={onRoll}
-      className="bg-surface-container hover:bg-surface-container-high rounded-xl border border-white/5 hover:border-primary/40 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)] p-5 transition-all cursor-pointer group relative w-full text-left"
+      className="bg-surface-container hover:bg-surface-container-high rounded-xl border border-white/10 hover:border-primary/40 hover:shadow-[0_0_20px_rgba(0,240,255,0.2)] p-4 sm:p-5 transition-all cursor-pointer group relative w-full text-left"
     >
       {cardContent}
     </button>
   ) : (
-    <div className="bg-surface-container rounded-xl border border-white/5 p-5 relative w-full">
+    <div className="bg-surface-container rounded-xl border border-white/10 p-4 sm:p-5 relative w-full">
       {cardContent}
     </div>
   )

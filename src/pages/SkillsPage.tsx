@@ -88,17 +88,17 @@ export function SkillsPage() {
               {t('skills.subtitle')}
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
             {/* Search */}
-            <div className="relative">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary/50 text-sm">
+            <div className="relative w-full sm:w-64">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary/60 text-sm">
                 search
               </span>
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t('skills.searchPlaceholder')}
-                className="bg-surface-container-high/80 rounded-xl pl-10 pr-4 py-2.5 font-label text-sm text-on-surface placeholder:text-tertiary/50 outline-none w-64 border border-white/10 focus:border-primary transition-colors"
+                className="w-full bg-surface-container-high/90 rounded-xl pl-10 pr-4 py-2.5 font-label text-sm text-on-surface placeholder:text-tertiary/70 outline-none border border-white/15 focus:border-primary transition-colors"
               />
             </div>
             {/* Filter */}
@@ -221,16 +221,16 @@ function SkillRow({
           <p className="font-headline text-base sm:text-lg font-bold text-white group-hover:text-primary truncate leading-tight transition-colors">
             {displayName}
           </p>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="font-label text-[10px] text-primary bg-primary/15 border border-primary/30 px-2 py-0.5 rounded-md uppercase font-bold">
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <span className="font-label text-[11px] text-primary bg-primary/15 border border-primary/35 px-2 py-0.5 rounded-md uppercase font-bold">
               {translateAbilityShort(skill.ability, locale)}
             </span>
             {skill.classSkill && (
-              <span className="font-label text-[10px] text-secondary bg-secondary/15 border border-secondary/30 px-2 py-0.5 rounded-md uppercase tracking-wider font-bold">
+              <span className="font-label text-[11px] text-secondary bg-secondary/15 border border-secondary/35 px-2 py-0.5 rounded-md uppercase tracking-wider font-bold">
                 {locale === 'it' ? 'Classe' : 'Class'}
               </span>
             )}
-            <span className="font-label text-[10px] text-tertiary">
+            <span className="font-label text-[11px] text-on-surface-variant">
               {t('skills.ranks')}: {skill.ranks}
             </span>
           </div>
@@ -242,7 +242,7 @@ function SkillRow({
         <span className="font-label text-xl sm:text-2xl font-black leading-none">
           {total >= 0 ? `+${total}` : total}
         </span>
-        <span className="font-label text-[9px] uppercase tracking-wider font-bold opacity-80 mt-0.5">
+        <span className="font-label text-[10px] uppercase tracking-wider font-bold opacity-90 mt-0.5">
           Roll
         </span>
       </div>

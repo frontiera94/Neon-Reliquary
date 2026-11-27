@@ -50,25 +50,28 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
 
   return (
     <>
-      {/* Backdrop — z-[40] keeps it below the sticky TopBar (z-50) */}
+      {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-[40] bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-[70] bg-black/65 backdrop-blur-sm"
           onClick={onClose}
         />
       )}
 
-      {/* Slide-in panel — z-[45] so the sticky TopBar always renders on top */}
+      {/* Slide-in panel — z-[75] renders cleanly above sticky TopBar and BottomNav on mobile & desktop */}
       <div
-        className="fixed top-0 right-0 bottom-0 z-[45] w-full max-w-sm sm:max-w-md bg-surface-container/95 backdrop-blur-xl border-l border-white/10 flex flex-col transition-transform duration-300"
+        role={isOpen ? 'dialog' : undefined}
+        aria-modal={isOpen ? true : undefined}
+        aria-label={t('settings.title')}
+        aria-hidden={!isOpen}
+        className={`fixed top-0 right-0 bottom-0 z-[75] w-full max-w-sm sm:max-w-md bg-surface-container/98 backdrop-blur-xl border-l border-white/15 flex flex-col transition-all duration-300 ${
+          isOpen ? 'visible pointer-events-auto' : 'invisible pointer-events-none'
+        }`}
         style={{
           transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
-          boxShadow: '-10px 0 40px rgba(0,0,0,0.7), -4px 0 30px -10px rgba(0,240,255,0.15)',
+          boxShadow: isOpen ? '-10px 0 40px rgba(0,0,0,0.8), -4px 0 30px -10px rgba(0,240,255,0.15)' : 'none',
         }}
       >
-        {/* Spacer to clear the sticky TopBar */}
-        <div className="h-[73px] flex-shrink-0" />
-
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 flex-shrink-0 bg-surface-container-high/40">
           <div className="flex items-center gap-2">
@@ -326,7 +329,7 @@ export function SettingsPanel({ isOpen, onClose, initialTab = 'tools' }: Setting
 
               {history.length === 0 ? (
                 <div className="px-6 py-10 text-center">
-                  <p className="font-label text-xs text-tertiary/50 uppercase tracking-widest">{t('settings.noRolls')}</p>
+                  <p className="font-label text-xs text-tertiary uppercase tracking-widest">{t('settings.noRolls')}</p>
                 </div>
               ) : (
                 <ul className="divide-y divide-white/5">

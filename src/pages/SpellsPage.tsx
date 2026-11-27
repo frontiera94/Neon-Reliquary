@@ -372,14 +372,14 @@ export function SpellsPage() {
       ) : null}
 
       {/* Filter bar */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary/50 text-sm">search</span>
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
+        <div className="relative w-full sm:w-64">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary/60 text-sm">search</span>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('spells.searchPlaceholder')}
-            className="bg-surface-container-high/80 rounded-xl pl-10 pr-4 py-2.5 font-label text-sm text-on-surface placeholder:text-tertiary/50 outline-none w-64 border border-white/10 focus:border-primary transition-colors"
+            className="w-full bg-surface-container-high/90 rounded-xl pl-10 pr-4 py-2.5 font-label text-sm text-on-surface placeholder:text-tertiary/70 outline-none border border-white/15 focus:border-primary transition-colors"
           />
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -731,18 +731,18 @@ function SpellRow({
               </span>
             )}
           </div>
-          <p className="font-label text-[10px] text-on-surface-variant mt-0.5">
+          <p className="font-label text-[11px] sm:text-xs text-on-surface-variant mt-1">
             {spell.castingTime} · {spell.range} · {spell.duration}
           </p>
         </div>
-        <span className="material-symbols-outlined text-primary/50 group-open:rotate-180 transition-transform flex-shrink-0">
+        <span className="material-symbols-outlined text-primary/60 group-open:rotate-180 transition-transform flex-shrink-0">
           expand_more
         </span>
       </summary>
 
-      <div className="bg-surface-container-low/90 px-6 pb-6 pt-3 border-t border-white/5">
-        <p className="font-body text-tertiary text-sm leading-relaxed mb-4">{spell.description}</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-[10px] font-label uppercase tracking-widest">
+      <div className="bg-surface-container-low/95 px-4 sm:px-6 pb-5 sm:pb-6 pt-3.5 border-t border-white/10">
+        <p className="font-body text-on-surface-variant text-sm leading-relaxed mb-4">{spell.description}</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-[11px] font-label uppercase tracking-wider">
           {spell.savingThrow && (
             <div>
               <p className="text-primary mb-1 font-bold">{t('spells.savingThrow')}</p>
